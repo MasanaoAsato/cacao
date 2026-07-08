@@ -32,9 +32,15 @@ func NewPeriod(startDate, endDate time.Time) (Period, error) {
 	}, nil
 }
 
-// normalizeDate は時刻部分を切り捨て、カレンダー日のみに正規化する。
-func normalizeDate(t time.Time) time.Time {
+// NormalizeDate は時刻部分を切り捨て、カレンダー日のみに正規化する。
+// エンティティ層からも再利用できるように公開している。
+func NormalizeDate(t time.Time) time.Time {
 	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+}
+
+// normalizeDate はエイリアス。既存の呼び出しを壊さないための内部関数。
+func normalizeDate(t time.Time) time.Time {
+	return NormalizeDate(t)
 }
 
 // StartDate は開始日を返す。
