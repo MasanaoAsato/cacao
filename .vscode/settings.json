@@ -1,0 +1,6 @@
+{
+  "go.goroot": "/home/ubuntu/.local/share/mise/installs/go/1.26.4",
+  "go.gopath": "/home/ubuntu/go",
+  "go.useLanguageServer": true,
+  "go.toolsManagement.autoUpdate": true
+}
