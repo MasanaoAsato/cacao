@@ -2,7 +2,7 @@ package entity
 
 import (
 	"fmt"
-	"sort"
+	"slices"
 	"time"
 
 	"cacao/src/domain/value_object"
