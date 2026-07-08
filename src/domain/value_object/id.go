@@ -43,3 +43,8 @@ func (i ID) String() string {
 func (i ID) Equals(other ID) bool {
 	return i.value == other.value
 }
+
+// IsEmpty は ID が空（ゼロ値）かどうかを判定する。
+func (i ID) IsEmpty() bool {
+	return i.value == uuid.Nil
+}
