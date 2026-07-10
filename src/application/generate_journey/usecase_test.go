@@ -8,6 +8,7 @@ import (
 
 	"cacao/src/application"
 	"cacao/src/domain/entity"
+	"cacao/src/domain/event"
 	"cacao/src/domain/repository"
 	"cacao/src/domain/service"
 	"cacao/src/domain/value_object"
@@ -66,6 +67,19 @@ func (m *mockJourneyRepo) Delete(_ context.Context, _ value_object.ID) error {
 	return nil
 }
 
+type mockPublisher struct {
+	events []event.DomainEvent
+	err    error
+}
+
+func (m *mockPublisher) Publish(_ context.Context, e event.DomainEvent) error {
+	if m.err != nil {
+		return m.err
+	}
+	m.events = append(m.events, e)
+	return nil
+}
+
 type mockGenerator struct {
 	route service.GeneratedRoute
 	err   error
@@ -105,6 +119,7 @@ func TestUseCase_Execute(t *testing.T) {
 	t.Run("正常系: JourneyRequest から Journey が生成・保存される", func(t *testing.T) {
 		request := mustNewJourneyRequest(t)
 		journeyRepo := &mockJourneyRepo{}
+		publisher := &mockPublisher{}
 		uc := NewUseCase(
 			&mockRequestRepo{request: request},
 			journeyRepo,
@@ -134,6 +149,7 @@ func TestUseCase_Execute(t *testing.T) {
 					},
 				},
 			}},
+			publisher,
 		)
 
 		output, err := uc.Execute(context.Background(), Input{RequestID: request.ID().String()})
@@ -149,10 +165,13 @@ func TestUseCase_Execute(t *testing.T) {
 		if journeyRepo.saved.DayCount() != 2 {
 			t.Fatalf("day count = %d, want 2", journeyRepo.saved.DayCount())
 		}
+		if len(publisher.events) != 1 {
+			t.Fatalf("expected 1 published event, got %d", len(publisher.events))
+		}
 	})
 
 	t.Run("異常系: 不正な RequestID", func(t *testing.T) {
-		uc := NewUseCase(&mockRequestRepo{}, &mockJourneyRepo{}, &mockGenerator{})
+		uc := NewUseCase(&mockRequestRepo{}, &mockJourneyRepo{}, &mockGenerator{}, &mockPublisher{})
 		_, err := uc.Execute(context.Background(), Input{RequestID: "not-a-uuid"})
 		if err == nil {
 			t.Fatal("expected error, got nil")
@@ -167,6 +186,7 @@ func TestUseCase_Execute(t *testing.T) {
 			&mockRequestRepo{err: repository.ErrJourneyRequestNotFound},
 			&mockJourneyRepo{},
 			&mockGenerator{},
+			&mockPublisher{},
 		)
 		_, err := uc.Execute(context.Background(), Input{RequestID: value_object.NewID().String()})
 		if err == nil {
@@ -183,6 +203,7 @@ func TestUseCase_Execute(t *testing.T) {
 			&mockRequestRepo{request: request},
 			&mockJourneyRepo{},
 			&mockGenerator{err: errors.New("generation failed")},
+			&mockPublisher{},
 		)
 		_, err := uc.Execute(context.Background(), Input{RequestID: request.ID().String()})
 		if err == nil {
@@ -213,6 +234,7 @@ func TestUseCase_Execute(t *testing.T) {
 					},
 				},
 			}},
+			&mockPublisher{},
 		)
 
 		_, err := uc.Execute(context.Background(), Input{RequestID: request.ID().String()})
@@ -244,6 +266,7 @@ func TestUseCase_Execute(t *testing.T) {
 					},
 				},
 			}},
+			&mockPublisher{},
 		)
 
 		_, err := uc.Execute(context.Background(), Input{RequestID: request.ID().String()})
@@ -284,6 +307,7 @@ func TestUseCase_Execute(t *testing.T) {
 					},
 				},
 			}},
+			&mockPublisher{},
 		)
 
 		output, err := uc.Execute(context.Background(), Input{RequestID: request.ID().String()})
@@ -292,6 +316,36 @@ func TestUseCase_Execute(t *testing.T) {
 		}
 		if output.JourneyID == "" {
 			t.Fatal("expected non-empty journey id")
+		}
+	})
+
+	t.Run("異常系: イベント発行失敗", func(t *testing.T) {
+		request := mustNewJourneyRequest(t)
+		publisher := &mockPublisher{err: errors.New("publish failed")}
+		uc := NewUseCase(
+			&mockRequestRepo{request: request},
+			&mockJourneyRepo{},
+			&mockGenerator{route: service.GeneratedRoute{
+				Days: []service.GeneratedDay{
+					{
+						Date: time.Date(2026, 7, 7, 0, 0, 0, 0, time.UTC),
+						Spots: []service.GeneratedSpot{
+							{
+								Name:          "東京タワー",
+								Description:   "展望台",
+								StartAt:       time.Date(2026, 7, 7, 10, 0, 0, 0, time.UTC),
+								EstimatedCost: mustNewMoney(t, 1000, "JPY"),
+							},
+						},
+					},
+				},
+			}},
+			publisher,
+		)
+
+		_, err := uc.Execute(context.Background(), Input{RequestID: request.ID().String()})
+		if err == nil {
+			t.Fatal("expected error, got nil")
 		}
 	})
 }

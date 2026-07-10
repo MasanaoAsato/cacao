@@ -6,6 +6,7 @@ import (
 
 	"cacao/src/application"
 	"cacao/src/domain/entity"
+	"cacao/src/domain/event"
 	"cacao/src/domain/repository"
 	"cacao/src/domain/value_object"
 )
@@ -16,12 +17,13 @@ type UseCase interface {
 }
 
 // NewUseCase は CreateJourneyRequest ユースケースの実装を生成する。
-func NewUseCase(repo repository.JourneyRequestRepository) UseCase {
-	return &useCase{repo: repo}
+func NewUseCase(repo repository.JourneyRequestRepository, publisher event.Publisher) UseCase {
+	return &useCase{repo: repo, publisher: publisher}
 }
 
 type useCase struct {
-	repo repository.JourneyRequestRepository
+	repo      repository.JourneyRequestRepository
+	publisher event.Publisher
 }
 
 // Execute はユーザー入力から JourneyRequest を生成・保存し、生成したIDを返す。
@@ -54,6 +56,10 @@ func (uc *useCase) Execute(ctx context.Context, input Input) (Output, error) {
 
 	if err := uc.repo.Save(ctx, request); err != nil {
 		return Output{}, fmt.Errorf("failed to save journey request: %w", err)
+	}
+
+	if err := uc.publisher.Publish(ctx, event.NewJourneyRequested(request.ID())); err != nil {
+		return Output{}, fmt.Errorf("failed to publish journey requested event: %w", err)
 	}
 
 	return Output{RequestID: request.ID().String()}, nil
