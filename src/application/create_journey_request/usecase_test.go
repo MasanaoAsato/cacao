@@ -8,6 +8,7 @@ import (
 
 	"cacao/src/application"
 	"cacao/src/domain/entity"
+	"cacao/src/domain/event"
 	"cacao/src/domain/repository"
 	"cacao/src/domain/value_object"
 )
@@ -37,10 +38,24 @@ func (m *mockJourneyRequestRepository) Delete(_ context.Context, _ value_object.
 	return nil
 }
 
+type mockPublisher struct {
+	events []event.DomainEvent
+	err    error
+}
+
+func (m *mockPublisher) Publish(_ context.Context, e event.DomainEvent) error {
+	if m.err != nil {
+		return m.err
+	}
+	m.events = append(m.events, e)
+	return nil
+}
+
 func TestUseCase_Execute(t *testing.T) {
 	t.Run("正常系: 有効な入力から JourneyRequest が生成・保存される", func(t *testing.T) {
 		repo := &mockJourneyRequestRepository{}
-		uc := NewUseCase(repo)
+		publisher := &mockPublisher{}
+		uc := NewUseCase(repo, publisher)
 		input := Input{
 			DepartureCity:    "東京",
 			DepartureCountry: "日本",
@@ -63,10 +78,13 @@ func TestUseCase_Execute(t *testing.T) {
 		if repo.saved.Departure().City() != "東京" {
 			t.Fatalf("departure city mismatch: got %q", repo.saved.Departure().City())
 		}
+		if len(publisher.events) != 1 {
+			t.Fatalf("expected 1 published event, got %d", len(publisher.events))
+		}
 	})
 
 	t.Run("異常系: 出発地点の都市が空", func(t *testing.T) {
-		uc := NewUseCase(&mockJourneyRequestRepository{})
+		uc := NewUseCase(&mockJourneyRequestRepository{}, &mockPublisher{})
 		input := Input{
 			DepartureCity:    "   ",
 			DepartureCountry: "日本",
@@ -86,7 +104,7 @@ func TestUseCase_Execute(t *testing.T) {
 	})
 
 	t.Run("異常系: 終了日が開始日より前", func(t *testing.T) {
-		uc := NewUseCase(&mockJourneyRequestRepository{})
+		uc := NewUseCase(&mockJourneyRequestRepository{}, &mockPublisher{})
 		input := Input{
 			DepartureCity:    "東京",
 			DepartureCountry: "日本",
@@ -106,7 +124,7 @@ func TestUseCase_Execute(t *testing.T) {
 	})
 
 	t.Run("異常系: 不正な通貨コード", func(t *testing.T) {
-		uc := NewUseCase(&mockJourneyRequestRepository{})
+		uc := NewUseCase(&mockJourneyRequestRepository{}, &mockPublisher{})
 		input := Input{
 			DepartureCity:    "東京",
 			DepartureCountry: "日本",
@@ -126,7 +144,7 @@ func TestUseCase_Execute(t *testing.T) {
 	})
 
 	t.Run("異常系: 予算が負数", func(t *testing.T) {
-		uc := NewUseCase(&mockJourneyRequestRepository{})
+		uc := NewUseCase(&mockJourneyRequestRepository{}, &mockPublisher{})
 		input := Input{
 			DepartureCity:    "東京",
 			DepartureCountry: "日本",
@@ -147,7 +165,26 @@ func TestUseCase_Execute(t *testing.T) {
 
 	t.Run("異常系: リポジトリ保存失敗", func(t *testing.T) {
 		repo := &mockJourneyRequestRepository{err: errors.New("save failed")}
-		uc := NewUseCase(repo)
+		uc := NewUseCase(repo, &mockPublisher{})
+		input := Input{
+			DepartureCity:    "東京",
+			DepartureCountry: "日本",
+			StartDate:        time.Date(2026, 7, 7, 0, 0, 0, 0, time.UTC),
+			EndDate:          time.Date(2026, 7, 9, 0, 0, 0, 0, time.UTC),
+			Amount:           50000,
+			Currency:         "JPY",
+		}
+
+		_, err := uc.Execute(context.Background(), input)
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+	})
+
+	t.Run("異常系: イベント発行失敗", func(t *testing.T) {
+		repo := &mockJourneyRequestRepository{}
+		publisher := &mockPublisher{err: errors.New("publish failed")}
+		uc := NewUseCase(repo, publisher)
 		input := Input{
 			DepartureCity:    "東京",
 			DepartureCountry: "日本",
@@ -165,7 +202,7 @@ func TestUseCase_Execute(t *testing.T) {
 
 	t.Run("境界値: 開始日と終了日が同日", func(t *testing.T) {
 		repo := &mockJourneyRequestRepository{}
-		uc := NewUseCase(repo)
+		uc := NewUseCase(repo, &mockPublisher{})
 		input := Input{
 			DepartureCity:    "東京",
 			DepartureCountry: "日本",

@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"cacao/src/application"
-	"cacao/src/domain/entity"
+	"cacao/src/domain/event"
 	"cacao/src/domain/repository"
 	"cacao/src/domain/service"
 	"cacao/src/domain/value_object"
@@ -22,11 +22,13 @@ func NewUseCase(
 	requestRepo repository.JourneyRequestRepository,
 	journeyRepo repository.JourneyRepository,
 	generator service.JourneyGenerator,
+	publisher event.Publisher,
 ) UseCase {
 	return &useCase{
 		requestRepo: requestRepo,
 		journeyRepo: journeyRepo,
 		generator:   generator,
+		publisher:   publisher,
 	}
 }
 
@@ -34,6 +36,7 @@ type useCase struct {
 	requestRepo repository.JourneyRequestRepository
 	journeyRepo repository.JourneyRepository
 	generator   service.JourneyGenerator
+	publisher   event.Publisher
 }
 
 // Execute は JourneyRequest ID から LLM で旅程を生成し、Journey を保存する。
@@ -56,13 +59,8 @@ func (uc *useCase) Execute(ctx context.Context, input Input) (Output, error) {
 		return Output{}, fmt.Errorf("%w: %w", application.ErrGenerationFailed, err)
 	}
 
-	days, err := buildItineraryDays(route)
-	if err != nil {
-		return Output{}, fmt.Errorf("%w: %w", application.ErrInvalidInput, err)
-	}
-
 	journeyID := value_object.NewID()
-	journey, err := entity.NewJourney(journeyID, requestID, request.Period(), days)
+	journey, err := service.NewJourneyFromGenerated(journeyID, requestID, request.Period(), route)
 	if err != nil {
 		return Output{}, fmt.Errorf("%w: %w", application.ErrInvalidInput, err)
 	}
@@ -71,35 +69,9 @@ func (uc *useCase) Execute(ctx context.Context, input Input) (Output, error) {
 		return Output{}, fmt.Errorf("%w: failed to save journey: %w", application.ErrGenerationFailed, err)
 	}
 
-	return Output{JourneyID: journey.ID().String()}, nil
-}
-
-func buildItineraryDays(route service.GeneratedRoute) ([]entity.ItineraryDay, error) {
-	days := make([]entity.ItineraryDay, 0, len(route.Days))
-	for _, generatedDay := range route.Days {
-		spots := make([]entity.Spot, 0, len(generatedDay.Spots))
-		for _, generatedSpot := range generatedDay.Spots {
-			spotID := value_object.NewID()
-			spot, err := entity.NewSpot(
-				spotID,
-				generatedSpot.Name,
-				generatedSpot.Description,
-				generatedSpot.StartAt,
-				generatedSpot.EstimatedCost,
-			)
-			if err != nil {
-				return nil, fmt.Errorf("failed to build spot: %w", err)
-			}
-			spots = append(spots, spot)
-		}
-
-		dayID := value_object.NewID()
-		day, err := entity.NewItineraryDay(dayID, generatedDay.Date, spots)
-		if err != nil {
-			return nil, fmt.Errorf("failed to build day: %w", err)
-		}
-		days = append(days, day)
+	if err := uc.publisher.Publish(ctx, event.NewJourneyGenerated(journey.ID(), requestID)); err != nil {
+		return Output{}, fmt.Errorf("failed to publish journey generated event: %w", err)
 	}
 
-	return days, nil
+	return Output{JourneyID: journey.ID().String()}, nil
 }
