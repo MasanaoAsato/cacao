@@ -37,5 +37,7 @@ func main() {
 		getReqUC,
 		listReqUC,
 	)
-	r.Run(":8080")
+	if err := r.Run(":8080"); err != nil {
+		panic(err)
+	}
 }

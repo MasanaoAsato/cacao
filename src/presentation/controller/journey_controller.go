@@ -11,11 +11,6 @@ import (
 	"cacao/src/presentation/presenter"
 )
 
-// GenerateJourneyRequest は旅程生成リクエストのJSONボディ。
-type generateJourneyRequest struct {
-	// 現状はボディが不要だが、将来の拡張に備えて空構造体として定義しておく。
-}
-
 // HandleGenerate は POST /journey-requests/:id/generate のハンドラ。
 func HandleGenerate(uc generatejourney.UseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {

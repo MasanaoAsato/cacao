@@ -69,6 +69,9 @@ func TestPublisherMock_Events_ReturnsCopy(t *testing.T) {
 	events := publisher.Events()
 	events = append(events, event.NewJourneyRequested(value_object.NewID()))
 
+	if len(events) != 2 {
+		t.Errorf("expected copied events length 2, got %d", len(events))
+	}
 	if len(publisher.Events()) != 1 {
 		t.Errorf("expected internal events unchanged, got %d", len(publisher.Events()))
 	}
