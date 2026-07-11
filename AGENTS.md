@@ -27,7 +27,7 @@ src/
 ├── infrastructure/   # インフラ層
 │   ├── repository/   # リポジトリ実装
 │   └── service/      # サービス実装
-├── interface/        # インターフェース層
+├── presentation/     # インターフェース層
 │   ├── controller/   # コントローラー
 │   └── presenter/    # プレゼンター
 └── main.go           # エントリーポイント
