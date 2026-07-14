@@ -6,6 +6,9 @@ description: When a user requests a specific coding skill, the agent refers to t
 # coding golang
 This repository contains an implementation in Go.
 You must implement tests.
+Must do `golangci-lint run` to check for linting errors.
+Must do `golangci-lint fmt` to check for formatting errors.
+Must check doing `go test ./...` to check for test errors.
 There are some good skills for Go that can be used to improve the quality of the code, such as:
 
 -golang-code-style

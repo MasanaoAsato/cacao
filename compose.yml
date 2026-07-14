@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:18.4
+    container_name: cacao-db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: Wt9wCKTIqjgv17ED
+      POSTGRES_DB: cacao
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+volumes:
+  db-data:
