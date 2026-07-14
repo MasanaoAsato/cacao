@@ -14,3 +14,4 @@ Agents must take design patterns and language-specific best practices into accou
 To ensure high-quality output regarding design patterns and the language, agents must check whether they possess the relevant skills for these design patterns and the language, and utilize them if available.
 
 The completed design is output as a Markdown file in the “./.design”.
+The file name has prefix like "01,02...xx" number.
