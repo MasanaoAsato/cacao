@@ -30,3 +30,17 @@ go install github.com/goplus/gop@latest
 go test ./...
 ```
 
+# migration
+`brew install golang-migrate`
+
+## スキーマの作成
+`migrate create -ext sql -dir <作成するディレクトリ> -seq <名前>`
+
+## マイグレーションの実行（進める）
+`migrate --path src/migrations --database 'postgresql://admin:Wt9wCKTIqjgv17ED@localhost:5432/cacao?sslmode=disable' -verbose up`
+
+## マイグレーションの実行（進める 1）
+`migrate --path src/migrations --database 'postgresql://admin:Wt9wCKTIqjgv17ED@localhost:5432/cacao?sslmode=disable' -verbose up 1`
+
+## マイグレーションの実行（戻す）
+`migrate --path src/migrations --database 'postgresql://admin:Wt9wCKTIqjgv17ED@localhost:5432/cacao?sslmode=disable' -verbose down`
