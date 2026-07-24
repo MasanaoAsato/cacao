@@ -1,3 +1,31 @@
 [tools]
 go = '1.26.4'
 golangci-lint = "latest"
+golang-migrate = "latest"
+
+# データベースマイグレーション（golang-migrate）
+# 参考: https://github.com/golang-migrate/migrate
+#
+# 実行例:
+#   mise run migrate-up
+#   mise run migrate-down
+#   mise run migrate-new -- create_journey
+
+[env]
+DB_URL = "postgres://admin:Wt9wCKTIqjgv17ED@localhost:5432/cacao?sslmode=disable"
+
+[tasks.migrate-up]
+description = "保留中のマイグレーションをすべて適用する"
+run = "migrate -path src/migrations -database '${DB_URL}' up"
+
+[tasks.migrate-down]
+description = "直近のマイグレーションを1つロールバックする"
+run = "migrate -path src/migrations -database '${DB_URL}' down 1"
+
+[tasks.migrate-force]
+description = "指定バージョンに強制設定（例: mise run migrate-force -- 1）"
+run = "migrate -path src/migrations -database '${DB_URL}' force ${1}"
+
+[tasks.migrate-new]
+description = "新しいマイグレーションファイルを作成（例: mise run migrate-new -- create_journey）"
+run = "migrate create -ext sql -dir src/migrations -seq ${1}"
