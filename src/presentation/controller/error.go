@@ -26,6 +26,8 @@ func handleApplicationError(c *gin.Context, err error) {
 		c.JSON(http.StatusNotFound, errorResponse{Error: "journey not found", Detail: err.Error()})
 	case errors.Is(err, application.ErrGenerationFailed):
 		c.JSON(http.StatusBadGateway, errorResponse{Error: "generation failed", Detail: err.Error()})
+	case errors.Is(err, application.ErrDuplicateID):
+		c.JSON(http.StatusConflict, errorResponse{Error: "duplicate id", Detail: err.Error()})
 	default:
 		c.JSON(http.StatusInternalServerError, errorResponse{Error: "internal server error", Detail: err.Error()})
 	}
