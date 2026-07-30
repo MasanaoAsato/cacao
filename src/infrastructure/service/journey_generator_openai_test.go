@@ -153,7 +153,7 @@ func TestJourneyGeneratorOpenAI_Generate_WithWebSearch(t *testing.T) {
 			t.Errorf("expected request body to contain web_search tool, but got: %s", body)
 		}
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(responsesAPIBody(t, llmOutput))
+		_, _ = w.Write(responsesAPIBody(t, llmOutput))
 	})
 
 	generator := NewJourneyGeneratorOpenAI(client, "gpt-4o-mini", true)
@@ -185,7 +185,7 @@ func TestJourneyGeneratorOpenAI_Generate_WithoutWebSearch(t *testing.T) {
 			t.Errorf("expected request body not to contain web_search tool, but got: %s", body)
 		}
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(responsesAPIBody(t, llmOutput))
+		_, _ = w.Write(responsesAPIBody(t, llmOutput))
 	})
 
 	generator := NewJourneyGeneratorOpenAI(client, "gpt-4o-mini", false)
