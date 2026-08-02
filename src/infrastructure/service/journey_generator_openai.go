@@ -12,7 +12,6 @@ import (
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/responses"
-	"github.com/openai/openai-go/v3/shared"
 )
 
 // OpenAIConfig は OpenAI クライアントの生成に必要な設定を環境変数から読み込む。
@@ -69,22 +68,32 @@ func NewJourneyGeneratorOpenAI(client openai.Client, model string, webSearchEnab
 // 応答 JSON を service.GeneratedRoute へパースして返す。
 // 処理の流れ:
 //  1. prompt.BuildJourneyPrompt(request) でユーザープロンプトを組み立てる
-//  2. g.client.Responses.New(ctx, params) に JSON モード（json_object）を指定して問い合わせる
+//  2. g.client.Responses.New(ctx, params) に Structured Outputs（json_schema）を指定して問い合わせる
 //  3. prompt.ParseGeneratedRoute(resp.OutputText(), request) でパース・検証する
+//
+// なお JSON モード（json_object）は Web Search ツールと併用できない（API が 400 を返す）ため、
+// 併用可能な Structured Outputs（json_schema）を採用している。
 func (g *JourneyGeneratorOpenAI) Generate(ctx context.Context, request entity.JourneyRequest) (service.GeneratedRoute, error) {
 	userInput, err := prompt.BuildJourneyPrompt(request)
 	if err != nil {
 		return service.GeneratedRoute{}, fmt.Errorf("build prompt: %w", err)
 	}
 
-	jsonObject := shared.NewResponseFormatJSONObjectParam()
+	// strict: true でスキーマ準拠を保証させる。スキーマはプロンプトの出力形式と
+	// 一体で管理するため prompt パッケージから取得する。
+	jsonSchema := responses.ResponseFormatTextJSONSchemaConfigParam{
+		Name:        "journey_route",
+		Description: openai.String("条件に合う旅行の旅程。days に日ごとのスポット一覧を格納する。"),
+		Schema:      prompt.RouteJSONSchema(),
+		Strict:      openai.Bool(true),
+	}
 	params := responses.ResponseNewParams{
 		Instructions: openai.String(prompt.SystemInstruction()),
 		Input:        responses.ResponseNewParamsInputUnion{OfString: openai.String(userInput)},
 		Model:        g.model,
 		Text: responses.ResponseTextConfigParam{
 			Format: responses.ResponseFormatTextConfigUnionParam{
-				OfJSONObject: &jsonObject,
+				OfJSONSchema: &jsonSchema,
 			},
 		},
 	}
