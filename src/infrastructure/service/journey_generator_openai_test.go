@@ -138,6 +138,39 @@ func TestJourneyGeneratorOpenAI_Generate_InvalidLLMOutput(t *testing.T) {
 	}
 }
 
+// TestJourneyGeneratorOpenAI_Generate_UsesJSONSchema はリクエストボディの text.format が
+// json_schema（Structured Outputs）であり、json_object（JSON モード）でないことを検証する。
+// json_object は Web Search ツールと併用できず OpenAI API が 400 を返すため、
+// Web Search 有効の組み合わせでも json_schema が使われることを保証する回帰テスト。
+func TestJourneyGeneratorOpenAI_Generate_UsesJSONSchema(t *testing.T) {
+	llmOutput := `{"days":[{"date":"2026-08-01","spots":[{"name":"浅草寺","description":"東京最古の寺院","startAt":"2026-08-01T09:00:00+09:00","estimatedCost":{"amount":0,"currency":"JPY"}}]}]}`
+
+	client := newOpenAITestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			t.Fatalf("failed to read request body: %v", err)
+		}
+		if !bytes.Contains(body, []byte(`"json_schema"`)) {
+			t.Errorf("expected request body to use json_schema format, but got: %s", body)
+		}
+		if bytes.Contains(body, []byte(`"json_object"`)) {
+			t.Errorf("expected request body not to use json_object format, but got: %s", body)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(responsesAPIBody(t, llmOutput))
+	})
+
+	// 元の不具合は Web Search 有効時に発生したため、その組み合わせで検証する
+	generator := NewJourneyGeneratorOpenAI(client, "gpt-4o-mini", true)
+	start := time.Date(2026, 8, 1, 0, 0, 0, 0, time.UTC)
+	end := time.Date(2026, 8, 3, 0, 0, 0, 0, time.UTC)
+	req := newStubTestJourneyRequest(t, start, end, 30000)
+
+	if _, err := generator.Generate(context.Background(), req); err != nil {
+		t.Fatalf("Generate failed: %v", err)
+	}
+}
+
 // TestJourneyGeneratorOpenAI_Generate_WithWebSearch は Web Search 有効時に
 // リクエストボディの tools に web_search が含まれることを検証する。
 // これは「Web Search が有効化された状態で OpenAI API が呼ばれているか」を保証する境界値に近い正常系テスト。

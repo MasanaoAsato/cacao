@@ -1,6 +1,8 @@
 package prompt
 
 import (
+	"encoding/json"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -265,4 +267,72 @@ func TestParseGeneratedRoute(t *testing.T) {
 			t.Errorf("expected no spots error, got %v", err)
 		}
 	})
+}
+
+func TestRouteJSONSchema(t *testing.T) {
+	t.Run("正常系: strict モードの制約を満たし、routeJSON と対応する構造を返す", func(t *testing.T) {
+		schemaJSON, err := json.Marshal(RouteJSONSchema())
+		if err != nil {
+			t.Fatalf("RouteJSONSchema should be marshalable: %v", err)
+		}
+
+		// strict モードの制約: 全オブジェクトで全フィールドが required かつ additionalProperties: false。
+		// フィールド名は routeJSON（LLM 応答の受け皿 DTO）の JSON タグと一致させる。
+		want := `{
+			"type": "object",
+			"properties": {
+				"days": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"date": {"type": "string", "description": "YYYY-MM-DD 形式の日付"},
+							"spots": {
+								"type": "array",
+								"items": {
+									"type": "object",
+									"properties": {
+										"name": {"type": "string", "description": "スポット名"},
+										"description": {"type": "string", "description": "スポットの説明（1〜2文）"},
+										"startAt": {"type": "string", "description": "RFC 3339 形式の訪問開始時刻"},
+										"estimatedCost": {
+											"type": "object",
+											"properties": {
+												"amount": {"type": "integer"},
+												"currency": {"type": "string"}
+											},
+											"required": ["amount", "currency"],
+											"additionalProperties": false
+										}
+									},
+									"required": ["name", "description", "startAt", "estimatedCost"],
+									"additionalProperties": false
+								}
+							}
+						},
+						"required": ["date", "spots"],
+						"additionalProperties": false
+					}
+				}
+			},
+			"required": ["days"],
+			"additionalProperties": false
+		}`
+
+		// JSON 文字列同士の比較ではキー順に依存してしまうため、
+		// いったん map にデコードしてから reflect.DeepEqual で構造比較する。
+		var gotMap, wantMap map[string]any
+		if err := json.Unmarshal(schemaJSON, &gotMap); err != nil {
+			t.Fatalf("failed to unmarshal schema: %v", err)
+		}
+		if err := json.Unmarshal([]byte(want), &wantMap); err != nil {
+			t.Fatalf("failed to unmarshal expected schema: %v", err)
+		}
+		if !reflect.DeepEqual(gotMap, wantMap) {
+			t.Errorf("schema mismatch\n got: %s\nwant: %s", schemaJSON, want)
+		}
+	})
+
+	// 異常系・境界値系: RouteJSONSchema は引数を取らず常に同じスキーマを返す純粋関数のため、
+	// エラー経路・境界値は存在しない。
 }

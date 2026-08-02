@@ -77,6 +77,71 @@ func BuildJourneyPrompt(request entity.JourneyRequest) (string, error) {
 	return prompt, nil
 }
 
+// RouteJSONSchema は LLM 応答 JSON の構造を定義する JSON Schema を返す。
+// OpenAI Responses API の Structured Outputs（json_schema）に渡し、
+// 出力が BuildJourneyPrompt の出力形式（routeJSON に対応）に従うことを API 側に保証させる。
+//
+// JSON モード（json_object）は Web Search ツールと併用できない（API が 400 を返す）ため、
+// 併用可能な json_schema を採用している。
+// strict モードの制約上、全オブジェクトで全フィールドを required にし、
+// additionalProperties: false を付ける必要がある。
+// routeJSON と構造を一致させること（片方を変えたらもう片方も変える）。
+func RouteJSONSchema() map[string]any {
+	return map[string]any{
+		"type": "object",
+		"properties": map[string]any{
+			"days": map[string]any{
+				"type":  "array",
+				"items": dayJSONSchema(),
+			},
+		},
+		"required":             []string{"days"},
+		"additionalProperties": false,
+	}
+}
+
+// dayJSONSchema は1日分の JSON Schema を返す（RouteJSONSchema の部品）。
+func dayJSONSchema() map[string]any {
+	return map[string]any{
+		"type": "object",
+		"properties": map[string]any{
+			"date": map[string]any{
+				"type":        "string",
+				"description": "YYYY-MM-DD 形式の日付",
+			},
+			"spots": map[string]any{
+				"type":  "array",
+				"items": spotJSONSchema(),
+			},
+		},
+		"required":             []string{"date", "spots"},
+		"additionalProperties": false,
+	}
+}
+
+// spotJSONSchema はスポット1件分の JSON Schema を返す（RouteJSONSchema の部品）。
+func spotJSONSchema() map[string]any {
+	return map[string]any{
+		"type": "object",
+		"properties": map[string]any{
+			"name":        map[string]any{"type": "string", "description": "スポット名"},
+			"description": map[string]any{"type": "string", "description": "スポットの説明（1〜2文）"},
+			"startAt":     map[string]any{"type": "string", "description": "RFC 3339 形式の訪問開始時刻"},
+			"estimatedCost": map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"amount":   map[string]any{"type": "integer"},
+					"currency": map[string]any{"type": "string"},
+				},
+				"required":             []string{"amount", "currency"},
+				"additionalProperties": false,
+			},
+		},
+		"required":             []string{"name", "description", "startAt", "estimatedCost"},
+		"additionalProperties": false,
+	}
+}
+
 // routeJSON は LLM 応答 JSON の受け皿となる中間構造体（DTO）。
 // service.GeneratedRoute は Money などの値オブジェクトを含み直接 Unmarshal できないため、
 // いったんプリミティブな形で受けてからコンストラクタ経由で値オブジェクトに変換する。

@@ -15,8 +15,8 @@ import (
 // ハルシネーション（架空の観光地名）を減らすために使用する。
 // "1"/"true" で有効、それ以外は無効。未設定時は envDefault により無効。
 type LLMConfig struct {
-	Driver          string `env:"LLM_DRIVER"          envDefault:"stub"`
-	WebSearchEnabled bool  `env:"LLM_WEB_SEARCH"  envDefault:"false"`
+	Driver           string `env:"LLM_DRIVER"          envDefault:"stub"`
+	WebSearchEnabled bool   `env:"LLM_WEB_SEARCH"  envDefault:"false"`
 }
 
 // LLMConfigFromEnv は環境変数から LLM ドライバ設定をパースして返す。
