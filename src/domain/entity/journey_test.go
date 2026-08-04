@@ -11,11 +11,17 @@ import (
 func mustNewItineraryDay(t *testing.T, date time.Time, spots []Spot) ItineraryDay {
 	t.Helper()
 	id := value_object.NewID()
-	day, err := NewItineraryDay(id, date, spots)
+	legs := mustNewLegsForSpots(t, spots, legCostsSameCurrency(t, spots, zeroAmounts(len(spots)), "JPY"))
+	day, err := NewItineraryDay(id, date, spots, legs)
 	if err != nil {
 		t.Fatalf("failed to create itinerary day: %v", err)
 	}
 	return day
+}
+
+// zeroAmounts は length 個の 0 を返す（leg cost を全て 0 円にするため）。
+func zeroAmounts(length int) []int {
+	return make([]int, length)
 }
 
 func defaultPeriod(t *testing.T) value_object.Period {
@@ -164,7 +170,8 @@ func TestJourney_Days_Immutability(t *testing.T) {
 
 	journey, _ := NewJourney(id, requestID, defaultPeriod(t), []ItineraryDay{day})
 	days := journey.Days()
-	days[0] = mustNewItineraryDay(t, time.Date(2099, 1, 1, 0, 0, 0, 0, time.UTC), nil)
+	// 上書き用のダミー。Date だけ参照され中身は問わないが、§6.2 で spots は1つ以上必須なので spot を入れる。
+	days[0] = mustNewItineraryDay(t, time.Date(2099, 1, 1, 0, 0, 0, 0, time.UTC), []Spot{mustNewSpot(t, "ダミー", 0, "JPY")})
 
 	if !journey.Days()[0].Date().Equal(time.Date(2026, 7, 7, 0, 0, 0, 0, time.UTC)) {
 		t.Fatal("Days() returned mutable internal slice")
@@ -179,7 +186,8 @@ func TestJourney_Equals(t *testing.T) {
 
 	t.Run("正常系: 同じ ID は同一", func(t *testing.T) {
 		j1, _ := NewJourney(idA, requestID, defaultPeriod(t), []ItineraryDay{day})
-		j2, _ := NewJourney(idA, value_object.NewID(), defaultPeriod(t), []ItineraryDay{mustNewItineraryDay(t, time.Date(2026, 7, 7, 0, 0, 0, 0, time.UTC), nil)})
+		// 中身は問わないが§6.2 で spots は1つ以上必須なので spot を入れる。Equals は ID で判定するため。
+		j2, _ := NewJourney(idA, value_object.NewID(), defaultPeriod(t), []ItineraryDay{mustNewItineraryDay(t, time.Date(2026, 7, 7, 0, 0, 0, 0, time.UTC), []Spot{mustNewSpot(t, "ダミー", 0, "JPY")})})
 
 		if !j1.Equals(j2) {
 			t.Fatal("expected journeys with same id to be equal")
