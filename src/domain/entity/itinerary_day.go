@@ -20,7 +20,7 @@ type ItineraryDay struct {
 // 時刻部分は正規化され、日付のみを保持する。
 // spots は startAt の昇順に整列される。
 //
-// 不変条件（設計書 09 §6.2）:
+// 不変条件:
 //   - spots は1つ以上必須（空日程は不可）
 //   - len(legs) == len(spots)（各スポットに「到着区間」がちょうど1本）
 //   - legs[i].To() はソート後の spots[i] を指すスポット Endpoint であること
