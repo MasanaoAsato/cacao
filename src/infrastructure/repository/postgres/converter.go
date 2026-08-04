@@ -4,6 +4,8 @@ import (
 	"cacao/src/domain/entity"
 	"cacao/src/domain/value_object"
 	"fmt"
+	"sort"
+	"time"
 )
 
 func journeyRequestToModel(jr entity.JourneyRequest) (JourneyRequestModel, error) {
@@ -115,6 +117,7 @@ func modelToJourney(m JourneyModel) (entity.Journey, error) {
 
 // modelToItineraryDay は ItineraryDayModel から entity.ItineraryDay を復元する。
 // 子の SpotModel も entity.Spot に変換し、NewItineraryDay で不変条件を再検証する。
+// DB に Leg テーブルはまだ存在しないため、復元時に spots から Leg を動的に生成する。
 func modelToItineraryDay(m ItineraryDayModel) (entity.ItineraryDay, error) {
 	id, err := value_object.NewIDFromString(m.ID)
 	if err != nil {
@@ -130,7 +133,66 @@ func modelToItineraryDay(m ItineraryDayModel) (entity.ItineraryDay, error) {
 		spots = append(spots, spot)
 	}
 
-	return entity.NewItineraryDay(id, m.Date, spots)
+	// NewItineraryDay は spots を StartAt 昇順に整列するため、Leg も同じ順序で生成する必要がある。
+	// モデル側の並びが逆順でも、先にソートしておけば連鎖検証が壊れない。
+	sort.SliceStable(spots, func(i, j int) bool {
+		return spots[i].StartAt().Before(spots[j].StartAt())
+	})
+
+	legs, err := buildLegsFromSpots(spots)
+	if err != nil {
+		return entity.ItineraryDay{}, fmt.Errorf("build legs: %w", err)
+	}
+
+	return entity.NewItineraryDay(id, m.Date, spots, legs)
+}
+
+// buildLegsFromSpots は spots から Leg スライスを動的に生成する。
+// DB に Leg テーブルが存在しない間の暫定対応。全て徒歩・0円・微小时間で生成する。
+func buildLegsFromSpots(spots []entity.Spot) ([]entity.Leg, error) {
+	if len(spots) == 0 {
+		return nil, nil
+	}
+
+	mode, err := value_object.NewTransportMode("walk")
+	if err != nil {
+		return nil, fmt.Errorf("create transport mode: %w", err)
+	}
+	currency, err := value_object.NewCurrency("JPY")
+	if err != nil {
+		return nil, fmt.Errorf("create default currency: %w", err)
+	}
+	zeroCost, err := value_object.NewMoney(0, currency)
+	if err != nil {
+		return nil, fmt.Errorf("create zero money: %w", err)
+	}
+
+	legs := make([]entity.Leg, len(spots))
+	for i, spot := range spots {
+		var from value_object.Endpoint
+		if i == 0 {
+			from, err = value_object.NewNamedEndpoint("出発地")
+			if err != nil {
+				return nil, fmt.Errorf("leg %d: create named endpoint: %w", i+1, err)
+			}
+		} else {
+			from, err = value_object.NewSpotEndpoint(spots[i-1].ID())
+			if err != nil {
+				return nil, fmt.Errorf("leg %d: create spot endpoint: %w", i+1, err)
+			}
+		}
+		to, err := value_object.NewSpotEndpoint(spot.ID())
+		if err != nil {
+			return nil, fmt.Errorf("leg %d: create spot endpoint: %w", i+1, err)
+		}
+
+		leg, err := entity.NewLeg(value_object.NewID(), from, to, mode, time.Minute, zeroCost)
+		if err != nil {
+			return nil, fmt.Errorf("leg %d: %w", i+1, err)
+		}
+		legs[i] = leg
+	}
+	return legs, nil
 }
 
 // modelToSpot は SpotModel から entity.Spot を復元する。

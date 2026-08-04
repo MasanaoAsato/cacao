@@ -59,7 +59,37 @@ func (g *JourneyGeneratorStub) Generate(_ context.Context, request entity.Journe
 				EstimatedCost: cost,
 			})
 		}
-		generatedDays = append(generatedDays, service.GeneratedDay{Date: d, Spots: spots})
+
+		// 各スポットに対応する Leg を機械的に生成（設計書 09 §7.3）。
+		// 徒歩・移動費 0 円・固定時間（先頭区間 15 分、以降 10 分）とし、
+		// 既存の予算按分ロジック（スポット費用のみ按分）は変えずに済む。
+		mode, err := value_object.NewTransportMode("walk")
+		if err != nil {
+			return service.GeneratedRoute{}, fmt.Errorf("failed to create transport mode: %w", err)
+		}
+		zeroCost, err := value_object.NewMoney(0, currency)
+		if err != nil {
+			return service.GeneratedRoute{}, fmt.Errorf("failed to create zero money: %w", err)
+		}
+
+		legs := make([]service.GeneratedLeg, 0, spotsPerDay)
+		for s := 0; s < spotsPerDay; s++ {
+			duration := 10 * time.Minute
+			if s == 0 {
+				duration = 15 * time.Minute
+			}
+			leg := service.GeneratedLeg{
+				Mode:     mode,
+				Duration: duration,
+				Cost:     zeroCost,
+			}
+			if s == 0 {
+				leg.FromLabel = fmt.Sprintf("出発地 %d", i+1)
+			}
+			legs = append(legs, leg)
+		}
+
+		generatedDays = append(generatedDays, service.GeneratedDay{Date: d, Spots: spots, Legs: legs})
 	}
 
 	return service.GeneratedRoute{Days: generatedDays}, nil

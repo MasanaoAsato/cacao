@@ -45,6 +45,44 @@ func mustNewMoney(t *testing.T, amount int, code string) value_object.Money {
 	return money
 }
 
+// mustNewLegsForSpots は spots に対応する Leg スライスを生成するテストヘルパー。
+func mustNewLegsForSpots(t *testing.T, spots []entity.Spot) []entity.Leg {
+	t.Helper()
+	if len(spots) == 0 {
+		return nil
+	}
+	mode, err := value_object.NewTransportMode("walk")
+	if err != nil {
+		t.Fatalf("failed to create transport mode: %v", err)
+	}
+	zeroCost := mustNewMoney(t, 0, "JPY")
+	legs := make([]entity.Leg, len(spots))
+	for i, spot := range spots {
+		var from value_object.Endpoint
+		if i == 0 {
+			from, err = value_object.NewNamedEndpoint("出発地")
+			if err != nil {
+				t.Fatalf("failed to create named endpoint: %v", err)
+			}
+		} else {
+			from, err = value_object.NewSpotEndpoint(spots[i-1].ID())
+			if err != nil {
+				t.Fatalf("failed to create spot endpoint: %v", err)
+			}
+		}
+		to, err := value_object.NewSpotEndpoint(spot.ID())
+		if err != nil {
+			t.Fatalf("failed to create spot endpoint: %v", err)
+		}
+		leg, err := entity.NewLeg(value_object.NewID(), from, to, mode, time.Minute, zeroCost)
+		if err != nil {
+			t.Fatalf("failed to create leg %d: %v", i+1, err)
+		}
+		legs[i] = leg
+	}
+	return legs
+}
+
 func mustNewJourney(t *testing.T) entity.Journey {
 	t.Helper()
 	spot, _ := entity.NewSpot(
@@ -54,10 +92,12 @@ func mustNewJourney(t *testing.T) entity.Journey {
 		time.Date(2026, 7, 7, 10, 0, 0, 0, time.UTC),
 		mustNewMoney(t, 1000, "JPY"),
 	)
+	legs := mustNewLegsForSpots(t, []entity.Spot{spot})
 	day, _ := entity.NewItineraryDay(
 		value_object.NewID(),
 		time.Date(2026, 7, 7, 0, 0, 0, 0, time.UTC),
 		[]entity.Spot{spot},
+		legs,
 	)
 	period, _ := value_object.NewPeriod(
 		time.Date(2026, 7, 7, 0, 0, 0, 0, time.UTC),
