@@ -115,6 +115,31 @@ func mustNewMoney(t *testing.T, amount int, code string) value_object.Money {
 	return money
 }
 
+// mustNewGeneratedLegsFor は n 個の GeneratedLeg を生成するテストヘルパー。
+func mustNewGeneratedLegsFor(t *testing.T, n int, code string) []service.GeneratedLeg {
+	t.Helper()
+	mode, err := value_object.NewTransportMode("walk")
+	if err != nil {
+		t.Fatalf("failed to create transport mode: %v", err)
+	}
+	cost := mustNewMoney(t, 0, code)
+	legs := make([]service.GeneratedLeg, n)
+	for i := range legs {
+		legs[i] = service.GeneratedLeg{
+			FromLabel: func() string {
+				if i == 0 {
+					return "出発地"
+				}
+				return ""
+			}(),
+			Mode:     mode,
+			Duration: time.Minute,
+			Cost:     cost,
+		}
+	}
+	return legs
+}
+
 func TestUseCase_Execute(t *testing.T) {
 	t.Run("正常系: JourneyRequest から Journey が生成・保存される", func(t *testing.T) {
 		request := mustNewJourneyRequest(t)
@@ -135,6 +160,7 @@ func TestUseCase_Execute(t *testing.T) {
 								EstimatedCost: mustNewMoney(t, 1000, "JPY"),
 							},
 						},
+						Legs: mustNewGeneratedLegsFor(t, 1, "JPY"),
 					},
 					{
 						Date: time.Date(2026, 7, 8, 0, 0, 0, 0, time.UTC),
@@ -146,6 +172,7 @@ func TestUseCase_Execute(t *testing.T) {
 								EstimatedCost: mustNewMoney(t, 1500, "JPY"),
 							},
 						},
+						Legs: mustNewGeneratedLegsFor(t, 1, "JPY"),
 					},
 				},
 			}},
@@ -231,6 +258,7 @@ func TestUseCase_Execute(t *testing.T) {
 								EstimatedCost: mustNewMoney(t, 1000, "JPY"),
 							},
 						},
+						Legs: mustNewGeneratedLegsFor(t, 1, "JPY"),
 					},
 				},
 			}},
@@ -263,6 +291,7 @@ func TestUseCase_Execute(t *testing.T) {
 								EstimatedCost: mustNewMoney(t, 1000, "JPY"),
 							},
 						},
+						Legs: mustNewGeneratedLegsFor(t, 1, "JPY"),
 					},
 				},
 			}},
@@ -293,6 +322,7 @@ func TestUseCase_Execute(t *testing.T) {
 								EstimatedCost: mustNewMoney(t, 0, "JPY"),
 							},
 						},
+						Legs: mustNewGeneratedLegsFor(t, 1, "JPY"),
 					},
 					{
 						Date: time.Date(2026, 7, 9, 0, 0, 0, 0, time.UTC),
@@ -304,6 +334,7 @@ func TestUseCase_Execute(t *testing.T) {
 								EstimatedCost: mustNewMoney(t, 0, "JPY"),
 							},
 						},
+						Legs: mustNewGeneratedLegsFor(t, 1, "JPY"),
 					},
 				},
 			}},
@@ -337,6 +368,7 @@ func TestUseCase_Execute(t *testing.T) {
 								EstimatedCost: mustNewMoney(t, 1000, "JPY"),
 							},
 						},
+						Legs: mustNewGeneratedLegsFor(t, 1, "JPY"),
 					},
 				},
 			}},

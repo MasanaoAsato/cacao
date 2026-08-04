@@ -13,6 +13,51 @@ import (
 	"gorm.io/gorm"
 )
 
+// mustNewLegsForSpots は spots に対応する Leg スライスを生成するテストヘルパー。
+func mustNewLegsForSpots(t *testing.T, spots []entity.Spot) []entity.Leg {
+	t.Helper()
+	if len(spots) == 0 {
+		return nil
+	}
+	mode, err := value_object.NewTransportMode("walk")
+	if err != nil {
+		t.Fatalf("failed to create transport mode: %v", err)
+	}
+	currency, err := value_object.NewCurrency("JPY")
+	if err != nil {
+		t.Fatalf("failed to create currency: %v", err)
+	}
+	zeroCost, err := value_object.NewMoney(0, currency)
+	if err != nil {
+		t.Fatalf("failed to create zero money: %v", err)
+	}
+	legs := make([]entity.Leg, len(spots))
+	for i, spot := range spots {
+		var from value_object.Endpoint
+		if i == 0 {
+			from, err = value_object.NewNamedEndpoint("出発地")
+			if err != nil {
+				t.Fatalf("failed to create named endpoint: %v", err)
+			}
+		} else {
+			from, err = value_object.NewSpotEndpoint(spots[i-1].ID())
+			if err != nil {
+				t.Fatalf("failed to create spot endpoint: %v", err)
+			}
+		}
+		to, err := value_object.NewSpotEndpoint(spot.ID())
+		if err != nil {
+			t.Fatalf("failed to create spot endpoint: %v", err)
+		}
+		leg, err := entity.NewLeg(value_object.NewID(), from, to, mode, time.Minute, zeroCost)
+		if err != nil {
+			t.Fatalf("failed to create leg %d: %v", i+1, err)
+		}
+		legs[i] = leg
+	}
+	return legs
+}
+
 func newTestJourney(t *testing.T, requestID value_object.ID) entity.Journey {
 	t.Helper()
 
@@ -39,7 +84,8 @@ func newTestJourney(t *testing.T, requestID value_object.ID) entity.Journey {
 		t.Fatalf("failed to create spot: %v", err)
 	}
 
-	day, err := entity.NewItineraryDay(value_object.NewID(), date, []entity.Spot{spot})
+	legs := mustNewLegsForSpots(t, []entity.Spot{spot})
+	day, err := entity.NewItineraryDay(value_object.NewID(), date, []entity.Spot{spot}, legs)
 	if err != nil {
 		t.Fatalf("failed to create itinerary day: %v", err)
 	}
@@ -126,7 +172,7 @@ func newTestJourneyWithDays(t *testing.T, requestID value_object.ID, dayCount in
 		if err != nil {
 			t.Fatalf("failed to create spot %d: %v", i+1, err)
 		}
-		day, err := entity.NewItineraryDay(value_object.NewID(), date, []entity.Spot{spot})
+		day, err := entity.NewItineraryDay(value_object.NewID(), date, []entity.Spot{spot}, mustNewLegsForSpots(t, []entity.Spot{spot}))
 		if err != nil {
 			t.Fatalf("failed to create itinerary day %d: %v", i+1, err)
 		}

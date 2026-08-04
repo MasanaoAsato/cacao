@@ -257,7 +257,7 @@ func TestModelToJourney(t *testing.T) {
 		}
 	})
 
-	t.Run("境界値: 日程1日・スポット0件でも復元できる", func(t *testing.T) {
+	t.Run("境界値: 日程1日・スポット0件はエラーになる", func(t *testing.T) {
 		dayID := value_object.NewID().String()
 		journeyID := value_object.NewID().String()
 		m := JourneyModel{
@@ -273,15 +273,12 @@ func TestModelToJourney(t *testing.T) {
 			},
 		}
 
-		journey, err := modelToJourney(m)
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
+		_, err := modelToJourney(m)
+		if err == nil {
+			t.Fatal("expected error for empty spots, got nil")
 		}
-		if journey.DayCount() != 1 {
-			t.Fatalf("DayCount() = %d, want %d", journey.DayCount(), 1)
-		}
-		if len(journey.Days()[0].Spots()) != 0 {
-			t.Fatalf("len(days[0].Spots()) = %d, want %d", len(journey.Days()[0].Spots()), 0)
+		if !strings.Contains(err.Error(), "at least one spot") {
+			t.Fatalf("expected spots-required error, got %v", err)
 		}
 	})
 
