@@ -60,7 +60,7 @@ func (g *JourneyGeneratorStub) Generate(_ context.Context, request entity.Journe
 			})
 		}
 
-		// 各スポットに対応する Leg を機械的に生成（設計書 09 §7.3）。
+		// 各スポットに対応する Leg を機械的に生成。
 		// 徒歩・移動費 0 円・固定時間（先頭区間 15 分、以降 10 分）とし、
 		// 既存の予算按分ロジック（スポット費用のみ按分）は変えずに済む。
 		mode, err := value_object.NewTransportMode("walk")

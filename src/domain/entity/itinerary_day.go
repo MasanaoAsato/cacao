@@ -27,7 +27,7 @@ type ItineraryDay struct {
 //   - legs[0].From() は名前付き Endpoint（IsSpot() == false）であること
 //   - legs[i>0].From() は spots[i-1] を指すスポット Endpoint であること
 //
-// legs は再ソートしない。呼び出し元が spots とペアで整列済みのものを渡す契約（設計判断 §6.2）。
+// legs は再ソートしない。呼び出し元が spots とペアで整列済みのものを渡す契約
 func NewItineraryDay(id value_object.ID, date time.Time, spots []Spot, leg []Leg) (ItineraryDay, error) {
 	if id.IsEmpty() {
 		return ItineraryDay{}, fmt.Errorf("itinerary day id must not be empty")
