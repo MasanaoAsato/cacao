@@ -68,6 +68,11 @@ func TestBuildJourneyPrompt(t *testing.T) {
 			"JPY 10000", // 30000 / 3日
 			"JPY 建ての整数",
 			"実在するもののみを使用",
+			// legs 関連のルール（設計書 09 §8.1）
+			"legs の件数は spots と同じ",
+			"mode は walk / train / bus / car / taxi / bicycle / flight / ferry / other",
+			"durationMinutes は1分以上の整数",
+			"移動費用も JPY 建ての整数",
 		} {
 			if !strings.Contains(prompt, want) {
 				t.Errorf("prompt should contain %q\n--- prompt ---\n%s", want, prompt)
@@ -79,6 +84,7 @@ func TestBuildJourneyPrompt(t *testing.T) {
 			`"days"`, `"date"`, `"spots"`,
 			`"name"`, `"description"`, `"startAt"`,
 			`"estimatedCost"`, `"amount"`, `"currency": "JPY"`,
+			`"legs"`, `"from"`, `"durationMinutes"`, `"cost"`,
 		} {
 			if !strings.Contains(prompt, want) {
 				t.Errorf("prompt should contain %q\n--- prompt ---\n%s", want, prompt)
@@ -129,7 +135,7 @@ func TestParseGeneratedRoute(t *testing.T) {
 	start := time.Date(2026, 8, 1, 0, 0, 0, 0, utc)
 	end := time.Date(2026, 8, 3, 0, 0, 0, 0, utc)
 
-	t.Run("正常系: 正しい JSON を GeneratedRoute へ変換できる", func(t *testing.T) {
+	t.Run("正常系: 正しい JSON（legs 入り）を GeneratedRoute へ変換できる", func(t *testing.T) {
 		request := mustBuildRequest(t, start, end, 30000, "JPY")
 		content := `{
 			"days": [
@@ -138,12 +144,19 @@ func TestParseGeneratedRoute(t *testing.T) {
 					"spots": [
 						{"name": "浅草寺", "description": "東京最古の寺院", "startAt": "2026-08-01T09:00:00+09:00", "estimatedCost": {"amount": 0, "currency": "JPY"}},
 						{"name": "東京スカイツリー", "description": "高さ634mの電波塔", "startAt": "2026-08-01T13:00:00+09:00", "estimatedCost": {"amount": 2100, "currency": "JPY"}}
+					],
+					"legs": [
+						{"from": "東京（出発地）", "mode": "train", "durationMinutes": 15, "cost": {"amount": 210, "currency": "JPY"}},
+						{"from": "", "mode": "train", "durationMinutes": 25, "cost": {"amount": 240, "currency": "JPY"}}
 					]
 				},
 				{
 					"date": "2026-08-02",
 					"spots": [
 						{"name": "明治神宮", "description": "都心の森", "startAt": "2026-08-02T10:00:00+09:00", "estimatedCost": {"amount": 500, "currency": "JPY"}}
+					],
+					"legs": [
+						{"from": "東京（宿泊地）", "mode": "walk", "durationMinutes": 1, "cost": {"amount": 0, "currency": "JPY"}}
 					]
 				}
 			]
@@ -177,14 +190,39 @@ func TestParseGeneratedRoute(t *testing.T) {
 		if got := spots[1].EstimatedCost.Currency().Code(); got != "JPY" {
 			t.Errorf("expected currency JPY, got %s", got)
 		}
+
+		// legs の変換検証
+		legs := route.Days[0].Legs
+		if len(legs) != 2 {
+			t.Fatalf("expected 2 legs on day 1, got %d", len(legs))
+		}
+		if legs[0].FromLabel != "東京（出発地）" {
+			t.Errorf("expected from label 東京（出発地）, got %q", legs[0].FromLabel)
+		}
+		if got := legs[0].Mode.String(); got != "train" {
+			t.Errorf("expected mode train, got %s", got)
+		}
+		if legs[0].Duration != 15*time.Minute {
+			t.Errorf("expected duration 15m, got %v", legs[0].Duration)
+		}
+		if legs[0].Cost.Amount() != 210 {
+			t.Errorf("expected leg cost 210, got %d", legs[0].Cost.Amount())
+		}
+		// 2本目は from が空でも無視されて、FromLabel が空のままになる（位置ベース対応のため）
+		if legs[1].FromLabel != "" {
+			t.Errorf("expected second leg FromLabel empty, got %q", legs[1].FromLabel)
+		}
+		if legs[1].Duration != 25*time.Minute {
+			t.Errorf("expected duration 25m, got %v", legs[1].Duration)
+		}
 	})
 
 	t.Run("境界値: 期間の開始日・終了日ちょうどの日付は受け入れる", func(t *testing.T) {
 		request := mustBuildRequest(t, start, end, 30000, "JPY")
 		content := `{
 			"days": [
-				{"date": "2026-08-01", "spots": [{"name": "A", "description": "d", "startAt": "2026-08-01T09:00:00+09:00", "estimatedCost": {"amount": 100, "currency": "JPY"}}]},
-				{"date": "2026-08-03", "spots": [{"name": "B", "description": "d", "startAt": "2026-08-03T18:00:00+09:00", "estimatedCost": {"amount": 200, "currency": "JPY"}}]}
+				{"date": "2026-08-01", "spots": [{"name": "A", "description": "d", "startAt": "2026-08-01T09:00:00+09:00", "estimatedCost": {"amount": 100, "currency": "JPY"}}], "legs": [{"from": "東京（出発地）", "mode": "walk", "durationMinutes": 1, "cost": {"amount": 0, "currency": "JPY"}}]},
+				{"date": "2026-08-03", "spots": [{"name": "B", "description": "d", "startAt": "2026-08-03T18:00:00+09:00", "estimatedCost": {"amount": 200, "currency": "JPY"}}], "legs": [{"from": "東京（宿泊地）", "mode": "train", "durationMinutes": 30, "cost": {"amount": 300, "currency": "JPY"}}]}
 			]
 		}`
 
@@ -207,7 +245,7 @@ func TestParseGeneratedRoute(t *testing.T) {
 		request := mustBuildRequest(t, jstStart, jstEnd, 30000, "JPY")
 		content := `{
 			"days": [
-				{"date": "2026-08-03", "spots": [{"name": "横浜中華街", "description": "食べ歩き", "startAt": "2026-08-03T12:00:00+09:00", "estimatedCost": {"amount": 3000, "currency": "JPY"}}]}
+				{"date": "2026-08-03", "spots": [{"name": "横浜中華街", "description": "食べ歩き", "startAt": "2026-08-03T12:00:00+09:00", "estimatedCost": {"amount": 3000, "currency": "JPY"}}], "legs": [{"from": "東京（宿泊地）", "mode": "train", "durationMinutes": 30, "cost": {"amount": 500, "currency": "JPY"}}]}
 			]
 		}`
 
@@ -223,6 +261,8 @@ func TestParseGeneratedRoute(t *testing.T) {
 	t.Run("異常系", func(t *testing.T) {
 		request := mustBuildRequest(t, start, end, 30000, "JPY")
 		spot := `"spots": [{"name": "浅草寺", "description": "d", "startAt": "2026-08-01T09:00:00+09:00", "estimatedCost": {"amount": 100, "currency": "JPY"}}]`
+		// 既存ケースは legs 件数検証に干渉しないよう、スポット1件に対して leg を1本付ける。
+		leg := `"legs": [{"from": "東京（出発地）", "mode": "train", "durationMinutes": 15, "cost": {"amount": 210, "currency": "JPY"}}]`
 
 		tests := []struct {
 			name    string
@@ -230,12 +270,20 @@ func TestParseGeneratedRoute(t *testing.T) {
 			wantErr string
 		}{
 			{"JSON が壊れている", `{"days": [`, "failed to decode"},
-			{"日付フォーマットが不正", `{"days": [{"date": "2026/08/01", ` + spot + `}]}`, "invalid date"},
-			{"期間外の日付", `{"days": [{"date": "2026-08-04", ` + spot + `}]}`, "out of travel period"},
-			{"開始時刻フォーマットが不正", `{"days": [{"date": "2026-08-01", "spots": [{"name": "A", "description": "d", "startAt": "9時", "estimatedCost": {"amount": 100, "currency": "JPY"}}]}]}`, "invalid startAt"},
-			{"通貨が予算と不一致", `{"days": [{"date": "2026-08-01", "spots": [{"name": "A", "description": "d", "startAt": "2026-08-01T09:00:00+09:00", "estimatedCost": {"amount": 100, "currency": "USD"}}]}]}`, "does not match budget currency"},
-			{"金額が負", `{"days": [{"date": "2026-08-01", "spots": [{"name": "A", "description": "d", "startAt": "2026-08-01T09:00:00+09:00", "estimatedCost": {"amount": -100, "currency": "JPY"}}]}]}`, "non-negative"},
-			{"スポット名が空", `{"days": [{"date": "2026-08-01", "spots": [{"name": "", "description": "d", "startAt": "2026-08-01T09:00:00+09:00", "estimatedCost": {"amount": 100, "currency": "JPY"}}]}]}`, "name must not be empty"},
+			{"日付フォーマットが不正", `{"days": [{"date": "2026/08/01", ` + spot + `, ` + leg + `}]}`, "invalid date"},
+			{"期間外の日付", `{"days": [{"date": "2026-08-04", ` + spot + `, ` + leg + `}]}`, "out of travel period"},
+			{"開始時刻フォーマットが不正", `{"days": [{"date": "2026-08-01", "spots": [{"name": "A", "description": "d", "startAt": "9時", "estimatedCost": {"amount": 100, "currency": "JPY"}}], ` + leg + `}]}`, "invalid startAt"},
+			{"通貨が予算と不一致", `{"days": [{"date": "2026-08-01", "spots": [{"name": "A", "description": "d", "startAt": "2026-08-01T09:00:00+09:00", "estimatedCost": {"amount": 100, "currency": "USD"}}], ` + leg + `}]}`, "does not match budget currency"},
+			{"金額が負", `{"days": [{"date": "2026-08-01", "spots": [{"name": "A", "description": "d", "startAt": "2026-08-01T09:00:00+09:00", "estimatedCost": {"amount": -100, "currency": "JPY"}}], ` + leg + `}]}`, "non-negative"},
+			{"スポット名が空", `{"days": [{"date": "2026-08-01", "spots": [{"name": "", "description": "d", "startAt": "2026-08-01T09:00:00+09:00", "estimatedCost": {"amount": 100, "currency": "JPY"}}], ` + leg + `}]}`, "name must not be empty"},
+			// legs 固有の異常系
+			{"legs の件数が spots と不一致", `{"days": [{"date": "2026-08-01", ` + spot + `, "legs": []}]}`, "does not match spots count"},
+			{"先頭 leg の from が空", `{"days": [{"date": "2026-08-01", ` + spot + `, "legs": [{"from": "", "mode": "train", "durationMinutes": 15, "cost": {"amount": 210, "currency": "JPY"}}]}]}`, "first leg must have from label"},
+			{"未知の mode", `{"days": [{"date": "2026-08-01", ` + spot + `, "legs": [{"from": "東京（出発地）", "mode": "shinkansen", "durationMinutes": 15, "cost": {"amount": 210, "currency": "JPY"}}]}]}`, "invalid transport mode"},
+			{"durationMinutes が 0", `{"days": [{"date": "2026-08-01", ` + spot + `, "legs": [{"from": "東京（出発地）", "mode": "train", "durationMinutes": 0, "cost": {"amount": 210, "currency": "JPY"}}]}]}`, "durationMinutes must be >= 1"},
+			{"durationMinutes が負", `{"days": [{"date": "2026-08-01", ` + spot + `, "legs": [{"from": "東京（出発地）", "mode": "train", "durationMinutes": -5, "cost": {"amount": 210, "currency": "JPY"}}]}]}`, "durationMinutes must be >= 1"},
+			{"leg の通貨が予算と不一致", `{"days": [{"date": "2026-08-01", ` + spot + `, "legs": [{"from": "東京（出発地）", "mode": "train", "durationMinutes": 15, "cost": {"amount": 210, "currency": "USD"}}]}]}`, "does not match budget currency"},
+			{"leg の金額が負", `{"days": [{"date": "2026-08-01", ` + spot + `, "legs": [{"from": "東京（出発地）", "mode": "train", "durationMinutes": 15, "cost": {"amount": -210, "currency": "JPY"}}]}]}`, "non-negative"},
 		}
 
 		for _, tt := range tests {
@@ -308,9 +356,35 @@ func TestRouteJSONSchema(t *testing.T) {
 									"required": ["name", "description", "startAt", "estimatedCost"],
 									"additionalProperties": false
 								}
+							},
+							"legs": {
+								"type": "array",
+								"items": {
+									"type": "object",
+									"properties": {
+										"from": {"type": "string", "description": "起点名（各日の1本目の区間のみ必須。2本目以降は空文字でよい）"},
+										"mode": {
+											"type": "string",
+											"description": "移動手段",
+											"enum": ["walk", "train", "bus", "car", "taxi", "bicycle", "flight", "ferry", "other"]
+										},
+										"durationMinutes": {"type": "integer", "description": "移動時間（分）", "minimum": 1},
+										"cost": {
+											"type": "object",
+											"properties": {
+												"amount": {"type": "integer"},
+												"currency": {"type": "string"}
+											},
+											"required": ["amount", "currency"],
+											"additionalProperties": false
+										}
+									},
+									"required": ["from", "mode", "durationMinutes", "cost"],
+									"additionalProperties": false
+								}
 							}
 						},
-						"required": ["date", "spots"],
+						"required": ["date", "spots", "legs"],
 						"additionalProperties": false
 					}
 				}
