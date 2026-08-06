@@ -2,10 +2,10 @@ package entity
 
 import (
 	"fmt"
-	"sort"
 	"time"
 
 	"cacao/src/domain/value_object"
+	"slices"
 )
 
 // ItineraryDay は旅程内の1日分を表す集約内エンティティ。
@@ -43,8 +43,8 @@ func NewItineraryDay(id value_object.ID, date time.Time, spots []Spot, leg []Leg
 
 	sortedSpots := make([]Spot, len(spots))
 	copy(sortedSpots, spots)
-	sort.Slice(sortedSpots, func(i, j int) bool {
-		return sortedSpots[i].StartAt().Before(sortedSpots[j].StartAt())
+	slices.SortStableFunc(sortedSpots, func(a, b Spot) int {
+		return a.StartAt().Compare(b.StartAt())
 	})
 
 	for i, l := range leg {
