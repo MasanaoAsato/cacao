@@ -43,6 +43,7 @@ type ItineraryDayModel struct {
 	JourneyID string      `gorm:"column:journey_id;type:uuid"`
 	Date      time.Time   `gorm:"column:date;type:date"`
 	Spots     []SpotModel `gorm:"foreignKey:ItineraryDayID;constraint:OnDelete:CASCADE"`
+	Legs      []LegModel  `gorm:"foreignKey:ItineraryDayID;constraint:OnDelete:CASCADE"`
 	CreatedAt time.Time   `gorm:"column:created_at;type:timestamptz"`
 	UpdatedAt time.Time   `gorm:"column:updated_at;type:timestamptz"`
 }
@@ -67,3 +68,20 @@ type SpotModel struct {
 }
 
 func (SpotModel) TableName() string { return "journey.spots" }
+
+type LegModel struct {
+	ID              string    `gorm:"primaryKey;type:uuid"`
+	ItineraryDayID  string    `gorm:"column:itinerary_day_id;type:uuid;index"`
+	Seq             int       `gorm:"column:seq"`
+	FromSpotID      *string   `gorm:"column:from_spot_id;type:uuid"`
+	FromLabel       string    `gorm:"column:from_label"`
+	ToSpotID        string    `gorm:"column:to_spot_id;type:uuid"`
+	TransportMode   string    `gorm:"column:transport_mode;type:varchar(20)"`
+	DurationMinutes int       `gorm:"column:duration_minutes"`
+	Amount          int       `gorm:"column:amount"`
+	Currency        string    `gorm:"column:currency;type:varchar(3)"`
+	CreatedAt       time.Time `gorm:"column:created_at;type:timestamptz"`
+	UpdatedAt       time.Time `gorm:"column:updated_at;type:timestamptz"`
+}
+
+func (LegModel) TableName() string { return "journey.legs" }

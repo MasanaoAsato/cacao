@@ -3,8 +3,9 @@ package postgres
 import (
 	"cacao/src/domain/entity"
 	"cacao/src/domain/value_object"
+	"cmp"
 	"fmt"
-	"sort"
+	"slices"
 	"time"
 )
 
@@ -116,8 +117,9 @@ func modelToJourney(m JourneyModel) (entity.Journey, error) {
 }
 
 // modelToItineraryDay は ItineraryDayModel から entity.ItineraryDay を復元する。
-// 子の SpotModel も entity.Spot に変換し、NewItineraryDay で不変条件を再検証する。
-// DB に Leg テーブルはまだ存在しないため、復元時に spots から Leg を動的に生成する。
+// 子の SpotModel を entity.Spot に、LegModel を entity.Leg に変換し、
+// NewItineraryDay で連鎖不変条件（legs がスポット列を辿るチェーン）を再検証する。
+// これにより、DB 上の legs が壊れていてもドメイン層で検出できる。
 func modelToItineraryDay(m ItineraryDayModel) (entity.ItineraryDay, error) {
 	id, err := value_object.NewIDFromString(m.ID)
 	if err != nil {
@@ -135,64 +137,82 @@ func modelToItineraryDay(m ItineraryDayModel) (entity.ItineraryDay, error) {
 
 	// NewItineraryDay は spots を StartAt 昇順に整列するため、Leg も同じ順序で生成する必要がある。
 	// モデル側の並びが逆順でも、先にソートしておけば連鎖検証が壊れない。
-	sort.SliceStable(spots, func(i, j int) bool {
-		return spots[i].StartAt().Before(spots[j].StartAt())
+	slices.SortStableFunc(spots, func(a, b entity.Spot) int {
+		return a.StartAt().Compare(b.StartAt())
 	})
 
-	legs, err := buildLegsFromSpots(spots)
-	if err != nil {
-		return entity.ItineraryDay{}, fmt.Errorf("build legs: %w", err)
+	// legs は Seq 昇順（0,1,2,...）で復元する。Seq は日内の区間順序を示すため、
+	// DB 側の並び順に依存せず必ず順序どおりに並べる。
+	legModels := make([]LegModel, len(m.Legs))
+	copy(legModels, m.Legs)
+	slices.SortStableFunc(legModels, func(a, b LegModel) int {
+		return cmp.Compare(a.Seq, b.Seq)
+	})
+
+	legs := make([]entity.Leg, 0, len(legModels))
+	for _, lm := range legModels {
+		leg, err := modelToLeg(lm)
+		if err != nil {
+			return entity.ItineraryDay{}, fmt.Errorf("convert leg %s: %w", lm.ID, err)
+		}
+		legs = append(legs, leg)
 	}
 
+	// スポット列と対になるよう、legs が連鎖をなしているかを NewItineraryDay で再検証する。
 	return entity.NewItineraryDay(id, m.Date, spots, legs)
 }
 
-// buildLegsFromSpots は spots から Leg スライスを動的に生成する。
-// DB に Leg テーブルが存在しない間の暫定対応。全て徒歩・0円・微小时間で生成する。
-func buildLegsFromSpots(spots []entity.Spot) ([]entity.Leg, error) {
-	if len(spots) == 0 {
-		return nil, nil
+// modelToLeg は LegModel から entity.Leg を復元し、NewLeg で不変条件を再検証する。
+func modelToLeg(m LegModel) (entity.Leg, error) {
+	id, err := value_object.NewIDFromString(m.ID)
+	if err != nil {
+		return entity.Leg{}, fmt.Errorf("leg id: %w", err)
 	}
 
-	mode, err := value_object.NewTransportMode("walk")
-	if err != nil {
-		return nil, fmt.Errorf("create transport mode: %w", err)
-	}
-	currency, err := value_object.NewCurrency("JPY")
-	if err != nil {
-		return nil, fmt.Errorf("create default currency: %w", err)
-	}
-	zeroCost, err := value_object.NewMoney(0, currency)
-	if err != nil {
-		return nil, fmt.Errorf("create zero money: %w", err)
-	}
-
-	legs := make([]entity.Leg, len(spots))
-	for i, spot := range spots {
-		var from value_object.Endpoint
-		if i == 0 {
-			from, err = value_object.NewNamedEndpoint("出発地")
-			if err != nil {
-				return nil, fmt.Errorf("leg %d: create named endpoint: %w", i+1, err)
-			}
-		} else {
-			from, err = value_object.NewSpotEndpoint(spots[i-1].ID())
-			if err != nil {
-				return nil, fmt.Errorf("leg %d: create spot endpoint: %w", i+1, err)
-			}
-		}
-		to, err := value_object.NewSpotEndpoint(spot.ID())
+	// from は from_spot_id が非 NULL ならスポット参照、NULL なら from_label を使う。
+	// 両方空（from_spot_id が NULL かつ from_label が空）は、名前付き Endpoint の
+	// 生成時にエラーになり、DB の破損として検出される。
+	var from value_object.Endpoint
+	if m.FromSpotID != nil {
+		fromID, err := value_object.NewIDFromString(*m.FromSpotID)
 		if err != nil {
-			return nil, fmt.Errorf("leg %d: create spot endpoint: %w", i+1, err)
+			return entity.Leg{}, fmt.Errorf("leg from spot id: %w", err)
 		}
-
-		leg, err := entity.NewLeg(value_object.NewID(), from, to, mode, time.Minute, zeroCost)
+		from, err = value_object.NewSpotEndpoint(fromID)
 		if err != nil {
-			return nil, fmt.Errorf("leg %d: %w", i+1, err)
+			return entity.Leg{}, fmt.Errorf("leg from endpoint: %w", err)
 		}
-		legs[i] = leg
+	} else {
+		from, err = value_object.NewNamedEndpoint(m.FromLabel)
+		if err != nil {
+			return entity.Leg{}, fmt.Errorf("leg from endpoint: %w", err)
+		}
 	}
-	return legs, nil
+
+	toID, err := value_object.NewIDFromString(m.ToSpotID)
+	if err != nil {
+		return entity.Leg{}, fmt.Errorf("leg to spot id: %w", err)
+	}
+	to, err := value_object.NewSpotEndpoint(toID)
+	if err != nil {
+		return entity.Leg{}, fmt.Errorf("leg to endpoint: %w", err)
+	}
+
+	mode, err := value_object.NewTransportMode(m.TransportMode)
+	if err != nil {
+		return entity.Leg{}, fmt.Errorf("leg transport mode: %w", err)
+	}
+
+	currency, err := value_object.NewCurrency(m.Currency)
+	if err != nil {
+		return entity.Leg{}, fmt.Errorf("leg currency: %w", err)
+	}
+	cost, err := value_object.NewMoney(m.Amount, currency)
+	if err != nil {
+		return entity.Leg{}, fmt.Errorf("leg cost: %w", err)
+	}
+
+	return entity.NewLeg(id, from, to, mode, time.Duration(m.DurationMinutes)*time.Minute, cost)
 }
 
 // modelToSpot は SpotModel から entity.Spot を復元する。
@@ -250,11 +270,61 @@ func itineraryDayToModel(journeyID value_object.ID, d entity.ItineraryDay) (Itin
 		spotModels = append(spotModels, sm)
 	}
 
+	// legs は Legs() の順（連鎖順）に Seq = 0,1,2,... を振って展開する。
+	// Seq は復元時に区間順序を保証するための明示的なカラムであるため、
+	// DB の並び順に依存させず、必ずこの連鎖順で採番する。
+	legs := d.Legs()
+	legModels := make([]LegModel, 0, len(legs))
+	for seq, leg := range legs {
+		lm, err := legToModel(d.ID(), seq, leg)
+		if err != nil {
+			return ItineraryDayModel{}, fmt.Errorf("convert leg %s: %w", leg.ID().String(), err)
+		}
+		legModels = append(legModels, lm)
+	}
+
 	return ItineraryDayModel{
 		ID:        d.ID().String(),
 		JourneyID: journeyID.String(),
 		Date:      d.Date(),
 		Spots:     spotModels,
+		Legs:      legModels,
+	}, nil
+}
+
+// legToModel は entity.Leg を LegModel に変換する。
+// seq は日内の区間順序（0始まり）。itineraryDayToModel が Legs() の順で振る。
+func legToModel(itineraryDayID value_object.ID, seq int, l entity.Leg) (LegModel, error) {
+	if l.ID().IsEmpty() {
+		return LegModel{}, fmt.Errorf("leg id is empty")
+	}
+	if itineraryDayID.IsEmpty() {
+		return LegModel{}, fmt.Errorf("itinerary day id is empty")
+	}
+
+	// from はスポット参照なら from_spot_id に、旅程外地点なら from_label に展開する。
+	var fromSpotID *string
+	fromLabel := ""
+	from := l.From()
+	if from.IsSpot() {
+		id := from.SpotID().String()
+		fromSpotID = &id
+	} else {
+		fromLabel = from.Label()
+	}
+
+	cost := l.Cost()
+	return LegModel{
+		ID:              l.ID().String(),
+		ItineraryDayID:  itineraryDayID.String(),
+		Seq:             seq,
+		FromSpotID:      fromSpotID,
+		FromLabel:       fromLabel,
+		ToSpotID:        l.To().SpotID().String(),
+		TransportMode:   l.Mode().String(),
+		DurationMinutes: int(l.Duration() / time.Minute),
+		Amount:          cost.Amount(),
+		Currency:        cost.Currency().Code(),
 	}, nil
 }
 
