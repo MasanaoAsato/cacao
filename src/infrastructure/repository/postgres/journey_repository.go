@@ -64,6 +64,15 @@ func (r *JourneyRepositoryPostgres) Save(ctx context.Context, j entity.Journey) 
 					return err
 				}
 			}
+
+			// 5. さらに孫要素（legs）を保存する。
+			// legs は spots への外部キー (from_spot_id / to_spot_id) を持つため、
+			// spots を保存した後に挿入する必要がある（挿入順に注意）。
+			for _, lm := range dm.Legs {
+				if err := tx.Save(&lm).Error; err != nil {
+					return err
+				}
+			}
 		}
 		return nil
 	}); err != nil {
@@ -75,7 +84,7 @@ func (r *JourneyRepositoryPostgres) Save(ctx context.Context, j entity.Journey) 
 func (r *JourneyRepositoryPostgres) FindByID(ctx context.Context, id value_object.ID) (entity.Journey, error) {
 	var m JourneyModel
 	err := r.db.WithContext(ctx).
-		Preload("Days").Preload("Days.Spots").
+		Preload("Days").Preload("Days.Spots").Preload("Days.Legs").
 		Where("id = ?", id.String()).
 		First(&m).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -90,7 +99,7 @@ func (r *JourneyRepositoryPostgres) FindByID(ctx context.Context, id value_objec
 func (r *JourneyRepositoryPostgres) FindByRequestID(ctx context.Context, requestID value_object.ID) (entity.Journey, error) {
 	var m JourneyModel
 	err := r.db.WithContext(ctx).
-		Preload("Days").Preload("Days.Spots").
+		Preload("Days").Preload("Days.Spots").Preload("Days.Legs").
 		Where("journey_request_id = ?", requestID.String()).
 		First(&m).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -107,7 +116,7 @@ func (r *JourneyRepositoryPostgres) FindByRequestID(ctx context.Context, request
 func (r *JourneyRepositoryPostgres) FindAll(ctx context.Context) ([]entity.Journey, error) {
 	var models []JourneyModel
 	err := r.db.WithContext(ctx).
-		Preload("Days").Preload("Days.Spots").
+		Preload("Days").Preload("Days.Spots").Preload("Days.Legs").
 		Find(&models).Error
 	if err != nil {
 		return nil, err

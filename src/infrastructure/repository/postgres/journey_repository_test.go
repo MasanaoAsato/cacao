@@ -142,6 +142,36 @@ func TestJourneyRepositoryPostgres_SaveAndFindByID(t *testing.T) {
 	if got.DayCount() != journey.DayCount() {
 		t.Errorf("DayCount mismatch: got %d, want %d", got.DayCount(), journey.DayCount())
 	}
+
+	// legs 込みの往復を検証する（§9.4: legs を保存し、Preload("Days.Legs") で復元する）。
+	wantDay := journey.Days()[0]
+	gotDay := got.Days()[0]
+	wantLegs := wantDay.Legs()
+	gotLegs := gotDay.Legs()
+	if len(gotLegs) != len(wantLegs) {
+		t.Fatalf("legs count mismatch: got %d, want %d", len(gotLegs), len(wantLegs))
+	}
+	for i, wantLeg := range wantLegs {
+		gotLeg := gotLegs[i]
+		if !gotLeg.ID().Equals(wantLeg.ID()) {
+			t.Errorf("legs[%d] ID mismatch: got %q, want %q", i, gotLeg.ID().String(), wantLeg.ID().String())
+		}
+		if !gotLeg.From().Equals(wantLeg.From()) {
+			t.Errorf("legs[%d] From mismatch: got %v, want %v", i, gotLeg.From(), wantLeg.From())
+		}
+		if !gotLeg.To().Equals(wantLeg.To()) {
+			t.Errorf("legs[%d] To mismatch: got %v, want %v", i, gotLeg.To(), wantLeg.To())
+		}
+		if gotLeg.Mode() != wantLeg.Mode() {
+			t.Errorf("legs[%d] Mode mismatch: got %q, want %q", i, gotLeg.Mode(), wantLeg.Mode())
+		}
+		if gotLeg.Duration() != wantLeg.Duration() {
+			t.Errorf("legs[%d] Duration mismatch: got %v, want %v", i, gotLeg.Duration(), wantLeg.Duration())
+		}
+		if !gotLeg.Cost().Equals(wantLeg.Cost()) {
+			t.Errorf("legs[%d] Cost mismatch: got %v, want %v", i, gotLeg.Cost(), wantLeg.Cost())
+		}
+	}
 }
 
 // newTestJourneyWithDays は指定した日程数の Journey を作るヘルパ。
