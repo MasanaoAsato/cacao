@@ -2,7 +2,7 @@ package service
 
 import (
 	"fmt"
-	"sort"
+	"slices"
 
 	"cacao/src/domain/entity"
 	"cacao/src/domain/value_object"
@@ -47,8 +47,8 @@ func buildItineraryDays(route GeneratedRoute) ([]entity.ItineraryDay, error) {
 		for i := range generatedDay.Spots {
 			pairs[i] = spotLegPair{spot: generatedDay.Spots[i], leg: generatedDay.Legs[i]}
 		}
-		sort.SliceStable(pairs, func(i, j int) bool {
-			return pairs[i].spot.StartAt.Before(pairs[j].spot.StartAt)
+		slices.SortStableFunc(pairs, func(a, b spotLegPair) int {
+			return a.spot.StartAt.Compare(b.spot.StartAt)
 		})
 
 		// ソート済みの順で Spot エンティティを生成（ID 採番）

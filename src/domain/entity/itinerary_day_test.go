@@ -1,7 +1,7 @@
 package entity
 
 import (
-	"sort"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -43,8 +43,8 @@ func mustNewLegsForSpots(t *testing.T, spots []Spot, legCosts []value_object.Mon
 	// StartAt 昇順にソートした spots コピーを作る
 	sorted := make([]Spot, len(spots))
 	copy(sorted, spots)
-	sort.Slice(sorted, func(i, j int) bool {
-		return sorted[i].StartAt().Before(sorted[j].StartAt())
+	slices.SortStableFunc(sorted, func(a, b Spot) int {
+		return a.StartAt().Compare(b.StartAt())
 	})
 
 	mode, err := value_object.NewTransportMode("walk")
