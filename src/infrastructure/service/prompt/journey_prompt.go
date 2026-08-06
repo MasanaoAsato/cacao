@@ -37,13 +37,18 @@ func BuildJourneyPrompt(request entity.JourneyRequest) (string, error) {
 
 # 作成ルール
 1. 各日に1つ以上のスポット（訪問先・アクティビティ）を設定すること
-2. 1日あたりの予算の目安は %s %d とし、各日のスポット費用の合計がこれを超えないこと
-3. 全日程のスポット費用の合計が総予算を超えないこと
+2. 1日あたりの予算の目安は %s %d とし、各日のスポット費用と移動費用の合計がこれを超えないこと
+3. 全日程のスポット費用と移動費用の合計が総予算を超えないこと
 4. スポットの費用はすべて %s 建ての整数で記載すること
 5. 各スポットには訪問開始時刻を設定し、1日の中で時系列が前後しないこと
 6. 出発地から無理なく移動できる範囲のスポットを選ぶこと
 7. 有名な観光地だけでなく穴場も織り交ぜ、同じ条件でも毎回異なるユニークな旅程にすること
 8. すべてのスポット名・施設名は実在するもののみを使用すること。自信がない場合は Web Search で確認すること
+9. 各スポットへの到着区間（legs）を必ず設定し、legs の件数は spots と同じにすること
+10. legs[i] は spots[i] に到着する移動を表す。各日の1本目は出発地（初日）または宿泊地（2日目以降）からの移動とし、from に起点名を記載すること
+11. mode は walk / train / bus / car / taxi / bicycle / flight / ferry / other のいずれかとすること
+12. durationMinutes は1分以上の整数で、現実的な移動時間にすること
+13. 移動費用も %s 建ての整数とし、徒歩区間は 0 円でよいこと
 
 # 出力形式
 以下の JSON のみを出力すること。説明文・Markdown・コードフェンスは一切付けないこと。
@@ -59,6 +64,14 @@ func BuildJourneyPrompt(request entity.JourneyRequest) (string, error) {
           "startAt": "RFC 3339 形式の現地時刻（例: 2026-08-01T09:00:00+09:00）",
           "estimatedCost": { "amount": 金額の整数, "currency": "%s" }
         }
+      ],
+      "legs": [
+        {
+          "from": "起点名（各日の1本目の区間のみ必須。例: 東京（出発地）, 大阪（宿泊地））",
+          "mode": "walk|train|bus|car|taxi|bicycle|flight|ferry|other",
+          "durationMinutes": 移動時間の整数（分）,
+          "cost": { "amount": 金額の整数, "currency": "%s" }
+        }
       ]
     }
   ]
@@ -70,6 +83,8 @@ func BuildJourneyPrompt(request entity.JourneyRequest) (string, error) {
 		days,
 		budget.String(),
 		currency, dailyBudget,
+		currency,
+		currency,
 		currency,
 		currency,
 	)
@@ -113,8 +128,51 @@ func dayJSONSchema() map[string]any {
 				"type":  "array",
 				"items": spotJSONSchema(),
 			},
+			"legs": map[string]any{
+				"type":  "array",
+				"items": legJSONSchema(),
+			},
 		},
-		"required":             []string{"date", "spots"},
+		"required":             []string{"date", "spots", "legs"},
+		"additionalProperties": false,
+	}
+}
+
+// legJSONSchema は移動区間1件分の JSON Schema を返す（RouteJSONSchema の部品）。
+// strict モードの制約上、全フィールドを required にし additionalProperties: false を付ける。
+// from は先頭区間でのみ必須だが、strict では全要素で必須となるため、2本目以降は空文字でよい旨を description で示す。
+func legJSONSchema() map[string]any {
+	return map[string]any{
+		"type": "object",
+		"properties": map[string]any{
+			"from": map[string]any{
+				"type":        "string",
+				"description": "起点名（各日の1本目の区間のみ必須。2本目以降は空文字でよい）",
+			},
+			"mode": map[string]any{
+				"type":        "string",
+				"description": "移動手段",
+				"enum": []string{
+					"walk", "train", "bus", "car", "taxi",
+					"bicycle", "flight", "ferry", "other",
+				},
+			},
+			"durationMinutes": map[string]any{
+				"type":        "integer",
+				"description": "移動時間（分）",
+				"minimum":     1,
+			},
+			"cost": map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"amount":   map[string]any{"type": "integer"},
+					"currency": map[string]any{"type": "string"},
+				},
+				"required":             []string{"amount", "currency"},
+				"additionalProperties": false,
+			},
+		},
+		"required":             []string{"from", "mode", "durationMinutes", "cost"},
 		"additionalProperties": false,
 	}
 }
@@ -153,6 +211,7 @@ type routeJSON struct {
 type dayJSON struct {
 	Date  string     `json:"date"`
 	Spots []spotJSON `json:"spots"`
+	Legs  []legJSON  `json:"legs"`
 }
 
 type spotJSON struct {
@@ -160,6 +219,15 @@ type spotJSON struct {
 	Description   string    `json:"description"`
 	StartAt       string    `json:"startAt"`
 	EstimatedCost moneyJSON `json:"estimatedCost"`
+}
+
+// legJSON は1区間分の移動情報。設計書 09 §8.2 のとおり、legs[i] は spots[i] への到着区間。
+// from は各日の先頭区間（legs[0]）でのみ必須で、2本目以降は無視して寛容にパースする。
+type legJSON struct {
+	From            string    `json:"from"`
+	Mode            string    `json:"mode"`
+	DurationMinutes int       `json:"durationMinutes"`
+	Cost            moneyJSON `json:"cost"`
 }
 
 type moneyJSON struct {
@@ -204,7 +272,26 @@ func ParseGeneratedRoute(content string, request entity.JourneyRequest) (service
 			}
 			spots = append(spots, spot)
 		}
-		days = append(days, service.GeneratedDay{Date: date, Spots: spots})
+
+		// 設計書 09 §6.2: 各日は「spots への到着区間」がちょうど1本ずつ必要。
+		// LLM は件数を守れないことがあるため、後続の不変条件（NewItineraryDay の連鎖検証）の前に
+		// この時点で検証して早めに失敗させる。
+		if len(d.Legs) != len(d.Spots) {
+			return service.GeneratedRoute{}, fmt.Errorf(
+				"day %d (%s): legs count %d does not match spots count %d",
+				i+1, d.Date, len(d.Legs), len(d.Spots),
+			)
+		}
+
+		legs := make([]service.GeneratedLeg, 0, len(d.Legs))
+		for j, l := range d.Legs {
+			leg, err := parseLeg(l, j, wantCurrency)
+			if err != nil {
+				return service.GeneratedRoute{}, fmt.Errorf("day %d leg %d: %w", i+1, j+1, err)
+			}
+			legs = append(legs, leg)
+		}
+		days = append(days, service.GeneratedDay{Date: date, Spots: spots, Legs: legs})
 	}
 
 	return service.GeneratedRoute{Days: days}, nil
@@ -230,6 +317,55 @@ func parseDateInPeriod(dateStr string, period value_object.Period) (time.Time, e
 		)
 	}
 	return date, nil
+}
+
+// parseLeg は DTO の移動区間を検証しながら service.GeneratedLeg へ変換する。
+// idx は日内の区間位置（0始まり）。検証ルール（設計書 09 §8.2）:
+//   - 先頭区間（idx==0）の from は空文字不可（出発地・宿泊地の起点名）
+//   - 2本目以降の from は無視する（起点は直前スポットに自動的に定まるため寛容に扱う）
+//   - mode は TransportMode のトークンのいずれか
+//   - durationMinutes は 1 以上（分 → time.Duration に変換）
+//   - cost の通貨は予算通貨と一致
+func parseLeg(l legJSON, idx int, wantCurrency value_object.Currency) (service.GeneratedLeg, error) {
+	fromLabel := ""
+	if idx == 0 {
+		if l.From == "" {
+			return service.GeneratedLeg{}, fmt.Errorf("first leg must have from label")
+		}
+		fromLabel = l.From
+	}
+
+	mode, err := value_object.NewTransportMode(l.Mode)
+	if err != nil {
+		return service.GeneratedLeg{}, err
+	}
+
+	if l.DurationMinutes < 1 {
+		return service.GeneratedLeg{}, fmt.Errorf("durationMinutes must be >= 1, got %d", l.DurationMinutes)
+	}
+
+	currency, err := value_object.NewCurrency(l.Cost.Currency)
+	if err != nil {
+		return service.GeneratedLeg{}, err
+	}
+	if !currency.Equals(wantCurrency) {
+		return service.GeneratedLeg{}, fmt.Errorf(
+			"currency %q does not match budget currency %q",
+			currency.Code(), wantCurrency.Code(),
+		)
+	}
+
+	cost, err := value_object.NewMoney(l.Cost.Amount, currency)
+	if err != nil {
+		return service.GeneratedLeg{}, err
+	}
+
+	return service.GeneratedLeg{
+		FromLabel: fromLabel,
+		Mode:      mode,
+		Duration:  time.Duration(l.DurationMinutes) * time.Minute,
+		Cost:      cost,
+	}, nil
 }
 
 // parseSpot は DTO のスポットを検証しながら service.GeneratedSpot へ変換する。

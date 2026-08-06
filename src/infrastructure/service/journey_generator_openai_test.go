@@ -58,7 +58,7 @@ func responsesAPIBody(t *testing.T, text string) []byte {
 }
 
 func TestJourneyGeneratorOpenAI_Generate(t *testing.T) {
-	llmOutput := `{"days":[{"date":"2026-08-01","spots":[{"name":"浅草寺","description":"東京最古の寺院","startAt":"2026-08-01T09:00:00+09:00","estimatedCost":{"amount":0,"currency":"JPY"}}]}]}`
+	llmOutput := `{"days":[{"date":"2026-08-01","spots":[{"name":"浅草寺","description":"東京最古の寺院","startAt":"2026-08-01T09:00:00+09:00","estimatedCost":{"amount":0,"currency":"JPY"}}],"legs":[{"from":"東京（出発地）","mode":"walk","durationMinutes":1,"cost":{"amount":0,"currency":"JPY"}}]}]}`
 
 	client := newOpenAITestClient(t, func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -96,6 +96,20 @@ func TestJourneyGeneratorOpenAI_Generate(t *testing.T) {
 	}
 	if got := spots[0].EstimatedCost.Currency().Code(); got != "JPY" {
 		t.Errorf("expected currency JPY, got %s", got)
+	}
+
+	legs := route.Days[0].Legs
+	if len(legs) != 1 {
+		t.Fatalf("expected 1 leg, got %d", len(legs))
+	}
+	if legs[0].FromLabel != "東京（出発地）" {
+		t.Errorf("expected from label 東京（出発地）, got %q", legs[0].FromLabel)
+	}
+	if got := legs[0].Mode.String(); got != "walk" {
+		t.Errorf("expected mode walk, got %s", got)
+	}
+	if legs[0].Duration != time.Minute {
+		t.Errorf("expected duration 1m, got %v", legs[0].Duration)
 	}
 }
 
@@ -143,7 +157,7 @@ func TestJourneyGeneratorOpenAI_Generate_InvalidLLMOutput(t *testing.T) {
 // json_object は Web Search ツールと併用できず OpenAI API が 400 を返すため、
 // Web Search 有効の組み合わせでも json_schema が使われることを保証する回帰テスト。
 func TestJourneyGeneratorOpenAI_Generate_UsesJSONSchema(t *testing.T) {
-	llmOutput := `{"days":[{"date":"2026-08-01","spots":[{"name":"浅草寺","description":"東京最古の寺院","startAt":"2026-08-01T09:00:00+09:00","estimatedCost":{"amount":0,"currency":"JPY"}}]}]}`
+	llmOutput := `{"days":[{"date":"2026-08-01","spots":[{"name":"浅草寺","description":"東京最古の寺院","startAt":"2026-08-01T09:00:00+09:00","estimatedCost":{"amount":0,"currency":"JPY"}}],"legs":[{"from":"東京（出発地）","mode":"walk","durationMinutes":1,"cost":{"amount":0,"currency":"JPY"}}]}]}`
 
 	client := newOpenAITestClient(t, func(w http.ResponseWriter, r *http.Request) {
 		body, err := io.ReadAll(r.Body)
@@ -175,7 +189,7 @@ func TestJourneyGeneratorOpenAI_Generate_UsesJSONSchema(t *testing.T) {
 // リクエストボディの tools に web_search が含まれることを検証する。
 // これは「Web Search が有効化された状態で OpenAI API が呼ばれているか」を保証する境界値に近い正常系テスト。
 func TestJourneyGeneratorOpenAI_Generate_WithWebSearch(t *testing.T) {
-	llmOutput := `{"days":[{"date":"2026-08-01","spots":[{"name":"浅草寺","description":"東京最古の寺院","startAt":"2026-08-01T09:00:00+09:00","estimatedCost":{"amount":0,"currency":"JPY"}}]}]}`
+	llmOutput := `{"days":[{"date":"2026-08-01","spots":[{"name":"浅草寺","description":"東京最古の寺院","startAt":"2026-08-01T09:00:00+09:00","estimatedCost":{"amount":0,"currency":"JPY"}}],"legs":[{"from":"東京（出発地）","mode":"walk","durationMinutes":1,"cost":{"amount":0,"currency":"JPY"}}]}]}`
 
 	client := newOpenAITestClient(t, func(w http.ResponseWriter, r *http.Request) {
 		body, err := io.ReadAll(r.Body)
@@ -207,7 +221,7 @@ func TestJourneyGeneratorOpenAI_Generate_WithWebSearch(t *testing.T) {
 // リクエストボディの tools に web_search が含まれないことを検証する。
 // 未設定時は Web Search が無効であることを保証する境界値テスト。
 func TestJourneyGeneratorOpenAI_Generate_WithoutWebSearch(t *testing.T) {
-	llmOutput := `{"days":[{"date":"2026-08-01","spots":[{"name":"浅草寺","description":"東京最古寺院","startAt":"2026-08-01T09:00:00+09:00","estimatedCost":{"amount":0,"currency":"JPY"}}]}]}`
+	llmOutput := `{"days":[{"date":"2026-08-01","spots":[{"name":"浅草寺","description":"東京最古寺院","startAt":"2026-08-01T09:00:00+09:00","estimatedCost":{"amount":0,"currency":"JPY"}}],"legs":[{"from":"東京（出発地）","mode":"walk","durationMinutes":1,"cost":{"amount":0,"currency":"JPY"}}]}]}`
 
 	client := newOpenAITestClient(t, func(w http.ResponseWriter, r *http.Request) {
 		body, err := io.ReadAll(r.Body)
