@@ -33,6 +33,11 @@ func (uc *useCase) Execute(ctx context.Context, input Input) (Output, error) {
 		return Output{}, fmt.Errorf("%w: invalid departure: %w", application.ErrInvalidInput, err)
 	}
 
+	destination, err := value_object.NewDestination(input.DestinationCity, input.DestinationCountry)
+	if err != nil {
+		return Output{}, fmt.Errorf("%w: invalid destination: %w", application.ErrInvalidInput, err)
+	}
+
 	period, err := value_object.NewPeriod(input.StartDate, input.EndDate)
 	if err != nil {
 		return Output{}, fmt.Errorf("%w: invalid period: %w", application.ErrInvalidInput, err)
@@ -49,7 +54,7 @@ func (uc *useCase) Execute(ctx context.Context, input Input) (Output, error) {
 	}
 
 	id := value_object.NewID()
-	request, err := entity.NewJourneyRequest(id, departure, period, budget)
+	request, err := entity.NewJourneyRequest(id, departure, destination, period, budget)
 	if err != nil {
 		return Output{}, fmt.Errorf("%w: %w", application.ErrInvalidInput, err)
 	}

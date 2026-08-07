@@ -17,15 +17,18 @@ func journeyRequestToModel(jr entity.JourneyRequest) (JourneyRequestModel, error
 	period := jr.Period()
 	budget := jr.Budget()
 	departure := jr.Departure()
+	destination := jr.Destination()
 
 	return JourneyRequestModel{
-		ID:               jr.ID().String(),
-		DepartureCity:    departure.City(),
-		DepartureCountry: departure.Country(),
-		StartDate:        period.StartDate(),
-		EndDate:          period.EndDate(),
-		BudgetAmount:     budget.Amount(),
-		BudgetCurrency:   budget.Currency().Code(),
+		ID:                 jr.ID().String(),
+		DepartureCity:      departure.City(),
+		DepartureCountry:   departure.Country(),
+		DestinationCity:    destination.City(),
+		DestinationCountry: destination.Country(),
+		StartDate:          period.StartDate(),
+		EndDate:            period.EndDate(),
+		BudgetAmount:       budget.Amount(),
+		BudgetCurrency:     budget.Currency().Code(),
 	}, nil
 }
 
@@ -38,6 +41,11 @@ func modelToJourneyRequest(m JourneyRequestModel) (entity.JourneyRequest, error)
 	departure, err := value_object.NewDeparture(m.DepartureCity, m.DepartureCountry)
 	if err != nil {
 		return entity.JourneyRequest{}, fmt.Errorf("departure: %w", err)
+	}
+
+	destination, err := value_object.NewDestination(m.DestinationCity, m.DestinationCountry)
+	if err != nil {
+		return entity.JourneyRequest{}, fmt.Errorf("destination: %w", err)
 	}
 
 	period, err := value_object.NewPeriod(m.StartDate, m.EndDate)
@@ -54,7 +62,7 @@ func modelToJourneyRequest(m JourneyRequestModel) (entity.JourneyRequest, error)
 		return entity.JourneyRequest{}, fmt.Errorf("budget: %w", err)
 	}
 
-	return entity.NewJourneyRequest(id, departure, period, budget)
+	return entity.NewJourneyRequest(id, departure, destination, period, budget)
 }
 
 func journeyToModel(j entity.Journey) (JourneyModel, error) {

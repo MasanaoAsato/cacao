@@ -8,25 +8,27 @@ import (
 
 // JourneyRequest はユーザーが入力した旅程作成条件を表すエンティティ。
 type JourneyRequest struct {
-	id        value_object.ID
-	departure value_object.Departure
-	period    value_object.Period
-	budget    value_object.Money
+	id          value_object.ID
+	departure   value_object.Departure
+	destination value_object.Destination
+	period      value_object.Period
+	budget      value_object.Money
 }
 
 // NewJourneyRequest は JourneyRequest を生成する。
 // id は空であってはならない。値オブジェクト側で妥当性検証済みなので、
 // エンティティ側では id の空チェックのみ行う。
-func NewJourneyRequest(id value_object.ID, departure value_object.Departure, period value_object.Period, budget value_object.Money) (JourneyRequest, error) {
+func NewJourneyRequest(id value_object.ID, departure value_object.Departure, destination value_object.Destination, period value_object.Period, budget value_object.Money) (JourneyRequest, error) {
 	if id.IsEmpty() {
 		return JourneyRequest{}, fmt.Errorf("journey request id must not be empty")
 	}
 
 	return JourneyRequest{
-		id:        id,
-		departure: departure,
-		period:    period,
-		budget:    budget,
+		id:          id,
+		departure:   departure,
+		destination: destination,
+		period:      period,
+		budget:      budget,
 	}, nil
 }
 
@@ -38,6 +40,11 @@ func (r JourneyRequest) ID() value_object.ID {
 // Departure は出発地点を返す。
 func (r JourneyRequest) Departure() value_object.Departure {
 	return r.departure
+}
+
+// Destination は目的地を返す。
+func (r JourneyRequest) Destination() value_object.Destination {
+	return r.destination
 }
 
 // Period は日程を返す。

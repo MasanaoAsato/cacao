@@ -16,6 +16,7 @@ import (
 func newTestJourneyRequest(t *testing.T) entity.JourneyRequest {
 	t.Helper()
 	departure, err := value_object.NewDeparture("東京", "日本")
+	destination, err := value_object.NewDestination("大阪", "日本")
 	if err != nil {
 		t.Fatalf("failed to create departure: %v", err)
 	}
@@ -33,7 +34,7 @@ func newTestJourneyRequest(t *testing.T) entity.JourneyRequest {
 	if err != nil {
 		t.Fatalf("failed to create budget: %v", err)
 	}
-	req, err := entity.NewJourneyRequest(value_object.NewID(), departure, period, budget)
+	req, err := entity.NewJourneyRequest(value_object.NewID(), departure, destination, period, budget)
 	if err != nil {
 		t.Fatalf("failed to create journey request: %v", err)
 	}
@@ -105,10 +106,11 @@ func TestJourneyRequestRepositoryPostgres_Save_Updates(t *testing.T) {
 	}
 
 	newDeparture, err := value_object.NewDeparture("大阪", "日本")
+	destination, err := value_object.NewDestination("大阪", "日本")
 	if err != nil {
 		t.Fatalf("failed to create departure: %v", err)
 	}
-	updated, err := entity.NewJourneyRequest(req.ID(), newDeparture, req.Period(), req.Budget())
+	updated, err := entity.NewJourneyRequest(req.ID(), newDeparture, destination, req.Period(), req.Budget())
 	if err != nil {
 		t.Fatalf("failed to create updated request: %v", err)
 	}

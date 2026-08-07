@@ -9,15 +9,17 @@ import "time"
 // value_object.Departure, Period, Money をカラム展開したもの。
 // 値オブジェクトを正規化することで BETWEEN・GROUP BY 等の検索が直接書ける。
 type JourneyRequestModel struct {
-	ID               string    `gorm:"primaryKey;type:uuid"`
-	DepartureCity    string    `gorm:"column:departure_city"`
-	DepartureCountry string    `gorm:"column:departure_country"`
-	StartDate        time.Time `gorm:"column:start_date;type:date"`
-	EndDate          time.Time `gorm:"column:end_date;type:date"`
-	BudgetAmount     int       `gorm:"column:budget_amount"`
-	BudgetCurrency   string    `gorm:"column:budget_currency;type:varchar(3)"`
-	CreatedAt        time.Time `gorm:"column:created_at;type:timestamptz"`
-	UpdatedAt        time.Time `gorm:"column:updated_at;type:timestamptz"`
+	ID                 string    `gorm:"primaryKey;type:uuid"`
+	DepartureCity      string    `gorm:"column:departure_city"`
+	DepartureCountry   string    `gorm:"column:departure_country"`
+	DestinationCity    string    `gorm:"column:destination_city"`
+	DestinationCountry string    `gorm:"column:destination_country"`
+	StartDate          time.Time `gorm:"column:start_date;type:date"`
+	EndDate            time.Time `gorm:"column:end_date;type:date"`
+	BudgetAmount       int       `gorm:"column:budget_amount"`
+	BudgetCurrency     string    `gorm:"column:budget_currency;type:varchar(3)"`
+	CreatedAt          time.Time `gorm:"column:created_at;type:timestamptz"`
+	UpdatedAt          time.Time `gorm:"column:updated_at;type:timestamptz"`
 }
 
 func (JourneyRequestModel) TableName() string { return "journey.journey_requests" }

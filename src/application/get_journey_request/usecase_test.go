@@ -39,13 +39,14 @@ func (m *mockRequestRepo) Delete(_ context.Context, _ value_object.ID) error {
 func mustNewJourneyRequest(t *testing.T) entity.JourneyRequest {
 	t.Helper()
 	departure, _ := value_object.NewDeparture("東京", "日本")
+	destination, _ := value_object.NewDestination("大阪", "日本")
 	period, _ := value_object.NewPeriod(
 		time.Date(2026, 7, 7, 0, 0, 0, 0, time.UTC),
 		time.Date(2026, 7, 9, 0, 0, 0, 0, time.UTC),
 	)
 	currency, _ := value_object.NewCurrency("JPY")
 	budget, _ := value_object.NewMoney(50000, currency)
-	request, err := entity.NewJourneyRequest(value_object.NewID(), departure, period, budget)
+	request, err := entity.NewJourneyRequest(value_object.NewID(), departure, destination, period, budget)
 	if err != nil {
 		t.Fatalf("failed to create journey request: %v", err)
 	}

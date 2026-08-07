@@ -17,6 +17,15 @@ func mustNewDeparture(t *testing.T, city, country string) value_object.Departure
 	return d
 }
 
+func mustNewDestination(t *testing.T, city, country string) value_object.Destination {
+	t.Helper()
+	d, err := value_object.NewDestination(city, country)
+	if err != nil {
+		t.Fatalf("failed to create destination: %v", err)
+	}
+	return d
+}
+
 func mustNewPeriod(t *testing.T, start, end time.Time) value_object.Period {
 	t.Helper()
 	p, err := value_object.NewPeriod(start, end)
@@ -30,10 +39,11 @@ func TestNewJourneyRequest(t *testing.T) {
 	t.Run("正常系: 有効な JourneyRequest", func(t *testing.T) {
 		id := value_object.NewID()
 		departure := mustNewDeparture(t, "東京", "日本")
+		destination := mustNewDestination(t, "大阪", "日本")
 		period := mustNewPeriod(t, time.Date(2026, 7, 7, 0, 0, 0, 0, time.UTC), time.Date(2026, 7, 9, 0, 0, 0, 0, time.UTC))
 		budget := mustNewMoney(t, 50000, "JPY")
 
-		req, err := NewJourneyRequest(id, departure, period, budget)
+		req, err := NewJourneyRequest(id, departure, destination, period, budget)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -54,10 +64,11 @@ func TestNewJourneyRequest(t *testing.T) {
 
 	t.Run("異常系: 空の ID", func(t *testing.T) {
 		departure := mustNewDeparture(t, "東京", "日本")
+		destination := mustNewDestination(t, "大阪", "日本")
 		period := mustNewPeriod(t, time.Date(2026, 7, 7, 0, 0, 0, 0, time.UTC), time.Date(2026, 7, 9, 0, 0, 0, 0, time.UTC))
 		budget := mustNewMoney(t, 50000, "JPY")
 
-		_, err := NewJourneyRequest(value_object.ID{}, departure, period, budget)
+		_, err := NewJourneyRequest(value_object.ID{}, departure, destination, period, budget)
 		if err == nil {
 			t.Fatal("expected error for empty id, got nil")
 		}
@@ -71,12 +82,13 @@ func TestJourneyRequest_Equals(t *testing.T) {
 	idA := value_object.NewID()
 	idB := value_object.NewID()
 	departure := mustNewDeparture(t, "東京", "日本")
+	destination := mustNewDestination(t, "大阪", "日本")
 	period := mustNewPeriod(t, time.Date(2026, 7, 7, 0, 0, 0, 0, time.UTC), time.Date(2026, 7, 9, 0, 0, 0, 0, time.UTC))
 	budget := mustNewMoney(t, 50000, "JPY")
 
 	t.Run("正常系: 同じ ID は同一", func(t *testing.T) {
-		req1, _ := NewJourneyRequest(idA, departure, period, budget)
-		req2, _ := NewJourneyRequest(idA, mustNewDeparture(t, "大阪", "日本"), mustNewPeriod(t, time.Date(2026, 8, 1, 0, 0, 0, 0, time.UTC), time.Date(2026, 8, 3, 0, 0, 0, 0, time.UTC)), mustNewMoney(t, 100000, "JPY"))
+		req1, _ := NewJourneyRequest(idA, departure, destination, period, budget)
+		req2, _ := NewJourneyRequest(idA, mustNewDeparture(t, "大阪", "日本"), mustNewDestination(t, "京都", "日本"), mustNewPeriod(t, time.Date(2026, 8, 1, 0, 0, 0, 0, time.UTC), time.Date(2026, 8, 3, 0, 0, 0, 0, time.UTC)), mustNewMoney(t, 100000, "JPY"))
 
 		if !req1.Equals(req2) {
 			t.Fatal("expected requests with same id to be equal")
@@ -84,8 +96,8 @@ func TestJourneyRequest_Equals(t *testing.T) {
 	})
 
 	t.Run("正常系: 異なる ID は別物", func(t *testing.T) {
-		req1, _ := NewJourneyRequest(idA, departure, period, budget)
-		req2, _ := NewJourneyRequest(idB, departure, period, budget)
+		req1, _ := NewJourneyRequest(idA, departure, destination, period, budget)
+		req2, _ := NewJourneyRequest(idB, departure, destination, period, budget)
 
 		if req1.Equals(req2) {
 			t.Fatal("expected requests with different ids to be not equal")
