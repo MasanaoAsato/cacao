@@ -13,9 +13,12 @@ import (
 func newStubTestJourneyRequest(t *testing.T, start, end time.Time, amount int) entity.JourneyRequest {
 	t.Helper()
 	departure, err := value_object.NewDeparture("東京", "日本")
-	destination, err := value_object.NewDestination("大阪", "日本")
 	if err != nil {
 		t.Fatalf("failed to create departure: %v", err)
+	}
+	destination, err := value_object.NewDestination("大阪", "日本")
+	if err != nil {
+		t.Fatalf("failed to create destination: %v", err)
 	}
 	period, err := value_object.NewPeriod(start, end)
 	if err != nil {

@@ -109,9 +109,12 @@ func TestJourneyRequestRepositoryPostgres_Save_Updates(t *testing.T) {
 	}
 
 	newDeparture, err := value_object.NewDeparture("大阪", "日本")
-	destination, err := value_object.NewDestination("大阪", "日本")
 	if err != nil {
 		t.Fatalf("failed to create departure: %v", err)
+	}
+	destination, err := value_object.NewDestination("大阪", "日本")
+	if err != nil {
+		t.Fatalf("failed to create destination: %v", err)
 	}
 	updated, err := entity.NewJourneyRequest(req.ID(), newDeparture, destination, req.Period(), req.Budget())
 	if err != nil {
