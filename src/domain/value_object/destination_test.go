@@ -26,7 +26,7 @@ func TestNewDestination(t *testing.T) {
 		}
 	})
 	t.Run("正常系: 前後の空白は除去される", func(t *testing.T) {
-		d, err := NewDeparture("  Tokyo  ", "  Japan  ")
+		d, err := NewDestination("  Tokyo  ", "  Japan  ")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
