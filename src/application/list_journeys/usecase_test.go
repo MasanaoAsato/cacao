@@ -139,6 +139,38 @@ func TestUseCase_Execute(t *testing.T) {
 		}
 	})
 
+	t.Run("正常系: DTO に legs と解決済み Label が含まれる", func(t *testing.T) {
+		journey := mustNewJourney(t)
+		uc := NewUseCase(&mockJourneyRepo{journeys: []entity.Journey{journey}})
+
+		output, err := uc.Execute(context.Background(), Input{})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		day := output.Journeys[0].Days[0]
+		spot := day.Spots[0]
+		if len(day.Legs) != 1 {
+			t.Fatalf("legs length = %d, want 1", len(day.Legs))
+		}
+
+		leg := day.Legs[0]
+		// 先頭区間の from は名前付き Endpoint（出発地）
+		if leg.From.SpotID != "" {
+			t.Errorf("from spot_id = %q, want empty for named endpoint", leg.From.SpotID)
+		}
+		if leg.From.Label != "出発地" {
+			t.Errorf("from label = %q, want %q", leg.From.Label, "出発地")
+		}
+		// to はスポット参照。Label は日内のスポット名から解決される
+		if leg.To.SpotID != spot.ID {
+			t.Errorf("to spot_id = %q, want %q", leg.To.SpotID, spot.ID)
+		}
+		if leg.To.Label != spot.Name {
+			t.Errorf("to label = %q, want %q", leg.To.Label, spot.Name)
+		}
+	})
+
 	t.Run("異常系: リポジトリ取得失敗", func(t *testing.T) {
 		uc := NewUseCase(&mockJourneyRepo{err: errors.New("find all failed")})
 		_, err := uc.Execute(context.Background(), Input{})
