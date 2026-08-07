@@ -20,6 +20,7 @@ type ItineraryDayJSON struct {
 	ID    string     `json:"id"`
 	Date  string     `json:"date"`
 	Spots []SpotJSON `json:"spots"`
+	Legs  []LegJSON  `json:"legs"`
 }
 
 // SpotJSON は訪問先のJSON表現。
@@ -31,10 +32,24 @@ type SpotJSON struct {
 	EstimatedCost MoneyJSON `json:"estimated_cost"`
 }
 
+type LegJSON struct {
+	ID              string       `json:"id"`
+	From            EndpointJSON `json:"from"`
+	To              EndpointJSON `json:"to"`
+	Mode            string       `json:"mode"`
+	DurationMinutes int          `json:"duration_minutes"`
+	EstimatedCost   MoneyJSON    `json:"estimated_cost"`
+}
+
 // MoneyJSON は金額のJSON表現。
 type MoneyJSON struct {
 	Amount   int    `json:"amount"`
 	Currency string `json:"currency"`
+}
+
+type EndpointJSON struct {
+	SpotID string `json:"spot_id,omitempty"`
+	Label  string `json:"label"`
 }
 
 // ToJourneyResponse は GetJourney のOutputからJourneyResponseを組み立てる。
@@ -68,6 +83,7 @@ func toItineraryDayJSONs(dtos []getjourney.ItineraryDayDTO) []ItineraryDayJSON {
 			ID:    dto.ID,
 			Date:  dto.Date.Format(time.RFC3339),
 			Spots: toSpotJSONsFromGet(dto.Spots),
+			Legs:  toLegJSONsFromGet(dto.Legs),
 		})
 	}
 	return result
@@ -80,6 +96,7 @@ func toItineraryDayJSONsFromList(dtos []listjourneys.ItineraryDayDTO) []Itinerar
 			ID:    dto.ID,
 			Date:  dto.Date.Format(time.RFC3339),
 			Spots: toSpotJSONsFromList(dto.Spots),
+			Legs:  toLegJSONsFromList(dto.Legs),
 		})
 	}
 	return result
@@ -108,6 +125,36 @@ func toSpotJSONsFromList(dtos []listjourneys.SpotDTO) []SpotJSON {
 			Description:   dto.Description,
 			StartAt:       dto.StartAt.Format(time.RFC3339),
 			EstimatedCost: MoneyJSON{Amount: dto.EstimatedCost.Amount, Currency: dto.EstimatedCost.Currency},
+		})
+	}
+	return result
+}
+
+func toLegJSONsFromGet(dtos []getjourney.LegDTO) []LegJSON {
+	result := make([]LegJSON, 0, len(dtos))
+	for _, dto := range dtos {
+		result = append(result, LegJSON{
+			ID:              dto.ID,
+			From:            EndpointJSON{SpotID: dto.From.SpotID, Label: dto.From.Label},
+			To:              EndpointJSON{SpotID: dto.To.SpotID, Label: dto.To.Label},
+			Mode:            dto.Mode,
+			DurationMinutes: dto.DurationMinutes,
+			EstimatedCost:   MoneyJSON{Amount: dto.EstimatedCost.Amount, Currency: dto.EstimatedCost.Currency},
+		})
+	}
+	return result
+}
+
+func toLegJSONsFromList(dtos []listjourneys.LegDTO) []LegJSON {
+	result := make([]LegJSON, 0, len(dtos))
+	for _, dto := range dtos {
+		result = append(result, LegJSON{
+			ID:              dto.ID,
+			From:            EndpointJSON{SpotID: dto.From.SpotID, Label: dto.From.Label},
+			To:              EndpointJSON{SpotID: dto.To.SpotID, Label: dto.To.Label},
+			Mode:            dto.Mode,
+			DurationMinutes: dto.DurationMinutes,
+			EstimatedCost:   MoneyJSON{Amount: dto.EstimatedCost.Amount, Currency: dto.EstimatedCost.Currency},
 		})
 	}
 	return result
