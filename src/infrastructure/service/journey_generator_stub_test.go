@@ -16,6 +16,10 @@ func newStubTestJourneyRequest(t *testing.T, start, end time.Time, amount int) e
 	if err != nil {
 		t.Fatalf("failed to create departure: %v", err)
 	}
+	destination, err := value_object.NewDestination("大阪", "日本")
+	if err != nil {
+		t.Fatalf("failed to create destination: %v", err)
+	}
 	period, err := value_object.NewPeriod(start, end)
 	if err != nil {
 		t.Fatalf("failed to create period: %v", err)
@@ -28,7 +32,7 @@ func newStubTestJourneyRequest(t *testing.T, start, end time.Time, amount int) e
 	if err != nil {
 		t.Fatalf("failed to create budget: %v", err)
 	}
-	req, err := entity.NewJourneyRequest(value_object.NewID(), departure, period, budget)
+	req, err := entity.NewJourneyRequest(value_object.NewID(), departure, destination, period, budget)
 	if err != nil {
 		t.Fatalf("failed to create journey request: %v", err)
 	}
