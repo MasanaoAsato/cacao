@@ -14,10 +14,11 @@ type Output struct {
 
 // JourneyRequestDTO は JourneyRequest エンティティの読み取り専用表現。
 type JourneyRequestDTO struct {
-	ID        string
-	Departure string
-	Period    PeriodDTO
-	Budget    MoneyDTO
+	ID          string
+	Departure   string
+	Destination string
+	Period      PeriodDTO
+	Budget      MoneyDTO
 }
 
 // PeriodDTO は Period 値オブジェクトの読み取り専用表現。
