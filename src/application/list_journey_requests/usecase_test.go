@@ -66,6 +66,15 @@ func TestUseCase_Execute(t *testing.T) {
 		if output.Requests[0].ID != request.ID().String() {
 			t.Fatalf("id mismatch")
 		}
+		if output.Requests[0].Departure != "東京, 日本" {
+			t.Fatalf("departure = %q, want %q", output.Requests[0].Departure, "東京, 日本")
+		}
+		if output.Requests[0].Destination != "大阪, 日本" {
+			t.Fatalf("destination = %q, want %q", output.Requests[0].Destination, "大阪, 日本")
+		}
+		if output.Requests[0].Budget.Amount != 50000 {
+			t.Fatalf("budget amount = %d, want 50000", output.Requests[0].Budget.Amount)
+		}
 	})
 
 	t.Run("正常系: 空の一覧", func(t *testing.T) {

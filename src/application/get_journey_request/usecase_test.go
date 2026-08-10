@@ -68,6 +68,9 @@ func TestUseCase_Execute(t *testing.T) {
 		if output.Request.Departure != "東京, 日本" {
 			t.Fatalf("departure = %q, want %q", output.Request.Departure, "東京, 日本")
 		}
+		if output.Request.Destination != "大阪, 日本" {
+			t.Fatalf("destination = %q, want %q", output.Request.Destination, "大阪, 日本")
+		}
 		if output.Request.Budget.Amount != 50000 {
 			t.Fatalf("budget amount = %d, want 50000", output.Request.Budget.Amount)
 		}

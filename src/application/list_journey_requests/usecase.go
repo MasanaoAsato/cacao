@@ -39,8 +39,9 @@ func (uc *useCase) Execute(ctx context.Context, input Input) (Output, error) {
 
 func toJourneyRequestDTO(request entity.JourneyRequest) JourneyRequestDTO {
 	return JourneyRequestDTO{
-		ID:        request.ID().String(),
-		Departure: request.Departure().String(),
+		ID:          request.ID().String(),
+		Departure:   request.Departure().String(),
+		Destination: request.Destination().String(),
 		Period: PeriodDTO{
 			StartDate: request.Period().StartDate(),
 			EndDate:   request.Period().EndDate(),
