@@ -14,13 +14,17 @@ import (
 // mustBuildRequest はテスト用の JourneyRequest を生成するヘルパー。
 // 値オブジェクト側でバリデーション済みの値のみ渡すため、ここでは失敗しない前提とする。
 func mustBuildRequest(t *testing.T, start, end time.Time, amount int, currency string) entity.JourneyRequest {
+	return mustBuildRequestWithLocations(t, start, end, amount, currency, "東京", "日本", "大阪", "日本")
+}
+
+func mustBuildRequestWithLocations(t *testing.T, start, end time.Time, amount int, currency, departureCity, departureCountry, destinationCity, destinationCountry string) entity.JourneyRequest {
 	t.Helper()
 
-	departure, err := value_object.NewDeparture("東京", "日本")
+	departure, err := value_object.NewDeparture(departureCity, departureCountry)
 	if err != nil {
 		t.Fatalf("failed to create departure: %v", err)
 	}
-	destination, err := value_object.NewDestination("大阪", "日本")
+	destination, err := value_object.NewDestination(destinationCity, destinationCountry)
 	if err != nil {
 		t.Fatalf("failed to create destination: %v", err)
 	}
@@ -58,6 +62,7 @@ func TestBuildJourneyPrompt(t *testing.T) {
 		// 条件セクションの確認
 		for _, want := range []string{
 			"出発地: 東京, 日本",
+			"目的地: 大阪, 日本",
 			"2026-08-01 〜 2026-08-03（3日間）",
 			"総予算: JPY 30000",
 		} {
@@ -70,6 +75,12 @@ func TestBuildJourneyPrompt(t *testing.T) {
 		for _, want := range []string{
 			"各日に1つ以上のスポット",
 			"JPY 10000", // 30000 / 3日
+			"目的地（都市・国）周辺を主な旅行エリア",
+			"出発地周辺だけで旅程を完結させない",
+			"最終Legの終点として別途追加しない",
+			"出発地と目的地が同じ場合は、市内旅行または近郊旅行",
+			"初日の先頭Legには出発地から初日の最初のスポットまでの移動",
+			"2日目以降の先頭Legには宿泊地から最初のスポットまでの移動",
 			"JPY 建ての整数",
 			"実在するもののみを使用",
 			// legs 関連のルール（設計書 09 §8.1）
@@ -126,6 +137,35 @@ func TestBuildJourneyPrompt(t *testing.T) {
 		// 10000 / 3 = 3333（整数除算で切り捨て）
 		if !strings.Contains(prompt, "JPY 3333") {
 			t.Errorf("daily budget guideline should be floored\n--- prompt ---\n%s", prompt)
+		}
+	})
+
+	t.Run("境界値: 出発地と目的地が同じ都市", func(t *testing.T) {
+		day := time.Date(2026, 8, 1, 0, 0, 0, 0, time.UTC)
+		request := mustBuildRequestWithLocations(t, day, day, 5000, "JPY", "東京", "日本", "東京", "日本")
+
+		prompt, err := BuildJourneyPrompt(request)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !strings.Contains(prompt, "出発地: 東京, 日本") {
+			t.Errorf("prompt should contain same departure, got:\n%s", prompt)
+		}
+		if !strings.Contains(prompt, "目的地: 東京, 日本") {
+			t.Errorf("prompt should contain same destination, got:\n%s", prompt)
+		}
+	})
+
+	t.Run("正常系: 目的地の国なし", func(t *testing.T) {
+		day := time.Date(2026, 8, 1, 0, 0, 0, 0, time.UTC)
+		request := mustBuildRequestWithLocations(t, day, day, 5000, "JPY", "東京", "日本", "京都", "")
+
+		prompt, err := BuildJourneyPrompt(request)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !strings.Contains(prompt, "目的地: 京都\n") {
+			t.Errorf("prompt should contain destination without country, got:\n%s", prompt)
 		}
 	})
 

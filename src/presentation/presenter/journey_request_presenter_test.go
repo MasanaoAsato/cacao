@@ -21,8 +21,9 @@ func TestToJourneyRequestResponse(t *testing.T) {
 	start := time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2026, 7, 3, 0, 0, 0, 0, time.UTC)
 	dto := getjourneyrequest.JourneyRequestDTO{
-		ID:        "request-1",
-		Departure: "東京, 日本",
+		ID:          "request-1",
+		Departure:   "東京, 日本",
+		Destination: "大阪, 日本",
 		Period: getjourneyrequest.PeriodDTO{
 			StartDate: start,
 			EndDate:   end,
@@ -38,6 +39,9 @@ func TestToJourneyRequestResponse(t *testing.T) {
 	if resp.Departure != dto.Departure {
 		t.Errorf("Departure mismatch: got %s, want %s", resp.Departure, dto.Departure)
 	}
+	if resp.Destination != dto.Destination {
+		t.Errorf("Destination mismatch: got %s, want %s", resp.Destination, dto.Destination)
+	}
 	if resp.Period.StartDate != start.Format(time.RFC3339) {
 		t.Errorf("StartDate mismatch: got %s, want %s", resp.Period.StartDate, start.Format(time.RFC3339))
 	}
@@ -51,8 +55,9 @@ func TestToJourneyRequestListResponse(t *testing.T) {
 	end := time.Date(2026, 7, 3, 0, 0, 0, 0, time.UTC)
 	dtos := []listjourneyrequests.JourneyRequestDTO{
 		{
-			ID:        "request-1",
-			Departure: "東京, 日本",
+			ID:          "request-1",
+			Departure:   "東京, 日本",
+			Destination: "大阪, 日本",
 			Period: listjourneyrequests.PeriodDTO{
 				StartDate: start,
 				EndDate:   end,
@@ -67,6 +72,9 @@ func TestToJourneyRequestListResponse(t *testing.T) {
 	}
 	if resp[0].ID != "request-1" {
 		t.Errorf("ID mismatch: got %s", resp[0].ID)
+	}
+	if resp[0].Destination != "大阪, 日本" {
+		t.Errorf("Destination mismatch: got %s", resp[0].Destination)
 	}
 }
 

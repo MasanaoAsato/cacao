@@ -15,10 +15,11 @@ type CreateJourneyRequestResponse struct {
 
 // JourneyRequestResponse は JourneyRequest 系APIのJSONレスポンス。
 type JourneyRequestResponse struct {
-	ID        string               `json:"id"`
-	Departure string               `json:"departure"`
-	Period    JourneyRequestPeriod `json:"period"`
-	Budget    MoneyJSON            `json:"budget"`
+	ID          string               `json:"id"`
+	Departure   string               `json:"departure"`
+	Destination string               `json:"destination"`
+	Period      JourneyRequestPeriod `json:"period"`
+	Budget      MoneyJSON            `json:"budget"`
 }
 
 // JourneyRequestPeriod は JourneyRequest の期間JSON表現。
@@ -35,8 +36,9 @@ func ToCreateJourneyRequestResponse(output createjourneyrequest.Output) CreateJo
 // ToJourneyRequestResponse は GetJourneyRequest のOutputをJSONレスポンスに変換する。
 func ToJourneyRequestResponse(dto getjourneyrequest.JourneyRequestDTO) JourneyRequestResponse {
 	return JourneyRequestResponse{
-		ID:        dto.ID,
-		Departure: dto.Departure,
+		ID:          dto.ID,
+		Departure:   dto.Departure,
+		Destination: dto.Destination,
 		Period: JourneyRequestPeriod{
 			StartDate: dto.Period.StartDate.Format(time.RFC3339),
 			EndDate:   dto.Period.EndDate.Format(time.RFC3339),
@@ -53,8 +55,9 @@ func ToJourneyRequestListResponse(dtos []listjourneyrequests.JourneyRequestDTO) 
 	responses := make([]JourneyRequestResponse, 0, len(dtos))
 	for _, dto := range dtos {
 		responses = append(responses, JourneyRequestResponse{
-			ID:        dto.ID,
-			Departure: dto.Departure,
+			ID:          dto.ID,
+			Departure:   dto.Departure,
+			Destination: dto.Destination,
 			Period: JourneyRequestPeriod{
 				StartDate: dto.Period.StartDate.Format(time.RFC3339),
 				EndDate:   dto.Period.EndDate.Format(time.RFC3339),

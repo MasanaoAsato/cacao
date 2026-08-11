@@ -19,6 +19,7 @@ func SystemInstruction() string {
 // 返すよう指示しており、呼び出し側はその JSON をパースして旅程を復元する。
 func BuildJourneyPrompt(request entity.JourneyRequest) (string, error) {
 	departure := request.Departure().String()
+	destination := request.Destination().String()
 	period := request.Period()
 	days := period.Days()
 	budget := request.Budget()
@@ -32,23 +33,27 @@ func BuildJourneyPrompt(request entity.JourneyRequest) (string, error) {
 
 # 条件
 - 出発地: %s
+- 目的地: %s
 - 旅行期間: %s 〜 %s（%d日間）
 - 総予算: %s（旅行全体の上限額）
 
 # 作成ルール
 1. 各日に1つ以上のスポット（訪問先・アクティビティ）を設定すること
-2. 1日あたりの予算の目安は %s %d とし、各日のスポット費用と移動費用の合計がこれを超えないこと
+2. 1日あたりの予算配分の目安は %s %d とすること
 3. 全日程のスポット費用と移動費用の合計が総予算を超えないこと
 4. スポットの費用はすべて %s 建ての整数で記載すること
 5. 各スポットには訪問開始時刻を設定し、1日の中で時系列が前後しないこと
-6. 出発地から無理なく移動できる範囲のスポットを選ぶこと
-7. 有名な観光地だけでなく穴場も織り交ぜ、同じ条件でも毎回異なるユニークな旅程にすること
-8. すべてのスポット名・施設名は実在するもののみを使用すること。自信がない場合は Web Search で確認すること
-9. 各スポットへの到着区間（legs）を必ず設定し、legs の件数は spots と同じにすること
-10. legs[i] は spots[i] に到着する移動を表す。各日の1本目は出発地（初日）または宿泊地（2日目以降）からの移動とし、from に起点名を記載すること
-11. mode は walk / train / bus / car / taxi / bicycle / flight / ferry / other のいずれかとすること
-12. durationMinutes は1分以上の整数で、現実的な移動時間にすること
-13. 移動費用も %s 建ての整数とし、徒歩区間は 0 円でよいこと
+6. 目的地（都市・国）周辺を主な旅行エリアとしてスポットを選び、出発地周辺だけで旅程を完結させないこと
+7. 目的地は訪問エリアの条件として扱い、最終Legの終点として別途追加しないこと
+8. 出発地と目的地が同じ場合は、市内旅行または近郊旅行として扱うこと
+9. 有名な観光地だけでなく穴場も織り交ぜ、同じ条件でも毎回異なるユニークな旅程にすること
+10. すべてのスポット名・施設名は実在するもののみを使用すること。自信がない場合は Web Search で確認すること
+11. 各スポットへの到着区間（legs）を必ず設定し、legs の件数は spots と同じにすること
+12. 初日の先頭Legには出発地から初日の最初のスポットまでの移動を含め、2日目以降の先頭Legには宿泊地から最初のスポットまでの移動を含めること
+13. legs[i] は spots[i] に到着する移動を表し、各日の先頭Legの from に起点名を記載すること
+14. mode は walk / train / bus / car / taxi / bicycle / flight / ferry / other のいずれかとすること
+15. durationMinutes は1分以上の整数で、現実的な移動時間にすること
+16. 移動費用も %s 建ての整数とし、徒歩区間は 0 円でよいこと
 
 # 出力形式
 以下の JSON のみを出力すること。説明文・Markdown・コードフェンスは一切付けないこと。
@@ -78,6 +83,7 @@ func BuildJourneyPrompt(request entity.JourneyRequest) (string, error) {
 }
 `,
 		departure,
+		destination,
 		period.StartDate().Format(time.DateOnly),
 		period.EndDate().Format(time.DateOnly),
 		days,

@@ -53,8 +53,8 @@ func (g *JourneyGeneratorStub) Generate(_ context.Context, request entity.Journe
 				return service.GeneratedRoute{}, fmt.Errorf("failed to create money: %w", err)
 			}
 			spots = append(spots, service.GeneratedSpot{
-				Name:          fmt.Sprintf("サンプル観光地 %d-%d", i+1, s+1),
-				Description:   "スタブによる自動生成スポット",
+				Name:          fmt.Sprintf("スタブスポット %d-%d", i+1, s+1),
+				Description:   "スタブによる自動生成スポット（地理的位置は未指定）",
 				StartAt:       d.Add(time.Hour * time.Duration(9+s*3)),
 				EstimatedCost: cost,
 			})
@@ -84,7 +84,7 @@ func (g *JourneyGeneratorStub) Generate(_ context.Context, request entity.Journe
 				Cost:     zeroCost,
 			}
 			if s == 0 {
-				leg.FromLabel = fmt.Sprintf("出発地 %d", i+1)
+				leg.FromLabel = request.Departure().String()
 			}
 			legs = append(legs, leg)
 		}

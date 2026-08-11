@@ -26,9 +26,11 @@ func setupGin() *gin.Engine {
 type mockCreateJourneyRequestUseCase struct {
 	output createjourneyrequest.Output
 	err    error
+	input  createjourneyrequest.Input
 }
 
-func (m *mockCreateJourneyRequestUseCase) Execute(_ context.Context, _ createjourneyrequest.Input) (createjourneyrequest.Output, error) {
+func (m *mockCreateJourneyRequestUseCase) Execute(_ context.Context, input createjourneyrequest.Input) (createjourneyrequest.Output, error) {
+	m.input = input
 	return m.output, m.err
 }
 
@@ -56,11 +58,45 @@ func TestHandleCreate_Success(t *testing.T) {
 	r.POST("/journey-requests", HandleCreate(uc))
 
 	body := map[string]any{
+		"departure_city":      "東京",
+		"departure_country":   "日本",
+		"destination_city":    "大阪",
+		"destination_country": "日本",
+		"start_date":          "2026-07-01T00:00:00Z",
+		"end_date":            "2026-07-03T00:00:00Z",
+		"amount":              60000,
+		"currency":            "JPY",
+	}
+	b, _ := json.Marshal(body)
+	req := httptest.NewRequest(http.MethodPost, "/journey-requests", bytes.NewReader(b))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Errorf("expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+	if uc.input.DestinationCity != "大阪" {
+		t.Errorf("destination city = %q, want 大阪", uc.input.DestinationCity)
+	}
+	if uc.input.DestinationCountry != "日本" {
+		t.Errorf("destination country = %q, want 日本", uc.input.DestinationCountry)
+	}
+}
+
+func TestHandleCreate_Success_WithoutDestinationCountry(t *testing.T) {
+	r := setupGin()
+	uc := &mockCreateJourneyRequestUseCase{output: createjourneyrequest.Output{RequestID: "request-1"}}
+	r.POST("/journey-requests", HandleCreate(uc))
+
+	body := map[string]any{
 		"departure_city":    "東京",
 		"departure_country": "日本",
+		"destination_city":  "大阪",
 		"start_date":        "2026-07-01T00:00:00Z",
 		"end_date":          "2026-07-03T00:00:00Z",
-		"amount":            30000,
+		"amount":            60000,
 		"currency":          "JPY",
 	}
 	b, _ := json.Marshal(body)
@@ -72,6 +108,9 @@ func TestHandleCreate_Success(t *testing.T) {
 
 	if w.Code != http.StatusCreated {
 		t.Errorf("expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+	if uc.input.DestinationCountry != "" {
+		t.Errorf("destination country = %q, want empty", uc.input.DestinationCountry)
 	}
 }
 
@@ -97,12 +136,14 @@ func TestHandleCreate_InvalidInput(t *testing.T) {
 	r.POST("/journey-requests", HandleCreate(uc))
 
 	body := map[string]any{
-		"departure_city":    "東京",
-		"departure_country": "日本",
-		"start_date":        "2026-07-01T00:00:00Z",
-		"end_date":          "2026-07-03T00:00:00Z",
-		"amount":            30000,
-		"currency":          "JPY",
+		"departure_city":      "東京",
+		"departure_country":   "日本",
+		"destination_city":    "大阪",
+		"destination_country": "日本",
+		"start_date":          "2026-07-01T00:00:00Z",
+		"end_date":            "2026-07-03T00:00:00Z",
+		"amount":              60000,
+		"currency":            "JPY",
 	}
 	b, _ := json.Marshal(body)
 	req := httptest.NewRequest(http.MethodPost, "/journey-requests", bytes.NewReader(b))
@@ -122,12 +163,14 @@ func TestHandleCreate_InvalidDate(t *testing.T) {
 	r.POST("/journey-requests", HandleCreate(uc))
 
 	body := map[string]any{
-		"departure_city":    "東京",
-		"departure_country": "日本",
-		"start_date":        "invalid",
-		"end_date":          "2026-07-03T00:00:00Z",
-		"amount":            30000,
-		"currency":          "JPY",
+		"departure_city":      "東京",
+		"departure_country":   "日本",
+		"destination_city":    "大阪",
+		"destination_country": "日本",
+		"start_date":          "invalid",
+		"end_date":            "2026-07-03T00:00:00Z",
+		"amount":              60000,
+		"currency":            "JPY",
 	}
 	b, _ := json.Marshal(body)
 	req := httptest.NewRequest(http.MethodPost, "/journey-requests", bytes.NewReader(b))
@@ -146,8 +189,9 @@ func TestHandleGetRequest_Success(t *testing.T) {
 	uc := &mockGetJourneyRequestUseCase{
 		output: getjourneyrequest.Output{
 			Request: getjourneyrequest.JourneyRequestDTO{
-				ID:        "request-1",
-				Departure: "東京, 日本",
+				ID:          "request-1",
+				Departure:   "東京, 日本",
+				Destination: "大阪, 日本",
 				Period: getjourneyrequest.PeriodDTO{
 					StartDate: time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC),
 					EndDate:   time.Date(2026, 7, 3, 0, 0, 0, 0, time.UTC),
@@ -189,8 +233,9 @@ func TestHandleListRequests_Success(t *testing.T) {
 		output: listjourneyrequests.Output{
 			Requests: []listjourneyrequests.JourneyRequestDTO{
 				{
-					ID:        "request-1",
-					Departure: "東京, 日本",
+					ID:          "request-1",
+					Departure:   "東京, 日本",
+					Destination: "大阪, 日本",
 					Period: listjourneyrequests.PeriodDTO{
 						StartDate: time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC),
 						EndDate:   time.Date(2026, 7, 3, 0, 0, 0, 0, time.UTC),
