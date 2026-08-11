@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -56,9 +57,21 @@ func TestJourneyGeneratorStub_Generate(t *testing.T) {
 		t.Errorf("expected %d days, got %d", expectedDays, len(route.Days))
 	}
 
-	for _, day := range route.Days {
+	for dayIndex, day := range route.Days {
 		if len(day.Spots) != 2 {
 			t.Errorf("expected 2 spots per day, got %d", len(day.Spots))
+		}
+		if len(day.Legs) != 2 {
+			t.Errorf("day %d: expected 2 legs, got %d", dayIndex+1, len(day.Legs))
+			continue
+		}
+		if got, want := day.Legs[0].FromLabel, req.Departure().String(); got != want {
+			t.Errorf("day %d: first leg from label = %q, want %q", dayIndex+1, got, want)
+		}
+		for _, spot := range day.Spots {
+			if strings.Contains(spot.Name, req.Destination().City()) {
+				t.Errorf("spot name %q should not imply destination %q", spot.Name, req.Destination().City())
+			}
 		}
 	}
 }

@@ -30,6 +30,10 @@ go install github.com/goplus/gop@latest
 go test ./...
 ```
 
+```bash
+golangci-lint fmt --diff
+golangci-lint run
+```
 # migration
 `brew install golang-migrate`
 

@@ -15,12 +15,14 @@ import (
 
 // createJourneyRequestRequest は POST /journey-requests のリクエストボディ。
 type createJourneyRequestRequest struct {
-	DepartureCity    string `json:"departure_city" binding:"required"`
-	DepartureCountry string `json:"departure_country" binding:"required"`
-	StartDate        string `json:"start_date" binding:"required"`
-	EndDate          string `json:"end_date" binding:"required"`
-	Amount           int    `json:"amount" binding:"required,min=1"`
-	Currency         string `json:"currency" binding:"required"`
+	DepartureCity      string `json:"departure_city" binding:"required"`
+	DepartureCountry   string `json:"departure_country" binding:"required"`
+	DestinationCity    string `json:"destination_city" binding:"required"`
+	DestinationCountry string `json:"destination_country"`
+	StartDate          string `json:"start_date" binding:"required"`
+	EndDate            string `json:"end_date" binding:"required"`
+	Amount             int    `json:"amount" binding:"required,min=1"`
+	Currency           string `json:"currency" binding:"required"`
 }
 
 func (r createJourneyRequestRequest) toUseCaseInput() (createjourneyrequest.Input, error) {
@@ -33,12 +35,14 @@ func (r createJourneyRequestRequest) toUseCaseInput() (createjourneyrequest.Inpu
 		return createjourneyrequest.Input{}, fmt.Errorf("invalid end_date: %w", err)
 	}
 	return createjourneyrequest.Input{
-		DepartureCity:    r.DepartureCity,
-		DepartureCountry: r.DepartureCountry,
-		StartDate:        start,
-		EndDate:          end,
-		Amount:           r.Amount,
-		Currency:         r.Currency,
+		DepartureCity:      r.DepartureCity,
+		DepartureCountry:   r.DepartureCountry,
+		DestinationCity:    r.DestinationCity,
+		DestinationCountry: r.DestinationCountry,
+		StartDate:          start,
+		EndDate:            end,
+		Amount:             r.Amount,
+		Currency:           r.Currency,
 	}, nil
 }
 
