@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="{{LANG}}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{TITLE}}</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f7f8fa;
+      --surface: #ffffff;
+      --text: #182230;
+      --muted: #596579;
+      --border: #d7dde5;
+      --accent: #275dad;
+      --current: #166534;
+      --current-bg: #ecfdf3;
+      --proposed: #92400e;
+      --proposed-bg: #fff7ed;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 16px/1.65 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    main {
+      width: min(900px, calc(100% - 2rem));
+      margin: 2rem auto;
+      padding: clamp(1.25rem, 4vw, 3rem);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    h1, h2, h3 { line-height: 1.25; }
+    h2 { margin-top: 2.5rem; border-bottom: 1px solid var(--border); padding-bottom: .4rem; }
+    h3 { margin-top: 1.75rem; }
+    nav { display: flex; flex-wrap: wrap; gap: .75rem; margin: 1.25rem 0 2rem; }
+    a { color: var(--accent); }
+    code { padding: .1rem .35rem; border-radius: 4px; background: color-mix(in srgb, var(--border) 45%, transparent); }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: .55rem .7rem; border: 1px solid var(--border); text-align: left; vertical-align: top; }
+    .state, .decision { border-left: 4px solid; padding: .75rem 1rem; margin: 1rem 0; }
+    .current { border-color: var(--current); background: var(--current-bg); color: #153e27; }
+    .proposed { border-color: var(--proposed); background: var(--proposed-bg); color: #4b2a12; }
+    .state strong { display: block; }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #111827;
+        --surface: #182230;
+        --text: #eef2f7;
+        --muted: #bac4d2;
+        --border: #3c4859;
+        --accent: #8db7ff;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>{{TITLE}}</h1>
+      <nav aria-label="Document sections">
+        <a href="#goal">Goal</a>
+        <a href="#design">Design</a>
+        <!-- Add links only for optional sections that remain. -->
+      </nav>
+    </header>
+
+    <section id="goal">
+      <h2>Goal</h2>
+      <ul>
+        <li><strong>Outcome:</strong> {{WHAT_BECOMES_POSSIBLE}}</li>
+        <li><strong>Reason:</strong> {{WHY_THIS_CHANGE_IS_NEEDED}}</li>
+        <li><strong>Scope:</strong> {{IN_SCOPE}}</li>
+        <!-- Add an out-of-scope item only when omission would be ambiguous. -->
+      </ul>
+    </section>
+
+    <section id="design">
+      <h2>Design</h2>
+      <!-- Add only change-specific h3 sections. Delete all template comments. -->
+      <h3 id="{{DESIGN_TOPIC_ID}}">{{DESIGN_TOPIC}}</h3>
+      <p>{{IMPLEMENTATION_RELEVANT_CONTRACT_BOUNDARY_OR_DECISION}}</p>
+    </section>
+
+    <!-- Add Implementation only when dependency order or change boundaries are not evident. -->
+    <!-- Add Verification only for non-obvious success, failure, or boundary conditions. -->
+  </main>
+</body>
+</html>
