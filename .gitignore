@@ -33,3 +33,6 @@ go.work.sum
 
 .design
 .study
+
+# Serena Headroomのやつ
+.serena/
