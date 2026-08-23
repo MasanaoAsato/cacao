@@ -1,0 +1,4 @@
+interface:
+  display_name: "実装設計書メンテナー"
+  short_description: "実装に着手できる簡潔で正確なHTML設計書を作成・更新します"
+  default_prompt: "$maintain-implementation-design を使い、今回の変更について実装可能なHTML設計書を .design に作成または更新してください。"
