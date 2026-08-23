@@ -24,6 +24,12 @@ func handleApplicationError(c *gin.Context, err error) {
 		c.JSON(http.StatusNotFound, errorResponse{Error: "journey request not found", Detail: err.Error()})
 	case errors.Is(err, application.ErrJourneyNotFound):
 		c.JSON(http.StatusNotFound, errorResponse{Error: "journey not found", Detail: err.Error()})
+	case errors.Is(err, application.ErrJourneyImageNotFound):
+		c.JSON(http.StatusNotFound, errorResponse{Error: "journey image not found", Detail: err.Error()})
+	case errors.Is(err, application.ErrJourneyImageNotReady):
+		c.JSON(http.StatusConflict, errorResponse{Error: "journey image not ready", Detail: err.Error()})
+	case errors.Is(err, application.ErrJourneyImageRetryNotAllowed):
+		c.JSON(http.StatusConflict, errorResponse{Error: "journey image retry not allowed", Detail: err.Error()})
 	case errors.Is(err, application.ErrGenerationFailed):
 		c.JSON(http.StatusBadGateway, errorResponse{Error: "generation failed", Detail: err.Error()})
 	case errors.Is(err, application.ErrDuplicateID):
