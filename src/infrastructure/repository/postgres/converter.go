@@ -352,3 +352,150 @@ func spotToModel(itineraryDayID value_object.ID, s entity.Spot) (SpotModel, erro
 		Currency:       cost.Currency().Code(),
 	}, nil
 }
+
+func journeyImageToModel(image entity.JourneyImage) (JourneyImageModel, error) {
+	if image.ID().IsEmpty() {
+		return JourneyImageModel{}, fmt.Errorf("journey image id is empty")
+	}
+	if image.RequestID().IsEmpty() {
+		return JourneyImageModel{}, fmt.Errorf("journey image request id is empty")
+	}
+
+	slot := image.Slot()
+	if err := slot.Validate(); err != nil {
+		return JourneyImageModel{}, fmt.Errorf("journey image slot: %w", err)
+	}
+	if err := image.Status().Validate(); err != nil {
+		return JourneyImageModel{}, fmt.Errorf("journey image status: %w", err)
+	}
+
+	model := JourneyImageModel{
+		ID:               image.ID().String(),
+		JourneyRequestID: image.RequestID().String(),
+		Purpose:          slot.Purpose().String(),
+		Ordinal:          slot.Ordinal(),
+		Status:           image.Status().String(),
+		AttemptCount:     image.AttemptCount(),
+	}
+
+	if assetReference, ok := image.AssetReference(); ok {
+		model.StorageKey = pointer(assetReference.StorageKey())
+		model.MediaType = pointer(assetReference.MediaType())
+		model.Width = pointer(assetReference.Width())
+		model.Height = pointer(assetReference.Height())
+	}
+	if failureCode, ok := image.FailureCode(); ok {
+		model.FailureCode = pointer(failureCode.String())
+	}
+
+	return model, nil
+}
+
+func modelToJourneyImage(model JourneyImageModel) (entity.JourneyImage, error) {
+	id, err := value_object.NewIDFromString(model.ID)
+	if err != nil {
+		return entity.JourneyImage{}, fmt.Errorf("journey image id: %w", err)
+	}
+	requestID, err := value_object.NewIDFromString(model.JourneyRequestID)
+	if err != nil {
+		return entity.JourneyImage{}, fmt.Errorf("journey image request id: %w", err)
+	}
+	purpose, err := value_object.NewImagePurpose(model.Purpose)
+	if err != nil {
+		return entity.JourneyImage{}, fmt.Errorf("journey image purpose: %w", err)
+	}
+	slot, err := value_object.NewImageSlot(purpose, model.Ordinal)
+	if err != nil {
+		return entity.JourneyImage{}, fmt.Errorf("journey image slot: %w", err)
+	}
+	status, err := value_object.NewImageStatus(model.Status)
+	if err != nil {
+		return entity.JourneyImage{}, fmt.Errorf("journey image status: %w", err)
+	}
+	if err := validateJourneyImageModelState(model, status); err != nil {
+		return entity.JourneyImage{}, err
+	}
+
+	assetReference, err := imageAssetReferenceFromModel(model)
+	if err != nil {
+		return entity.JourneyImage{}, err
+	}
+	failureCode := value_object.ImageFailureCode("")
+	if model.FailureCode != nil {
+		failureCode, err = value_object.NewImageFailureCode(*model.FailureCode)
+		if err != nil {
+			return entity.JourneyImage{}, fmt.Errorf("journey image failure code: %w", err)
+		}
+	}
+
+	image, err := entity.RestoreJourneyImage(
+		id,
+		requestID,
+		slot,
+		status,
+		assetReference,
+		failureCode,
+		model.AttemptCount,
+	)
+	if err != nil {
+		return entity.JourneyImage{}, fmt.Errorf("restore journey image: %w", err)
+	}
+	return image, nil
+}
+
+func imageAssetReferenceFromModel(
+	model JourneyImageModel,
+) (value_object.ImageAssetReference, error) {
+	hasAssetValue := model.StorageKey != nil || model.MediaType != nil ||
+		model.Width != nil || model.Height != nil
+	if !hasAssetValue {
+		return value_object.ImageAssetReference{}, nil
+	}
+	if model.StorageKey == nil || model.MediaType == nil ||
+		model.Width == nil || model.Height == nil {
+		return value_object.ImageAssetReference{}, fmt.Errorf(
+			"journey image asset columns must all be set",
+		)
+	}
+
+	assetReference, err := value_object.NewImageAssetReference(
+		*model.StorageKey,
+		*model.MediaType,
+		*model.Width,
+		*model.Height,
+	)
+	if err != nil {
+		return value_object.ImageAssetReference{}, fmt.Errorf(
+			"journey image asset reference: %w",
+			err,
+		)
+	}
+	return assetReference, nil
+}
+
+func validateJourneyImageModelState(
+	model JourneyImageModel,
+	status value_object.ImageStatus,
+) error {
+	if status == value_object.ImageStatusProcessing {
+		if model.LeaseUntil == nil || model.LeaseUntil.IsZero() {
+			return fmt.Errorf("processing journey image must have lease until")
+		}
+	} else if model.LeaseUntil != nil {
+		return fmt.Errorf("non-processing journey image must not have lease until")
+	}
+
+	if status == value_object.ImageStatusReady {
+		if model.CompletedAt == nil || model.CompletedAt.IsZero() {
+			return fmt.Errorf("ready journey image must have completed at")
+		}
+	} else if model.CompletedAt != nil {
+		return fmt.Errorf("non-ready journey image must not have completed at")
+	}
+
+	return nil
+}
+
+func pointer[T any](value T) *T {
+	return &value
+}

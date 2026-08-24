@@ -5,7 +5,7 @@ import (
 
 	"cacao/src/application"
 
-	"github.com/jackc/pgconn"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 // mapPostgresError は Postgres のドライバ固有エラーをアプリケーション層の
