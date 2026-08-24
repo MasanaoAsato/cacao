@@ -87,3 +87,25 @@ type LegModel struct {
 }
 
 func (LegModel) TableName() string { return "journey.legs" }
+
+// JourneyImageModel は journey.journey_images テーブルの1行に対応する GORM モデル。
+// entity.JourneyImage とは別物であり、converter.go でドメインの不変条件を再検証する。
+type JourneyImageModel struct {
+	ID               string     `gorm:"primaryKey;type:uuid"`
+	JourneyRequestID string     `gorm:"column:journey_request_id;type:uuid"`
+	Purpose          string     `gorm:"column:purpose;type:varchar(20)"`
+	Ordinal          int        `gorm:"column:ordinal"`
+	Status           string     `gorm:"column:status;type:varchar(20)"`
+	StorageKey       *string    `gorm:"column:storage_key"`
+	MediaType        *string    `gorm:"column:media_type;type:varchar(50)"`
+	Width            *int       `gorm:"column:width"`
+	Height           *int       `gorm:"column:height"`
+	FailureCode      *string    `gorm:"column:failure_code;type:varchar(50)"`
+	AttemptCount     int        `gorm:"column:attempt_count"`
+	LeaseUntil       *time.Time `gorm:"column:lease_until;type:timestamptz"`
+	CreatedAt        time.Time  `gorm:"column:created_at;type:timestamptz"`
+	UpdatedAt        time.Time  `gorm:"column:updated_at;type:timestamptz"`
+	CompletedAt      *time.Time `gorm:"column:completed_at;type:timestamptz"`
+}
+
+func (JourneyImageModel) TableName() string { return "journey.journey_images" }
