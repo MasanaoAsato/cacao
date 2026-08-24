@@ -7,6 +7,7 @@ import (
 
 	createjourneyrequest "cacao/src/application/create_journey_request"
 	generatejourney "cacao/src/application/generate_journey"
+	generatejourneyimage "cacao/src/application/generate_journey_image"
 	getjourney "cacao/src/application/get_journey"
 	getjourneyrequest "cacao/src/application/get_journey_request"
 	listjourneyrequests "cacao/src/application/list_journey_requests"
@@ -15,6 +16,7 @@ import (
 	"cacao/src/infrastructure/event"
 	"cacao/src/infrastructure/repository/postgres"
 	"cacao/src/infrastructure/service"
+	"cacao/src/infrastructure/worker"
 	"cacao/src/presentation/controller"
 
 	domainservice "cacao/src/domain/service"
@@ -45,6 +47,41 @@ func main() {
 	// 2. リポジトリ生成（Postgres 実装を注入）
 	reqRepo := postgres.NewJourneyRequestRepository(db)
 	journeyRepo := postgres.NewJourneyRepository(db)
+	imageRepo := postgres.NewJourneyImageRepository(db)
+	imageStorageConfig, err := service.ImageStorageConfigFromEnv()
+	if err != nil {
+		log.Fatalf("failed load image storage config: %v", err)
+	}
+	imageStorage, err := service.NewFileSystemImageStorage(imageStorageConfig)
+	if err != nil {
+		log.Fatalf("failed setup image storage: %v", err)
+	}
+	defer func() {
+		if err := imageStorage.Close(); err != nil {
+			log.Printf("failed close image storage: %v", err)
+		}
+	}()
+
+	workerConfig := worker.DefaultWorkerConfig()
+	imageGenerator := service.NewImageGeneratorStub()
+	generateImageUC := generatejourneyimage.NewUseCase(
+		imageRepo,
+		reqRepo,
+		imageGenerator,
+		imageStorage,
+		generatejourneyimage.Config{
+			GenerationTimeout: workerConfig.GenerationTimeout,
+			LeaseDuration:     workerConfig.LeaseDuration,
+		},
+	)
+	imageWorker, err := worker.NewJourneyImage(
+		workerConfig,
+		imageRepo,
+		generateImageUC,
+	)
+	if err != nil {
+		log.Fatalf("failed setup journey image worker: %v", err)
+	}
 
 	// 3. 旅程生成サービス（LLM_DRIVER で実装を切替、設計書 §8）
 	generator, err := newJourneyGenerator()
@@ -70,6 +107,11 @@ func main() {
 		getReqUC,
 		listReqUC,
 	)
+	go func() {
+		if err := imageWorker.Run(ctx, nil); err != nil {
+			log.Printf("journey image worker stopped: %v", err)
+		}
+	}()
 	if err := r.Run(":8080"); err != nil {
 		panic(err)
 	}

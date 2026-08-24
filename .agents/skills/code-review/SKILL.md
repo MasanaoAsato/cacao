@@ -6,6 +6,8 @@ description: When a user requests a code review, the agent refers to this skill 
 # Code Review for Golang
 You can use this skill to perform a code review for Golang code. It provides feedback on code quality, best practices, and potential improvements.
 
+Be sure to provide feedback on the results of the review in the user's language.
+
 -golang-code-style
 -golang-error-handling
 -golang-lint
