@@ -13,6 +13,7 @@ import (
 )
 
 type Config struct {
+	URL          string `env:"POSTGRESQL_URL"`
 	Host         string `env:"POSTGRES_HOST"          envDefault:"localhost"`
 	Port         string `env:"POSTGRES_PORT"          envDefault:"5432"`
 	User         string `env:"POSTGRES_USER"          envDefault:"admin"`
@@ -34,11 +35,7 @@ func ConfigFromEnv() (Config, error) {
 }
 
 func CreateGORMClient(ctx context.Context, cfg Config) (*gorm.DB, error) {
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.DBName, cfg.SSLMODE,
-	)
-
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+	db, err := gorm.Open(postgres.Open(cfg.dsn()), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Warn),
 	})
 	if err != nil {
@@ -56,4 +53,15 @@ func CreateGORMClient(ctx context.Context, cfg Config) (*gorm.DB, error) {
 	}
 
 	return db, nil
+}
+
+func (c Config) dsn() string {
+	if c.URL != "" {
+		return c.URL
+	}
+
+	return fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		c.Host, c.Port, c.User, c.Password, c.DBName, c.SSLMODE,
+	)
 }

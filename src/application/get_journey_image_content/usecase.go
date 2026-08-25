@@ -63,6 +63,6 @@ func (uc *useCase) Execute(ctx context.Context, input Input) (Output, error) {
 	return Output{
 		Content:   content,
 		MediaType: assetReference.MediaType(),
-		ETag:      fmt.Sprintf("%q", image.ID().String()),
+		ETag:      image.ID().String(),
 	}, nil
 }
