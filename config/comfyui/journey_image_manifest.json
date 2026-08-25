@@ -1,0 +1,12 @@
+{
+  "version": "v1",
+  "positive_prompt": {"node_id": "57:27", "input": "text"},
+  "negative_prompt": null,
+  "seed": {"node_id": "57:3", "input": "seed"},
+  "size": {
+    "node_id": "57:13",
+    "width_input": "width",
+    "height_input": "height"
+  },
+  "output_node_id": "9"
+}
