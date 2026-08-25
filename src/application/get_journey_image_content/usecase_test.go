@@ -155,7 +155,7 @@ func TestUseCaseExecute(t *testing.T) {
 			wantOpen:   1,
 		},
 		{
-			name:     "境界値系: ETagは画像idを引用符で囲む",
+			name:     "正常系: ETagは画像idを返す",
 			input:    Input{ImageID: readyImage.ID().String()},
 			image:    readyImage,
 			wantOpen: 1,
@@ -189,8 +189,8 @@ func TestUseCaseExecute(t *testing.T) {
 				if output.MediaType != "image/png" {
 					t.Errorf("MediaType = %q, want image/png", output.MediaType)
 				}
-				if output.ETag != "\""+readyImage.ID().String()+"\"" {
-					t.Errorf("ETag = %q, want quoted image id", output.ETag)
+				if output.ETag != readyImage.ID().String() {
+					t.Errorf("ETag = %q, want image id", output.ETag)
 				}
 				if closeErr := output.Content.Close(); closeErr != nil {
 					t.Errorf("Content.Close() error = %v", closeErr)

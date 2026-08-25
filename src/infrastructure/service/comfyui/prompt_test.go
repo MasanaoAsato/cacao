@@ -25,7 +25,7 @@ func TestNewPromptUsesPurposePreset(t *testing.T) {
 			ordinal:    1,
 			width:      896,
 			height:     1280,
-			promptText: "cover image slot 1",
+			promptText: "portrait composition",
 		},
 		{
 			name:       "illustration",
@@ -33,7 +33,7 @@ func TestNewPromptUsesPurposePreset(t *testing.T) {
 			ordinal:    2,
 			width:      1024,
 			height:     768,
-			promptText: "illustration image slot 2",
+			promptText: "landscape composition",
 		},
 	}
 

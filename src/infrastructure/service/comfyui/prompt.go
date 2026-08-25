@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"strings"
-	"time"
 
 	domainservice "cacao/src/domain/service"
 	"cacao/src/domain/value_object"
@@ -40,19 +39,16 @@ func NewPrompt(brief domainservice.ImageBrief) (Prompt, error) {
 	}
 
 	width, height := imageSize(brief.Slot().Purpose())
-	ordinal := brief.Slot().Ordinal()
-	period := brief.Period()
 	destination := brief.Destination().String()
 
 	positive := fmt.Sprintf(
-		"A polished travel illustration for %s, a %d-day journey from %s to %s, %s image slot %d, %s season, suitable for a travel journal.",
+		"A polished, text-free travel background illustration of %s. "+
+			"Depict scenery, architecture, color palette, vegetation, and weather that are geographically and climatically authentic to the destination. "+
+			"Do not use generic seasonal motifs, landmarks, or vegetation from other regions. "+
+			"%s "+
+			"Background artwork only. No typography, text, letters, words, numbers, dates, logos, watermarks, captions, or signage.",
 		destination,
-		period.Days(),
-		period.StartDate().Format(time.DateOnly),
-		period.EndDate().Format(time.DateOnly),
-		brief.Slot().Purpose().String(),
-		ordinal,
-		season(period.StartDate()),
+		composition(brief.Slot().Purpose()),
 	)
 
 	return Prompt{
@@ -91,17 +87,12 @@ func imageSize(purpose value_object.ImagePurpose) (int, int) {
 	return 1024, 768
 }
 
-func season(date time.Time) string {
-	switch date.Month() {
-	case time.December, time.January, time.February:
-		return "winter"
-	case time.March, time.April, time.May:
-		return "spring"
-	case time.June, time.July, time.August:
-		return "summer"
-	default:
-		return "autumn"
+func composition(purpose value_object.ImagePurpose) string {
+	if purpose == value_object.ImagePurposeCover {
+		return "Use a portrait composition with a clean, uncluttered upper area for later layout."
 	}
+
+	return "Use a landscape composition with a balanced focal point and uncluttered margins for later layout."
 }
 
 func validatePrompt(prompt Prompt) error {
