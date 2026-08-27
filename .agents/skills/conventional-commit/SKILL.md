@@ -17,6 +17,9 @@ description: 'Prompt and workflow for generating conventional commit messages us
 2. Run `git diff` or `git diff --cached` to inspect changes.
 3. Stage your changes with `git add <file>`.
 4. Construct your commit message using the following XML structure.
+5. Propose work beanch name.
+6. Branch name rule is based "topics/<branchType_prefix>/<pr_number>/<beanch_description>"
+7. BranchType prefixes are "feature","refactor","chore","fix","docs","hotfix","test"
 
 ### Commit Message Structure
 

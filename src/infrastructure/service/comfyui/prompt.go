@@ -42,11 +42,35 @@ func NewPrompt(brief domainservice.ImageBrief) (Prompt, error) {
 	destination := brief.Destination().String()
 
 	positive := fmt.Sprintf(
-		"A polished, text-free travel background illustration of %s. "+
-			"Depict scenery, architecture, color palette, vegetation, and weather that are geographically and climatically authentic to the destination. "+
-			"Do not use generic seasonal motifs, landmarks, or vegetation from other regions. "+
-			"%s "+
-			"Background artwork only. No typography, text, letters, words, numbers, dates, logos, watermarks, captions, or signage.",
+		`DESTINATION REFERENCE:
+		%s
+
+		The destination above is semantic reference information only.
+		Use it only to determine the appropriate geography, climate, architecture,
+		vegetation, landscape, and atmosphere.
+		Never reproduce, copy, spell, transliterate, translate, or visually render
+		the destination name itself anywhere in the image.
+
+		Create a polished environmental background illustration representing that destination.
+
+		Depict scenery, architecture, color palette, vegetation, and weather that are
+		geographically and climatically authentic to the destination.
+		Do not use generic seasonal motifs, landmarks, or vegetation from other regions.
+
+		Use a full-frame scenic composition.
+		%s
+		This is environmental artwork, not a travel poster, postcard, title card,
+		advertisement, brochure, magazine cover, or promotional graphic.
+		Do not reserve empty space for a title or heading.
+
+		Any signs, plaques, storefront signs, billboards, posters, displays, labels,
+		or other surfaces that would normally contain writing must instead be blank,
+		unmarked, or contain only non-symbolic decorative texture.
+
+		Background artwork only.
+		No typography, text, letters, words, numbers, dates, place names, logos,
+		watermarks, captions, signage, pseudo-text, fictional writing, or
+		text-like markings anywhere in the image.`,
 		destination,
 		composition(brief.Slot().Purpose()),
 	)
