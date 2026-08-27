@@ -2,30 +2,32 @@ package postgres
 
 import (
 	"errors"
+	"fmt"
 
 	"cacao/src/application"
+	"cacao/src/infrastructure/observability"
 
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
 // mapPostgresError は Postgres のドライバ固有エラーをアプリケーション層の
-// ポータブルなエラーに変換する。
+// ポータブルなエラーに変換し、SQLSTATE を原因追跡のために保持する。
 //
 // ユースケース:
-//   - 23505 unique_violation: 重複した主キー・一意制約違反を application.ErrDuplicateID に変換
-//   - その他: 元のエラーをそのまま返す（生の Postgres エラーが露出するのを防ぐため、
-//     将来ここでラップを増やす余地を残す）
-func mapPostgresError(err error) error {
+//   - 23505 unique_violation: application.ErrDuplicateID に変換する
+//   - その他: 元のエラーを保持する
+func mapPostgresError(operation string, err error) error {
 	if err == nil {
 		return nil
 	}
 
 	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) {
-		if pgErr.Code == "23505" {
-			return application.ErrDuplicateID
-		}
+	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+		return observability.WithOperation(
+			operation,
+			fmt.Errorf("%w: %w", application.ErrDuplicateID, err),
+		)
 	}
 
-	return err
+	return observability.WithOperation(operation, err)
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"cacao/src/application"
 	createjourneyrequest "cacao/src/application/create_journey_request"
 	getjourneyrequest "cacao/src/application/get_journey_request"
 	listjourneyrequests "cacao/src/application/list_journey_requests"
@@ -51,12 +52,22 @@ func HandleCreate(uc createjourneyrequest.UseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req createJourneyRequestRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
+			logHTTPFailure(
+				c,
+				http.StatusBadRequest,
+				fmt.Errorf("%w: bind journey request body: %w", application.ErrInvalidInput, err),
+			)
 			c.JSON(http.StatusBadRequest, errorResponse{Error: "invalid request body", Detail: err.Error()})
 			return
 		}
 
 		input, err := req.toUseCaseInput()
 		if err != nil {
+			logHTTPFailure(
+				c,
+				http.StatusBadRequest,
+				fmt.Errorf("%w: convert journey request input: %w", application.ErrInvalidInput, err),
+			)
 			c.JSON(http.StatusBadRequest, errorResponse{Error: "invalid input", Detail: err.Error()})
 			return
 		}

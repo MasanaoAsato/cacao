@@ -1,11 +1,13 @@
 package postgres
 
 import (
+	"context"
+	"errors"
+
 	"cacao/src/domain/entity"
 	"cacao/src/domain/repository"
 	"cacao/src/domain/value_object"
-	"context"
-	"errors"
+	"cacao/src/infrastructure/observability"
 
 	"gorm.io/gorm"
 )
@@ -76,7 +78,7 @@ func (r *JourneyRepositoryPostgres) Save(ctx context.Context, j entity.Journey) 
 		}
 		return nil
 	}); err != nil {
-		return mapPostgresError(err)
+		return mapPostgresError("save_journey", err)
 	}
 	return nil
 }
@@ -91,7 +93,7 @@ func (r *JourneyRepositoryPostgres) FindByID(ctx context.Context, id value_objec
 		return entity.Journey{}, repository.ErrJourneyNotFound
 	}
 	if err != nil {
-		return entity.Journey{}, err
+		return entity.Journey{}, observability.WithOperation("find_journey", err)
 	}
 	return modelToJourney(m)
 }
@@ -106,7 +108,7 @@ func (r *JourneyRepositoryPostgres) FindByRequestID(ctx context.Context, request
 		return entity.Journey{}, repository.ErrJourneyNotFound
 	}
 	if err != nil {
-		return entity.Journey{}, err
+		return entity.Journey{}, observability.WithOperation("find_journey_by_request", err)
 	}
 	return modelToJourney(m)
 }
@@ -119,7 +121,7 @@ func (r *JourneyRepositoryPostgres) FindAll(ctx context.Context) ([]entity.Journ
 		Preload("Days").Preload("Days.Spots").Preload("Days.Legs").
 		Find(&models).Error
 	if err != nil {
-		return nil, err
+		return nil, observability.WithOperation("list_journeys", err)
 	}
 
 	result := make([]entity.Journey, 0, len(models))
@@ -143,7 +145,7 @@ func (r *JourneyRepositoryPostgres) Delete(ctx context.Context, id value_object.
 		Where("id = ?", id.String()).
 		Delete(&JourneyModel{})
 	if result.Error != nil {
-		return result.Error
+		return observability.WithOperation("delete_journey", result.Error)
 	}
 	if result.RowsAffected == 0 {
 		return repository.ErrJourneyNotFound
