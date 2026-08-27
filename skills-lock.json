@@ -7,6 +7,12 @@
       "skillPath": "domain-driven-design/SKILL.md",
       "computedHash": "3a84c4c48b3d1bcdf07e6ba096749679f97915dd6b4f9c87ab8a715b936fed30"
     },
+    "eli5": {
+      "source": "DreambigOu/ELI5",
+      "sourceType": "github",
+      "skillPath": "skills/eli5/SKILL.md",
+      "computedHash": "ebe7a298b60d28ac26da8aa505d28dc97d124882abc7f33eddeb0d01e9852058"
+    },
     "find-skills": {
       "source": "vercel-labs/skills",
       "sourceType": "github",

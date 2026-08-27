@@ -10,6 +10,7 @@ import (
 	generatejourneyimage "cacao/src/application/generate_journey_image"
 	"cacao/src/domain/repository"
 	"cacao/src/domain/value_object"
+	"cacao/src/infrastructure/observability"
 )
 
 const recoveryInterval = time.Minute
@@ -165,7 +166,7 @@ func (w *JourneyImageWorker) pollPending(
 
 	images, err := w.imageRepo.FindPending(ctx, w.config.BatchSize)
 	if err != nil {
-		w.reportError("find pending journey images", err)
+		w.reportError(ctx, "find_pending_journey_images", "", err)
 		return
 	}
 
@@ -195,7 +196,7 @@ func (w *JourneyImageWorker) pollPending(
 				return
 			}
 			if err := w.executeGeneration(ctx, imageID); err != nil && ctx.Err() == nil {
-				w.reportError("generate journey image", fmt.Errorf("image %s: %w", imageID, err))
+				w.reportError(ctx, "generate_journey_image", imageID.String(), err)
 			}
 		}()
 	}
@@ -227,23 +228,32 @@ func (w *JourneyImageWorker) recoverExpired(ctx context.Context) {
 		w.config.RecoveryBatchSize,
 	)
 	if err != nil {
-		w.reportError("find expired journey images", err)
+		w.reportError(ctx, "find_expired_journey_images", "", err)
 		return
 	}
 
 	for _, image := range images {
 		if err := image.Fail(value_object.ImageFailureCodeProviderTimeout); err != nil {
-			w.reportError("fail expired journey image", fmt.Errorf("image %s: %w", image.ID(), err))
+			w.reportError(ctx, "fail_expired_journey_image", image.ID().String(), err)
 			continue
 		}
 		if err := w.imageRepo.Save(ctx, image); err != nil {
-			w.reportError("save expired journey image", fmt.Errorf("image %s: %w", image.ID(), err))
+			w.reportError(ctx, "save_expired_journey_image", image.ID().String(), err)
 		}
 	}
 }
 
-func (w *JourneyImageWorker) reportError(message string, err error) {
-	w.logger.Error(message, slog.Any("error", err))
+func (w *JourneyImageWorker) reportError(ctx context.Context, operation string, imageID string, err error) {
+	observability.LogFailure(
+		ctx,
+		w.logger,
+		slog.LevelError,
+		observability.FailureContext{
+			Operation:      operation,
+			JourneyImageID: imageID,
+		},
+		err,
+	)
 }
 
 func normalizeWorkerConfig(config WorkerConfig) (WorkerConfig, error) {

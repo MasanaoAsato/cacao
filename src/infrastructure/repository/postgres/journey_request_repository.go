@@ -1,11 +1,13 @@
 package postgres
 
 import (
+	"context"
+	"errors"
+
 	"cacao/src/domain/entity"
 	"cacao/src/domain/repository"
 	"cacao/src/domain/value_object"
-	"context"
-	"errors"
+	"cacao/src/infrastructure/observability"
 
 	"gorm.io/gorm"
 )
@@ -27,7 +29,7 @@ func (r *JourneyRequestRepositoryPostgres) Save(ctx context.Context, jr entity.J
 		return err
 	}
 	if err := r.db.WithContext(ctx).Save(&model).Error; err != nil {
-		return mapPostgresError(err)
+		return mapPostgresError("save_journey_request", err)
 	}
 	return nil
 }
@@ -43,7 +45,7 @@ func (r *JourneyRequestRepositoryPostgres) FindByID(ctx context.Context, id valu
 		return entity.JourneyRequest{}, repository.ErrJourneyRequestNotFound
 	}
 	if err != nil {
-		return entity.JourneyRequest{}, err
+		return entity.JourneyRequest{}, observability.WithOperation("find_journey_request", err)
 	}
 	return modelToJourneyRequest(m)
 }
@@ -53,7 +55,7 @@ func (r *JourneyRequestRepositoryPostgres) FindByID(ctx context.Context, id valu
 func (r *JourneyRequestRepositoryPostgres) FindAll(ctx context.Context) ([]entity.JourneyRequest, error) {
 	var models []JourneyRequestModel
 	if err := r.db.WithContext(ctx).Find(&models).Error; err != nil {
-		return nil, err
+		return nil, observability.WithOperation("list_journey_requests", err)
 	}
 
 	result := make([]entity.JourneyRequest, 0, len(models))
@@ -74,7 +76,7 @@ func (r *JourneyRequestRepositoryPostgres) Delete(ctx context.Context, id value_
 		Where("id = ?", id.String()).
 		Delete(&JourneyRequestModel{})
 	if result.Error != nil {
-		return result.Error
+		return observability.WithOperation("delete_journey_request", result.Error)
 	}
 	if result.RowsAffected == 0 {
 		return repository.ErrJourneyRequestNotFound

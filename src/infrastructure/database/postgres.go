@@ -36,7 +36,7 @@ func ConfigFromEnv() (Config, error) {
 
 func CreateGORMClient(ctx context.Context, cfg Config) (*gorm.DB, error) {
 	db, err := gorm.Open(postgres.Open(cfg.dsn()), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Warn),
+		Logger: logger.Default.LogMode(logger.Silent),
 	})
 	if err != nil {
 		return nil, err

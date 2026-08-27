@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -25,6 +25,7 @@ import (
 	retryjourneyimage "cacao/src/application/retry_journey_image"
 	"cacao/src/infrastructure/database"
 	"cacao/src/infrastructure/event"
+	"cacao/src/infrastructure/observability"
 	"cacao/src/infrastructure/repository/postgres"
 	"cacao/src/infrastructure/service"
 	"cacao/src/infrastructure/service/comfyui"
@@ -43,8 +44,18 @@ const (
 )
 
 func main() {
+	logger := slog.New(slog.NewJSONHandler(os.Stderr, nil))
+	slog.SetDefault(logger)
+
 	if err := run(); err != nil {
-		log.Fatal(err)
+		observability.LogFailure(
+			context.Background(),
+			logger,
+			slog.LevelError,
+			observability.FailureContext{Operation: "run_application"},
+			err,
+		)
+		os.Exit(1)
 	}
 }
 
@@ -76,7 +87,13 @@ func run() error {
 	}
 	defer func() {
 		if closeErr := databaseConnection.Close(); closeErr != nil {
-			log.Printf("failed close database: %v", closeErr)
+			observability.LogFailure(
+				context.Background(),
+				slog.Default(),
+				slog.LevelError,
+				observability.FailureContext{Operation: "close_database"},
+				closeErr,
+			)
 		}
 	}()
 
@@ -204,7 +221,13 @@ func closeImageStorage(storage domainservice.ImageStorage) {
 		return
 	}
 	if err := closeable.Close(); err != nil {
-		log.Printf("failed close image storage: %v", err)
+		observability.LogFailure(
+			context.Background(),
+			slog.Default(),
+			slog.LevelError,
+			observability.FailureContext{Operation: "close_image_storage"},
+			err,
+		)
 	}
 }
 

@@ -246,7 +246,7 @@ func TestJourneyGeneratorOpenRouterGenerateWebSearchDisabled(t *testing.T) {
 	}
 }
 
-func TestJourneyGeneratorOpenRouterGenerateSDKErrorLogsSafeDetails(t *testing.T) {
+func TestJourneyGeneratorOpenRouterGenerateSDKErrorDoesNotLogFailure(t *testing.T) {
 	request := newStubTestJourneyRequest(
 		t,
 		time.Date(2026, 8, 1, 0, 0, 0, 0, time.UTC),
@@ -264,15 +264,15 @@ func TestJourneyGeneratorOpenRouterGenerateSDKErrorLogsSafeDetails(t *testing.T)
 	if err == nil {
 		t.Fatal("Generate() error = nil, want error")
 	}
-	if !strings.Contains(err.Error(), "provider rejected request") && !strings.Contains(err.Error(), "bad request") {
-		t.Errorf("error = %q, want safe provider detail", err)
+	if !strings.Contains(err.Error(), "openrouter request failed") {
+		t.Errorf("error = %q, want generic request failure", err)
 	}
 	if strings.Contains(err.Error(), openRouterTestAPIKey) || strings.Contains(err.Error(), "do-not-log") {
 		t.Errorf("error exposes sensitive detail: %q", err)
 	}
 	logText := logs.String()
-	if !strings.Contains(logText, "openrouter journey generation failed") {
-		t.Errorf("logs = %q, want failure log", logText)
+	if strings.Contains(logText, "openrouter journey generation failed") {
+		t.Errorf("logs = %q, want no failure log", logText)
 	}
 	if strings.Contains(logText, openRouterTestAPIKey) || strings.Contains(logText, "do-not-log") {
 		t.Errorf("logs expose sensitive detail: %q", logText)

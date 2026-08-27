@@ -9,6 +9,7 @@ import (
 	"cacao/src/domain/entity"
 	"cacao/src/domain/repository"
 	"cacao/src/domain/value_object"
+	"cacao/src/infrastructure/observability"
 
 	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"
@@ -73,7 +74,7 @@ func (r *JourneyImageRepositoryPostgres) Save(
 		return nil
 	})
 	if err != nil {
-		return mapJourneyImageRepositoryError(err)
+		return mapJourneyImageRepositoryError("save_journey_image", err)
 	}
 	return nil
 }
@@ -89,7 +90,7 @@ func (r *JourneyImageRepositoryPostgres) FindByID(
 		return entity.JourneyImage{}, repository.ErrJourneyImageNotFound
 	}
 	if err != nil {
-		return entity.JourneyImage{}, fmt.Errorf("find journey image by id: %w", err)
+		return entity.JourneyImage{}, mapJourneyImageRepositoryError("find_journey_image", err)
 	}
 	return modelToJourneyImage(model)
 }
@@ -106,7 +107,7 @@ func (r *JourneyImageRepositoryPostgres) FindByRequestID(
 		Order("ordinal ASC").
 		Find(&models).Error
 	if err != nil {
-		return nil, fmt.Errorf("find journey images by request id: %w", err)
+		return nil, mapJourneyImageRepositoryError("list_journey_images", err)
 	}
 	return journeyImageModelsToEntities(models)
 }
@@ -130,7 +131,7 @@ func (r *JourneyImageRepositoryPostgres) FindBySlot(
 		return entity.JourneyImage{}, repository.ErrJourneyImageNotFound
 	}
 	if err != nil {
-		return entity.JourneyImage{}, fmt.Errorf("find journey image by slot: %w", err)
+		return entity.JourneyImage{}, mapJourneyImageRepositoryError("find_journey_image_slot", err)
 	}
 	return modelToJourneyImage(model)
 }
@@ -152,7 +153,7 @@ func (r *JourneyImageRepositoryPostgres) FindPending(
 		Limit(limit).
 		Find(&models).Error
 	if err != nil {
-		return nil, fmt.Errorf("find pending journey images: %w", err)
+		return nil, mapJourneyImageRepositoryError("find_pending_journey_images", err)
 	}
 	return journeyImageModelsToEntities(models)
 }
@@ -179,7 +180,7 @@ func (r *JourneyImageRepositoryPostgres) FindExpiredProcessing(
 		Limit(limit).
 		Find(&models).Error
 	if err != nil {
-		return nil, fmt.Errorf("find expired processing journey images: %w", err)
+		return nil, mapJourneyImageRepositoryError("find_expired_journey_images", err)
 	}
 	return journeyImageModelsToEntities(models)
 }
@@ -237,7 +238,7 @@ func (r *JourneyImageRepositoryPostgres) Claim(
 		return nil
 	})
 	if err != nil {
-		return entity.JourneyImage{}, false, mapJourneyImageRepositoryError(err)
+		return entity.JourneyImage{}, false, mapJourneyImageRepositoryError("claim_journey_image", err)
 	}
 	return claimedImage, claimed, nil
 }
@@ -249,7 +250,7 @@ func (r *JourneyImageRepositoryPostgres) Delete(
 ) error {
 	result := r.db.WithContext(ctx).Where("id = ?", id.String()).Delete(&JourneyImageModel{})
 	if result.Error != nil {
-		return fmt.Errorf("delete journey image: %w", result.Error)
+		return mapJourneyImageRepositoryError("delete_journey_image", result.Error)
 	}
 	return nil
 }
@@ -318,11 +319,14 @@ func journeyImageModelsToEntities(
 	return images, nil
 }
 
-func mapJourneyImageRepositoryError(err error) error {
+func mapJourneyImageRepositoryError(operation string, err error) error {
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) && pgErr.Code == "23505" &&
 		pgErr.ConstraintName == journeyImageSlotUniqueConstraint {
-		return repository.ErrJourneyImageSlotAlreadyExists
+		return observability.WithOperation(
+			operation,
+			fmt.Errorf("%w: %w", repository.ErrJourneyImageSlotAlreadyExists, err),
+		)
 	}
-	return err
+	return observability.WithOperation(operation, err)
 }

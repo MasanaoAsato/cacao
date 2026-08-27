@@ -1,6 +1,10 @@
 package controller
 
 import (
+	"io"
+	"log/slog"
+	"net/http"
+
 	getjourneyimage "cacao/src/application/get_journey_image"
 	getjourneyimagecontent "cacao/src/application/get_journey_image_content"
 	"github.com/gin-gonic/gin"
@@ -14,6 +18,7 @@ import (
 	listjourneys "cacao/src/application/list_journeys"
 	requestjourneyimages "cacao/src/application/request_journey_images"
 	retryjourneyimage "cacao/src/application/retry_journey_image"
+	"cacao/src/infrastructure/observability"
 )
 
 // ImageRoutes は画像APIへ注入するユースケース群である。
@@ -35,7 +40,8 @@ func NewRouter(
 	listReqUC listjourneyrequests.UseCase,
 	imageRoutes ...ImageRoutes,
 ) *gin.Engine {
-	r := gin.Default()
+	r := gin.New()
+	r.Use(safeRecovery())
 	api := r.Group("/api/v1")
 	{
 		api.POST("/journey-requests", HandleCreate(createReqUC))
@@ -50,4 +56,17 @@ func NewRouter(
 	}
 
 	return r
+}
+
+func safeRecovery() gin.HandlerFunc {
+	return gin.CustomRecoveryWithWriter(io.Discard, func(c *gin.Context, recovered any) {
+		observability.LogRecoveredPanic(
+			requestContext(c),
+			slog.Default(),
+			"http_panic",
+			routeName(c),
+			recovered,
+		)
+		c.AbortWithStatus(http.StatusInternalServerError)
+	})
 }

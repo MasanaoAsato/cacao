@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -12,12 +11,12 @@ import (
 
 	"cacao/src/domain/entity"
 	"cacao/src/domain/service"
+	"cacao/src/infrastructure/observability"
 	"cacao/src/infrastructure/service/prompt"
 
 	openrouter "github.com/OpenRouterTeam/go-sdk"
 	"github.com/OpenRouterTeam/go-sdk/models/components"
 	"github.com/OpenRouterTeam/go-sdk/models/operations"
-	sdkerrors "github.com/OpenRouterTeam/go-sdk/models/sdkerrors"
 	"github.com/OpenRouterTeam/go-sdk/optionalnullable"
 	"github.com/OpenRouterTeam/go-sdk/retry"
 	"github.com/caarlos0/env/v10"
@@ -166,11 +165,6 @@ func (g *JourneyGeneratorOpenRouter) Generate(
 			"duration_ms", time.Since(startedAt).Milliseconds(),
 		}
 		if err != nil {
-			attrs = append(attrs,
-				"error_type", fmt.Sprintf("%T", err),
-				"error", safeOpenRouterErrorMessage(err),
-			)
-			logger.ErrorContext(ctx, "openrouter journey generation failed", attrs...)
 			return
 		}
 		logger.InfoContext(ctx, "openrouter journey generation succeeded", attrs...)
@@ -198,7 +192,10 @@ func (g *JourneyGeneratorOpenRouter) Generate(
 		operations.WithOperationTimeout(g.config.RequestTimeout),
 	)
 	if err != nil {
-		return service.GeneratedRoute{}, newOpenRouterRequestError(err, g.config.APIKey)
+		return service.GeneratedRoute{}, observability.WithOperation(
+			"openrouter_send_chat_completion",
+			newOpenRouterRequestError(err),
+		)
 	}
 	if response == nil || response.ChatResult == nil {
 		return service.GeneratedRoute{}, errors.New("openrouter response must contain chat result")
@@ -282,58 +279,11 @@ func (e *openRouterRequestError) Unwrap() error {
 	return e.cause
 }
 
-func newOpenRouterRequestError(cause error, secret string) error {
-	message := safeOpenRouterErrorMessage(cause)
-	if secret != "" {
-		message = strings.ReplaceAll(message, secret, "[REDACTED]")
-	}
+func newOpenRouterRequestError(cause error) error {
 	return &openRouterRequestError{
 		cause:   cause,
-		message: "openrouter request failed: " + message,
+		message: "openrouter request failed",
 	}
-}
-
-func safeOpenRouterErrorMessage(err error) string {
-	if err == nil {
-		return ""
-	}
-	var requestErr *openRouterRequestError
-	if errors.As(err, &requestErr) {
-		return sanitizeOpenRouterLogValue(requestErr.message)
-	}
-	if errors.Is(err, context.DeadlineExceeded) {
-		return "request timed out"
-	}
-	if errors.Is(err, context.Canceled) {
-		return "request canceled"
-	}
-
-	var apiErr *sdkerrors.APIError
-	if errors.As(err, &apiErr) {
-		return sanitizeOpenRouterLogValue(apiErr.Message)
-	}
-
-	var envelope struct {
-		Error struct {
-			Message string `json:"message"`
-		} `json:"error"`
-	}
-	if json.Unmarshal([]byte(err.Error()), &envelope) == nil && envelope.Error.Message != "" {
-		return sanitizeOpenRouterLogValue(envelope.Error.Message)
-	}
-
-	return "sdk request failed"
-}
-
-func sanitizeOpenRouterLogValue(value string) string {
-	value = strings.Join(strings.Fields(value), " ")
-	if len(value) > 512 {
-		return value[:512]
-	}
-	if value == "" {
-		return "unknown error"
-	}
-	return value
 }
 
 var _ service.JourneyGenerator = (*JourneyGeneratorOpenRouter)(nil)
