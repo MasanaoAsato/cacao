@@ -307,6 +307,12 @@ func newJourneyGenerator() (domainservice.JourneyGenerator, error) {
 		}
 		client := service.NewOpenAIClient(aiCfg)
 		return service.NewJourneyGeneratorOpenAI(client, aiCfg.Model, cfg.WebSearchEnabled), nil
+	case "openrouter":
+		openRouterCfg, err := service.OpenRouterConfigFromEnv()
+		if err != nil {
+			return nil, fmt.Errorf("failed to load openrouter config: %w", err)
+		}
+		return service.NewJourneyGeneratorOpenRouter(openRouterCfg, cfg.WebSearchEnabled), nil
 	case "stub", "":
 		return service.NewJourneyGeneratorStub(), nil
 	default:
