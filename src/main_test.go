@@ -3,11 +3,91 @@ package main
 import (
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 	"time"
 
 	"cacao/src/infrastructure/service"
 )
+
+func TestNewJourneyGeneratorOpenRouter(t *testing.T) {
+	t.Setenv("LLM_DRIVER", "openrouter")
+	t.Setenv("LLM_WEB_SEARCH", "true")
+	t.Setenv("OPENROUTER_API_KEY", "test-openrouter-api-key")
+	t.Setenv("OPENROUTER_MODEL", "openai/gpt-4o-mini")
+
+	generator, err := newJourneyGenerator()
+	if err != nil {
+		t.Fatalf("newJourneyGenerator() error = %v", err)
+	}
+	if _, ok := generator.(*service.JourneyGeneratorOpenRouter); !ok {
+		t.Fatalf("generator type = %T, want *service.JourneyGeneratorOpenRouter", generator)
+	}
+}
+
+func TestNewJourneyGeneratorOpenRouterRejectsMissingConfiguration(t *testing.T) {
+	tests := []struct {
+		name   string
+		apiKey string
+		model  string
+		want   string
+	}{
+		{
+			name:   "missing API key",
+			apiKey: "",
+			model:  "openai/gpt-4o-mini",
+			want:   "api key",
+		},
+		{
+			name:   "missing model",
+			apiKey: "test-openrouter-api-key",
+			model:  "",
+			want:   "model",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv("LLM_DRIVER", "openrouter")
+			t.Setenv("OPENROUTER_API_KEY", tt.apiKey)
+			t.Setenv("OPENROUTER_MODEL", tt.model)
+
+			_, err := newJourneyGenerator()
+			if err == nil {
+				t.Fatal("newJourneyGenerator() error = nil, want error")
+			}
+			if !strings.Contains(err.Error(), tt.want) {
+				t.Errorf("error = %q, want message containing %q", err, tt.want)
+			}
+		})
+	}
+}
+
+func TestNewJourneyGeneratorKeepsExistingDrivers(t *testing.T) {
+	t.Run("stub", func(t *testing.T) {
+		t.Setenv("LLM_DRIVER", "stub")
+
+		generator, err := newJourneyGenerator()
+		if err != nil {
+			t.Fatalf("newJourneyGenerator() error = %v", err)
+		}
+		if _, ok := generator.(*service.JourneyGeneratorStub); !ok {
+			t.Fatalf("generator type = %T, want *service.JourneyGeneratorStub", generator)
+		}
+	})
+
+	t.Run("unsupported driver", func(t *testing.T) {
+		t.Setenv("LLM_DRIVER", "unsupported")
+
+		_, err := newJourneyGenerator()
+		if err == nil {
+			t.Fatal("newJourneyGenerator() error = nil, want error")
+		}
+		if !strings.Contains(err.Error(), "unsupported LLM_DRIVER") {
+			t.Errorf("error = %q, want unsupported driver error", err)
+		}
+	})
+}
 
 func TestNewImageGenerator(t *testing.T) {
 	tests := []struct {
