@@ -48,7 +48,7 @@ Do not ask the user for information discoverable from the repository. Ask before
 5. Add **Implementation** only when dependency order or change boundaries are not evident from Design. Describe logical units and ordering, not a task checklist.
 6. Add **Verification** only for non-obvious acceptance criteria or important success, failure, and boundary conditions.
 7. Do not add a standalone **Current State** section. Put only the current-to-proposed delta needed for the design inside Design.
-
+8. Specifically, please include in the design document details such as the specific file names, where the files will be created or modified, and the respective responsibilities for each.
 ## Update
 
 1. Read the entire target design and the current repository evidence relevant to the requested change.
