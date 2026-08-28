@@ -9,6 +9,7 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     steps:
+      # Setup
       - name: Checkout repository
         uses: actions/checkout@v7
 
@@ -24,10 +25,19 @@ jobs:
         with:
           install: true
 
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v9
-        with:
-          version: v2.12
+      - name: Install frontend dependencies
+        run: mise run web:install
 
-      - name: Run tests
-        run: go test -v ./...
+      # Golang
+      - name: Golang
+        run: |
+          mise run lint
+          mise run test
+
+      # Frontend
+      - name: Frontend
+        run: |
+          mise run web:check
+          mise run web:typecheck
+          mise run web:test
+          mise run web:build
