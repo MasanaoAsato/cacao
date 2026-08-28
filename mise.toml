@@ -20,6 +20,11 @@ run = "go test ./..."
 description = "Go APIサーバーを起動する"
 run = "go run ./src"
 
+[tasks."web:install"]
+description = "Webの依存関係をインストールする"
+dir = "web"
+run = "pnpm install --frozen-lockfile"
+
 [tasks."web:dev"]
 description = "Web開発サーバーを起動する"
 dir = "web"

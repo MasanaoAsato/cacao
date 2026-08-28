@@ -43,7 +43,7 @@ type PageMetric = {
 
 function installPageMetrics(pageMetric?: PageMetric) {
 	const isMeasuredPage = (element: HTMLElement, axis: PageMetric["axis"]) =>
-		element.dataset.pageId === pageMetric?.pageId && pageMetric.axis === axis;
+		element.dataset.pageId === pageMetric?.pageId && pageMetric?.axis === axis;
 	const measuredScrollSize = (axis: PageMetric["axis"]) =>
 		pageMetric?.isOverflowing && pageMetric.axis === axis ? 201 : 200;
 	Object.defineProperties(HTMLElement.prototype, {
