@@ -1,0 +1,184 @@
+@import "@fontsource/noto-serif-jp/400.css";
+@import "@fontsource/noto-serif-jp/700.css";
+
+@page {
+	size: A5;
+	margin: 0;
+}
+
+:root {
+	--print-page-title-size: 10mm;
+	font-family: "Noto Serif JP", serif;
+	color: #27221f;
+	background: #e9e4de;
+	font-synthesis: none;
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+}
+
+html,
+body,
+#root {
+	min-width: 0;
+	margin: 0;
+}
+
+#root {
+	width: 100%;
+	max-width: none;
+}
+
+body {
+	background: #e9e4de;
+}
+
+.print-spike-shell {
+	min-height: 100vh;
+	padding: 1.5rem;
+}
+
+.print-controls {
+	display: grid;
+	grid-template-columns: auto auto 1fr;
+	align-items: end;
+	gap: 1rem;
+	width: min(148mm, 100%);
+	margin: 0 auto 1.5rem;
+	padding: 1rem;
+	color: #fff;
+	background: #362f2a;
+	border-radius: 0.5rem;
+}
+
+.print-controls__field {
+	display: grid;
+	gap: 0.35rem;
+}
+
+.print-controls label,
+.print-controls__status {
+	font-size: 0.85rem;
+}
+
+.print-controls select,
+.print-controls button {
+	min-height: 2.5rem;
+	padding: 0.45rem 0.75rem;
+	font: inherit;
+	color: #27221f;
+	background: #fff;
+	border: 1px solid #d4c5b8;
+	border-radius: 0.3rem;
+}
+
+.print-controls button {
+	font-weight: 700;
+	cursor: pointer;
+}
+
+.print-controls button:disabled {
+	cursor: wait;
+	opacity: 0.55;
+}
+
+.print-controls__status {
+	margin: 0;
+}
+
+.print-document {
+	margin: 0 auto;
+}
+
+.print-page {
+	display: flex;
+	position: relative;
+	flex-direction: column;
+	width: 148mm;
+	height: 210mm;
+	box-sizing: border-box;
+	margin: 0 auto 1.5rem;
+	padding: 16mm 14mm 14mm;
+	background: #fffdf9;
+	box-shadow: 0 0.5rem 1.5rem rgb(39 34 31 / 16%);
+	break-inside: avoid;
+}
+
+.print-page__eyebrow {
+	margin: 0 0 0.75rem;
+	color: #8b5e3c;
+	font-family: system-ui, sans-serif;
+	font-size: 0.7rem;
+	font-weight: 700;
+	letter-spacing: 0.12em;
+}
+
+.print-page__title {
+	margin: 0 0 1.25rem;
+	font-size: var(--print-page-title-size);
+	font-weight: 700;
+	line-height: 1.25;
+	line-break: strict;
+}
+
+.print-page__image {
+	display: block;
+	width: 100%;
+	max-height: 53mm;
+	margin: 0 0 1.25rem;
+	object-fit: contain;
+}
+
+.print-page__body {
+	font-size: 0.95rem;
+	line-height: 2;
+	line-break: strict;
+	word-break: normal;
+}
+
+.print-page__body p {
+	margin: 0 0 0.9rem;
+}
+
+.print-page__number {
+	margin: auto 0 0;
+	color: #8b5e3c;
+	font-family: system-ui, sans-serif;
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-align: right;
+}
+
+@media print {
+	html,
+	body,
+	#root {
+		width: auto;
+		min-width: 0;
+		margin: 0;
+		background: #fff;
+	}
+
+	.print-spike-shell {
+		min-height: 0;
+		padding: 0;
+	}
+
+	.print-spike-shell .print-controls {
+		display: none;
+	}
+
+	.print-page {
+		width: 148mm;
+		height: 210mm;
+		margin: 0;
+		box-shadow: none;
+		break-after: page;
+		page-break-after: always;
+	}
+
+	.print-page:last-child {
+		break-after: auto;
+		page-break-after: auto;
+	}
+}

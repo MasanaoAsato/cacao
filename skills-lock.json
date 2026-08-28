@@ -85,6 +85,12 @@
       "skillPath": "skills/golang-troubleshooting/SKILL.md",
       "computedHash": "94dcf6cb5f6ef515c628f06eb379239f35aef53dbded72ed615fcb5f07a5c7d0"
     },
+    "vercel-react-best-practices": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-best-practices/SKILL.md",
+      "computedHash": "ca7b0c0c6e5f2750043f7f0cd72d16ac4e2abc48f9b5500d047a4b77a2506212"
+    },
     "web-design-guidelines": {
       "source": "vercel-labs/agent-skills",
       "sourceType": "github",

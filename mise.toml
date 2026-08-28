@@ -1,3 +1,56 @@
 [tools]
 go = '1.26.4'
 golangci-lint = "latest"
+node = '24.20.0'
+pnpm = '11.24.0'
+
+[tasks.fmt]
+description = "Goコードをフォーマットする"
+run = "go fmt ./..."
+
+[tasks.lint]
+description = "Goコードをlintする"
+run = "golangci-lint run ./..."
+
+[tasks.test]
+description = "Goのテストを実行する"
+run = "go test ./..."
+
+[tasks.server]
+description = "Go APIサーバーを起動する"
+run = "go run ./src"
+
+[tasks."web:dev"]
+description = "Web開発サーバーを起動する"
+dir = "web"
+run = "pnpm dev"
+
+[tasks."web:build"]
+description = "Webをビルドする"
+dir = "web"
+run = "pnpm build"
+
+[tasks."web:lint"]
+description = "Webのlintを実行する"
+dir = "web"
+run = "pnpm lint"
+
+[tasks."web:check"]
+description = "Webの総合チェックを実行する"
+dir = "web"
+run = "pnpm check"
+
+[tasks."web:format"]
+description = "Webコードをフォーマットする"
+dir = "web"
+run = "pnpm format"
+
+[tasks."web:typecheck"]
+description = "Webの型チェックを実行する"
+dir = "web"
+run = "pnpm typecheck"
+
+[tasks."web:test"]
+description = "Webのテストを実行する"
+dir = "web"
+run = "pnpm test"
