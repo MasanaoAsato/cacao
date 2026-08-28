@@ -8,16 +8,23 @@ You can use this skill to perform a code review for Golang code. It provides fee
 
 Be sure to provide feedback on the results of the review in the user's language.
 
--golang-code-style
--golang-error-handling
--golang-lint
--golang-naming
--golang-observability
--golang-performance
--golang-popular-libraries
--golang-security
--golang-testing
--golang-troubleshooting
+- golang-code-style
+- golang-error-handling
+- golang-lint
+- golang-naming
+- golang-observability
+- golang-performance
+- golang-popular-libraries
+- golang-security
+- golang-testing
+- golang-troubleshooting
+
+# Code Review for Frontend
+You can use this skill to perform a code review for frontend code. It provides feedback on code quality, best practices, and potential improvements.
+
+- .agents/skills/vercel-react-best-practices
+- .agents/skills/web-design- guidelines
+- .agents/skills/frontend-design
 
 # review level
 You can specify the level of review you want:

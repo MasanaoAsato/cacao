@@ -36,3 +36,6 @@ go.work.sum
 
 # 画像生成のローカル保存先
 var/journey-images
+
+# some skills
+.agents/skills/vercel-react-best-practices
