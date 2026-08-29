@@ -1,6 +1,7 @@
 import "./print.css";
 import { Route, Routes } from "react-router";
 import { JourneyBookletPage } from "./pages/journey-booklet/JourneyBookletPage";
+import { JourneyCreationPage } from "./pages/journey-creation/JourneyCreationPage";
 import { PrintCssSpikePage } from "./pages/print-css-spike/PrintCssSpikePage";
 
 function NotFoundPage() {
@@ -10,6 +11,7 @@ function NotFoundPage() {
 function App() {
 	return (
 		<Routes>
+			<Route path="/" element={<JourneyCreationPage />} />
 			<Route
 				path="/journeys/:journeyId/booklet"
 				element={<JourneyBookletPage />}

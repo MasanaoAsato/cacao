@@ -3,9 +3,25 @@ package presenter
 import (
 	"time"
 
+	generatejourney "cacao/src/application/generate_journey"
 	getjourney "cacao/src/application/get_journey"
 	listjourneys "cacao/src/application/list_journeys"
 )
+
+// GenerateJourneyResponse は旅程生成APIのJSONレスポンス。
+// RequestID は既存クライアントとの互換性のために残す別名である。
+type GenerateJourneyResponse struct {
+	JourneyID string `json:"journey_id"`
+	RequestID string `json:"request_id"`
+}
+
+// ToGenerateJourneyResponse は GenerateJourney のOutputをJSONレスポンスに変換する。
+func ToGenerateJourneyResponse(output generatejourney.Output) GenerateJourneyResponse {
+	return GenerateJourneyResponse{
+		JourneyID: output.JourneyID,
+		RequestID: output.JourneyID,
+	}
+}
 
 // JourneyResponse は Journey 系APIのJSONレスポンス。
 type JourneyResponse struct {

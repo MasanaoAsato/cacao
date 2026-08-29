@@ -10,6 +10,10 @@ import {
 	requestJson,
 } from "./client";
 
+export type GenerateJourneyApiResponse = {
+	readonly journey_id: string;
+};
+
 export type EndpointApiResponse = {
 	readonly label: string;
 	readonly spot_id?: string;
@@ -140,3 +144,31 @@ export function getJourney(
 		options,
 	);
 }
+
+export function decodeGenerateJourneyResponse(
+	value: unknown,
+): GenerateJourneyApiResponse {
+	const record = readRecord(value, "generate journey");
+	const journeyId = readNonEmptyString(
+		record,
+		"journey_id",
+		"generate journey",
+	);
+	return { journey_id: journeyId };
+}
+
+export function generateJourney(
+	requestId: string,
+	options: ApiRequestOptions = {},
+): Promise<GenerateJourneyApiResponse> {
+	return requestJson(
+		`/api/v1/journey-requests/${encodeURIComponent(requestId)}/generate`,
+		decodeGenerateJourneyResponse,
+		{
+			...options,
+			method: "POST",
+		},
+	);
+}
+
+export const decodeGenerateJourney = decodeGenerateJourneyResponse;

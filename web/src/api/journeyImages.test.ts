@@ -1,7 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
 	decodeJourneyImageList,
 	type JourneyImageApiResponse,
+	requestCoverImage,
+	retryJourneyImage,
 	selectCoverImage,
 } from "./journeyImages";
 
@@ -18,6 +20,42 @@ const readyCover: JourneyImageApiResponse = {
 };
 
 describe("journey images API", () => {
+	it("正常系: 表紙画像要求POSTはcoverスロットだけを送信する", async () => {
+		const fetchImpl = vi.fn(
+			async () =>
+				new Response(
+					JSON.stringify({
+						images: [readyCover],
+						journey_request_id: "request-1",
+					}),
+					{ status: 202 },
+				),
+		);
+
+		await requestCoverImage("request/1", { fetchImpl });
+
+		expect(fetchImpl).toHaveBeenCalledWith(
+			"/api/v1/journey-requests/request%2F1/images",
+			expect.objectContaining({
+				body: JSON.stringify({ slots: [{ ordinal: 1, purpose: "cover" }] }),
+				method: "POST",
+			}),
+		);
+	});
+
+	it("正常系: 失敗画像のretry POSTをデコードできる", async () => {
+		const fetchImpl = vi.fn(
+			async () => new Response(JSON.stringify(readyCover), { status: 202 }),
+		);
+
+		await retryJourneyImage("image/1", { fetchImpl });
+
+		expect(fetchImpl).toHaveBeenCalledWith(
+			"/api/v1/journey-images/image%2F1/retry",
+			expect.objectContaining({ method: "POST" }),
+		);
+	});
+
 	it("正常系: 表紙スロットを選択できる", () => {
 		const response = decodeJourneyImageList({
 			images: [readyCover],

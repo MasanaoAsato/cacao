@@ -20,7 +20,7 @@ func HandleGenerate(uc generatejourney.UseCase) gin.HandlerFunc {
 			handleApplicationError(c, err)
 			return
 		}
-		c.JSON(http.StatusCreated, presenter.CreateJourneyRequestResponse{RequestID: out.JourneyID})
+		c.JSON(http.StatusCreated, presenter.ToGenerateJourneyResponse(out))
 	}
 }
 
