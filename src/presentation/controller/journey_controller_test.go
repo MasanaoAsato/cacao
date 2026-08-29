@@ -58,12 +58,11 @@ func TestHandleGenerate_Success(t *testing.T) {
 
 	var response struct {
 		JourneyID string `json:"journey_id"`
-		RequestID string `json:"request_id"`
 	}
 	if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
 		t.Fatalf("failed to decode response: %v", err)
 	}
-	if response.JourneyID != "journey-1" || response.RequestID != "journey-1" {
+	if response.JourneyID != "journey-1" {
 		t.Fatalf("unexpected response: %+v", response)
 	}
 }

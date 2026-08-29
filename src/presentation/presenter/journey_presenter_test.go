@@ -17,15 +17,12 @@ func TestToGenerateJourneyResponse(t *testing.T) {
 	if response.JourneyID != "journey-1" {
 		t.Errorf("JourneyID mismatch: got %s", response.JourneyID)
 	}
-	if response.RequestID != "journey-1" {
-		t.Errorf("legacy RequestID mismatch: got %s", response.RequestID)
-	}
 
 	encoded, err := json.Marshal(response)
 	if err != nil {
 		t.Fatalf("failed to marshal response: %v", err)
 	}
-	if string(encoded) != `{"journey_id":"journey-1","request_id":"journey-1"}` {
+	if string(encoded) != `{"journey_id":"journey-1"}` {
 		t.Errorf("unexpected JSON: %s", encoded)
 	}
 }
