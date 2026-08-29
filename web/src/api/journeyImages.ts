@@ -32,6 +32,10 @@ export type JourneyImageListApiResponse = {
 	readonly images: readonly JourneyImageApiResponse[];
 };
 
+export type CoverImageRequestPayload = {
+	readonly slots: readonly [{ readonly purpose: "cover"; readonly ordinal: 1 }];
+};
+
 function decodeStatus(value: unknown, context: string): JourneyImageStatus {
 	if (
 		value !== "pending" &&
@@ -45,7 +49,10 @@ function decodeStatus(value: unknown, context: string): JourneyImageStatus {
 	return value;
 }
 
-function decodeImage(value: unknown, index: number): JourneyImageApiResponse {
+export function decodeJourneyImage(
+	value: unknown,
+	index = 0,
+): JourneyImageApiResponse {
 	const context = `images[${index}]`;
 	const record = readRecord(value, context);
 	const slot = readRecord(record.slot, `${context}.slot`);
@@ -71,7 +78,7 @@ export function decodeJourneyImageList(
 	const record = readRecord(value, "journey image list");
 	return {
 		images: readArray(record.images, "journey image list.images").map(
-			decodeImage,
+			(value, index) => decodeJourneyImage(value, index),
 		),
 		journey_request_id: readNonEmptyString(
 			record,
@@ -103,4 +110,35 @@ export function selectCoverImage(
 	}
 
 	return covers[0] ?? null;
+}
+
+export function requestCoverImage(
+	requestId: string,
+	options: ApiRequestOptions = {},
+): Promise<JourneyImageListApiResponse> {
+	return requestJson(
+		`/api/v1/journey-requests/${encodeURIComponent(requestId)}/images`,
+		decodeJourneyImageList,
+		{
+			...options,
+			body: { slots: [{ ordinal: 1, purpose: "cover" }] },
+			method: "POST",
+		},
+	);
+}
+
+export const requestJourneyImages = requestCoverImage;
+
+export function retryJourneyImage(
+	imageId: string,
+	options: ApiRequestOptions = {},
+): Promise<JourneyImageApiResponse> {
+	return requestJson(
+		`/api/v1/journey-images/${encodeURIComponent(imageId)}/retry`,
+		decodeJourneyImage,
+		{
+			...options,
+			method: "POST",
+		},
+	);
 }

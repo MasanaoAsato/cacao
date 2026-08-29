@@ -1,5 +1,9 @@
-import { describe, expect, it } from "vitest";
-import { decodeJourneyRequest } from "./journeyRequests";
+import { describe, expect, it, vi } from "vitest";
+import {
+	createJourneyRequest,
+	decodeCreateJourneyRequest,
+	decodeJourneyRequest,
+} from "./journeyRequests";
 
 const requestPayload = {
 	budget: { amount: 80000, currency: "JPY" },
@@ -13,6 +17,45 @@ const requestPayload = {
 };
 
 describe("journey requests API", () => {
+	it("正常系: 旅程リクエスト作成レスポンスをデコードできる", () => {
+		expect(decodeCreateJourneyRequest({ request_id: "request-1" })).toEqual({
+			request_id: "request-1",
+		});
+	});
+
+	it("異常系: 作成レスポンスにrequest_idがなければ拒否する", () => {
+		expect(() => decodeCreateJourneyRequest({})).toThrow("request_id");
+	});
+
+	it("正常系: 作成POSTは全フィールドをJSONで送信する", async () => {
+		const fetchImpl = vi.fn(
+			async () =>
+				new Response(JSON.stringify({ request_id: "request-1" }), {
+					status: 201,
+				}),
+		);
+		const payload = {
+			amount: 90000,
+			currency: "JPY",
+			departure_city: "千葉",
+			departure_country: "Japan",
+			destination_city: "宇都宮",
+			destination_country: "Japan",
+			end_date: "2026-10-25T00:00:00Z",
+			start_date: "2026-10-23T00:00:00Z",
+		};
+
+		await createJourneyRequest(payload, { fetchImpl });
+
+		expect(fetchImpl).toHaveBeenCalledWith(
+			"/api/v1/journey-requests",
+			expect.objectContaining({
+				body: JSON.stringify(payload),
+				method: "POST",
+			}),
+		);
+	});
+
 	it("正常系: 旅程リクエストをデコードできる", () => {
 		expect(decodeJourneyRequest(requestPayload)).toEqual(requestPayload);
 	});

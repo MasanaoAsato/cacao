@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
-import { decodeJourney, getJourney } from "./journeys";
+import {
+	decodeGenerateJourneyResponse,
+	decodeJourney,
+	generateJourney,
+	getJourney,
+} from "./journeys";
 
 const journeyPayload = {
 	days: [
@@ -33,6 +38,46 @@ const journeyPayload = {
 };
 
 describe("journeys API", () => {
+	it("正常系: 旅程生成レスポンスをjourney_idとしてデコードできる", () => {
+		expect(
+			decodeGenerateJourneyResponse({
+				journey_id: "journey-1",
+				request_id: "journey-1",
+			}),
+		).toEqual({ journey_id: "journey-1" });
+	});
+
+	it("異常系: 旅程生成レスポンスにjourney_idがなければ拒否する", () => {
+		expect(() =>
+			decodeGenerateJourneyResponse({ request_id: "journey-1" }),
+		).toThrow("journey_id");
+	});
+
+	it("正常系: レガシーrequest_idは新規コードで参照せずjourney_idだけを返す", () => {
+		expect(
+			decodeGenerateJourneyResponse({
+				journey_id: "journey-1",
+				request_id: "legacy-value",
+			}),
+		).toEqual({ journey_id: "journey-1" });
+	});
+
+	it("正常系: 旅程生成POSTはrequest IDをURLエンコードする", async () => {
+		const fetchImpl = vi.fn(
+			async () =>
+				new Response(JSON.stringify({ journey_id: "journey-1" }), {
+					status: 201,
+				}),
+		);
+
+		await generateJourney("request/1", { fetchImpl });
+
+		expect(fetchImpl).toHaveBeenCalledWith(
+			"/api/v1/journey-requests/request%2F1/generate",
+			expect.objectContaining({ method: "POST" }),
+		);
+	});
+
 	it("正常系: Journeyレスポンスをデコードできる", () => {
 		const journey = decodeJourney(journeyPayload);
 

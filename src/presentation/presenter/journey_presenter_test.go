@@ -6,9 +6,26 @@ import (
 	"testing"
 	"time"
 
+	generatejourney "cacao/src/application/generate_journey"
 	getjourney "cacao/src/application/get_journey"
 	listjourneys "cacao/src/application/list_journeys"
 )
+
+func TestToGenerateJourneyResponse(t *testing.T) {
+	response := ToGenerateJourneyResponse(generatejourney.Output{JourneyID: "journey-1"})
+
+	if response.JourneyID != "journey-1" {
+		t.Errorf("JourneyID mismatch: got %s", response.JourneyID)
+	}
+
+	encoded, err := json.Marshal(response)
+	if err != nil {
+		t.Fatalf("failed to marshal response: %v", err)
+	}
+	if string(encoded) != `{"journey_id":"journey-1"}` {
+		t.Errorf("unexpected JSON: %s", encoded)
+	}
+}
 
 func TestToJourneyResponse(t *testing.T) {
 	date := time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC)

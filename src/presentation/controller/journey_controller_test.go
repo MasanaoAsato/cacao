@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -53,6 +54,16 @@ func TestHandleGenerate_Success(t *testing.T) {
 
 	if w.Code != http.StatusCreated {
 		t.Errorf("expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var response struct {
+		JourneyID string `json:"journey_id"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
+		t.Fatalf("failed to decode response: %v", err)
+	}
+	if response.JourneyID != "journey-1" {
+		t.Fatalf("unexpected response: %+v", response)
 	}
 }
 

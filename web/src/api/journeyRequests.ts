@@ -8,6 +8,21 @@ import {
 } from "./client";
 import type { MoneyApiResponse } from "./journeys";
 
+export type CreateJourneyRequestPayload = {
+	readonly departure_city: string;
+	readonly departure_country: string;
+	readonly destination_city: string;
+	readonly destination_country: string;
+	readonly start_date: string;
+	readonly end_date: string;
+	readonly amount: number;
+	readonly currency: string;
+};
+
+export type CreateJourneyRequestApiResponse = {
+	readonly request_id: string;
+};
+
 export type JourneyRequestApiResponse = {
 	readonly id: string;
 	readonly departure: string;
@@ -24,6 +39,19 @@ function decodeMoney(value: unknown, context: string): MoneyApiResponse {
 	return {
 		amount: readInteger(record, "amount", context),
 		currency: readNonEmptyString(record, "currency", context),
+	};
+}
+
+export function decodeCreateJourneyRequest(
+	value: unknown,
+): CreateJourneyRequestApiResponse {
+	const record = readRecord(value, "create journey request");
+	return {
+		request_id: readNonEmptyString(
+			record,
+			"request_id",
+			"create journey request",
+		),
 	};
 }
 
@@ -54,3 +82,16 @@ export function getJourneyRequest(
 		options,
 	);
 }
+
+export function createJourneyRequest(
+	payload: CreateJourneyRequestPayload,
+	options: ApiRequestOptions = {},
+): Promise<CreateJourneyRequestApiResponse> {
+	return requestJson("/api/v1/journey-requests", decodeCreateJourneyRequest, {
+		...options,
+		body: payload,
+		method: "POST",
+	});
+}
+
+export const decodeCreateJourneyRequestResponse = decodeCreateJourneyRequest;
