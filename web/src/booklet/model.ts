@@ -62,7 +62,7 @@ export type BookletModel = {
 
 export type CoverPagePlan = {
 	readonly kind: "cover";
-	readonly pageId: "cover";
+	readonly pageId: string;
 };
 
 export type DayPagePlan = {

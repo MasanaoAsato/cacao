@@ -2,7 +2,7 @@
 
 import "@testing-library/jest-dom/vitest";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
-import { MemoryRouter, Route, Routes } from "react-router";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { JourneyBookletPage } from "./JourneyBookletPage";
 
@@ -91,13 +91,23 @@ const originalOffsetHeight = Object.getOwnPropertyDescriptor(
 const originalGetBoundingClientRect =
 	HTMLElement.prototype.getBoundingClientRect;
 
-function renderPage() {
+function LocationProbe() {
+	const location = useLocation();
+	return <div data-testid="location-search">{location.search}</div>;
+}
+
+function renderPage(initialEntry = "/journeys/journey-1/booklet") {
 	return render(
-		<MemoryRouter initialEntries={["/journeys/journey-1/booklet"]}>
+		<MemoryRouter initialEntries={[initialEntry]}>
 			<Routes>
 				<Route
 					path="/journeys/:journeyId/booklet"
-					element={<JourneyBookletPage />}
+					element={
+						<>
+							<JourneyBookletPage />
+							<LocationProbe />
+						</>
+					}
 				/>
 			</Routes>
 		</MemoryRouter>,
@@ -113,6 +123,7 @@ function installBrowserMocks() {
 		configurable: true,
 		value: {
 			check: vi.fn().mockReturnValue(true),
+			load: vi.fn().mockResolvedValue([]),
 			ready: Promise.resolve(),
 		},
 	});
@@ -238,6 +249,13 @@ describe("JourneyBookletPage", () => {
 		expect(window.print).toHaveBeenCalledTimes(1);
 		expect(fetchMock).toHaveBeenCalledTimes(3);
 		expect(fetchMock.mock.calls[0]?.[0]).toBe("/api/v1/journeys/journey-1");
+		expect(
+			vi
+				.mocked(document.fonts.load)
+				.mock.calls.some(
+					([, sampleText]) => sampleText === "東京の旅程・京都散策",
+				),
+		).toBe(true);
 	});
 
 	it("異常系: 表紙画像が未準備なら印刷と生成要求を行わない", async () => {
@@ -277,7 +295,7 @@ describe("JourneyBookletPage", () => {
 			new Error("decode failed"),
 		);
 		installFetchMock();
-		renderPage();
+		renderPage("/journeys/journey-1/booklet?seed=v1-00000013");
 
 		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 		await waitFor(() =>
@@ -287,6 +305,278 @@ describe("JourneyBookletPage", () => {
 		);
 
 		expect(printButton).toBeDisabled();
+		expect(
+			document.querySelector<HTMLElement>(".booklet-measurement")?.dataset
+				.bookletThemeKey,
+		).toBe("v1-00000013:selected");
 		expect(window.print).not.toHaveBeenCalled();
+	});
+
+	it("異常系: 選択フォントを確認できなければ候補を進めず印刷しない", async () => {
+		vi.mocked(document.fonts.check).mockReturnValue(false);
+		installFetchMock();
+		renderPage("/journeys/journey-1/booklet?seed=v1-00000013");
+
+		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
+		await waitFor(() =>
+			expect(screen.getByRole("status")).toHaveTextContent(
+				"読み込みを確認できませんでした",
+			),
+		);
+		expect(printButton).toBeDisabled();
+		expect(
+			document.querySelector<HTMLElement>(".booklet-measurement")?.dataset
+				.bookletThemeKey,
+		).toBe("v1-00000013:selected");
+		expect(window.print).not.toHaveBeenCalled();
+	});
+
+	it("異常系: 計測DOMの寸法が不正なら候補を進めず印刷しない", async () => {
+		Object.defineProperties(HTMLElement.prototype, {
+			clientHeight: { configurable: true, get: () => 0 },
+			clientWidth: { configurable: true, get: () => 0 },
+			offsetHeight: { configurable: true, get: () => 0 },
+			scrollHeight: { configurable: true, get: () => 0 },
+			scrollWidth: { configurable: true, get: () => 0 },
+		});
+		Object.defineProperty(HTMLElement.prototype, "getBoundingClientRect", {
+			configurable: true,
+			value: () =>
+				({
+					bottom: 0,
+					height: 0,
+					left: 0,
+					right: 0,
+					top: 0,
+					width: 0,
+				}) as DOMRect,
+		});
+		installFetchMock();
+		renderPage("/journeys/journey-1/booklet?seed=v1-00000013");
+
+		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
+		await waitFor(() =>
+			expect(screen.getByRole("status")).toHaveTextContent(
+				"ページ本文高さを計測できませんでした",
+			),
+		);
+		expect(printButton).toBeDisabled();
+		expect(
+			document.querySelector<HTMLElement>(".booklet-measurement")?.dataset
+				.bookletThemeKey,
+		).toBe("v1-00000013:selected");
+		expect(window.print).not.toHaveBeenCalled();
+	});
+
+	it("異常系: 文字を隠す表示設定があれば候補を進めず印刷しない", async () => {
+		const style = document.createElement("style");
+		style.textContent =
+			"[data-booklet-text-role] { overflow: hidden !important; }";
+		document.head.append(style);
+		try {
+			installFetchMock();
+			renderPage("/journeys/journey-1/booklet?seed=v1-00000013");
+
+			const printButton = screen.getByRole("button", { name: "PDFを印刷" });
+			await waitFor(() =>
+				expect(screen.getByRole("status")).toHaveTextContent(
+					"文字を隠す表示設定を検出しました",
+				),
+			);
+			expect(printButton).toBeDisabled();
+			expect(
+				document.querySelector<HTMLElement>(".booklet-measurement")?.dataset
+					.bookletThemeKey,
+			).toBe("v1-00000013:selected");
+			expect(window.print).not.toHaveBeenCalled();
+		} finally {
+			style.remove();
+		}
+	});
+
+	it("異常系: 実ページ数が計画と一致しなければ候補を進めず印刷しない", async () => {
+		const originalQuerySelectorAll = Object.getOwnPropertyDescriptor(
+			Element.prototype,
+			"querySelectorAll",
+		);
+		if (!originalQuerySelectorAll) {
+			throw new Error("querySelectorAllの記述子がありません。");
+		}
+		Object.defineProperty(Element.prototype, "querySelectorAll", {
+			configurable: true,
+			value: function <E extends Element = Element>(
+				this: HTMLElement,
+				selectors: string,
+			): NodeListOf<E> {
+				if (
+					selectors === "[data-booklet-page]" &&
+					this.classList.contains("booklet-document")
+				) {
+					return document
+						.createDocumentFragment()
+						.querySelectorAll<E>(selectors);
+				}
+				return originalQuerySelectorAll.value.call(
+					this,
+					selectors,
+				) as NodeListOf<E>;
+			},
+		});
+		try {
+			installFetchMock();
+			renderPage("/journeys/journey-1/booklet?seed=v1-00000013");
+
+			const printButton = screen.getByRole("button", { name: "PDFを印刷" });
+			await waitFor(() =>
+				expect(screen.getByRole("status")).toHaveTextContent(
+					"印刷ページ数がページ計画と一致しません",
+				),
+			);
+			expect(printButton).toBeDisabled();
+			expect(
+				document.querySelector<HTMLElement>(".booklet-measurement")?.dataset
+					.bookletThemeKey,
+			).toBe("v1-00000013:selected");
+			expect(window.print).not.toHaveBeenCalled();
+		} finally {
+			Object.defineProperty(
+				Element.prototype,
+				"querySelectorAll",
+				originalQuerySelectorAll,
+			);
+		}
+	});
+
+	it("異常系: すべての安全候補で表紙が収まらなければ印刷しない", async () => {
+		installFetchMock();
+		Object.defineProperty(HTMLElement.prototype, "scrollHeight", {
+			configurable: true,
+			get: () => 300,
+		});
+		renderPage();
+
+		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
+		await waitFor(() =>
+			expect(screen.getByRole("status")).toHaveTextContent("表紙の縦幅"),
+		);
+		expect(printButton).toBeDisabled();
+		printButton.click();
+		expect(window.print).not.toHaveBeenCalled();
+	});
+
+	it("正常系: 表紙の収まり失敗は安全候補を順に試す", async () => {
+		installFetchMock();
+		let releaseFirstDecode!: () => void;
+		const firstDecode = new Promise<void>((resolve) => {
+			releaseFirstDecode = resolve;
+		});
+		vi.mocked(HTMLImageElement.prototype.decode).mockImplementationOnce(
+			() => firstDecode,
+		);
+		Object.defineProperty(HTMLElement.prototype, "scrollHeight", {
+			configurable: true,
+			get() {
+				const element = this as HTMLElement;
+				if (!element.matches("[data-booklet-cover-text]")) {
+					return 100;
+				}
+				const key = element.closest<HTMLElement>(".booklet-measurement")
+					?.dataset.bookletThemeKey;
+				return key?.endsWith(":safe-geometry") ? 100 : 300;
+			},
+		});
+		const themeKeys: string[] = [];
+		const observer = new MutationObserver((records) => {
+			const previousKeys: string[] = [];
+			for (const record of records) {
+				const target = record.target;
+				if (
+					target instanceof HTMLElement &&
+					target.classList.contains("booklet-measurement")
+				) {
+					if (record.oldValue) {
+						previousKeys.push(record.oldValue);
+					}
+				}
+			}
+			for (const key of previousKeys) {
+				if (key.startsWith("v1-") && themeKeys.at(-1) !== key) {
+					themeKeys.push(key);
+				}
+			}
+			const target = document.querySelector<HTMLElement>(
+				".booklet-measurement",
+			);
+			const key = target?.dataset.bookletThemeKey;
+			if (key && themeKeys.at(-1) !== key) {
+				themeKeys.push(key);
+			}
+		});
+		observer.observe(document.body, {
+			attributes: true,
+			subtree: true,
+			attributeFilter: ["data-booklet-theme-key"],
+			attributeOldValue: true,
+		});
+		renderPage("/journeys/journey-1/booklet?seed=v1-00000013");
+
+		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
+		await waitFor(() => expect(printButton).toBeDisabled());
+		expect(
+			document.querySelector<HTMLElement>(".booklet-measurement")?.dataset
+				.bookletThemeKey,
+		).toBe("v1-00000013:selected");
+		releaseFirstDecode();
+		await waitFor(() => expect(printButton).toBeEnabled());
+		observer.disconnect();
+		expect(themeKeys).toEqual([
+			"v1-00000013:selected",
+			"v1-00000013:balanced-density",
+			"v1-00000013:compact-density",
+			"v1-00000013:safe-geometry",
+		]);
+		expect(
+			new Set(
+				Array.from(
+					document.querySelectorAll<HTMLElement>("[data-booklet-page]"),
+				).map((page) => page.dataset.bookletThemeKey),
+			),
+		).toEqual(new Set(["v1-00000013:safe-geometry"]));
+	});
+
+	it("異常系: 不正なseedクエリは既定テーマへ戻しURLから除去する", async () => {
+		installFetchMock();
+		renderPage("/journeys/journey-1/booklet?seed=v2-00000000");
+
+		await waitFor(() =>
+			expect(screen.getByTestId("location-search").textContent).toBe(""),
+		);
+		await waitFor(() =>
+			expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled(),
+		);
+	});
+
+	it("正常系: 再抽選は異なるレシピのseedをURL履歴へ追加する", async () => {
+		const randomValues = vi
+			.spyOn(crypto, "getRandomValues")
+			.mockImplementation((values) => {
+				if (values instanceof Uint32Array) {
+					values[0] = 7;
+				}
+				return values;
+			});
+		installFetchMock();
+		renderPage();
+
+		await waitFor(() =>
+			expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled(),
+		);
+		screen.getByRole("button", { name: "別のデザインを試す" }).click();
+		await waitFor(() =>
+			expect(screen.getByTestId("location-search")).toHaveTextContent(
+				"seed=v1-00000007",
+			),
+		);
+		expect(randomValues).toHaveBeenCalled();
 	});
 });

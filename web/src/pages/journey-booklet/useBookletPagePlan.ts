@@ -1,9 +1,20 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { BookletModel } from "../../booklet/model";
 import {
 	type BookletPageMeasurement,
+	isRecoverableBookletFailure,
 	paginateBooklet,
+	type RecoverableBookletFailureCode,
 } from "../../booklet/paginate";
+import {
+	getThemeCandidates,
+	resolveBookletTheme,
+} from "../../theme/bookletTheme";
+import type {
+	BookletThemeCandidate,
+	RequestedBookletTheme,
+	ResolvedBookletTheme,
+} from "../../theme/types";
 
 export type BookletPagePlanStatus =
 	| "idle"
@@ -13,15 +24,43 @@ export type BookletPagePlanStatus =
 	| "error";
 
 export type BookletPagePlanResult = {
+	readonly activeTheme: ResolvedBookletTheme | null;
 	readonly documentRef: React.RefObject<HTMLElement | null>;
 	readonly error: string | null;
 	readonly measurementRef: React.RefObject<HTMLDivElement | null>;
 	readonly pagePlan: ReturnType<typeof paginateBooklet> | null;
+	readonly resolvedTheme: ResolvedBookletTheme | null;
 	readonly status: BookletPagePlanStatus;
 };
 
+type LayoutFailureCode =
+	| RecoverableBookletFailureCode
+	| "dom-not-ready"
+	| "hidden-text";
+
+const FONT_SAMPLE_TEXT = "東京の旅程・京都散策";
+
+export class BookletLayoutError extends Error {
+	readonly code: LayoutFailureCode;
+
+	constructor(code: LayoutFailureCode, message: string) {
+		super(message);
+		this.code = code;
+		this.name = "BookletLayoutError";
+	}
+}
+
 function errorMessage(error: unknown, fallback: string): string {
 	return error instanceof Error ? error.message : fallback;
+}
+
+function isRecoverableLayoutFailure(error: unknown): boolean {
+	return (
+		isRecoverableBookletFailure(error) ||
+		(error instanceof BookletLayoutError &&
+			error.code !== "dom-not-ready" &&
+			error.code !== "hidden-text")
+	);
 }
 
 async function waitForImageDecode(image: HTMLImageElement): Promise<void> {
@@ -33,15 +72,9 @@ async function waitForImageDecode(image: HTMLImageElement): Promise<void> {
 			throw new Error(`画像「${image.alt}」の読み込みに失敗しました。`);
 		}
 	}
-
-	if (image.complete) {
-		if (image.naturalWidth > 0) {
-			return;
-		}
-
-		throw new Error(`画像「${image.alt}」の読み込みに失敗しました。`);
+	if (image.complete && image.naturalWidth > 0) {
+		return;
 	}
-
 	await new Promise<void>((resolve, reject) => {
 		const handleLoad = () => {
 			cleanup();
@@ -55,23 +88,41 @@ async function waitForImageDecode(image: HTMLImageElement): Promise<void> {
 			image.removeEventListener("load", handleLoad);
 			image.removeEventListener("error", handleError);
 		};
-
 		image.addEventListener("load", handleLoad, { once: true });
 		image.addEventListener("error", handleError, { once: true });
 	});
 }
 
-async function waitForFonts(): Promise<void> {
+function fontFamiliesFor(theme: BookletThemeCandidate): readonly string[] {
+	switch (theme.fontPairId) {
+		case "classic":
+			return ["Noto Serif JP"];
+		case "literary":
+			return ["Shippori Mincho", "Noto Sans JP"];
+		case "wayfinding":
+			return ["Zen Kaku Gothic New", "Noto Sans JP"];
+		case "modern":
+			return ["Noto Sans JP"];
+		case "round-trip":
+			return ["M PLUS Rounded 1c", "Noto Sans JP"];
+	}
+}
+
+async function waitForFonts(theme: BookletThemeCandidate): Promise<void> {
 	if (!document.fonts) {
 		return;
 	}
-
 	await document.fonts.ready;
-	if (
-		!document.fonts.check('400 16px "Noto Serif JP"') ||
-		!document.fonts.check('700 16px "Noto Serif JP"')
-	) {
-		throw new Error("Noto Serif JP の読み込みを確認できませんでした。");
+	for (const family of fontFamiliesFor(theme)) {
+		for (const weight of [400, 700] as const) {
+			const descriptor = `${weight} 10pt "${family}"`;
+			await document.fonts.load(descriptor, FONT_SAMPLE_TEXT);
+			if (!document.fonts.check(descriptor, FONT_SAMPLE_TEXT)) {
+				throw new Error(
+					`${family} ${weight} の読み込みを確認できませんでした。`,
+				);
+			}
+		}
 	}
 }
 
@@ -81,10 +132,12 @@ function readNaturalHeight(element: HTMLElement, name: string): number {
 		element.offsetHeight,
 		element.scrollHeight,
 	);
-	if (!Number.isFinite(height) || height <= 0) {
-		throw new Error(`${name}の高さを計測できませんでした。`);
+	if (!Number.isFinite(height) || height < 0) {
+		throw new BookletLayoutError(
+			"dom-not-ready",
+			`${name}を計測できませんでした。`,
+		);
 	}
-
 	return height;
 }
 
@@ -101,10 +154,26 @@ function readContentHeight(element: HTMLElement): number {
 		element.getBoundingClientRect().height,
 	);
 	if (!Number.isFinite(height) || height <= 0) {
-		throw new Error("A5ページの本文高さを計測できませんでした。");
+		throw new BookletLayoutError(
+			"dom-not-ready",
+			"ページ本文高さを計測できませんでした。",
+		);
 	}
-
 	return height;
+}
+
+function readContentWidth(element: HTMLElement): number {
+	const width = Math.max(
+		element.clientWidth,
+		element.getBoundingClientRect().width,
+	);
+	if (!Number.isFinite(width) || width <= 0) {
+		throw new BookletLayoutError(
+			"dom-not-ready",
+			"ページ本文幅を計測できませんでした。",
+		);
+	}
+	return width;
 }
 
 function queryRequired(
@@ -114,210 +183,347 @@ function queryRequired(
 ): HTMLElement {
 	const element = root.querySelector<HTMLElement>(selector);
 	if (!element) {
-		throw new Error(`${name}を準備できませんでした。`);
+		throw new BookletLayoutError(
+			"dom-not-ready",
+			`${name}を準備できませんでした。`,
+		);
 	}
-
 	return element;
+}
+
+function ensureCoverTextFits(root: HTMLDivElement): void {
+	const text = queryRequired(root, "[data-booklet-cover-text]", "表紙文字領域");
+	const panel = root.querySelector<SVGRectElement>(
+		".booklet-cover__panel-shape",
+	);
+	if (!panel) {
+		throw new BookletLayoutError(
+			"dom-not-ready",
+			"表紙文字パネルを準備できませんでした。",
+		);
+	}
+	if (text.scrollWidth > text.clientWidth) {
+		throw new BookletLayoutError(
+			"cover-inline-overflow",
+			"表紙の横方向の文字が収まりません。",
+		);
+	}
+	const textRect = text.getBoundingClientRect();
+	const panelRect = panel.getBoundingClientRect();
+	if (textRect.left < panelRect.left || textRect.right > panelRect.right) {
+		throw new BookletLayoutError(
+			"cover-inline-overflow",
+			"表紙文字が安全領域をはみ出しました。",
+		);
+	}
+	if (textRect.top < panelRect.top || textRect.bottom > panelRect.bottom) {
+		throw new BookletLayoutError(
+			"cover-block-overflow",
+			"表紙文字が安全領域をはみ出しました。",
+		);
+	}
 }
 
 function collectMeasurement(
 	model: BookletModel,
 	root: HTMLDivElement,
 ): BookletPageMeasurement {
-	const contentElements = root.querySelectorAll<HTMLElement>(
-		"[data-booklet-measurement-content]",
+	ensureCoverTextFits(root);
+	const coverText = queryRequired(
+		root,
+		"[data-booklet-cover-text]",
+		"表紙文字領域",
 	);
-	const contentElement = contentElements[0];
-	if (!contentElement) {
-		throw new Error("ページ計測用の本文を準備できませんでした。");
+	const dayPages = Array.from(
+		root.querySelectorAll<HTMLElement>(".booklet-page--measurement"),
+	);
+	const firstDayPage = dayPages[0];
+	if (!firstDayPage && model.days.length > 0) {
+		throw new BookletLayoutError(
+			"dom-not-ready",
+			"日別ページ計測用DOMを準備できませんでした。",
+		);
+	}
+	const content = firstDayPage
+		? queryRequired(
+				firstDayPage,
+				"[data-booklet-measurement-content]",
+				"本文領域",
+			)
+		: queryRequired(root, "[data-booklet-measurement-content]", "本文領域");
+	if (dayPages.length !== model.days.length) {
+		throw new BookletLayoutError(
+			"dom-not-ready",
+			"日別ページ計測用DOMの件数が一致しません。",
+		);
 	}
 
-	const days = model.days.map((day, dayIndex) => {
-		const dayRoot = root.querySelector<HTMLElement>(
-			`.booklet-page--measurement:nth-of-type(${dayIndex + 2})`,
-		);
-		if (!dayRoot) {
-			throw new Error(
-				`Day ${dayIndex + 1}の計測ページを準備できませんでした。`,
-			);
-		}
-
-		const headers = dayRoot.querySelectorAll<HTMLElement>(
-			".booklet-day-header",
-		);
-		if (headers.length < 2) {
-			throw new Error(`Day ${dayIndex + 1}のヘッダーを計測できませんでした。`);
-		}
-
-		const unitHeights = day.units.map((_, unitIndex) => {
-			const unit = queryRequired(
-				dayRoot,
-				`[data-booklet-measurement-unit="${dayIndex}-${unitIndex}"]`,
-				`Day ${dayIndex + 1}のSpot ${unitIndex + 1}`,
-			);
-			return readOuterHeight(
-				unit,
-				`Day ${dayIndex + 1}のSpot ${unitIndex + 1}`,
-			);
-		});
-
-		return {
-			continuationHeaderHeight: readOuterHeight(
-				headers[1],
-				`Day ${dayIndex + 1}の継続ヘッダー`,
-			),
-			headerHeight: readOuterHeight(
-				headers[0],
-				`Day ${dayIndex + 1}のヘッダー`,
-			),
-			unitHeights,
-		};
-	});
-
-	const coverBody = queryRequired(
-		root,
-		"[data-booklet-measurement-cover-body]",
-		"表紙",
-	);
-
 	return {
-		contentHeight: readContentHeight(contentElement),
-		coverHeight: readNaturalHeight(coverBody, "表紙"),
-		days,
+		contentHeight: readContentHeight(content),
+		contentWidth: readContentWidth(content),
+		coverHeight: coverText.scrollHeight,
+		coverWidth: coverText.scrollWidth,
+		days: model.days.map((day, dayIndex) => {
+			const page = dayPages[dayIndex];
+			if (!page) {
+				throw new BookletLayoutError(
+					"dom-not-ready",
+					`Day ${dayIndex + 1}を計測できませんでした。`,
+				);
+			}
+			const headers = page.querySelectorAll<HTMLElement>(".booklet-day-header");
+			const header = headers[0];
+			const continuationHeader = headers[1];
+			if (!header || !continuationHeader) {
+				throw new BookletLayoutError(
+					"dom-not-ready",
+					`Day ${dayIndex + 1}のヘッダーを計測できませんでした。`,
+				);
+			}
+			return {
+				continuationHeaderHeight: readOuterHeight(
+					continuationHeader,
+					`Day ${dayIndex + 1}の継続ヘッダー`,
+				),
+				headerHeight: readOuterHeight(header, `Day ${dayIndex + 1}のヘッダー`),
+				unitHeights: day.units.map((_unit, unitIndex) =>
+					readOuterHeight(
+						queryRequired(
+							page,
+							`[data-booklet-measurement-unit="${dayIndex}-${unitIndex}"]`,
+							`Day ${dayIndex + 1}のSpot ${unitIndex + 1}`,
+						),
+						`Day ${dayIndex + 1}のSpot ${unitIndex + 1}`,
+					),
+				),
+			};
+		}),
 	};
 }
 
-function ensurePagesFit(root: HTMLElement): void {
+function hidesText(style: CSSStyleDeclaration): boolean {
+	const unsafeOverflow = new Set(["hidden", "clip", "scroll", "auto"]);
+	const lineClamp = (
+		style as CSSStyleDeclaration & { webkitLineClamp?: string }
+	).webkitLineClamp;
+	return (
+		unsafeOverflow.has(style.overflow) ||
+		unsafeOverflow.has(style.overflowX) ||
+		unsafeOverflow.has(style.overflowY) ||
+		style.whiteSpace === "nowrap" ||
+		(style.textOverflow !== "" && style.textOverflow !== "clip") ||
+		(lineClamp !== undefined && lineClamp !== "" && lineClamp !== "none") ||
+		style.transform.includes("scale")
+	);
+}
+
+function ensurePagesFit(
+	root: HTMLElement,
+	pagePlan: ReturnType<typeof paginateBooklet>,
+	theme: ResolvedBookletTheme,
+): void {
 	const pages = Array.from(
 		root.querySelectorAll<HTMLElement>("[data-booklet-page]"),
 	);
-	const overflowingPageIndex = pages.findIndex(
-		(page) =>
-			page.scrollHeight > page.clientHeight ||
-			page.scrollWidth > page.clientWidth,
-	);
-	if (overflowingPageIndex !== -1) {
-		throw new Error(
-			`${overflowingPageIndex + 1}ページ目の内容がA5ページに収まりません。`,
+	if (pages.length !== pagePlan.length) {
+		throw new BookletLayoutError(
+			"dom-not-ready",
+			"印刷ページ数がページ計画と一致しません。",
 		);
 	}
+	for (const page of pages) {
+		if (page.dataset.bookletThemeKey !== theme.resolvedThemeKey) {
+			throw new BookletLayoutError(
+				"dom-not-ready",
+				"実ページと計測テーマが一致しません。",
+			);
+		}
+		if (page.scrollWidth > page.clientWidth) {
+			throw new BookletLayoutError(
+				"page-inline-overflow",
+				"印刷ページが横方向にあふれています。",
+			);
+		}
+		if (page.scrollHeight > page.clientHeight) {
+			throw new BookletLayoutError(
+				"page-block-overflow",
+				"印刷ページが縦方向にあふれています。",
+			);
+		}
+	}
+	for (const text of root.querySelectorAll<HTMLElement>(
+		"[data-booklet-text-role]",
+	)) {
+		if (hidesText(getComputedStyle(text))) {
+			throw new BookletLayoutError(
+				"hidden-text",
+				"文字を隠す表示設定を検出しました。",
+			);
+		}
+		if (text.scrollWidth > text.clientWidth) {
+			throw new BookletLayoutError(
+				"text-inline-overflow",
+				`${text.dataset.bookletTextRole ?? "文字"}が横方向にあふれています。`,
+			);
+		}
+		if (text.scrollHeight > text.clientHeight) {
+			throw new BookletLayoutError(
+				"text-block-overflow",
+				`${text.dataset.bookletTextRole ?? "文字"}が縦方向にあふれています。`,
+			);
+		}
+	}
+}
+
+function nextFrame(): Promise<void> {
+	return new Promise((resolve) => {
+		if (typeof requestAnimationFrame === "function") {
+			requestAnimationFrame(() => resolve());
+			return;
+		}
+		setTimeout(resolve, 0);
+	});
 }
 
 export function useBookletPagePlan(
 	model: BookletModel | null,
+	requestedTheme: RequestedBookletTheme | null,
 ): BookletPagePlanResult {
 	const measurementRef = useRef<HTMLDivElement>(null);
 	const documentRef = useRef<HTMLElement>(null);
 	const runIdRef = useRef(0);
-	const [state, setState] = useState<{
-		readonly error: string | null;
-		readonly pagePlan: ReturnType<typeof paginateBooklet> | null;
-		readonly status: BookletPagePlanStatus;
-	}>({ error: null, pagePlan: null, status: "idle" });
+	const [candidateIndex, setCandidateIndex] = useState(0);
+	const [pagePlan, setPagePlan] = useState<ReturnType<
+		typeof paginateBooklet
+	> | null>(null);
+	const [resolvedTheme, setResolvedTheme] =
+		useState<ResolvedBookletTheme | null>(null);
+	const [error, setError] = useState<string | null>(null);
+	const [status, setStatus] = useState<BookletPagePlanStatus>("idle");
+
+	const candidateResult = useMemo(() => {
+		if (!requestedTheme) {
+			return {
+				candidates: [] as readonly BookletThemeCandidate[],
+				error: null,
+			};
+		}
+		try {
+			return { candidates: getThemeCandidates(requestedTheme), error: null };
+		} catch (candidateError) {
+			return {
+				candidates: [] as readonly BookletThemeCandidate[],
+				error: errorMessage(
+					candidateError,
+					"しおりのデザイン定義を読み込めませんでした。",
+				),
+			};
+		}
+	}, [requestedTheme]);
+
+	const candidate = candidateResult.candidates[candidateIndex] ?? null;
+	const activeTheme = useMemo(
+		() =>
+			requestedTheme && candidate
+				? resolveBookletTheme(requestedTheme, candidate)
+				: null,
+		[candidate, requestedTheme],
+	);
 
 	useEffect(() => {
-		const runId = runIdRef.current + 1;
-		runIdRef.current = runId;
-		if (!model) {
-			setState({ error: null, pagePlan: null, status: "idle" });
+		runIdRef.current += 1;
+		setCandidateIndex(0);
+		setPagePlan(null);
+		setResolvedTheme(null);
+		setError(candidateResult.error);
+		setStatus(
+			model && requestedTheme && !candidateResult.error
+				? "measuring"
+				: candidateResult.error
+					? "error"
+					: "idle",
+		);
+	}, [candidateResult.error, model, requestedTheme]);
+
+	useEffect(() => {
+		if (!model || !requestedTheme || !activeTheme || candidateResult.error) {
 			return;
 		}
-
+		const runId = ++runIdRef.current;
 		let cancelled = false;
-		setState({ error: null, pagePlan: null, status: "measuring" });
-
-		const runMeasurement = async () => {
+		const run = async () => {
 			try {
-				const root = measurementRef.current;
-				if (!root) {
-					throw new Error("ページ計測用DOMを準備できませんでした。");
+				setPagePlan(null);
+				setResolvedTheme(null);
+				setError(null);
+				setStatus("measuring");
+				await waitForFonts(activeTheme);
+				const measurementRoot = measurementRef.current;
+				if (!measurementRoot) {
+					throw new BookletLayoutError(
+						"dom-not-ready",
+						"ページ計測用DOMを準備できませんでした。",
+					);
 				}
-
 				await Promise.all(
-					Array.from(root.querySelectorAll<HTMLImageElement>("img")).map(
-						waitForImageDecode,
+					Array.from(measurementRoot.querySelectorAll("img")).map((image) =>
+						waitForImageDecode(image),
 					),
 				);
-				await waitForFonts();
+				const measuredPlan = paginateBooklet(
+					model,
+					collectMeasurement(model, measurementRoot),
+				);
 				if (cancelled || runId !== runIdRef.current) {
 					return;
 				}
-
-				const pagePlan = paginateBooklet(
-					model,
-					collectMeasurement(model, root),
-				);
-				setState({ error: null, pagePlan, status: "checking" });
-			} catch (error) {
-				if (!cancelled && runId === runIdRef.current) {
-					setState({
-						error: errorMessage(error, "印刷前の計測に失敗しました。"),
-						pagePlan: null,
-						status: "error",
-					});
+				setPagePlan(measuredPlan);
+				setStatus("checking");
+				await nextFrame();
+				await nextFrame();
+				if (cancelled || runId !== runIdRef.current) {
+					return;
 				}
+				const documentRoot = documentRef.current;
+				if (!documentRoot) {
+					throw new BookletLayoutError(
+						"dom-not-ready",
+						"印刷ページDOMを準備できませんでした。",
+					);
+				}
+				ensurePagesFit(documentRoot, measuredPlan, activeTheme);
+				setResolvedTheme(activeTheme);
+				setStatus("ready");
+			} catch (runError) {
+				if (cancelled || runId !== runIdRef.current) {
+					return;
+				}
+				if (
+					isRecoverableLayoutFailure(runError) &&
+					candidateIndex + 1 < candidateResult.candidates.length
+				) {
+					setCandidateIndex(candidateIndex + 1);
+					return;
+				}
+				setPagePlan(null);
+				setResolvedTheme(null);
+				setError(errorMessage(runError, "印刷前の収まり確認に失敗しました。"));
+				setStatus("error");
 			}
 		};
-
-		void runMeasurement();
+		void run();
 		return () => {
 			cancelled = true;
 		};
-	}, [model]);
-
-	useEffect(() => {
-		if (state.status !== "checking" || !state.pagePlan) {
-			return;
-		}
-
-		let cancelled = false;
-		const timer = window.setTimeout(() => {
-			try {
-				const root = documentRef.current;
-				if (!root) {
-					throw new Error("印刷ページを準備できませんでした。");
-				}
-				const pages = root.querySelectorAll("[data-booklet-page]");
-				if (pages.length !== state.pagePlan?.length) {
-					throw new Error("印刷ページの描画が完了しませんでした。");
-				}
-				ensurePagesFit(root);
-				if (!cancelled) {
-					setState((current) =>
-						current.pagePlan === state.pagePlan
-							? { ...current, status: "ready" }
-							: current,
-					);
-				}
-			} catch (error) {
-				if (!cancelled) {
-					setState((current) =>
-						current.pagePlan === state.pagePlan
-							? {
-									...current,
-									error: errorMessage(
-										error,
-										"印刷ページの検査に失敗しました。",
-									),
-									status: "error",
-								}
-							: current,
-					);
-				}
-			}
-		}, 0);
-
-		return () => {
-			cancelled = true;
-			window.clearTimeout(timer);
-		};
-	}, [state.pagePlan, state.status]);
+	}, [activeTheme, candidateIndex, candidateResult, model, requestedTheme]);
 
 	return {
+		activeTheme,
 		documentRef,
-		error: state.error,
+		error,
 		measurementRef,
-		pagePlan: state.pagePlan,
-		status: state.status,
+		pagePlan,
+		resolvedTheme,
+		status,
 	};
 }

@@ -234,7 +234,6 @@ body {
 	background: #fff;
 	box-shadow: 0 0.75rem 2rem rgb(39 34 31 / 16%);
 	break-inside: avoid;
-	overflow: hidden;
 }
 
 .booklet-page__content {

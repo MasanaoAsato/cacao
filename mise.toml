@@ -59,3 +59,8 @@ run = "pnpm typecheck"
 description = "Webのテストを実行する"
 dir = "web"
 run = "pnpm test"
+
+[tasks."web:test:e2e"]
+description = "WebのChromium品質テストを実行する"
+dir = "web"
+run = "pnpm test:e2e"
