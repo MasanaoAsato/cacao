@@ -37,5 +37,8 @@ go.work.sum
 # 画像生成のローカル保存先
 var/journey-images
 
+# Playwright test artifacts
+web/test-results/
+
 # some skills
 .agents/skills/vercel-react-best-practices
