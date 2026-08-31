@@ -28,14 +28,10 @@ export type SelectableCoverLayoutId =
 
 export type ResolvedCoverLayoutId = SelectableCoverLayoutId | "safe-cover";
 
-export type ItineraryLayoutId =
-	| "stacked-ledger"
-	| "route-rail"
-	| "split-forward"
-	| "split-reverse"
-	| "center-column"
-	| "upper-right"
-	| "lower-right";
+export type ItineraryTemplateId =
+	| "route-thread"
+	| "field-journal"
+	| "travel-ticket";
 
 export type EmphasisId = "place-led" | "balanced" | "route-led" | "time-led";
 
@@ -91,6 +87,15 @@ export type PaletteDefinition = {
 	readonly muted: string;
 	readonly surfaceStops: readonly [string, string];
 	readonly text: string;
+	readonly itinerary?: ItineraryPaletteDefinition;
+};
+
+export type ItineraryPaletteDefinition = {
+	readonly accent: string;
+	readonly border: string;
+	readonly muted: string;
+	readonly surfaceStops: readonly [string, string];
+	readonly text: string;
 };
 
 export type CoverLayoutDefinition = {
@@ -99,8 +104,8 @@ export type CoverLayoutDefinition = {
 	readonly textAreaWidthMm: number;
 };
 
-export type ItineraryLayoutDefinition = {
-	readonly id: ItineraryLayoutId;
+export type ItineraryTemplateDefinition = {
+	readonly id: ItineraryTemplateId;
 };
 
 export type EmphasisDefinition = {
@@ -123,7 +128,7 @@ export type ThemeRecipeDefinition = {
 	readonly emphasisId: EmphasisId;
 	readonly fontPairId: FontPairId;
 	readonly id: string;
-	readonly itineraryLayoutId: ItineraryLayoutId;
+	readonly itineraryTemplateId: ItineraryTemplateId;
 	readonly paletteId: PaletteId;
 	readonly signatureId: SignatureId;
 	readonly typography: TypographySafety;
@@ -148,7 +153,7 @@ export type BookletThemeCandidate = {
 	readonly emphasisId: EmphasisId;
 	readonly fallbackStep: FallbackStep;
 	readonly fontPairId: FontPairId;
-	readonly itineraryLayoutId: ItineraryLayoutId;
+	readonly itineraryTemplateId: ItineraryTemplateId;
 	readonly paletteId: PaletteId;
 	readonly requestedRecipeId: string;
 	readonly resolvedThemeKey: string;
@@ -171,8 +176,8 @@ export type ThemeCatalogReferences = {
 	readonly emphasis: ReadonlyMap<EmphasisId, EmphasisDefinition>;
 	readonly fonts: ReadonlyMap<FontPairId, FontPairDefinition>;
 	readonly itineraries: ReadonlyMap<
-		ItineraryLayoutId,
-		ItineraryLayoutDefinition
+		ItineraryTemplateId,
+		ItineraryTemplateDefinition
 	>;
 	readonly palettes: ReadonlyMap<PaletteId, PaletteDefinition>;
 	readonly signatures: ReadonlyMap<SignatureId, SignatureDefinition>;

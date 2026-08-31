@@ -206,7 +206,7 @@ const rangeCases: readonly RangeCase[] = [
 	},
 	{
 		label: "Spot説明領域幅",
-		lower: 56,
+		lower: 76,
 		apply: (value, typography) => ({
 			...typography,
 			detailWidthMm: value,
