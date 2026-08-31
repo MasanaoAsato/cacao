@@ -1,4 +1,8 @@
-import type { CSSProperties, RefObject } from "react";
+import type { CSSProperties, ReactNode, RefObject } from "react";
+import {
+	formatBookletDate,
+	formatBookletDateTime,
+} from "../../booklet/dateFormat";
 import type {
 	ArrivalUnit,
 	BookletCover,
@@ -12,10 +16,12 @@ import {
 } from "../../theme/bookletTheme";
 import type {
 	BookletThemeCandidate,
+	CoverVeilBounds,
 	ResolvedBookletTheme,
 } from "../../theme/types";
 
 export type BookletDocumentProps = {
+	readonly coverVeilBounds: CoverVeilBounds;
 	readonly model: BookletModel;
 	readonly pagePlan: readonly BookletPagePlan[];
 	readonly rootRef: RefObject<HTMLElement | null>;
@@ -33,10 +39,6 @@ function formatMoney(money: {
 	readonly currency: string;
 }): string {
 	return `${money.amount.toLocaleString("ja-JP")} ${money.currency}`;
-}
-
-function displayDateTime(value: string): string {
-	return value.replace("T", " ");
 }
 
 function titleLengthClass(destination: string): string {
@@ -63,50 +65,134 @@ function themeStyle(theme: BookletThemeCandidate): CSSProperties {
 	return getBookletThemeCssVariables(theme) as CSSProperties;
 }
 
-type CoverPanelGeometry = {
-	readonly height: number;
-	readonly width: number;
-	readonly x: number;
-	readonly y: number;
-};
+const COVER_WIDTH = 148;
+const COVER_HEIGHT = 210;
+const VEIL_SOLID_MARGIN = 4;
+const VEIL_FADE_LENGTH = 16;
 
-function coverPanelGeometry(theme: BookletThemeCandidate): CoverPanelGeometry {
-	switch (theme.coverLayoutId) {
-		case "center":
-			return { height: 76, width: 104, x: 22, y: 67 };
-		case "north-west":
-			return { height: 70, width: 80, x: 12, y: 12 };
-		case "north-east":
-			return { height: 70, width: 80, x: 56, y: 12 };
-		case "south-west":
-			return { height: 70, width: 80, x: 12, y: 128 };
-		case "south-east":
-			return { height: 70, width: 80, x: 56, y: 128 };
-		case "split-left":
-			return { height: 210, width: 70, x: 0, y: 0 };
-		case "horizon":
-			return { height: 62, width: 148, x: 0, y: 148 };
-		case "safe-cover":
-			return { height: 190, width: 128, x: 10, y: 10 };
-	}
+function percentage(value: number): string {
+	return `${Number((value * 100).toFixed(3))}%`;
 }
 
-function CoverPanel({ theme }: { readonly theme: BookletThemeCandidate }) {
-	const geometry = coverPanelGeometry(theme);
+function CoverVeil({
+	bounds,
+	theme,
+}: {
+	readonly bounds: CoverVeilBounds;
+	readonly theme: BookletThemeCandidate;
+}) {
+	const gradientId = `booklet-cover-veil-${theme.resolvedThemeKey}`.replace(
+		/[^a-z0-9-]/gi,
+		"-",
+	);
+	const veilStop = (
+		<stop
+			stopColor="var(--booklet-cover-veil)"
+			stopOpacity="var(--booklet-cover-veil-opacity)"
+		/>
+	);
+	let gradient: ReactNode;
+
+	if (theme.coverLayoutId === "split-left") {
+		const solidEdge = bounds.x + bounds.width + VEIL_SOLID_MARGIN;
+		const transparentEdge = solidEdge + VEIL_FADE_LENGTH;
+		gradient = (
+			<linearGradient
+				gradientUnits="userSpaceOnUse"
+				id={gradientId}
+				x1="0"
+				x2={transparentEdge}
+				y1="0"
+				y2="0"
+			>
+				{veilStop}
+				<stop
+					offset={percentage(solidEdge / transparentEdge)}
+					stopColor="var(--booklet-cover-veil)"
+					stopOpacity="var(--booklet-cover-veil-opacity)"
+				/>
+				<stop
+					offset="100%"
+					stopColor="var(--booklet-cover-veil)"
+					stopOpacity="0"
+				/>
+			</linearGradient>
+		);
+	} else if (theme.coverLayoutId === "horizon") {
+		const solidEdge = bounds.y - VEIL_SOLID_MARGIN;
+		const transparentEdge = solidEdge - VEIL_FADE_LENGTH;
+		const gradientLength = COVER_HEIGHT - transparentEdge;
+		gradient = (
+			<linearGradient
+				gradientUnits="userSpaceOnUse"
+				id={gradientId}
+				x1="0"
+				x2="0"
+				y1={COVER_HEIGHT}
+				y2={transparentEdge}
+			>
+				{veilStop}
+				<stop
+					offset={percentage((COVER_HEIGHT - solidEdge) / gradientLength)}
+					stopColor="var(--booklet-cover-veil)"
+					stopOpacity="var(--booklet-cover-veil-opacity)"
+				/>
+				<stop
+					offset="100%"
+					stopColor="var(--booklet-cover-veil)"
+					stopOpacity="0"
+				/>
+			</linearGradient>
+		);
+	} else {
+		const centerX = bounds.x + bounds.width / 2;
+		const centerY = bounds.y + bounds.height / 2;
+		const outerRadiusX =
+			bounds.width / 2 + VEIL_SOLID_MARGIN + VEIL_FADE_LENGTH;
+		const outerRadiusY =
+			bounds.height / 2 + VEIL_SOLID_MARGIN + VEIL_FADE_LENGTH;
+		const innerStop = Math.max(
+			(bounds.width / 2 + VEIL_SOLID_MARGIN) / outerRadiusX,
+			(bounds.height / 2 + VEIL_SOLID_MARGIN) / outerRadiusY,
+		);
+		gradient = (
+			<radialGradient
+				cx={centerX}
+				cy={centerY}
+				gradientTransform={`translate(${centerX} ${centerY}) scale(1 ${outerRadiusY / outerRadiusX}) translate(${-centerX} ${-centerY})`}
+				gradientUnits="userSpaceOnUse"
+				id={gradientId}
+				r={outerRadiusX}
+			>
+				{veilStop}
+				<stop
+					offset={percentage(innerStop)}
+					stopColor="var(--booklet-cover-veil)"
+					stopOpacity="var(--booklet-cover-veil-opacity)"
+				/>
+				<stop
+					offset="100%"
+					stopColor="var(--booklet-cover-veil)"
+					stopOpacity="0"
+				/>
+			</radialGradient>
+		);
+	}
+
 	return (
 		<svg
 			aria-hidden="true"
-			className="booklet-cover__panel"
+			className="booklet-cover__veil"
+			data-booklet-cover-veil={`${bounds.x},${bounds.y},${bounds.width},${bounds.height}`}
 			focusable="false"
 			preserveAspectRatio="none"
-			viewBox="0 0 148 210"
+			viewBox={`0 0 ${COVER_WIDTH} ${COVER_HEIGHT}`}
 		>
+			<defs>{gradient}</defs>
 			<rect
-				className="booklet-cover__panel-shape"
-				height={geometry.height}
-				width={geometry.width}
-				x={geometry.x}
-				y={geometry.y}
+				fill={`url(#${gradientId})`}
+				height={COVER_HEIGHT}
+				width={COVER_WIDTH}
 			/>
 		</svg>
 	);
@@ -146,9 +232,11 @@ function BookletPageSurface({
 
 function CoverContent({
 	cover,
+	veilBounds,
 	theme,
 }: {
 	readonly cover: BookletCover;
+	readonly veilBounds: CoverVeilBounds | null;
 	readonly theme: BookletThemeCandidate;
 }) {
 	return (
@@ -162,47 +250,44 @@ function CoverContent({
 				alt={`${cover.destination}の表紙画像`}
 				width={cover.image.width}
 			/>
-			<div className="booklet-cover__scrim" aria-hidden="true" />
-			<CoverPanel theme={theme} />
-			<div
-				className="booklet-cover__text"
-				data-booklet-cover-safe-area="true"
-				data-booklet-cover-text="true"
-			>
-				<p className="booklet-eyebrow" data-booklet-text-role="utility-label">
-					TRAVEL JOURNAL
-				</p>
-				<h1
-					className={`booklet-cover__title ${titleLengthClass(cover.destination)}`}
-					data-booklet-text-role="cover-destination"
-				>
-					{cover.destination}
-				</h1>
-				<p
-					className="booklet-cover__route"
-					data-booklet-text-role="cover-route"
-				>
-					{cover.departure} <span aria-hidden="true">→</span>{" "}
-					{cover.destination}
-				</p>
-				<p
-					className="booklet-cover__period"
-					data-booklet-text-role="cover-period"
-				>
-					<time dateTime={cover.period.start_date}>
-						{displayDateTime(cover.period.start_date)}
-					</time>
-					<span aria-hidden="true"> — </span>
-					<time dateTime={cover.period.end_date}>
-						{displayDateTime(cover.period.end_date)}
-					</time>
-				</p>
-				<p
-					className="booklet-cover__budget"
-					data-booklet-text-role="cover-budget"
-				>
-					予算 {formatMoney(cover.budget)}
-				</p>
+			{veilBounds ? <CoverVeil bounds={veilBounds} theme={theme} /> : null}
+			<div className="booklet-cover__text">
+				<div className="booklet-cover__copy" data-booklet-cover-copy="true">
+					<p className="booklet-eyebrow" data-booklet-text-role="utility-label">
+						TRAVEL JOURNAL
+					</p>
+					<h1
+						className={`booklet-cover__title ${titleLengthClass(cover.destination)}`}
+						data-booklet-text-role="cover-destination"
+					>
+						{cover.destination}
+					</h1>
+					<p
+						className="booklet-cover__route"
+						data-booklet-text-role="cover-route"
+					>
+						{cover.departure} <span aria-hidden="true">→</span>{" "}
+						{cover.destination}
+					</p>
+					<p
+						className="booklet-cover__period"
+						data-booklet-text-role="cover-period"
+					>
+						<time dateTime={cover.period.start_date}>
+							{formatBookletDate(cover.period.start_date)}
+						</time>
+						<span aria-hidden="true"> — </span>
+						<time dateTime={cover.period.end_date}>
+							{formatBookletDate(cover.period.end_date)}
+						</time>
+					</p>
+					<p
+						className="booklet-cover__budget"
+						data-booklet-text-role="cover-budget"
+					>
+						予算 {formatMoney(cover.budget)}
+					</p>
+				</div>
 			</div>
 		</div>
 	);
@@ -223,7 +308,7 @@ function DayHeader({
 				DAY {String(day.dayNumber).padStart(2, "0")}
 				{continuation ? "（続き）" : ""}
 			</p>
-			<h2 data-booklet-text-role="day-title">{displayDateTime(day.date)}</h2>
+			<h2 data-booklet-text-role="day-title">{formatBookletDate(day.date)}</h2>
 		</header>
 	);
 }
@@ -281,7 +366,7 @@ function ArrivalUnitView({
 				</p>
 				<p className="booklet-unit__time" data-booklet-text-role="unit-time">
 					<time dateTime={unit.spot.start_at}>
-						{displayDateTime(unit.spot.start_at)}
+						{formatBookletDateTime(unit.spot.start_at)}
 					</time>
 				</p>
 				<h3 data-booklet-text-role="spot-name">{unit.spot.name}</h3>
@@ -315,17 +400,23 @@ function DayPage({
 }
 
 function PhysicalPage({
+	coverVeilBounds,
 	model,
 	page,
 	theme,
 }: {
+	readonly coverVeilBounds: CoverVeilBounds;
 	readonly model: BookletModel;
 	readonly page: BookletPagePlan;
 	readonly theme: ResolvedBookletTheme;
 }) {
 	const pageContent =
 		page.kind === "cover" ? (
-			<CoverContent cover={model.cover} theme={theme} />
+			<CoverContent
+				cover={model.cover}
+				theme={theme}
+				veilBounds={coverVeilBounds}
+			/>
 		) : model.days[page.dayIndex] ? (
 			<DayPage day={model.days[page.dayIndex]} page={page} />
 		) : null;
@@ -346,6 +437,7 @@ function PhysicalPage({
 }
 
 export function BookletDocument({
+	coverVeilBounds,
 	model,
 	pagePlan,
 	rootRef,
@@ -362,6 +454,7 @@ export function BookletDocument({
 			{pagePlan.map((page) => (
 				<PhysicalPage
 					key={page.pageId}
+					coverVeilBounds={coverVeilBounds}
 					model={model}
 					page={page}
 					theme={theme}
@@ -423,7 +516,7 @@ export function BookletMeasurement({
 					className="booklet-page__content"
 					data-booklet-measurement-content="true"
 				>
-					<CoverContent cover={model.cover} theme={theme} />
+					<CoverContent cover={model.cover} theme={theme} veilBounds={null} />
 				</div>
 			</article>
 			{model.days.map((day, dayIndex) => (

@@ -136,6 +136,7 @@ export function JourneyBookletPage() {
 	);
 	const {
 		activeTheme,
+		coverVeilBounds,
 		documentRef,
 		error: pagePlanError,
 		measurementRef,
@@ -147,6 +148,7 @@ export function JourneyBookletPage() {
 		loadState.status === "ready" &&
 		status === "ready" &&
 		pagePlan !== null &&
+		coverVeilBounds !== null &&
 		resolvedTheme !== null &&
 		activeTheme?.resolvedThemeKey === resolvedTheme.resolvedThemeKey;
 
@@ -297,8 +299,9 @@ export function JourneyBookletPage() {
 					theme={activeTheme}
 				/>
 			) : null}
-			{model && pagePlan && activeTheme ? (
+			{model && pagePlan && activeTheme && coverVeilBounds ? (
 				<BookletDocument
+					coverVeilBounds={coverVeilBounds}
 					model={model}
 					pagePlan={pagePlan}
 					rootRef={documentRef}

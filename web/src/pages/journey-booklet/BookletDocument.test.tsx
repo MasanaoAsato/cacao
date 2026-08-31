@@ -69,6 +69,8 @@ const pagePlan: readonly BookletPagePlan[] = [
 	},
 ];
 
+const coverVeilBounds = { height: 48, width: 80, x: 34, y: 81 };
+
 function resolvedTheme() {
 	const requested = createBookletTheme({ value: 7, version: "v1" });
 	const candidate = getThemeCandidates(requested)[0];
@@ -84,6 +86,7 @@ describe("BookletDocument", () => {
 		const theme = resolvedTheme();
 		const { container } = render(
 			<BookletDocument
+				coverVeilBounds={coverVeilBounds}
 				model={model}
 				pagePlan={pagePlan}
 				rootRef={rootRef}
@@ -96,9 +99,19 @@ describe("BookletDocument", () => {
 			"src",
 			"/cover.png",
 		);
+		expect(cover?.querySelector("svg.booklet-cover__veil")).toHaveAttribute(
+			"data-booklet-cover-veil",
+			"34,81,80,48",
+		);
 		expect(
-			cover?.querySelector("svg.booklet-cover__panel"),
-		).toBeInTheDocument();
+			cover?.querySelector(".booklet-cover__panel"),
+		).not.toBeInTheDocument();
+		expect(
+			cover?.querySelector(".booklet-cover__scrim"),
+		).not.toBeInTheDocument();
+		expect(container).toHaveTextContent("2026/08/28 — 2026/08/29");
+		expect(container).toHaveTextContent("2026/08/28 10:00");
+		expect(container).not.toHaveTextContent("T00:00:00");
 		expect(
 			container.querySelector(".booklet-page--day svg.booklet-page__surface"),
 		).toBeInTheDocument();
@@ -133,7 +146,7 @@ describe("BookletDocument", () => {
 			container.querySelector(".booklet-theme--cover-safe-cover"),
 		).toBeInTheDocument();
 		expect(
-			container.querySelector("[data-booklet-cover-safe-area]"),
+			container.querySelector("[data-booklet-cover-copy]"),
 		).toBeInTheDocument();
 		expect(
 			container.querySelector("[data-booklet-text-role=spot-description]"),

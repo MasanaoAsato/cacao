@@ -54,6 +54,13 @@ export type ThemeSeed = {
 	readonly version: ThemeCatalogVersion;
 };
 
+export type CoverVeilBounds = {
+	readonly height: number;
+	readonly width: number;
+	readonly x: number;
+	readonly y: number;
+};
+
 export type TypographySafety = {
 	readonly body: TextStyleSafety;
 	readonly coverTitle: TextStyleSafety;
@@ -85,8 +92,9 @@ export type PaletteDefinition = {
 	readonly accent: string;
 	readonly background: string;
 	readonly border: string;
-	readonly coverPanel: string;
-	readonly coverPanelOpacity: number;
+	readonly coverInk: string;
+	readonly coverVeil: string;
+	readonly coverVeilOpacity: number;
 	readonly id: PaletteId;
 	readonly muted: string;
 	readonly surfaceStops: readonly [string, string];

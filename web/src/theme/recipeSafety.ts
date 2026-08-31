@@ -9,7 +9,7 @@ import type {
 } from "./types";
 
 const MINIMUM_CONTRAST_RATIO = 4.5;
-const COVER_PANEL_OPACITY_RANGE = [0.52, 0.88] as const;
+const COVER_VEIL_OPACITY_RANGE = [0.36, 0.42] as const;
 
 export class ThemeRecipeValidationError extends Error {
 	constructor(message: string) {
@@ -99,45 +99,6 @@ function contrastRatioRgb(
 	);
 }
 
-function blendRgb(
-	foreground: readonly [number, number, number],
-	background: readonly [number, number, number],
-	opacity: number,
-): readonly [number, number, number] {
-	return [
-		foreground[0] * opacity + background[0] * (1 - opacity),
-		foreground[1] * opacity + background[1] * (1 - opacity),
-		foreground[2] * opacity + background[2] * (1 - opacity),
-	];
-}
-
-function coverContrastRatio(
-	foreground: string,
-	palette: {
-		readonly coverPanel: string;
-		readonly coverPanelOpacity: number;
-	},
-): number | null {
-	const foregroundRgb = parseHexColor(foreground);
-	const panelRgb = parseHexColor(palette.coverPanel);
-	if (!foregroundRgb || !panelRgb) {
-		return null;
-	}
-
-	const endpointRatios = ([0, 255] as const).map((channel) => {
-		const backdrop: readonly [number, number, number] = [
-			channel,
-			channel,
-			channel,
-		];
-		return contrastRatioRgb(
-			foregroundRgb,
-			blendRgb(panelRgb, backdrop, palette.coverPanelOpacity),
-		);
-	});
-	return Math.min(...endpointRatios);
-}
-
 function backgroundEndpoints(background: string): readonly string[] {
 	const colors = background.match(/#[0-9a-f]{6}/gi);
 	return colors ?? [];
@@ -154,9 +115,9 @@ function validatePaletteContrast(
 		);
 	}
 	requireRange(
-		palette.coverPanelOpacity,
-		...COVER_PANEL_OPACITY_RANGE,
-		"表紙パネル不透明度",
+		palette.coverVeilOpacity,
+		...COVER_VEIL_OPACITY_RANGE,
+		"表紙ベール不透明度",
 	);
 
 	const pageBackgrounds = backgroundEndpoints(palette.background);
@@ -168,7 +129,7 @@ function validatePaletteContrast(
 	const backgrounds = [
 		...pageBackgrounds,
 		...palette.surfaceStops,
-		palette.coverPanel,
+		palette.coverVeil,
 	];
 
 	for (const foreground of [palette.text, palette.muted, palette.accent]) {
@@ -182,7 +143,7 @@ function validatePaletteContrast(
 		}
 	}
 
-	const coverContrast = coverContrastRatio(palette.text, palette);
+	const coverContrast = contrastRatio(palette.coverInk, palette.coverVeil);
 	if (coverContrast === null || coverContrast < MINIMUM_CONTRAST_RATIO) {
 		throw new ThemeRecipeValidationError(
 			`配色「${palette.id}」の表紙文字コントラストは${MINIMUM_CONTRAST_RATIO}:1以上にしてください。`,
