@@ -319,7 +319,7 @@ describe("レシピ安全規格", () => {
 		);
 	});
 
-	it("境界値系: 表紙パネル不透明度は画像を残す安全範囲だけを受理する", () => {
+	it("境界値系: 表紙ベール不透明度は画像を残す安全範囲だけを受理する", () => {
 		const palette = THEME_CATALOG_REFERENCES.palettes.get("paper-ink");
 		if (!palette) {
 			throw new Error("paper-ink配色がありません。");
@@ -328,25 +328,25 @@ describe("レシピ安全規格", () => {
 			...THEME_CATALOG_REFERENCES,
 			palettes: new Map(THEME_CATALOG_REFERENCES.palettes),
 		};
-		for (const opacity of [0.52, 0.88]) {
+		for (const opacity of [0.36, 0.42]) {
 			references.palettes.set("paper-ink", {
 				...palette,
-				coverPanelOpacity: opacity,
+				coverVeilOpacity: opacity,
 			});
 			expect(() => defineThemeRecipe(makeRecipe(), references)).not.toThrow();
 		}
-		for (const opacity of [0.51, 0.89]) {
+		for (const opacity of [0.35, 0.43]) {
 			references.palettes.set("paper-ink", {
 				...palette,
-				coverPanelOpacity: opacity,
+				coverVeilOpacity: opacity,
 			});
 			expect(() => defineThemeRecipe(makeRecipe(), references)).toThrow(
-				"表紙パネル不透明度",
+				"表紙ベール不透明度",
 			);
 		}
 	});
 
-	it("異常系: PDF実使用面と表紙パネルの低コントラストを拒否する", () => {
+	it("異常系: PDF実使用面と表紙ベールの低コントラストを拒否する", () => {
 		const palette = THEME_CATALOG_REFERENCES.palettes.get("paper-ink");
 		if (!palette) {
 			throw new Error("paper-ink配色がありません。");
@@ -365,7 +365,7 @@ describe("レシピ安全規格", () => {
 
 		references.palettes.set("paper-ink", {
 			...palette,
-			coverPanel: "#000000",
+			coverVeil: "#000000",
 		});
 		expect(() => defineThemeRecipe(makeRecipe(), references)).toThrow(
 			"コントラスト",

@@ -99,24 +99,45 @@ test.describe("PDFしおり", () => {
 				const image = element.querySelector<HTMLImageElement>(
 					".booklet-cover__image",
 				);
-				const panelShape = element.querySelector<SVGElement>(
-					".booklet-cover__panel-shape",
+				const veil = element.querySelector<SVGSVGElement>(
+					".booklet-cover__veil",
 				);
+				const coverLayout = Array.from(
+					element.closest<HTMLElement>(".booklet-theme")?.classList ?? [],
+				)
+					.find((className) => className.startsWith("booklet-theme--cover-"))
+					?.slice("booklet-theme--cover-".length);
 				return {
+					coverLayout,
+					gradientType:
+						veil?.querySelector("linearGradient")?.tagName ??
+						veil?.querySelector("radialGradient")?.tagName,
 					imageLoaded: (image?.naturalWidth ?? 0) > 0,
 					imageZIndex: styleOf(".booklet-cover__image")?.zIndex,
-					panelOpacity: Number.parseFloat(
-						panelShape ? getComputedStyle(panelShape).fillOpacity : "NaN",
-					),
-					panelZIndex: styleOf(".booklet-cover__panel")?.zIndex,
+					legacyLayerCount: element.querySelectorAll(
+						".booklet-cover__panel, .booklet-cover__scrim",
+					).length,
 					textZIndex: styleOf(".booklet-cover__text")?.zIndex,
+					veilBounds: veil?.dataset.bookletCoverVeil,
+					veilZIndex: styleOf(".booklet-cover__veil")?.zIndex,
 				};
 			});
 			expect(coverLayers.imageLoaded).toBe(true);
 			expect(coverLayers.imageZIndex).toBe("0");
-			expect(coverLayers.panelZIndex).toBe("2");
-			expect(coverLayers.textZIndex).toBe("3");
-			expect(coverLayers.panelOpacity).toBeLessThan(0.9);
+			expect(coverLayers.veilZIndex).toBe("1");
+			expect(coverLayers.textZIndex).toBe("2");
+			expect(coverLayers.legacyLayerCount).toBe(0);
+			expect(coverLayers.gradientType).toBe(
+				coverLayers.coverLayout === "split-left" ||
+					coverLayers.coverLayout === "horizon"
+					? "linearGradient"
+					: "radialGradient",
+			);
+			const veilBounds = coverLayers.veilBounds?.split(",").map(Number) ?? [];
+			expect(veilBounds).toHaveLength(4);
+			expect(veilBounds.every((value) => Number.isFinite(value))).toBe(true);
+			expect(veilBounds[2]).toBeGreaterThan(0);
+			expect(veilBounds[3]).toBeGreaterThan(0);
 			const box = await cover.boundingBox();
 			expect(box?.width).toBeCloseTo(559, 0);
 			expect(box?.height).toBeCloseTo(794, 0);

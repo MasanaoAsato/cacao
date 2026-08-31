@@ -45,8 +45,7 @@
 }
 
 .booklet-cover__image,
-.booklet-cover__scrim,
-.booklet-cover__panel,
+.booklet-cover__veil,
 .booklet-cover__text {
 	position: absolute;
 	inset: 0;
@@ -54,7 +53,12 @@
 
 .booklet-cover__text {
 	box-sizing: border-box;
-	z-index: 3;
+	z-index: 2;
+}
+
+.booklet-cover__copy {
+	display: inline-block;
+	max-width: 100%;
 }
 
 .booklet-cover__image {
@@ -66,49 +70,11 @@
 	object-position: center;
 }
 
-.booklet-cover__scrim {
+.booklet-cover__veil {
 	z-index: 1;
-	background: linear-gradient(135deg, rgb(0 0 0 / 38%), transparent 65%);
-}
-
-.booklet-cover__panel {
-	z-index: 2;
+	pointer-events: none;
 	width: 100%;
 	height: 100%;
-}
-
-.booklet-cover__panel-shape {
-	fill: var(--booklet-cover-panel);
-	fill-opacity: var(--booklet-cover-panel-opacity);
-	stroke: var(--booklet-cover-panel);
-	stroke-opacity: 0.72;
-	stroke-width: 0.45;
-	vector-effect: non-scaling-stroke;
-}
-
-.booklet-theme--cover-horizon .booklet-cover__scrim {
-	background: linear-gradient(0deg, rgb(0 0 0 / 42%), transparent 56%);
-}
-
-.booklet-theme--cover-north-east .booklet-cover__scrim,
-.booklet-theme--cover-south-east .booklet-cover__scrim {
-	background: linear-gradient(225deg, rgb(0 0 0 / 38%), transparent 65%);
-}
-
-.booklet-theme--cover-south-west .booklet-cover__scrim {
-	background: linear-gradient(45deg, rgb(0 0 0 / 38%), transparent 65%);
-}
-
-.booklet-theme--cover-south-east .booklet-cover__scrim {
-	background: linear-gradient(315deg, rgb(0 0 0 / 38%), transparent 65%);
-}
-
-.booklet-theme--cover-split-left .booklet-cover__scrim {
-	background: linear-gradient(90deg, rgb(0 0 0 / 42%), transparent 72%);
-}
-
-.booklet-theme--cover-center .booklet-cover__scrim {
-	background: rgb(0 0 0 / 28%);
 }
 
 .booklet-theme--cover-north-west .booklet-cover__text {
@@ -143,7 +109,7 @@
 }
 
 .booklet-theme--cover-horizon .booklet-cover__text {
-	inset: 160mm auto auto 12mm;
+	inset: 156mm auto auto 12mm;
 	width: 124mm;
 }
 
@@ -152,21 +118,8 @@
 	width: 104mm;
 }
 
-.booklet-theme--cover-safe-cover .booklet-cover__scrim {
-	background: rgb(0 0 0 / 18%);
-}
-
-.booklet-theme--cover-safe-cover .booklet-cover__panel-shape {
-	fill-opacity: var(--booklet-cover-panel-opacity);
-}
-
 .booklet-theme--cover-safe-cover .booklet-cover__text {
 	padding: 8mm;
-}
-
-.booklet-theme--cover-safe-cover.booklet-theme--palette-night-window
-	.booklet-cover__panel-shape {
-	fill-opacity: var(--booklet-cover-panel-opacity);
 }
 
 .booklet-theme--cover-safe-cover .booklet-cover__text,
@@ -177,11 +130,11 @@
 .booklet-theme--cover-north-west .booklet-cover__text,
 .booklet-theme--cover-south-east .booklet-cover__text,
 .booklet-theme--cover-south-west .booklet-cover__text {
-	color: var(--booklet-text);
+	color: var(--booklet-cover-ink);
 }
 
 .booklet-theme .booklet-cover__text .booklet-eyebrow {
-	color: var(--booklet-text);
+	color: var(--booklet-cover-ink);
 }
 
 .booklet-theme--cover-horizon .booklet-cover__text,
@@ -192,7 +145,7 @@
 .booklet-theme .booklet-cover__title {
 	margin: 0;
 	padding-bottom: 0.1em;
-	color: var(--booklet-text);
+	color: var(--booklet-cover-ink);
 	font-family: var(--booklet-heading-family);
 	font-size: var(--booklet-cover-title-size);
 	font-weight: 700;
