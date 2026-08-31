@@ -114,6 +114,51 @@ function renderPage(initialEntry = "/journeys/journey-1/booklet") {
 	);
 }
 
+function domRect(
+	left: number,
+	top: number,
+	width: number,
+	height: number,
+): DOMRect {
+	return {
+		bottom: top + height,
+		height,
+		left,
+		right: left + width,
+		top,
+		width,
+		x: left,
+		y: top,
+		toJSON: () => ({}),
+	};
+}
+
+function coverSafeAreaFor(element: HTMLElement) {
+	const theme = element.closest<HTMLElement>(".booklet-theme");
+	if (theme?.classList.contains("booklet-theme--cover-north-west")) {
+		return { height: 70, width: 80, x: 12, y: 12 };
+	}
+	if (theme?.classList.contains("booklet-theme--cover-north-east")) {
+		return { height: 70, width: 80, x: 56, y: 12 };
+	}
+	if (theme?.classList.contains("booklet-theme--cover-south-west")) {
+		return { height: 70, width: 80, x: 12, y: 128 };
+	}
+	if (theme?.classList.contains("booklet-theme--cover-south-east")) {
+		return { height: 70, width: 80, x: 56, y: 128 };
+	}
+	if (theme?.classList.contains("booklet-theme--cover-split-left")) {
+		return { height: 210, width: 70, x: 0, y: 0 };
+	}
+	if (theme?.classList.contains("booklet-theme--cover-horizon")) {
+		return { height: 62, width: 148, x: 0, y: 148 };
+	}
+	if (theme?.classList.contains("booklet-theme--cover-safe-cover")) {
+		return { height: 190, width: 128, x: 10, y: 10 };
+	}
+	return { height: 76, width: 104, x: 22, y: 67 };
+}
+
 function installBrowserMocks() {
 	Object.defineProperty(HTMLImageElement.prototype, "decode", {
 		configurable: true,
@@ -155,7 +200,23 @@ function installBrowserMocks() {
 	});
 	Object.defineProperty(HTMLElement.prototype, "getBoundingClientRect", {
 		configurable: true,
-		value: () => ({ height: 20, width: 200 }) as DOMRect,
+		value: function getBoundingClientRectMock(this: HTMLElement) {
+			if (this.classList.contains("booklet-cover-content")) {
+				return domRect(0, 0, 560, 794);
+			}
+			if (this.hasAttribute("data-booklet-cover-copy")) {
+				const safeArea = coverSafeAreaFor(this);
+				const scaleX = 560 / 148;
+				const scaleY = 794 / 210;
+				return domRect(
+					(safeArea.x + 4) * scaleX,
+					(safeArea.y + 4) * scaleY,
+					Math.min(50, safeArea.width - 8) * scaleX,
+					Math.min(30, safeArea.height - 8) * scaleY,
+				);
+			}
+			return domRect(0, 0, 200, 20);
+		},
 	});
 }
 
@@ -357,7 +418,7 @@ describe("JourneyBookletPage", () => {
 		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 		await waitFor(() =>
 			expect(screen.getByRole("status")).toHaveTextContent(
-				"ページ本文高さを計測できませんでした",
+				"表紙文字の位置を計測できませんでした",
 			),
 		);
 		expect(printButton).toBeDisabled();
@@ -365,6 +426,32 @@ describe("JourneyBookletPage", () => {
 			document.querySelector<HTMLElement>(".booklet-measurement")?.dataset
 				.bookletThemeKey,
 		).toBe("v1-00000013:selected");
+		expect(window.print).not.toHaveBeenCalled();
+	});
+
+	it("異常系: 表紙文字が安全領域外なら印刷しない", async () => {
+		Object.defineProperty(HTMLElement.prototype, "getBoundingClientRect", {
+			configurable: true,
+			value: function outsideCoverSafeArea(this: HTMLElement) {
+				if (this.classList.contains("booklet-cover-content")) {
+					return domRect(0, 0, 560, 794);
+				}
+				if (this.hasAttribute("data-booklet-cover-copy")) {
+					return domRect(0, 0, 200, 80);
+				}
+				return domRect(0, 0, 200, 20);
+			},
+		});
+		installFetchMock();
+		renderPage("/journeys/journey-1/booklet?seed=v1-00000013");
+
+		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
+		await waitFor(() =>
+			expect(screen.getByRole("status")).toHaveTextContent(
+				"表紙文字が安全領域をはみ出しました",
+			),
+		);
+		expect(printButton).toBeDisabled();
 		expect(window.print).not.toHaveBeenCalled();
 	});
 
@@ -457,7 +544,9 @@ describe("JourneyBookletPage", () => {
 
 		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 		await waitFor(() =>
-			expect(screen.getByRole("status")).toHaveTextContent("表紙の縦幅"),
+			expect(screen.getByRole("status")).toHaveTextContent(
+				"表紙の縦方向の文字が収まりません",
+			),
 		);
 		expect(printButton).toBeDisabled();
 		printButton.click();
@@ -477,7 +566,7 @@ describe("JourneyBookletPage", () => {
 			configurable: true,
 			get() {
 				const element = this as HTMLElement;
-				if (!element.matches("[data-booklet-cover-text]")) {
+				if (!element.matches("[data-booklet-cover-copy]")) {
 					return 100;
 				}
 				const key = element.closest<HTMLElement>(".booklet-measurement")

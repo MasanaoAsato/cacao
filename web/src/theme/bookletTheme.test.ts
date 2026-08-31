@@ -28,7 +28,9 @@ describe("V1テーマカタログ", () => {
 			}),
 		).toMatchObject({
 			"--booklet-background": "#F7F2E8",
-			"--booklet-cover-panel-opacity": "0.54",
+			"--booklet-cover-ink": "#1D1B18",
+			"--booklet-cover-veil": "#FFFFFF",
+			"--booklet-cover-veil-opacity": "0.36",
 			"--booklet-cover-title-size-long": "27.2pt",
 			"--booklet-cover-title-size-very-long": "22pt",
 			"--booklet-text": "#1D1B18",

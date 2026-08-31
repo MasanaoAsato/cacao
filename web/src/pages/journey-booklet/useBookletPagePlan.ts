@@ -12,6 +12,7 @@ import {
 } from "../../theme/bookletTheme";
 import type {
 	BookletThemeCandidate,
+	CoverVeilBounds,
 	RequestedBookletTheme,
 	ResolvedBookletTheme,
 } from "../../theme/types";
@@ -25,6 +26,7 @@ export type BookletPagePlanStatus =
 
 export type BookletPagePlanResult = {
 	readonly activeTheme: ResolvedBookletTheme | null;
+	readonly coverVeilBounds: CoverVeilBounds | null;
 	readonly documentRef: React.RefObject<HTMLElement | null>;
 	readonly error: string | null;
 	readonly measurementRef: React.RefObject<HTMLDivElement | null>;
@@ -35,6 +37,7 @@ export type BookletPagePlanResult = {
 
 type LayoutFailureCode =
 	| RecoverableBookletFailureCode
+	| "cover-bounds-invalid"
 	| "dom-not-ready"
 	| "hidden-text";
 
@@ -58,6 +61,7 @@ function isRecoverableLayoutFailure(error: unknown): boolean {
 	return (
 		isRecoverableBookletFailure(error) ||
 		(error instanceof BookletLayoutError &&
+			error.code !== "cover-bounds-invalid" &&
 			error.code !== "dom-not-ready" &&
 			error.code !== "hidden-text")
 	);
@@ -191,47 +195,116 @@ function queryRequired(
 	return element;
 }
 
-function ensureCoverTextFits(root: HTMLDivElement): void {
-	const text = queryRequired(root, "[data-booklet-cover-text]", "表紙文字領域");
-	const panel = root.querySelector<SVGRectElement>(
-		".booklet-cover__panel-shape",
-	);
-	if (!panel) {
-		throw new BookletLayoutError(
-			"dom-not-ready",
-			"表紙文字パネルを準備できませんでした。",
-		);
+const COVER_VIEWBOX_WIDTH = 148;
+const COVER_VIEWBOX_HEIGHT = 210;
+
+function coverSafeArea(theme: BookletThemeCandidate): CoverVeilBounds {
+	switch (theme.coverLayoutId) {
+		case "center":
+			return { height: 76, width: 104, x: 22, y: 67 };
+		case "north-west":
+			return { height: 70, width: 80, x: 12, y: 12 };
+		case "north-east":
+			return { height: 70, width: 80, x: 56, y: 12 };
+		case "south-west":
+			return { height: 70, width: 80, x: 12, y: 128 };
+		case "south-east":
+			return { height: 70, width: 80, x: 56, y: 128 };
+		case "split-left":
+			return { height: 210, width: 70, x: 0, y: 0 };
+		case "horizon":
+			return { height: 62, width: 148, x: 0, y: 148 };
+		case "safe-cover":
+			return { height: 190, width: 128, x: 10, y: 10 };
 	}
+}
+
+function validRect(rect: DOMRect): boolean {
+	return (
+		[rect.left, rect.top, rect.width, rect.height].every(Number.isFinite) &&
+		rect.width > 0 &&
+		rect.height > 0
+	);
+}
+
+export function measureCoverVeilBounds(
+	root: HTMLDivElement,
+	theme: BookletThemeCandidate,
+): CoverVeilBounds {
+	const cover = queryRequired(root, ".booklet-cover-content", "表紙");
+	const text = queryRequired(root, "[data-booklet-cover-copy]", "表紙文字領域");
 	if (text.scrollWidth > text.clientWidth) {
 		throw new BookletLayoutError(
 			"cover-inline-overflow",
 			"表紙の横方向の文字が収まりません。",
 		);
 	}
-	const textRect = text.getBoundingClientRect();
-	const panelRect = panel.getBoundingClientRect();
-	if (textRect.left < panelRect.left || textRect.right > panelRect.right) {
-		throw new BookletLayoutError(
-			"cover-inline-overflow",
-			"表紙文字が安全領域をはみ出しました。",
-		);
-	}
-	if (textRect.top < panelRect.top || textRect.bottom > panelRect.bottom) {
+	if (text.scrollHeight > text.clientHeight) {
 		throw new BookletLayoutError(
 			"cover-block-overflow",
+			"表紙の縦方向の文字が収まりません。",
+		);
+	}
+
+	const coverRect = cover.getBoundingClientRect();
+	const textRect = text.getBoundingClientRect();
+	if (!validRect(coverRect) || !validRect(textRect)) {
+		throw new BookletLayoutError(
+			"cover-bounds-invalid",
+			"表紙文字の位置を計測できませんでした。",
+		);
+	}
+
+	const scaleX = COVER_VIEWBOX_WIDTH / coverRect.width;
+	const scaleY = COVER_VIEWBOX_HEIGHT / coverRect.height;
+	const bounds = {
+		height: textRect.height * scaleY,
+		width: textRect.width * scaleX,
+		x: (textRect.left - coverRect.left) * scaleX,
+		y: (textRect.top - coverRect.top) * scaleY,
+	};
+	if (
+		![bounds.x, bounds.y, bounds.width, bounds.height].every(Number.isFinite) ||
+		bounds.width <= 0 ||
+		bounds.height <= 0
+	) {
+		throw new BookletLayoutError(
+			"cover-bounds-invalid",
+			"表紙文字の位置を計測できませんでした。",
+		);
+	}
+
+	const safeArea = coverSafeArea(theme);
+	const tolerance = 0.1;
+	if (
+		bounds.x < safeArea.x - tolerance ||
+		bounds.y < safeArea.y - tolerance ||
+		bounds.x + bounds.width > safeArea.x + safeArea.width + tolerance ||
+		bounds.y + bounds.height > safeArea.y + safeArea.height + tolerance
+	) {
+		throw new BookletLayoutError(
+			"cover-bounds-invalid",
 			"表紙文字が安全領域をはみ出しました。",
 		);
 	}
+
+	return Object.freeze(bounds);
 }
+
+type CollectedMeasurement = {
+	readonly coverVeilBounds: CoverVeilBounds;
+	readonly pageMeasurement: BookletPageMeasurement;
+};
 
 function collectMeasurement(
 	model: BookletModel,
 	root: HTMLDivElement,
-): BookletPageMeasurement {
-	ensureCoverTextFits(root);
+	theme: BookletThemeCandidate,
+): CollectedMeasurement {
+	const coverVeilBounds = measureCoverVeilBounds(root, theme);
 	const coverText = queryRequired(
 		root,
-		"[data-booklet-cover-text]",
+		"[data-booklet-cover-copy]",
 		"表紙文字領域",
 	);
 	const dayPages = Array.from(
@@ -259,45 +332,53 @@ function collectMeasurement(
 	}
 
 	return {
-		contentHeight: readContentHeight(content),
-		contentWidth: readContentWidth(content),
-		coverHeight: coverText.scrollHeight,
-		coverWidth: coverText.scrollWidth,
-		days: model.days.map((day, dayIndex) => {
-			const page = dayPages[dayIndex];
-			if (!page) {
-				throw new BookletLayoutError(
-					"dom-not-ready",
-					`Day ${dayIndex + 1}を計測できませんでした。`,
+		coverVeilBounds,
+		pageMeasurement: {
+			contentHeight: readContentHeight(content),
+			contentWidth: readContentWidth(content),
+			coverHeight: coverText.scrollHeight,
+			coverWidth: coverText.scrollWidth,
+			days: model.days.map((day, dayIndex) => {
+				const page = dayPages[dayIndex];
+				if (!page) {
+					throw new BookletLayoutError(
+						"dom-not-ready",
+						`Day ${dayIndex + 1}を計測できませんでした。`,
+					);
+				}
+				const headers = page.querySelectorAll<HTMLElement>(
+					".booklet-day-header",
 				);
-			}
-			const headers = page.querySelectorAll<HTMLElement>(".booklet-day-header");
-			const header = headers[0];
-			const continuationHeader = headers[1];
-			if (!header || !continuationHeader) {
-				throw new BookletLayoutError(
-					"dom-not-ready",
-					`Day ${dayIndex + 1}のヘッダーを計測できませんでした。`,
-				);
-			}
-			return {
-				continuationHeaderHeight: readOuterHeight(
-					continuationHeader,
-					`Day ${dayIndex + 1}の継続ヘッダー`,
-				),
-				headerHeight: readOuterHeight(header, `Day ${dayIndex + 1}のヘッダー`),
-				unitHeights: day.units.map((_unit, unitIndex) =>
-					readOuterHeight(
-						queryRequired(
-							page,
-							`[data-booklet-measurement-unit="${dayIndex}-${unitIndex}"]`,
+				const header = headers[0];
+				const continuationHeader = headers[1];
+				if (!header || !continuationHeader) {
+					throw new BookletLayoutError(
+						"dom-not-ready",
+						`Day ${dayIndex + 1}のヘッダーを計測できませんでした。`,
+					);
+				}
+				return {
+					continuationHeaderHeight: readOuterHeight(
+						continuationHeader,
+						`Day ${dayIndex + 1}の継続ヘッダー`,
+					),
+					headerHeight: readOuterHeight(
+						header,
+						`Day ${dayIndex + 1}のヘッダー`,
+					),
+					unitHeights: day.units.map((_unit, unitIndex) =>
+						readOuterHeight(
+							queryRequired(
+								page,
+								`[data-booklet-measurement-unit="${dayIndex}-${unitIndex}"]`,
+								`Day ${dayIndex + 1}のSpot ${unitIndex + 1}`,
+							),
 							`Day ${dayIndex + 1}のSpot ${unitIndex + 1}`,
 						),
-						`Day ${dayIndex + 1}のSpot ${unitIndex + 1}`,
 					),
-				),
-			};
-		}),
+				};
+			}),
+		},
 	};
 }
 
@@ -321,6 +402,7 @@ function ensurePagesFit(
 	root: HTMLElement,
 	pagePlan: ReturnType<typeof paginateBooklet>,
 	theme: ResolvedBookletTheme,
+	coverVeilBounds: CoverVeilBounds,
 ): void {
 	const pages = Array.from(
 		root.querySelectorAll<HTMLElement>("[data-booklet-page]"),
@@ -329,6 +411,14 @@ function ensurePagesFit(
 		throw new BookletLayoutError(
 			"dom-not-ready",
 			"印刷ページ数がページ計画と一致しません。",
+		);
+	}
+	const veil = root.querySelector<SVGSVGElement>("svg.booklet-cover__veil");
+	const expectedVeilBounds = `${coverVeilBounds.x},${coverVeilBounds.y},${coverVeilBounds.width},${coverVeilBounds.height}`;
+	if (!veil || veil.dataset.bookletCoverVeil !== expectedVeilBounds) {
+		throw new BookletLayoutError(
+			"cover-bounds-invalid",
+			"表紙ベールと計測した文字位置が一致しません。",
 		);
 	}
 	for (const page of pages) {
@@ -393,6 +483,8 @@ export function useBookletPagePlan(
 	const documentRef = useRef<HTMLElement>(null);
 	const runIdRef = useRef(0);
 	const [candidateIndex, setCandidateIndex] = useState(0);
+	const [coverVeilBounds, setCoverVeilBounds] =
+		useState<CoverVeilBounds | null>(null);
 	const [pagePlan, setPagePlan] = useState<ReturnType<
 		typeof paginateBooklet
 	> | null>(null);
@@ -433,6 +525,7 @@ export function useBookletPagePlan(
 	useEffect(() => {
 		runIdRef.current += 1;
 		setCandidateIndex(0);
+		setCoverVeilBounds(null);
 		setPagePlan(null);
 		setResolvedTheme(null);
 		setError(candidateResult.error);
@@ -454,6 +547,7 @@ export function useBookletPagePlan(
 		const run = async () => {
 			try {
 				setPagePlan(null);
+				setCoverVeilBounds(null);
 				setResolvedTheme(null);
 				setError(null);
 				setStatus("measuring");
@@ -470,13 +564,16 @@ export function useBookletPagePlan(
 						waitForImageDecode(image),
 					),
 				);
-				const measuredPlan = paginateBooklet(
+				const collected = collectMeasurement(
 					model,
-					collectMeasurement(model, measurementRoot),
+					measurementRoot,
+					activeTheme,
 				);
+				const measuredPlan = paginateBooklet(model, collected.pageMeasurement);
 				if (cancelled || runId !== runIdRef.current) {
 					return;
 				}
+				setCoverVeilBounds(collected.coverVeilBounds);
 				setPagePlan(measuredPlan);
 				setStatus("checking");
 				await nextFrame();
@@ -491,7 +588,12 @@ export function useBookletPagePlan(
 						"印刷ページDOMを準備できませんでした。",
 					);
 				}
-				ensurePagesFit(documentRoot, measuredPlan, activeTheme);
+				ensurePagesFit(
+					documentRoot,
+					measuredPlan,
+					activeTheme,
+					collected.coverVeilBounds,
+				);
 				setResolvedTheme(activeTheme);
 				setStatus("ready");
 			} catch (runError) {
@@ -506,6 +608,7 @@ export function useBookletPagePlan(
 					return;
 				}
 				setPagePlan(null);
+				setCoverVeilBounds(null);
 				setResolvedTheme(null);
 				setError(errorMessage(runError, "印刷前の収まり確認に失敗しました。"));
 				setStatus("error");
@@ -519,6 +622,7 @@ export function useBookletPagePlan(
 
 	return {
 		activeTheme,
+		coverVeilBounds,
 		documentRef,
 		error,
 		measurementRef,
