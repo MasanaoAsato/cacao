@@ -30,12 +30,18 @@ func TestNewImageBrief(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewImageSlot() error = %v", err)
 	}
+	validIllustrationSlot, err := value_object.NewImageSlot(value_object.ImagePurposeIllustration, 1)
+	if err != nil {
+		t.Fatalf("NewImageSlot() error = %v", err)
+	}
+	validStyle := value_object.ImageVisualStyleEditorialPhotograph
 
 	tests := []struct {
 		name        string
 		destination value_object.Destination
 		period      value_object.Period
 		slot        value_object.ImageSlot
+		style       value_object.ImageVisualStyle
 		wantErr     bool
 	}{
 		{
@@ -43,12 +49,14 @@ func TestNewImageBrief(t *testing.T) {
 			destination: validDestination,
 			period:      validPeriod,
 			slot:        validSlot,
+			style:       validStyle,
 		},
 		{
 			name:        "異常系: destinationがゼロ値",
 			destination: value_object.Destination{},
 			period:      validPeriod,
 			slot:        validSlot,
+			style:       validStyle,
 			wantErr:     true,
 		},
 		{
@@ -56,6 +64,7 @@ func TestNewImageBrief(t *testing.T) {
 			destination: validDestination,
 			period:      value_object.Period{},
 			slot:        validSlot,
+			style:       validStyle,
 			wantErr:     true,
 		},
 		{
@@ -63,6 +72,7 @@ func TestNewImageBrief(t *testing.T) {
 			destination: validDestination,
 			period:      validPeriod,
 			slot:        value_object.ImageSlot{},
+			style:       validStyle,
 			wantErr:     true,
 		},
 		{
@@ -70,12 +80,29 @@ func TestNewImageBrief(t *testing.T) {
 			destination: validDestination,
 			period:      sameDayPeriod,
 			slot:        validSlot,
+			style:       validStyle,
+		},
+		{
+			name:        "異常系: coverにnone style",
+			destination: validDestination,
+			period:      validPeriod,
+			slot:        validSlot,
+			style:       value_object.ImageVisualStyleNone,
+			wantErr:     true,
+		},
+		{
+			name:        "異常系: illustrationにcover style",
+			destination: validDestination,
+			period:      validPeriod,
+			slot:        validIllustrationSlot,
+			style:       validStyle,
+			wantErr:     true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			brief, err := NewImageBrief(tt.destination, tt.period, tt.slot)
+			brief, err := NewImageBrief(tt.destination, tt.period, tt.slot, tt.style)
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("NewImageBrief() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -91,6 +118,9 @@ func TestNewImageBrief(t *testing.T) {
 			}
 			if brief.Slot() != tt.slot {
 				t.Errorf("Slot() = %v, want %v", brief.Slot(), tt.slot)
+			}
+			if brief.Style() != tt.style {
+				t.Errorf("Style() = %v, want %v", brief.Style(), tt.style)
 			}
 		})
 	}

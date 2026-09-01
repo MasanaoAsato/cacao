@@ -67,3 +67,43 @@ func TestNewPromptRejectsInvalidBrief(t *testing.T) {
 		t.Fatal("NewPrompt() error = nil, want error")
 	}
 }
+
+func TestNewPromptUsesEveryCoverVisualStyle(t *testing.T) {
+	t.Parallel()
+
+	for _, style := range value_object.CoverImageVisualStyleCatalog() {
+		style := style
+		t.Run(style.String(), func(t *testing.T) {
+			brief := newTestBriefWithStyle(t, value_object.ImagePurposeCover, 1, style)
+			prompt, err := NewPrompt(brief)
+			if err != nil {
+				t.Fatalf("NewPrompt() error = %v", err)
+			}
+			if !strings.Contains(prompt.Positive, stylePromptKeyword(style)) {
+				t.Fatalf("positive prompt = %q, want style keyword %q", prompt.Positive, stylePromptKeyword(style))
+			}
+			if !strings.Contains(prompt.Positive, "No typography, text, letters, words, numbers, dates") {
+				t.Fatalf("positive prompt = %q, want text-free contract", prompt.Positive)
+			}
+		})
+	}
+}
+
+func stylePromptKeyword(style value_object.ImageVisualStyle) string {
+	switch style {
+	case value_object.ImageVisualStyleEditorialPhotograph:
+		return "editorial travel photograph"
+	case value_object.ImageVisualStyleCinematicPhotograph:
+		return "cinematic environmental photograph"
+	case value_object.ImageVisualStyleWatercolor:
+		return "transparent watercolor painting"
+	case value_object.ImageVisualStyleGouache:
+		return "matte gouache painting"
+	case value_object.ImageVisualStyleOilPainting:
+		return "plein-air oil painting"
+	case value_object.ImageVisualStylePastel:
+		return "soft pastel painting"
+	default:
+		return ""
+	}
+}

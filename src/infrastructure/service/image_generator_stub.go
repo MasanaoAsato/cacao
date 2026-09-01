@@ -50,7 +50,12 @@ func (s *ImageGeneratorStub) Generate(
 	if err := ctx.Err(); err != nil {
 		return domainservice.GeneratedImage{}, err
 	}
-	if _, err := domainservice.NewImageBrief(brief.Destination(), brief.Period(), brief.Slot()); err != nil {
+	if _, err := domainservice.NewImageBrief(
+		brief.Destination(),
+		brief.Period(),
+		brief.Slot(),
+		brief.Style(),
+	); err != nil {
 		return domainservice.GeneratedImage{}, fmt.Errorf(
 			"%w: %w",
 			domainservice.ErrImageGenerationRejected,
