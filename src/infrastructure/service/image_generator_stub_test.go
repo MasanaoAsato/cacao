@@ -81,7 +81,12 @@ func newTestImageBrief(t *testing.T) domainservice.ImageBrief {
 	if err != nil {
 		t.Fatalf("NewImageSlot() error = %v", err)
 	}
-	brief, err := domainservice.NewImageBrief(destination, period, slot)
+	brief, err := domainservice.NewImageBrief(
+		destination,
+		period,
+		slot,
+		value_object.ImageVisualStyleEditorialPhotograph,
+	)
 	if err != nil {
 		t.Fatalf("NewImageBrief() error = %v", err)
 	}

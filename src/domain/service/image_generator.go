@@ -20,6 +20,7 @@ type ImageBrief struct {
 	destination value_object.Destination
 	period      value_object.Period
 	slot        value_object.ImageSlot
+	style       value_object.ImageVisualStyle
 }
 
 // NewImageBrief は有効な画像生成条件を作成する。
@@ -27,6 +28,7 @@ func NewImageBrief(
 	destination value_object.Destination,
 	period value_object.Period,
 	slot value_object.ImageSlot,
+	style value_object.ImageVisualStyle,
 ) (ImageBrief, error) {
 	if destination.City() == "" {
 		return ImageBrief{}, fmt.Errorf("invalid image brief: destination city must not be empty")
@@ -47,11 +49,15 @@ func NewImageBrief(
 	if err := slot.Validate(); err != nil {
 		return ImageBrief{}, fmt.Errorf("invalid image brief: invalid slot: %w", err)
 	}
+	if err := style.ValidateFor(slot.Purpose()); err != nil {
+		return ImageBrief{}, fmt.Errorf("invalid image brief: invalid visual style: %w", err)
+	}
 
 	return ImageBrief{
 		destination: destination,
 		period:      period,
 		slot:        slot,
+		style:       style,
 	}, nil
 }
 
@@ -68,6 +74,11 @@ func (b ImageBrief) Period() value_object.Period {
 // Slot は画像生成先のスロットを返す。
 func (b ImageBrief) Slot() value_object.ImageSlot {
 	return b.slot
+}
+
+// Style は画像生成に使用する画風IDを返す。
+func (b ImageBrief) Style() value_object.ImageVisualStyle {
+	return b.style
 }
 
 // GeneratedImage は画像生成器が返す未保存の画像である。

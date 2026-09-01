@@ -135,10 +135,24 @@ func (uc *useCase) generate(ctx context.Context, image entity.JourneyImage) erro
 		)
 	}
 
+	style := value_object.ImageVisualStyleNone
+	if image.Slot().Purpose() == value_object.ImagePurposeCover {
+		style, err = selectCoverStyle(image.ID())
+		if err != nil {
+			return uc.failAndSave(
+				ctx,
+				image,
+				value_object.ImageFailureCodeInternalError,
+				fmt.Errorf("select cover image visual style: %w", err),
+			)
+		}
+	}
+
 	brief, err := domainservice.NewImageBrief(
 		request.Destination(),
 		request.Period(),
 		image.Slot(),
+		style,
 	)
 	if err != nil {
 		return uc.failAndSave(

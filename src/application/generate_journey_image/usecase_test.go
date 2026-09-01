@@ -39,11 +39,47 @@ func TestUseCaseExecuteCompletesClaimedImage(t *testing.T) {
 	if !generator.called {
 		t.Error("ImageGenerator.Generate() was not called")
 	}
+	wantStyle, err := selectCoverStyle(image.ID())
+	if err != nil {
+		t.Fatalf("selectCoverStyle() error = %v", err)
+	}
+	if generator.brief.Style() != wantStyle {
+		t.Errorf("generated brief style = %q, want %q", generator.brief.Style(), wantStyle)
+	}
 	if imageRepo.saved.Status() != value_object.ImageStatusReady {
 		t.Errorf("saved image status = %q, want ready", imageRepo.saved.Status())
 	}
 	if !storage.saveCalled {
 		t.Error("ImageStorage.Save() was not called")
+	}
+}
+
+func TestUseCaseExecuteKeepsIllustrationStyleNone(t *testing.T) {
+	request := newTestJourneyRequest(t)
+	slot, err := value_object.NewImageSlot(value_object.ImagePurposeIllustration, 1)
+	if err != nil {
+		t.Fatalf("NewImageSlot() error = %v", err)
+	}
+	image, err := entity.NewJourneyImage(value_object.NewID(), request.ID(), slot)
+	if err != nil {
+		t.Fatalf("NewJourneyImage() error = %v", err)
+	}
+	generator := &generateImageGeneratorStub{}
+	useCase := NewUseCase(
+		&generateImageRepositoryStub{image: image},
+		&generateRequestRepositoryStub{request: request},
+		generator,
+		&generateImageStorageStub{asset: newTestAssetReference(t)},
+	)
+
+	if err := useCase.Execute(context.Background(), Input{ImageID: image.ID().String()}); err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+	if !generator.called {
+		t.Fatal("ImageGenerator.Generate() was not called")
+	}
+	if generator.brief.Style() != value_object.ImageVisualStyleNone {
+		t.Errorf("generated illustration brief style = %q, want none", generator.brief.Style())
 	}
 }
 
@@ -391,10 +427,12 @@ type generateImageGeneratorStub struct {
 	err            error
 	waitForContext bool
 	called         bool
+	brief          domainservice.ImageBrief
 }
 
-func (g *generateImageGeneratorStub) Generate(ctx context.Context, _ domainservice.ImageBrief) (domainservice.GeneratedImage, error) {
+func (g *generateImageGeneratorStub) Generate(ctx context.Context, brief domainservice.ImageBrief) (domainservice.GeneratedImage, error) {
 	g.called = true
+	g.brief = brief
 	if g.waitForContext {
 		<-ctx.Done()
 		return domainservice.GeneratedImage{}, ctx.Err()

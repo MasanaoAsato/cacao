@@ -278,6 +278,25 @@ func TestWorkflowBuildIsSafeForConcurrentCalls(t *testing.T) {
 }
 
 func newTestBrief(t *testing.T, purpose value_object.ImagePurpose, ordinal int) domainservice.ImageBrief {
+	style := value_object.ImageVisualStyleEditorialPhotograph
+	if purpose == value_object.ImagePurposeIllustration {
+		style = value_object.ImageVisualStyleNone
+	}
+
+	return newTestBriefWithStyle(
+		t,
+		purpose,
+		ordinal,
+		style,
+	)
+}
+
+func newTestBriefWithStyle(
+	t *testing.T,
+	purpose value_object.ImagePurpose,
+	ordinal int,
+	style value_object.ImageVisualStyle,
+) domainservice.ImageBrief {
 	t.Helper()
 	destination, err := value_object.NewDestination("Kyoto", "Japan")
 	if err != nil {
@@ -294,7 +313,12 @@ func newTestBrief(t *testing.T, purpose value_object.ImagePurpose, ordinal int) 
 	if err != nil {
 		t.Fatalf("NewImageSlot() error = %v", err)
 	}
-	brief, err := domainservice.NewImageBrief(destination, period, slot)
+	brief, err := domainservice.NewImageBrief(
+		destination,
+		period,
+		slot,
+		style,
+	)
 	if err != nil {
 		t.Fatalf("NewImageBrief() error = %v", err)
 	}

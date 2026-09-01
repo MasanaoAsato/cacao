@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"strings"
+	"time"
 
 	domainservice "cacao/src/domain/service"
 	"cacao/src/domain/value_object"
@@ -29,6 +30,7 @@ func NewPrompt(brief domainservice.ImageBrief) (Prompt, error) {
 		brief.Destination(),
 		brief.Period(),
 		brief.Slot(),
+		brief.Style(),
 	); err != nil {
 		return Prompt{}, fmt.Errorf("invalid image brief: %w", err)
 	}
@@ -40,6 +42,14 @@ func NewPrompt(brief domainservice.ImageBrief) (Prompt, error) {
 
 	width, height := imageSize(brief.Slot().Purpose())
 	destination := brief.Destination().String()
+	renderingInstruction, err := renderingInstruction(
+		brief.Style(),
+		brief.Slot().Purpose(),
+	)
+	if err != nil {
+		return Prompt{}, fmt.Errorf("resolve image visual style: %w", err)
+	}
+	period := brief.Period()
 
 	positive := fmt.Sprintf(
 		`DESTINATION REFERENCE:
@@ -51,7 +61,12 @@ func NewPrompt(brief domainservice.ImageBrief) (Prompt, error) {
 		Never reproduce, copy, spell, transliterate, translate, or visually render
 		the destination name itself anywhere in the image.
 
-		Create a polished environmental background illustration representing that destination.
+		TRAVEL PERIOD (SEMANTIC REFERENCE ONLY):
+		%s through %s
+		Use this only to infer the local season, weather, and atmosphere for the destination.
+		Never render the dates, time, calendar, or numbers in the image.
+
+		%s
 
 		Depict scenery, architecture, color palette, vegetation, and weather that are
 		geographically and climatically authentic to the destination.
@@ -72,6 +87,9 @@ func NewPrompt(brief domainservice.ImageBrief) (Prompt, error) {
 		watermarks, captions, signage, pseudo-text, fictional writing, or
 		text-like markings anywhere in the image.`,
 		destination,
+		period.StartDate().Format(time.DateOnly),
+		period.EndDate().Format(time.DateOnly),
+		renderingInstruction,
 		composition(brief.Slot().Purpose()),
 	)
 
@@ -113,10 +131,44 @@ func imageSize(purpose value_object.ImagePurpose) (int, int) {
 
 func composition(purpose value_object.ImagePurpose) string {
 	if purpose == value_object.ImagePurposeCover {
-		return "Use a portrait composition with a clean, uncluttered upper area for later layout."
+		return "Use a portrait composition with a balanced focal point and details extending through the entire frame."
 	}
 
 	return "Use a landscape composition with a balanced focal point and uncluttered margins for later layout."
+}
+
+func renderingInstruction(
+	style value_object.ImageVisualStyle,
+	purpose value_object.ImagePurpose,
+) (string, error) {
+	if purpose == value_object.ImagePurposeIllustration {
+		if style != value_object.ImageVisualStyleNone {
+			return "", fmt.Errorf("illustration image visual style must be none")
+		}
+
+		return "Create a polished environmental background illustration representing that destination.", nil
+	}
+
+	if purpose != value_object.ImagePurposeCover {
+		return "", fmt.Errorf("unsupported image purpose: %q", purpose)
+	}
+
+	switch style {
+	case value_object.ImageVisualStyleEditorialPhotograph:
+		return "Render as a natural-light editorial travel photograph with realistic materials and true-to-place color.", nil
+	case value_object.ImageVisualStyleCinematicPhotograph:
+		return "Render as a cinematic environmental photograph with restrained filmic color grading and authentic local light.", nil
+	case value_object.ImageVisualStyleWatercolor:
+		return "Render as a layered transparent watercolor painting with restrained paper texture.", nil
+	case value_object.ImageVisualStyleGouache:
+		return "Render as a matte gouache painting with clear shapes and tactile brushwork.", nil
+	case value_object.ImageVisualStyleOilPainting:
+		return "Render as a contemporary plein-air oil painting with natural colors and visible painterly texture.", nil
+	case value_object.ImageVisualStylePastel:
+		return "Render as a soft pastel painting with a controlled palette and gentle grain.", nil
+	default:
+		return "", fmt.Errorf("unsupported cover image visual style: %q", style)
+	}
 }
 
 func validatePrompt(prompt Prompt) error {
