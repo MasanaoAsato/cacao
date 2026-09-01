@@ -42,6 +42,7 @@ type LayoutFailureCode =
 	| "hidden-text";
 
 const FONT_SAMPLE_TEXT = "東京の旅程・京都散策";
+const LAYOUT_ROUNDING_TOLERANCE_PX = 1;
 
 export class BookletLayoutError extends Error {
 	readonly code: LayoutFailureCode;
@@ -428,13 +429,13 @@ function ensurePagesFit(
 				"実ページと計測テーマが一致しません。",
 			);
 		}
-		if (page.scrollWidth > page.clientWidth) {
+		if (page.scrollWidth > page.clientWidth + LAYOUT_ROUNDING_TOLERANCE_PX) {
 			throw new BookletLayoutError(
 				"page-inline-overflow",
 				"印刷ページが横方向にあふれています。",
 			);
 		}
-		if (page.scrollHeight > page.clientHeight) {
+		if (page.scrollHeight > page.clientHeight + LAYOUT_ROUNDING_TOLERANCE_PX) {
 			throw new BookletLayoutError(
 				"page-block-overflow",
 				"印刷ページが縦方向にあふれています。",
@@ -450,13 +451,13 @@ function ensurePagesFit(
 				"文字を隠す表示設定を検出しました。",
 			);
 		}
-		if (text.scrollWidth > text.clientWidth) {
+		if (text.scrollWidth > text.clientWidth + LAYOUT_ROUNDING_TOLERANCE_PX) {
 			throw new BookletLayoutError(
 				"text-inline-overflow",
 				`${text.dataset.bookletTextRole ?? "文字"}が横方向にあふれています。`,
 			);
 		}
-		if (text.scrollHeight > text.clientHeight) {
+		if (text.scrollHeight > text.clientHeight + LAYOUT_ROUNDING_TOLERANCE_PX) {
 			throw new BookletLayoutError(
 				"text-block-overflow",
 				`${text.dataset.bookletTextRole ?? "文字"}が縦方向にあふれています。`,

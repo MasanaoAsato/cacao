@@ -9,6 +9,7 @@ import type {
 } from "./types";
 
 const MINIMUM_CONTRAST_RATIO = 4.5;
+const MINIMUM_ITINERARY_TEXT_CONTRAST_RATIO = 7;
 const COVER_VEIL_OPACITY_RANGE = [0.36, 0.42] as const;
 
 export class ThemeRecipeValidationError extends Error {
@@ -131,6 +132,26 @@ function validatePaletteContrast(
 		...palette.surfaceStops,
 		palette.coverVeil,
 	];
+	const itinerary = palette.itinerary ?? palette;
+	for (const background of itinerary.surfaceStops) {
+		const textContrast = contrastRatio(itinerary.text, background);
+		if (
+			textContrast === null ||
+			textContrast < MINIMUM_ITINERARY_TEXT_CONTRAST_RATIO
+		) {
+			throw new ThemeRecipeValidationError(
+				`配色「${palette.id}」の本文文字コントラストは${MINIMUM_ITINERARY_TEXT_CONTRAST_RATIO}:1以上にしてください。`,
+			);
+		}
+		for (const foreground of [itinerary.muted, itinerary.accent]) {
+			const contrast = contrastRatio(foreground, background);
+			if (contrast === null || contrast < MINIMUM_CONTRAST_RATIO) {
+				throw new ThemeRecipeValidationError(
+					`配色「${palette.id}」の補助文字コントラストは${MINIMUM_CONTRAST_RATIO}:1以上にしてください。`,
+				);
+			}
+		}
+	}
 
 	for (const foreground of [palette.text, palette.muted, palette.accent]) {
 		for (const background of backgrounds) {
@@ -171,9 +192,9 @@ function validateReferences(
 			`未登録の表紙構図「${recipe.coverLayoutId}」です。`,
 		);
 	}
-	if (!references.itineraries.has(recipe.itineraryLayoutId)) {
+	if (!references.itineraries.has(recipe.itineraryTemplateId)) {
 		throw new ThemeRecipeValidationError(
-			`未登録の本文構図「${recipe.itineraryLayoutId}」です。`,
+			`未登録の本文テンプレート「${recipe.itineraryTemplateId}」です。`,
 		);
 	}
 	if (!references.emphasis.has(recipe.emphasisId)) {
@@ -189,6 +210,22 @@ function validateReferences(
 	if (!references.signatures.has(recipe.signatureId)) {
 		throw new ThemeRecipeValidationError(
 			`未登録の旅モチーフ「${recipe.signatureId}」です。`,
+		);
+	}
+	const templateForSignature: Record<
+		ThemeRecipeDefinition["signatureId"],
+		ThemeRecipeDefinition["itineraryTemplateId"]
+	> = {
+		"festival-ticket": "travel-ticket",
+		"field-notes": "field-journal",
+		"night-train": "route-thread",
+		postcard: "travel-ticket",
+		"quiet-gallery": "field-journal",
+		wayfinder: "route-thread",
+	};
+	if (templateForSignature[recipe.signatureId] !== recipe.itineraryTemplateId) {
+		throw new ThemeRecipeValidationError(
+			`旅モチーフ「${recipe.signatureId}」と本文テンプレートの組み合わせが不正です。`,
 		);
 	}
 
@@ -246,7 +283,7 @@ function validateTypography(recipe: ThemeRecipeDefinition): void {
 	);
 	requireRange(
 		typography.detailWidthMm,
-		56,
+		76,
 		Number.POSITIVE_INFINITY,
 		"Spot説明領域の幅",
 	);
@@ -297,7 +334,7 @@ function candidate(
 	overrides: Partial<
 		Pick<
 			BookletThemeCandidate,
-			"coverLayoutId" | "densityId" | "emphasisId" | "itineraryLayoutId"
+			"coverLayoutId" | "densityId" | "emphasisId" | "itineraryTemplateId"
 		>
 	>,
 	references: ThemeCatalogReferences,
@@ -310,7 +347,8 @@ function candidate(
 		emphasisId: overrides.emphasisId ?? recipe.emphasisId,
 		fallbackStep: step,
 		fontPairId: recipe.fontPairId,
-		itineraryLayoutId: overrides.itineraryLayoutId ?? recipe.itineraryLayoutId,
+		itineraryTemplateId:
+			overrides.itineraryTemplateId ?? recipe.itineraryTemplateId,
 		paletteId: recipe.paletteId,
 		requestedRecipeId: recipe.id,
 		resolvedThemeKey: `${requested.seedToken}:${step}`,
@@ -325,7 +363,7 @@ function hasSameGeometry(
 ): boolean {
 	return (
 		left.coverLayoutId === right.coverLayoutId &&
-		left.itineraryLayoutId === right.itineraryLayoutId &&
+		left.itineraryTemplateId === right.itineraryTemplateId &&
 		left.emphasisId === right.emphasisId &&
 		left.densityId === right.densityId
 	);
@@ -364,7 +402,7 @@ export function buildThemeCandidates(
 				coverLayoutId: "safe-cover",
 				densityId: "compact",
 				emphasisId: "balanced",
-				itineraryLayoutId: "stacked-ledger",
+				itineraryTemplateId: "field-journal",
 			},
 			references,
 		),

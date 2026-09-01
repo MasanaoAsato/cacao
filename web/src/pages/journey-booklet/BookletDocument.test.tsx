@@ -115,6 +115,16 @@ describe("BookletDocument", () => {
 		expect(
 			container.querySelector(".booklet-page--day svg.booklet-page__surface"),
 		).toBeInTheDocument();
+		expect(container.querySelector("ol.booklet-itinerary")).toBeInTheDocument();
+		expect(
+			container.querySelector('[data-booklet-text-role="unit-time"]'),
+		).toHaveTextContent("10:00");
+		expect(
+			container.querySelector('[data-booklet-text-role="detail-value"]'),
+		).toHaveTextContent("電車");
+		expect(
+			container.querySelector('[data-booklet-text-role="day-title"]'),
+		).toHaveTextContent("2026/08/28");
 		expect(container.querySelectorAll("[data-booklet-page]")).toHaveLength(2);
 		expect(
 			new Set(
@@ -123,6 +133,57 @@ describe("BookletDocument", () => {
 				).map((page) => page.dataset.bookletThemeKey),
 			),
 		).toEqual(new Set([theme.resolvedThemeKey]));
+
+		const unitRoles = Array.from(
+			container.querySelectorAll<HTMLElement>(
+				".booklet-unit [data-booklet-text-role]",
+			),
+		).map((element) => element.dataset.bookletTextRole);
+		expect(unitRoles).toEqual([
+			"utility-label",
+			"unit-time",
+			"spot-name",
+			"utility-label",
+			"unit-route",
+			"detail-term",
+			"detail-value",
+			"detail-term",
+			"detail-value",
+			"detail-term",
+			"detail-value",
+			"spot-description",
+			"unit-cost",
+		]);
+	});
+
+	it("正常系: 継続ページへ継続クラスと表示を付与する", () => {
+		const rootRef = createRef<HTMLElement>();
+		const theme = resolvedTheme();
+		const continuationPagePlan: readonly BookletPagePlan[] = [
+			{ kind: "cover", pageId: "cover-journey-1" },
+			{
+				continuation: true,
+				dayIndex: 0,
+				kind: "day",
+				pageId: "day-day-1-continued",
+				unitIndexes: [0],
+			},
+		];
+		const { container } = render(
+			<BookletDocument
+				coverVeilBounds={coverVeilBounds}
+				model={model}
+				pagePlan={continuationPagePlan}
+				rootRef={rootRef}
+				theme={theme}
+			/>,
+		);
+
+		const continuation = container.querySelector(
+			".booklet-page--day-continuation",
+		);
+		expect(continuation).toBeInTheDocument();
+		expect(continuation).toHaveTextContent("（続き）");
 	});
 
 	it("境界値系: safe-coverを計測DOMだけでなくそのまま描画できる", () => {

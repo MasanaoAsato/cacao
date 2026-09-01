@@ -33,8 +33,27 @@ describe("V1テーマカタログ", () => {
 			"--booklet-cover-veil-opacity": "0.36",
 			"--booklet-cover-title-size-long": "27.2pt",
 			"--booklet-cover-title-size-very-long": "22pt",
+			"--booklet-itinerary-text": "#1D1B18",
 			"--booklet-text": "#1D1B18",
 		});
+	});
+
+	it("正常系: レシピの署名グループが本文テンプレートへ固定される", () => {
+		expect(
+			THEME_RECIPES_V1.filter((recipe) => recipe.id.startsWith("field-")).every(
+				(recipe) => recipe.itineraryTemplateId === "field-journal",
+			),
+		).toBe(true);
+		expect(
+			THEME_RECIPES_V1.filter((recipe) => recipe.id.startsWith("way-")).every(
+				(recipe) => recipe.itineraryTemplateId === "route-thread",
+			),
+		).toBe(true);
+		expect(
+			THEME_RECIPES_V1.filter((recipe) =>
+				recipe.id.startsWith("ticket-"),
+			).every((recipe) => recipe.itineraryTemplateId === "travel-ticket"),
+		).toBe(true);
 	});
 
 	it("境界値系: 同じシードは同じ要求テーマを返す", () => {

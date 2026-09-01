@@ -3,6 +3,7 @@ import {
 	formatBookletDate,
 	formatBookletDateTime,
 } from "../../booklet/dateFormat";
+import { formatTransportMode } from "../../booklet/itineraryFormat";
 import type {
 	ArrivalUnit,
 	BookletCover,
@@ -53,7 +54,7 @@ function themeClass(theme: BookletThemeCandidate): string {
 	return [
 		"booklet-theme",
 		`booklet-theme--cover-${theme.coverLayoutId}`,
-		`booklet-theme--itinerary-${theme.itineraryLayoutId}`,
+		`booklet-theme--itinerary-${theme.itineraryTemplateId}`,
 		`booklet-theme--emphasis-${theme.emphasisId}`,
 		`booklet-theme--density-${theme.densityId}`,
 		`booklet-theme--palette-${theme.paletteId}`,
@@ -321,48 +322,17 @@ function ArrivalUnitView({
 	readonly unit: ArrivalUnit;
 }) {
 	return (
-		<section
+		<li
 			className="booklet-unit"
 			data-booklet-measurement-unit={measurementKey}
 			data-unit-id={unit.id}
 		>
-			<div className="booklet-unit__leg">
-				<p
-					className="booklet-unit__label"
-					data-booklet-text-role="utility-label"
-				>
-					移動
-				</p>
-				<p className="booklet-unit__route" data-booklet-text-role="unit-route">
-					<span>{unit.leg.from.label}</span>
-					<span aria-hidden="true"> → </span>
-					<span>{unit.leg.to.label}</span>
-				</p>
-				<dl className="booklet-unit__details">
-					<div>
-						<dt data-booklet-text-role="detail-term">交通</dt>
-						<dd data-booklet-text-role="detail-value">{unit.leg.mode}</dd>
-					</div>
-					<div>
-						<dt data-booklet-text-role="detail-term">所要時間</dt>
-						<dd data-booklet-text-role="detail-value">
-							{unit.leg.duration_minutes}分
-						</dd>
-					</div>
-					<div>
-						<dt data-booklet-text-role="detail-term">移動費</dt>
-						<dd data-booklet-text-role="detail-value">
-							{formatMoney(unit.leg.estimated_cost)}
-						</dd>
-					</div>
-				</dl>
-			</div>
 			<div className="booklet-unit__spot">
 				<p
 					className="booklet-unit__label"
 					data-booklet-text-role="utility-label"
 				>
-					SPOT
+					訪問先
 				</p>
 				<p className="booklet-unit__time" data-booklet-text-role="unit-time">
 					<time dateTime={unit.spot.start_at}>
@@ -370,12 +340,53 @@ function ArrivalUnitView({
 					</time>
 				</p>
 				<h3 data-booklet-text-role="spot-name">{unit.spot.name}</h3>
-				<p data-booklet-text-role="spot-description">{unit.spot.description}</p>
+				<div className="booklet-unit__leg">
+					<p
+						className="booklet-unit__label"
+						data-booklet-text-role="utility-label"
+					>
+						移動
+					</p>
+					<p
+						className="booklet-unit__route"
+						data-booklet-text-role="unit-route"
+					>
+						<span>{unit.leg.from.label}</span>
+						<span aria-hidden="true"> → </span>
+						<span>{unit.leg.to.label}</span>
+					</p>
+					<dl className="booklet-unit__details">
+						<div>
+							<dt data-booklet-text-role="detail-term">交通</dt>
+							<dd data-booklet-text-role="detail-value">
+								{formatTransportMode(unit.leg.mode)}
+							</dd>
+						</div>
+						<div>
+							<dt data-booklet-text-role="detail-term">所要時間</dt>
+							<dd data-booklet-text-role="detail-value">
+								{unit.leg.duration_minutes}分
+							</dd>
+						</div>
+						<div>
+							<dt data-booklet-text-role="detail-term">移動費</dt>
+							<dd data-booklet-text-role="detail-value">
+								{formatMoney(unit.leg.estimated_cost)}
+							</dd>
+						</div>
+					</dl>
+				</div>
+				<p
+					className="booklet-unit__description"
+					data-booklet-text-role="spot-description"
+				>
+					{unit.spot.description}
+				</p>
 				<p className="booklet-unit__cost" data-booklet-text-role="unit-cost">
 					滞在費 {formatMoney(unit.spot.estimated_cost)}
 				</p>
 			</div>
-		</section>
+		</li>
 	);
 }
 
@@ -389,12 +400,12 @@ function DayPage({
 	return (
 		<>
 			<DayHeader continuation={page.continuation} day={day} />
-			<div className="booklet-day__units">
+			<ol className="booklet-day__units booklet-itinerary" aria-label="旅程">
 				{page.unitIndexes.map((unitIndex) => {
 					const unit = day.units[unitIndex];
 					return unit ? <ArrivalUnitView key={unit.id} unit={unit} /> : null;
 				})}
-			</div>
+			</ol>
 		</>
 	);
 }
@@ -420,10 +431,19 @@ function PhysicalPage({
 		) : model.days[page.dayIndex] ? (
 			<DayPage day={model.days[page.dayIndex]} page={page} />
 		) : null;
+	const pageClassName = [
+		"booklet-page",
+		`booklet-page--${page.kind}`,
+		page.kind === "day" && page.continuation
+			? "booklet-page--day-continuation"
+			: null,
+	]
+		.filter(Boolean)
+		.join(" ");
 
 	return (
 		<article
-			className={`booklet-page booklet-page--${page.kind}`}
+			className={pageClassName}
 			data-booklet-page="true"
 			data-booklet-theme-key={theme.resolvedThemeKey}
 			data-page-id={page.pageId}
@@ -484,7 +504,7 @@ function MeasurementDay({
 					<DayHeader continuation={false} day={day} />
 					<DayHeader continuation day={day} />
 				</div>
-				<div className="booklet-day__units">
+				<ol className="booklet-day__units booklet-itinerary" aria-label="旅程">
 					{day.units.map((unit, unitIndex) => (
 						<ArrivalUnitView
 							key={unit.id}
@@ -492,7 +512,7 @@ function MeasurementDay({
 							unit={unit}
 						/>
 					))}
-				</div>
+				</ol>
 			</div>
 		</article>
 	);
