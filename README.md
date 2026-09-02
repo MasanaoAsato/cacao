@@ -31,6 +31,18 @@ go run ./src
 
 実行時の環境変数は [.env.example](/home/ubuntu/workspace/cacao/.env.example) にまとめています。設定は起動時に検証され、不正なdriver・期間・worker値ではHTTPリクエストを受け付ける前に終了します。
 
+### プロバイダーの切り替え
+
+`.env` の `IMAGE_GENERATOR_DRIVER` を変更してアプリケーションを再起動すると、以後に受け付ける画像生成要求のプロバイダーを切り替えられます。旅程本文を生成する `LLM_DRIVER` とは別の設定です。
+
+| 値 | 画像の生成元 | 必須設定 |
+| --- | --- | --- |
+| `stub` | 固定PNG。ローカル開発・E2E確認用 | なし |
+| `comfyui` | ローカルのComfyUI | `COMFYUI_BASE_URL`、workflow・manifestのパス |
+| `openrouter` | OpenRouterの画像生成API | `OPENROUTER_API_KEY`、`OPENROUTER_IMAGE_MODEL` |
+
+`IMAGE_GENERATOR_DRIVER` は起動時に一度だけ読み込まれるため、同じプロセスのままでは切り替わりません。値を変更したら、workerを含むアプリケーションを再起動してください。
+
 ### Stub E2E
 
 `stub` のまま起動した場合は、次の順にAPIを呼ぶと画像生成を確認できます。
@@ -62,6 +74,21 @@ COMFYUI_MANIFEST_PATH=/absolute/path/to/config/comfyui/journey_image_manifest.js
 ```
 
 workflowとmanifestは起動時に読み込まれ、node ID・input名・出力nodeまで検証されます。ComfyUIのURL、モデル、workflow JSON、保存ファイル名をHTTPリクエストから指定することはできません。
+
+### OpenRouter手動E2E
+
+OpenRouterで画像を生成するには、画像生成に対応したモデルIDを指定します。
+
+```dotenv
+IMAGE_GENERATOR_DRIVER=openrouter
+OPENROUTER_API_KEY=your-openrouter-api-key
+OPENROUTER_IMAGE_MODEL=provider/image-model
+IMAGE_GENERATION_TIMEOUT=180s
+```
+
+`OPENROUTER_API_KEY` は旅程本文のOpenRouter設定と共有できますが、画像には `OPENROUTER_IMAGE_MODEL` を使います。本文用の `OPENROUTER_MODEL` は画像モデルの代わりにはなりません。モデルIDにURLや先頭が `~` の値は指定できず、画像モデルの自動検出やHTTP APIからの上書きも行いません。
+
+設定後の画像生成リクエスト、状態確認、PNG取得の手順は [Stub E2E](#stub-e2e) と同じです。カバーには縦長、挿絵には横長の画像を要求し、返却された画像は保存前にPNG形式・バイト数・寸法を検証します。
 
 ## DB設定
 `POSTGRESQL_URL` を設定した場合は接続URIを優先します。空の場合は、以下の `POSTGRES_*` 個別設定（未設定なら `compose.yml` 相当の既定値）を使います。

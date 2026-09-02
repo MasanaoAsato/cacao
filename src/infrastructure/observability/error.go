@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
+	"net/http"
 	"os"
 
 	"github.com/OpenRouterTeam/go-sdk/models/sdkerrors"
@@ -43,6 +44,7 @@ var safeLogOperations = map[string]struct{}{
 	"find_journey_image_slot":         {},
 	"delete_journey_image":            {},
 	"openrouter_send_chat_completion": {},
+	"openrouter_generate_image":       {},
 }
 
 var safeRoutes = map[string]struct{}{
@@ -63,6 +65,86 @@ type FailureContext struct {
 	Route          string
 	Status         int
 	JourneyImageID string
+}
+
+// ErrorDetailCode は構造化失敗ログに記録できる固定の原因コードである。
+// 外部プロバイダーの本文やユーザー入力はこの型の値にしない。
+type ErrorDetailCode string
+
+const (
+	ErrorDetailOpenRouterRequestFailed                   ErrorDetailCode = "openrouter_request_failed"
+	ErrorDetailOpenRouterResponseMissingChatResult       ErrorDetailCode = "openrouter_response_missing_chat_result"
+	ErrorDetailOpenRouterResponseNoChoices               ErrorDetailCode = "openrouter_response_no_choices"
+	ErrorDetailOpenRouterResponseEmptyMessageContent     ErrorDetailCode = "openrouter_response_empty_message_content"
+	ErrorDetailOpenRouterResponseMessageContentNotString ErrorDetailCode = "openrouter_response_message_content_not_string"
+	ErrorDetailJourneyRouteParseFailed                   ErrorDetailCode = "journey_route_parse_failed"
+	ErrorDetailImageProviderTimeout                      ErrorDetailCode = "image_provider_timeout"
+	ErrorDetailImageProviderUnavailable                  ErrorDetailCode = "image_provider_unavailable"
+	ErrorDetailImageGenerationRejected                   ErrorDetailCode = "image_generation_rejected"
+	ErrorDetailGeneratedImageInvalid                     ErrorDetailCode = "generated_image_invalid"
+)
+
+type safeErrorDetailCarrier interface {
+	SafeLogErrorDetail() ErrorDetailCode
+}
+
+// WithErrorDetail は allowlist 済みの固定原因コードを error chain に付与する。
+func WithErrorDetail(detail ErrorDetailCode, err error) error {
+	if err == nil || !isSafeErrorDetail(detail) {
+		return err
+	}
+	return &errorDetailError{detail: detail, cause: err}
+}
+
+type errorDetailError struct {
+	detail ErrorDetailCode
+	cause  error
+}
+
+func (e *errorDetailError) Error() string {
+	if e.cause == nil {
+		return string(e.detail)
+	}
+	return e.cause.Error()
+}
+
+func (e *errorDetailError) Unwrap() error {
+	return e.cause
+}
+
+func (e *errorDetailError) SafeLogErrorDetail() ErrorDetailCode {
+	return e.detail
+}
+
+// ErrorDetail は error chain から allowlist 済みの原因コードだけを返す。
+func ErrorDetail(err error) string {
+	var carrier safeErrorDetailCarrier
+	if !errors.As(err, &carrier) || carrier == nil {
+		return ""
+	}
+	detail := carrier.SafeLogErrorDetail()
+	if !isSafeErrorDetail(detail) {
+		return ""
+	}
+	return string(detail)
+}
+
+func isSafeErrorDetail(detail ErrorDetailCode) bool {
+	switch detail {
+	case ErrorDetailOpenRouterRequestFailed,
+		ErrorDetailOpenRouterResponseMissingChatResult,
+		ErrorDetailOpenRouterResponseNoChoices,
+		ErrorDetailOpenRouterResponseEmptyMessageContent,
+		ErrorDetailOpenRouterResponseMessageContentNotString,
+		ErrorDetailJourneyRouteParseFailed,
+		ErrorDetailImageProviderTimeout,
+		ErrorDetailImageProviderUnavailable,
+		ErrorDetailImageGenerationRejected,
+		ErrorDetailGeneratedImageInvalid:
+		return true
+	default:
+		return false
+	}
 }
 
 // LogFailure は error の本文を出力せず、分類済みの失敗イベントを記録する。
@@ -97,6 +179,9 @@ func LogFailure(
 	}
 	if sourceOperation := SourceOperation(err); sourceOperation != "" {
 		attrs = append(attrs, slog.String("source_operation", sourceOperation))
+	}
+	if detail := ErrorDetail(err); detail != "" {
+		attrs = append(attrs, slog.String("error_detail", detail))
 	}
 	if status, errorClass, ok := ProviderErrorDetails(err); ok {
 		attrs = append(
@@ -297,14 +382,45 @@ func SourceOperation(err error) string {
 
 // ProviderErrorDetails は外部プロバイダーの安全な HTTP 分類だけを返す。
 func ProviderErrorDetails(err error) (int, string, bool) {
-	var apiError *sdkerrors.APIError
-	if !errors.As(err, &apiError) || apiError == nil {
-		return 0, "", false
-	}
-	if status := safeStatus(apiError.StatusCode); status != 0 {
+	if status, ok := providerStatusCode(err); ok {
 		return status, providerErrorClass(status), true
 	}
 	return 0, "", false
+}
+
+func providerStatusCode(err error) (int, bool) {
+	var apiError *sdkerrors.APIError
+	if errors.As(err, &apiError) && apiError != nil {
+		if status := safeStatus(apiError.StatusCode); status != 0 {
+			return status, true
+		}
+	}
+
+	typedErrors := []struct {
+		status int
+		target any
+	}{
+		{http.StatusBadRequest, new(*sdkerrors.BadRequestResponseError)},
+		{http.StatusUnauthorized, new(*sdkerrors.UnauthorizedResponseError)},
+		{http.StatusPaymentRequired, new(*sdkerrors.PaymentRequiredResponseError)},
+		{http.StatusForbidden, new(*sdkerrors.ForbiddenResponseError)},
+		{http.StatusNotFound, new(*sdkerrors.NotFoundResponseError)},
+		{http.StatusRequestTimeout, new(*sdkerrors.RequestTimeoutResponseError)},
+		{http.StatusRequestEntityTooLarge, new(*sdkerrors.PayloadTooLargeResponseError)},
+		{http.StatusUnprocessableEntity, new(*sdkerrors.UnprocessableEntityResponseError)},
+		{http.StatusTooManyRequests, new(*sdkerrors.TooManyRequestsResponseError)},
+		{http.StatusInternalServerError, new(*sdkerrors.InternalServerResponseError)},
+		{http.StatusBadGateway, new(*sdkerrors.BadGatewayResponseError)},
+		{http.StatusServiceUnavailable, new(*sdkerrors.ServiceUnavailableResponseError)},
+		{524, new(*sdkerrors.EdgeNetworkTimeoutResponseError)},
+		{529, new(*sdkerrors.ProviderOverloadedResponseError)},
+	}
+	for _, typedError := range typedErrors {
+		if errors.As(err, typedError.target) {
+			return typedError.status, true
+		}
+	}
+	return 0, false
 }
 
 // PostgresSQLState は PostgreSQL の SQLSTATE だけを返す。

@@ -200,6 +200,16 @@ func newImageGenerator(config service.ImageConfig) (domainservice.ImageGenerator
 			config.ComfyUIWorkflowPath,
 			config.ComfyUIManifestPath,
 		)
+	case "openrouter":
+		return service.NewOpenRouterImageGenerator(service.OpenRouterImageConfig{
+			APIKey:         config.OpenRouterAPIKey,
+			Model:          config.OpenRouterImageModel,
+			RequestTimeout: config.GenerationTimeout,
+			MaxBytes:       config.Storage.MaxBytes,
+			MaxWidth:       config.Storage.MaxWidth,
+			MaxHeight:      config.Storage.MaxHeight,
+			MaxPixels:      config.Storage.MaxPixels,
+		})
 	default:
 		return nil, fmt.Errorf("unsupported image generator driver: %q", config.GeneratorDriver)
 	}

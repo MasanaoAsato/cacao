@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -10,32 +11,32 @@ import (
 	"github.com/caarlos0/env/v10"
 )
 
-const (
-	defaultImageGeneratorDriver = "stub"
-)
-
 // ImageConfig は画像生成・worker・storageの運用設定を表す。
 type ImageConfig struct {
-	GeneratorDriver     string
-	ComfyUIBaseURL      string
-	ComfyUIWorkflowPath string
-	ComfyUIManifestPath string
-	GenerationTimeout   time.Duration
-	WorkerConcurrency   int
-	WorkerPollInterval  time.Duration
-	WorkerLeaseDuration time.Duration
-	Storage             ImageStorageConfig
+	GeneratorDriver      string
+	ComfyUIBaseURL       string
+	ComfyUIWorkflowPath  string
+	ComfyUIManifestPath  string
+	OpenRouterAPIKey     string
+	OpenRouterImageModel string
+	GenerationTimeout    time.Duration
+	WorkerConcurrency    int
+	WorkerPollInterval   time.Duration
+	WorkerLeaseDuration  time.Duration
+	Storage              ImageStorageConfig
 }
 
 type imageConfigEnv struct {
-	GeneratorDriver     string        `env:"IMAGE_GENERATOR_DRIVER" envDefault:"stub"`
-	ComfyUIBaseURL      string        `env:"COMFYUI_BASE_URL"`
-	ComfyUIWorkflowPath string        `env:"COMFYUI_WORKFLOW_PATH" envDefault:"config/comfyui/journey_image_api.json"`
-	ComfyUIManifestPath string        `env:"COMFYUI_MANIFEST_PATH" envDefault:"config/comfyui/journey_image_manifest.json"`
-	GenerationTimeout   time.Duration `env:"IMAGE_GENERATION_TIMEOUT" envDefault:"180s"`
-	WorkerConcurrency   int           `env:"IMAGE_WORKER_CONCURRENCY" envDefault:"1"`
-	WorkerPollInterval  time.Duration `env:"IMAGE_WORKER_POLL_INTERVAL" envDefault:"1s"`
-	WorkerLeaseDuration time.Duration `env:"IMAGE_WORKER_LEASE_DURATION" envDefault:"240s"`
+	GeneratorDriver      string        `env:"IMAGE_GENERATOR_DRIVER" envDefault:"stub"`
+	ComfyUIBaseURL       string        `env:"COMFYUI_BASE_URL"`
+	ComfyUIWorkflowPath  string        `env:"COMFYUI_WORKFLOW_PATH" envDefault:"config/comfyui/journey_image_api.json"`
+	ComfyUIManifestPath  string        `env:"COMFYUI_MANIFEST_PATH" envDefault:"config/comfyui/journey_image_manifest.json"`
+	OpenRouterAPIKey     string        `env:"OPENROUTER_API_KEY"`
+	OpenRouterImageModel string        `env:"OPENROUTER_IMAGE_MODEL"`
+	GenerationTimeout    time.Duration `env:"IMAGE_GENERATION_TIMEOUT" envDefault:"180s"`
+	WorkerConcurrency    int           `env:"IMAGE_WORKER_CONCURRENCY" envDefault:"1"`
+	WorkerPollInterval   time.Duration `env:"IMAGE_WORKER_POLL_INTERVAL" envDefault:"1s"`
+	WorkerLeaseDuration  time.Duration `env:"IMAGE_WORKER_LEASE_DURATION" envDefault:"240s"`
 }
 
 // ImageConfigFromEnv は画像関連の設定を環境変数から読み込み、相互条件まで検証する。
@@ -51,15 +52,17 @@ func ImageConfigFromEnv() (ImageConfig, error) {
 	}
 
 	config := ImageConfig{
-		GeneratorDriver:     raw.GeneratorDriver,
-		ComfyUIBaseURL:      raw.ComfyUIBaseURL,
-		ComfyUIWorkflowPath: raw.ComfyUIWorkflowPath,
-		ComfyUIManifestPath: raw.ComfyUIManifestPath,
-		GenerationTimeout:   raw.GenerationTimeout,
-		WorkerConcurrency:   raw.WorkerConcurrency,
-		WorkerPollInterval:  raw.WorkerPollInterval,
-		WorkerLeaseDuration: raw.WorkerLeaseDuration,
-		Storage:             storage,
+		GeneratorDriver:      raw.GeneratorDriver,
+		ComfyUIBaseURL:       raw.ComfyUIBaseURL,
+		ComfyUIWorkflowPath:  raw.ComfyUIWorkflowPath,
+		ComfyUIManifestPath:  raw.ComfyUIManifestPath,
+		OpenRouterAPIKey:     strings.TrimSpace(raw.OpenRouterAPIKey),
+		OpenRouterImageModel: strings.TrimSpace(raw.OpenRouterImageModel),
+		GenerationTimeout:    raw.GenerationTimeout,
+		WorkerConcurrency:    raw.WorkerConcurrency,
+		WorkerPollInterval:   raw.WorkerPollInterval,
+		WorkerLeaseDuration:  raw.WorkerLeaseDuration,
+		Storage:              storage,
 	}
 	if err := config.validate(); err != nil {
 		return ImageConfig{}, err
@@ -87,6 +90,8 @@ func (c ImageConfig) validate() error {
 		return nil
 	case "comfyui":
 		return c.validateComfyUI()
+	case "openrouter":
+		return c.validateOpenRouter()
 	default:
 		return fmt.Errorf("unsupported image generator driver: %q", c.GeneratorDriver)
 	}
@@ -111,3 +116,25 @@ func (c ImageConfig) validateComfyUI() error {
 
 	return nil
 }
+
+func (c ImageConfig) validateOpenRouter() error {
+	if strings.TrimSpace(c.OpenRouterAPIKey) == "" {
+		return errors.New("openrouter api key must be set when image generator driver is openrouter")
+	}
+	model := strings.TrimSpace(c.OpenRouterImageModel)
+	if model == "" {
+		return errors.New("openrouter image model must be set when image generator driver is openrouter")
+	}
+	if strings.HasPrefix(model, "~") {
+		return errors.New("openrouter image model must be a model id without leading '~'")
+	}
+	if strings.HasPrefix(model, "http://") || strings.HasPrefix(model, "https://") {
+		return errors.New("openrouter image model must be a model id, not a url")
+	}
+
+	return nil
+}
+
+const (
+	defaultImageGeneratorDriver = "stub"
+)

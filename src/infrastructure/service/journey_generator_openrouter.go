@@ -198,10 +198,16 @@ func (g *JourneyGeneratorOpenRouter) Generate(
 		)
 	}
 	if response == nil || response.ChatResult == nil {
-		return service.GeneratedRoute{}, errors.New("openrouter response must contain chat result")
+		return service.GeneratedRoute{}, observability.WithErrorDetail(
+			observability.ErrorDetailOpenRouterResponseMissingChatResult,
+			errors.New("openrouter response must contain chat result"),
+		)
 	}
 	if len(response.ChatResult.Choices) == 0 {
-		return service.GeneratedRoute{}, errors.New("openrouter response contains no choices")
+		return service.GeneratedRoute{}, observability.WithErrorDetail(
+			observability.ErrorDetailOpenRouterResponseNoChoices,
+			errors.New("openrouter response contains no choices"),
+		)
 	}
 
 	content, err := chatAssistantContentString(response.ChatResult.Choices[0].Message.Content)
@@ -211,7 +217,10 @@ func (g *JourneyGeneratorOpenRouter) Generate(
 
 	route, err = prompt.ParseGeneratedRoute(content, request)
 	if err != nil {
-		return service.GeneratedRoute{}, fmt.Errorf("parse generated route: %w", err)
+		return service.GeneratedRoute{}, fmt.Errorf(
+			"parse generated route: %w",
+			observability.WithErrorDetail(observability.ErrorDetailJourneyRouteParseFailed, err),
+		)
 	}
 	return route, nil
 }
@@ -255,13 +264,22 @@ func (g *JourneyGeneratorOpenRouter) buildRequest(userInput string) components.C
 func chatAssistantContentString(content optionalnullable.OptionalNullable[components.ChatAssistantMessageContent]) (string, error) {
 	contentValue, ok := content.Get()
 	if !ok || contentValue == nil {
-		return "", errors.New("openrouter response contains empty message content")
+		return "", observability.WithErrorDetail(
+			observability.ErrorDetailOpenRouterResponseEmptyMessageContent,
+			errors.New("openrouter response contains empty message content"),
+		)
 	}
 	if contentValue.Str == nil {
-		return "", errors.New("openrouter response message content must be a string")
+		return "", observability.WithErrorDetail(
+			observability.ErrorDetailOpenRouterResponseMessageContentNotString,
+			errors.New("openrouter response message content must be a string"),
+		)
 	}
 	if strings.TrimSpace(*contentValue.Str) == "" {
-		return "", errors.New("openrouter response contains empty message content")
+		return "", observability.WithErrorDetail(
+			observability.ErrorDetailOpenRouterResponseEmptyMessageContent,
+			errors.New("openrouter response contains empty message content"),
+		)
 	}
 	return *contentValue.Str, nil
 }
@@ -280,10 +298,13 @@ func (e *openRouterRequestError) Unwrap() error {
 }
 
 func newOpenRouterRequestError(cause error) error {
-	return &openRouterRequestError{
-		cause:   cause,
-		message: "openrouter request failed",
-	}
+	return observability.WithErrorDetail(
+		observability.ErrorDetailOpenRouterRequestFailed,
+		&openRouterRequestError{
+			cause:   cause,
+			message: "openrouter request failed",
+		},
+	)
 }
 
 var _ service.JourneyGenerator = (*JourneyGeneratorOpenRouter)(nil)
