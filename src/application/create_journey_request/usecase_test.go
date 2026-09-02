@@ -8,48 +8,10 @@ import (
 
 	"cacao/src/application"
 	"cacao/src/domain/entity"
-	"cacao/src/domain/event"
-	"cacao/src/domain/repository"
 	"cacao/src/domain/value_object"
+	"cacao/src/internal/testkit"
+	"cacao/src/internal/testkit/fakes"
 )
-
-type mockJourneyRequestRepository struct {
-	saved entity.JourneyRequest
-	err   error
-}
-
-func (m *mockJourneyRequestRepository) Save(_ context.Context, request entity.JourneyRequest) error {
-	if m.err != nil {
-		return m.err
-	}
-	m.saved = request
-	return nil
-}
-
-func (m *mockJourneyRequestRepository) FindByID(_ context.Context, _ value_object.ID) (entity.JourneyRequest, error) {
-	return entity.JourneyRequest{}, repository.ErrJourneyRequestNotFound
-}
-
-func (m *mockJourneyRequestRepository) FindAll(_ context.Context) ([]entity.JourneyRequest, error) {
-	return nil, nil
-}
-
-func (m *mockJourneyRequestRepository) Delete(_ context.Context, _ value_object.ID) error {
-	return nil
-}
-
-type mockPublisher struct {
-	events []event.DomainEvent
-	err    error
-}
-
-func (m *mockPublisher) Publish(_ context.Context, e event.DomainEvent) error {
-	if m.err != nil {
-		return m.err
-	}
-	m.events = append(m.events, e)
-	return nil
-}
 
 // validInput は正常系の入力値を返す。opt で一部のフィールドだけ上書きできる。
 func validInput(opt ...func(*Input)) Input {
@@ -58,8 +20,8 @@ func validInput(opt ...func(*Input)) Input {
 		DepartureCountry:   "日本",
 		DestinationCity:    "大阪",
 		DestinationCountry: "日本",
-		StartDate:          time.Date(2026, 7, 7, 0, 0, 0, 0, time.UTC),
-		EndDate:            time.Date(2026, 7, 9, 0, 0, 0, 0, time.UTC),
+		StartDate:          testkit.DefaultPeriodStart,
+		EndDate:            testkit.DefaultPeriodEnd,
 		Amount:             50000,
 		Currency:           "JPY",
 	}
@@ -75,10 +37,10 @@ func withEndDate(v time.Time) func(*Input)    { return func(i *Input) { i.EndDat
 func withCurrency(v string) func(*Input)      { return func(i *Input) { i.Currency = v } }
 func withAmount(v int) func(*Input)           { return func(i *Input) { i.Amount = v } }
 
-// newUseCase はモックを生成し、(usecase, repo, publisher) を返す。
-func newUseCase() (UseCase, *mockJourneyRequestRepository, *mockPublisher) {
-	repo := &mockJourneyRequestRepository{}
-	publisher := &mockPublisher{}
+// newUseCase はフェイクを生成し、(usecase, repo, publisher) を返す。
+func newUseCase() (UseCase, *fakes.FakeJourneyRequestRepository, *fakes.FakePublisher) {
+	repo := fakes.NewJourneyRequestRepository()
+	publisher := &fakes.FakePublisher{}
 	return NewUseCase(repo, publisher), repo, publisher
 }
 
@@ -105,17 +67,26 @@ func TestUseCase_Execute(t *testing.T) {
 		if output.RequestID == "" {
 			t.Fatal("expected non-empty request id")
 		}
-		if repo.saved.ID().String() != output.RequestID {
-			t.Fatalf("saved id mismatch: got %q, want %q", repo.saved.ID().String(), output.RequestID)
+		// 保存済みの内容はインメモリリポジトリから取り出して検証する
+		requestID, err := value_object.NewIDFromString(output.RequestID)
+		if err != nil {
+			t.Fatalf("output request id is not a valid id: %v", err)
 		}
-		if repo.saved.Departure().City() != "東京" {
-			t.Fatalf("departure city mismatch: got %q", repo.saved.Departure().City())
+		saved, err := repo.FindByID(context.Background(), requestID)
+		if err != nil {
+			t.Fatalf("saved request not found: %v", err)
 		}
-		if repo.saved.Destination().City() != "大阪" {
-			t.Fatalf("destination city mismatch: got %q", repo.saved.Destination().City())
+		if saved.ID().String() != output.RequestID {
+			t.Fatalf("saved id mismatch: got %q, want %q", saved.ID().String(), output.RequestID)
 		}
-		if len(publisher.events) != 1 {
-			t.Fatalf("expected 1 published event, got %d", len(publisher.events))
+		if saved.Departure().City() != "東京" {
+			t.Fatalf("departure city mismatch: got %q", saved.Departure().City())
+		}
+		if saved.Destination().City() != "大阪" {
+			t.Fatalf("destination city mismatch: got %q", saved.Destination().City())
+		}
+		if len(publisher.Events) != 1 {
+			t.Fatalf("expected 1 published event, got %d", len(publisher.Events))
 		}
 	})
 
@@ -126,8 +97,8 @@ func TestUseCase_Execute(t *testing.T) {
 
 	t.Run("異常系: 終了日が開始日より前", func(t *testing.T) {
 		uc, _, _ := newUseCase()
-		start := time.Date(2026, 7, 9, 0, 0, 0, 0, time.UTC)
-		end := time.Date(2026, 7, 7, 0, 0, 0, 0, time.UTC)
+		start := testkit.DefaultPeriodEnd
+		end := testkit.DefaultPeriodStart
 		assertInvalidInput(t, uc, validInput(withStartDate(start), withEndDate(end)))
 	})
 
@@ -142,8 +113,11 @@ func TestUseCase_Execute(t *testing.T) {
 	})
 
 	t.Run("異常系: リポジトリ保存失敗", func(t *testing.T) {
-		repo := &mockJourneyRequestRepository{err: errors.New("save failed")}
-		uc := NewUseCase(repo, &mockPublisher{})
+		repo := fakes.NewJourneyRequestRepository()
+		repo.SaveFn = func(context.Context, entity.JourneyRequest) error {
+			return errors.New("save failed")
+		}
+		uc := NewUseCase(repo, &fakes.FakePublisher{})
 
 		_, err := uc.Execute(context.Background(), validInput())
 		if err == nil {
@@ -152,7 +126,7 @@ func TestUseCase_Execute(t *testing.T) {
 	})
 
 	t.Run("異常系: イベント発行失敗", func(t *testing.T) {
-		uc := NewUseCase(&mockJourneyRequestRepository{}, &mockPublisher{err: errors.New("publish failed")})
+		uc := NewUseCase(fakes.NewJourneyRequestRepository(), &fakes.FakePublisher{Err: errors.New("publish failed")})
 
 		_, err := uc.Execute(context.Background(), validInput())
 		if err == nil {
@@ -162,7 +136,7 @@ func TestUseCase_Execute(t *testing.T) {
 
 	t.Run("境界値: 開始日と終了日が同日", func(t *testing.T) {
 		uc, _, _ := newUseCase()
-		day := time.Date(2026, 7, 7, 0, 0, 0, 0, time.UTC)
+		day := testkit.DefaultPeriodStart
 		in := validInput(withStartDate(day), withEndDate(day), withAmount(0))
 
 		output, err := uc.Execute(context.Background(), in)

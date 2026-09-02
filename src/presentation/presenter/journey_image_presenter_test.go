@@ -1,6 +1,7 @@
 package presenter
 
 import (
+	"cacao/src/application/readmodel"
 	"testing"
 
 	requestjourneyimages "cacao/src/application/request_journey_images"
@@ -18,10 +19,10 @@ func TestToRequestJourneyImagesResponse(t *testing.T) {
 			name: "pending image has null content fields",
 			output: requestjourneyimages.Output{
 				JourneyRequestID: "request-1",
-				Images: []requestjourneyimages.JourneyImageDTO{
+				Images: []readmodel.JourneyImageDTO{
 					{
 						ID:             "image-1",
-						Slot:           requestjourneyimages.SlotDTO{Purpose: "cover", Ordinal: 1},
+						Slot:           readmodel.SlotDTO{Purpose: "cover", Ordinal: 1},
 						Status:         "pending",
 						AttemptCount:   0,
 						HasContent:     false,
@@ -35,10 +36,10 @@ func TestToRequestJourneyImagesResponse(t *testing.T) {
 			name: "ready image exposes content metadata",
 			output: requestjourneyimages.Output{
 				JourneyRequestID: "request-1",
-				Images: []requestjourneyimages.JourneyImageDTO{
+				Images: []readmodel.JourneyImageDTO{
 					{
 						ID:           "image-1",
-						Slot:         requestjourneyimages.SlotDTO{Purpose: "cover", Ordinal: 1},
+						Slot:         readmodel.SlotDTO{Purpose: "cover", Ordinal: 1},
 						Status:       "ready",
 						AttemptCount: 1,
 						HasContent:   true,
@@ -55,10 +56,10 @@ func TestToRequestJourneyImagesResponse(t *testing.T) {
 			name: "failed image exposes failure code",
 			output: requestjourneyimages.Output{
 				JourneyRequestID: "request-1",
-				Images: []requestjourneyimages.JourneyImageDTO{
+				Images: []readmodel.JourneyImageDTO{
 					{
 						ID:             "image-1",
-						Slot:           requestjourneyimages.SlotDTO{Purpose: "cover", Ordinal: 1},
+						Slot:           readmodel.SlotDTO{Purpose: "cover", Ordinal: 1},
 						Status:         "failed",
 						AttemptCount:   3,
 						HasFailureCode: true,
@@ -73,7 +74,7 @@ func TestToRequestJourneyImagesResponse(t *testing.T) {
 			name: "empty output keeps images as empty array",
 			output: requestjourneyimages.Output{
 				JourneyRequestID: "request-1",
-				Images:           []requestjourneyimages.JourneyImageDTO{},
+				Images:           []readmodel.JourneyImageDTO{},
 			},
 			wantImageSize: 0,
 		},

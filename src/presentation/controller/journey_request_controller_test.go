@@ -2,6 +2,7 @@ package controller
 
 import (
 	"bytes"
+	"cacao/src/application/readmodel"
 	"context"
 	"encoding/json"
 	"errors"
@@ -188,15 +189,15 @@ func TestHandleGetRequest_Success(t *testing.T) {
 	r := setupGin()
 	uc := &mockGetJourneyRequestUseCase{
 		output: getjourneyrequest.Output{
-			Request: getjourneyrequest.JourneyRequestDTO{
+			Request: readmodel.JourneyRequestDTO{
 				ID:          "request-1",
 				Departure:   "東京, 日本",
 				Destination: "大阪, 日本",
-				Period: getjourneyrequest.PeriodDTO{
+				Period: readmodel.PeriodDTO{
 					StartDate: time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC),
 					EndDate:   time.Date(2026, 7, 3, 0, 0, 0, 0, time.UTC),
 				},
-				Budget: getjourneyrequest.MoneyDTO{Amount: 30000, Currency: "JPY"},
+				Budget: readmodel.MoneyDTO{Amount: 30000, Currency: "JPY"},
 			},
 		},
 	}
@@ -231,16 +232,16 @@ func TestHandleListRequests_Success(t *testing.T) {
 	r := setupGin()
 	uc := &mockListJourneyRequestsUseCase{
 		output: listjourneyrequests.Output{
-			Requests: []listjourneyrequests.JourneyRequestDTO{
+			Requests: []readmodel.JourneyRequestDTO{
 				{
 					ID:          "request-1",
 					Departure:   "東京, 日本",
 					Destination: "大阪, 日本",
-					Period: listjourneyrequests.PeriodDTO{
+					Period: readmodel.PeriodDTO{
 						StartDate: time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC),
 						EndDate:   time.Date(2026, 7, 3, 0, 0, 0, 0, time.UTC),
 					},
-					Budget: listjourneyrequests.MoneyDTO{Amount: 30000, Currency: "JPY"},
+					Budget: readmodel.MoneyDTO{Amount: 30000, Currency: "JPY"},
 				},
 			},
 		},

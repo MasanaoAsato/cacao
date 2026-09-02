@@ -9,6 +9,7 @@ import (
 	getjourneyimage "cacao/src/application/get_journey_image"
 	getjourneyimagecontent "cacao/src/application/get_journey_image_content"
 	listjourneyimages "cacao/src/application/list_journey_images"
+	"cacao/src/application/readmodel"
 	requestjourneyimages "cacao/src/application/request_journey_images"
 	retryjourneyimage "cacao/src/application/retry_journey_image"
 	"cacao/src/presentation/presenter"
@@ -161,7 +162,7 @@ func journeyRequestID(c *gin.Context) string {
 	return c.Param("id")
 }
 
-func hasActiveImages(images []requestjourneyimages.JourneyImageDTO) bool {
+func hasActiveImages(images []readmodel.JourneyImageDTO) bool {
 	for _, image := range images {
 		if image.Status == "pending" || image.Status == "processing" {
 			return true

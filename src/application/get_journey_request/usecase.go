@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"cacao/src/application"
-	"cacao/src/domain/entity"
+	"cacao/src/application/readmodel"
 	"cacao/src/domain/repository"
 	"cacao/src/domain/value_object"
 )
@@ -40,21 +40,5 @@ func (uc *useCase) Execute(ctx context.Context, input Input) (Output, error) {
 		return Output{}, fmt.Errorf("failed to find journey request: %w", err)
 	}
 
-	return Output{Request: toJourneyRequestDTO(request)}, nil
-}
-
-func toJourneyRequestDTO(request entity.JourneyRequest) JourneyRequestDTO {
-	return JourneyRequestDTO{
-		ID:          request.ID().String(),
-		Departure:   request.Departure().String(),
-		Destination: request.Destination().String(),
-		Period: PeriodDTO{
-			StartDate: request.Period().StartDate(),
-			EndDate:   request.Period().EndDate(),
-		},
-		Budget: MoneyDTO{
-			Amount:   request.Budget().Amount(),
-			Currency: request.Budget().Currency().Code(),
-		},
-	}
+	return Output{Request: readmodel.NewJourneyRequestDTO(request)}, nil
 }

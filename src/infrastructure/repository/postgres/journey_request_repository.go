@@ -7,7 +7,7 @@ import (
 	"cacao/src/domain/entity"
 	"cacao/src/domain/repository"
 	"cacao/src/domain/value_object"
-	"cacao/src/infrastructure/observability"
+	"cacao/src/observability"
 
 	"gorm.io/gorm"
 )

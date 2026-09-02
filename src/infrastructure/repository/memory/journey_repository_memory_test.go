@@ -11,7 +11,7 @@ import (
 	"cacao/src/domain/service"
 	"cacao/src/domain/value_object"
 
-	journeygeneratorservice "cacao/src/infrastructure/service"
+	"cacao/src/infrastructure/journeygen"
 )
 
 func newTestJourney(t *testing.T) entity.Journey {
@@ -43,7 +43,7 @@ func newTestJourney(t *testing.T) entity.Journey {
 		t.Fatalf("failed to create journey request: %v", err)
 	}
 
-	generator := journeygeneratorservice.NewJourneyGeneratorStub()
+	generator := journeygen.NewStub()
 	ctx := context.Background()
 	route, err := generator.Generate(ctx, req)
 	if err != nil {

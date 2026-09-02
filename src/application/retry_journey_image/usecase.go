@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"cacao/src/application"
+	"cacao/src/application/readmodel"
 	"cacao/src/domain/entity"
 	"cacao/src/domain/repository"
 	"cacao/src/domain/value_object"
@@ -52,29 +53,5 @@ func (uc *useCase) Execute(ctx context.Context, input Input) (Output, error) {
 		return Output{}, fmt.Errorf("save journey image: %w", err)
 	}
 
-	return Output{Image: toJourneyImageDTO(image)}, nil
-}
-
-func toJourneyImageDTO(image entity.JourneyImage) JourneyImageDTO {
-	dto := JourneyImageDTO{
-		ID: image.ID().String(),
-		Slot: SlotDTO{
-			Purpose: image.Slot().Purpose().String(),
-			Ordinal: image.Slot().Ordinal(),
-		},
-		Status:       image.Status().String(),
-		AttemptCount: image.AttemptCount(),
-	}
-	if assetReference, ok := image.AssetReference(); ok {
-		dto.HasContent = true
-		dto.MediaType = assetReference.MediaType()
-		dto.Width = assetReference.Width()
-		dto.Height = assetReference.Height()
-	}
-	if failureCode, ok := image.FailureCode(); ok {
-		dto.HasFailureCode = true
-		dto.FailureCode = failureCode.String()
-	}
-
-	return dto
+	return Output{Image: readmodel.NewJourneyImageDTO(image)}, nil
 }

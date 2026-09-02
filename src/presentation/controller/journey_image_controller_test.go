@@ -2,6 +2,7 @@ package controller
 
 import (
 	"bytes"
+	"cacao/src/application/readmodel"
 	"context"
 	"encoding/json"
 	"io"
@@ -94,8 +95,8 @@ func TestHandleRequestJourneyImagesReturnsAcceptedWithPollingHeaders(t *testing.
 	useCase := &imageRequestUseCaseMock{
 		output: requestjourneyimages.Output{
 			JourneyRequestID: "request-1",
-			Images: []requestjourneyimages.JourneyImageDTO{
-				{ID: "image-1", Slot: requestjourneyimages.SlotDTO{Purpose: "cover", Ordinal: 1}, Status: "pending"},
+			Images: []readmodel.JourneyImageDTO{
+				{ID: "image-1", Slot: readmodel.SlotDTO{Purpose: "cover", Ordinal: 1}, Status: "pending"},
 			},
 		},
 	}
@@ -185,21 +186,15 @@ func TestHandleGetJourneyImageContentSupportsETag(t *testing.T) {
 
 func TestNewRouterRegistersImageRoutes(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	router := NewRouter(
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		ImageRoutes{
+	router := NewRouter(Dependencies{
+		Images: ImageRoutes{
 			Request: &imageRequestUseCaseMock{},
 			List:    &imageListUseCaseMock{},
 			Get:     &imageGetUseCaseMock{},
 			Content: &imageContentUseCaseMock{},
 			Retry:   &imageRetryUseCaseMock{},
 		},
-	)
+	})
 
 	cases := []struct {
 		method string

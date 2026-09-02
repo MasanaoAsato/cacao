@@ -1,10 +1,10 @@
 package listjourneyrequests
 
 import (
+	"cacao/src/application/readmodel"
 	"context"
 	"fmt"
 
-	"cacao/src/domain/entity"
 	"cacao/src/domain/repository"
 )
 
@@ -29,26 +29,5 @@ func (uc *useCase) Execute(ctx context.Context, input Input) (Output, error) {
 		return Output{}, fmt.Errorf("failed to list journey requests: %w", err)
 	}
 
-	requestDTOs := make([]JourneyRequestDTO, 0, len(requests))
-	for _, request := range requests {
-		requestDTOs = append(requestDTOs, toJourneyRequestDTO(request))
-	}
-
-	return Output{Requests: requestDTOs}, nil
-}
-
-func toJourneyRequestDTO(request entity.JourneyRequest) JourneyRequestDTO {
-	return JourneyRequestDTO{
-		ID:          request.ID().String(),
-		Departure:   request.Departure().String(),
-		Destination: request.Destination().String(),
-		Period: PeriodDTO{
-			StartDate: request.Period().StartDate(),
-			EndDate:   request.Period().EndDate(),
-		},
-		Budget: MoneyDTO{
-			Amount:   request.Budget().Amount(),
-			Currency: request.Budget().Currency().Code(),
-		},
-	}
+	return Output{Requests: readmodel.NewJourneyRequestDTOs(requests)}, nil
 }

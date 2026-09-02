@@ -10,14 +10,14 @@ import (
 
 func TestNewRouter_RegistersRoutes(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	r := NewRouter(
-		&mockCreateJourneyRequestUseCase{},
-		&mockGenerateJourneyUseCase{},
-		&mockGetJourneyUseCase{},
-		&mockListJourneysUseCase{},
-		&mockGetJourneyRequestUseCase{},
-		&mockListJourneyRequestsUseCase{},
-	)
+	r := NewRouter(Dependencies{
+		CreateJourneyRequest: &mockCreateJourneyRequestUseCase{},
+		GenerateJourney:      &mockGenerateJourneyUseCase{},
+		GetJourney:           &mockGetJourneyUseCase{},
+		ListJourneys:         &mockListJourneysUseCase{},
+		GetJourneyRequest:    &mockGetJourneyRequestUseCase{},
+		ListJourneyRequests:  &mockListJourneyRequestsUseCase{},
+	})
 
 	routes := []struct {
 		method string

@@ -4,139 +4,26 @@ import (
 	"context"
 	"errors"
 	"testing"
-	"time"
 
 	"cacao/src/application"
+	"cacao/src/application/readmodel"
 	"cacao/src/domain/entity"
 	"cacao/src/domain/repository"
 	"cacao/src/domain/value_object"
+	"cacao/src/internal/testkit"
+	"cacao/src/internal/testkit/fakes"
 )
 
-type mockRequestRepo struct {
-	request entity.JourneyRequest
-	err     error
-}
-
-func (m *mockRequestRepo) Save(_ context.Context, _ entity.JourneyRequest) error {
-	return nil
-}
-
-func (m *mockRequestRepo) FindByID(_ context.Context, _ value_object.ID) (entity.JourneyRequest, error) {
-	if m.err != nil {
-		return entity.JourneyRequest{}, m.err
-	}
-
-	return m.request, nil
-}
-
-func (m *mockRequestRepo) FindAll(_ context.Context) ([]entity.JourneyRequest, error) {
-	return []entity.JourneyRequest{}, nil
-}
-
-func (m *mockRequestRepo) Delete(_ context.Context, _ value_object.ID) error {
-	return nil
-}
-
-type mockImageRepo struct {
-	images           map[value_object.ImageSlot]entity.JourneyImage
-	concurrentImages map[value_object.ImageSlot]entity.JourneyImage
-	findBySlotCalls  map[value_object.ImageSlot]int
-	saveErr          error
-	saveCalls        int
-	findByRequestErr error
-	findBySlotErr    error
-}
-
-func newMockImageRepo() *mockImageRepo {
-	return &mockImageRepo{
-		images:           map[value_object.ImageSlot]entity.JourneyImage{},
-		concurrentImages: map[value_object.ImageSlot]entity.JourneyImage{},
-		findBySlotCalls:  map[value_object.ImageSlot]int{},
-	}
-}
-
-func (m *mockImageRepo) Save(_ context.Context, image entity.JourneyImage) error {
-	m.saveCalls++
-	if m.saveErr != nil {
-		return m.saveErr
-	}
-
-	m.images[image.Slot()] = image
-	return nil
-}
-
-func (m *mockImageRepo) FindByID(_ context.Context, _ value_object.ID) (entity.JourneyImage, error) {
-	return entity.JourneyImage{}, repository.ErrJourneyImageNotFound
-}
-
-func (m *mockImageRepo) FindByRequestID(
-	_ context.Context,
-	_ value_object.ID,
-) ([]entity.JourneyImage, error) {
-	if m.findByRequestErr != nil {
-		return nil, m.findByRequestErr
-	}
-
-	return []entity.JourneyImage{}, nil
-}
-
-func (m *mockImageRepo) FindBySlot(
-	_ context.Context,
-	_ value_object.ID,
-	slot value_object.ImageSlot,
-) (entity.JourneyImage, error) {
-	if m.findBySlotErr != nil {
-		return entity.JourneyImage{}, m.findBySlotErr
-	}
-
-	m.findBySlotCalls[slot]++
-	if image, ok := m.images[slot]; ok {
-		return image, nil
-	}
-	if image, ok := m.concurrentImages[slot]; ok && m.findBySlotCalls[slot] > 1 {
-		return image, nil
-	}
-
-	return entity.JourneyImage{}, repository.ErrJourneyImageNotFound
-}
-
-func (m *mockImageRepo) FindPending(
-	_ context.Context,
-	_ int,
-) ([]entity.JourneyImage, error) {
-	return []entity.JourneyImage{}, nil
-}
-
-func (m *mockImageRepo) FindExpiredProcessing(
-	_ context.Context,
-	_ time.Time,
-	_ int,
-) ([]entity.JourneyImage, error) {
-	return []entity.JourneyImage{}, nil
-}
-
-func (m *mockImageRepo) Claim(
-	_ context.Context,
-	_ value_object.ID,
-	_ time.Time,
-) (entity.JourneyImage, bool, error) {
-	return entity.JourneyImage{}, false, repository.ErrJourneyImageNotFound
-}
-
-func (m *mockImageRepo) Delete(_ context.Context, _ value_object.ID) error {
-	return nil
-}
-
 func TestUseCaseExecute(t *testing.T) {
-	request := mustNewJourneyRequest(t)
-	coverSlot := mustNewSlot(t, value_object.ImagePurposeCover, 1)
-	illustrationThree := mustNewSlot(t, value_object.ImagePurposeIllustration, 3)
+	request := testkit.MustNewJourneyRequest(t)
+	coverSlot := testkit.MustNewImageSlot(t, value_object.ImagePurposeCover, 1)
+	illustrationThree := testkit.MustNewImageSlot(t, value_object.ImagePurposeIllustration, 3)
 
 	tests := []struct {
 		name           string
 		input          Input
 		requestErr     error
-		setupImageRepo func(*mockImageRepo)
+		setupImageRepo func(*fakes.FakeJourneyImageRepository)
 		wantErr        error
 		wantImageCount int
 		wantSaveCalls  int
@@ -176,8 +63,12 @@ func TestUseCaseExecute(t *testing.T) {
 				RequestID: request.ID().String(),
 				Slots:     []SlotInput{{Purpose: "cover", Ordinal: 1}},
 			},
-			setupImageRepo: func(imageRepo *mockImageRepo) {
-				imageRepo.images[coverSlot] = mustNewImage(t, request.ID(), coverSlot)
+			setupImageRepo: func(imageRepo *fakes.FakeJourneyImageRepository) {
+				// 埋め込みのインメモリ実装へ直接保存し、ユースケースの Save 呼び出し回数には含めない
+				existing := testkit.MustNewPendingImageFor(t, request.ID(), coverSlot)
+				if err := imageRepo.JourneyImageRepositoryMemory.Save(context.Background(), existing); err != nil {
+					t.Fatalf("seed existing image: %v", err)
+				}
 			},
 			wantImageCount: 1,
 			wantFirstSlot:  coverSlot,
@@ -189,9 +80,16 @@ func TestUseCaseExecute(t *testing.T) {
 				RequestID: request.ID().String(),
 				Slots:     []SlotInput{{Purpose: "cover", Ordinal: 1}},
 			},
-			setupImageRepo: func(imageRepo *mockImageRepo) {
-				imageRepo.saveErr = repository.ErrJourneyImageSlotAlreadyExists
-				imageRepo.concurrentImages[coverSlot] = mustNewImage(t, request.ID(), coverSlot)
+			setupImageRepo: func(imageRepo *fakes.FakeJourneyImageRepository) {
+				// Save の直前に別プロセスが同じ slot を作成した競合を再現する:
+				// 1回目の FindBySlot は not found、Save は一意制約違反、2回目の FindBySlot で既存画像が見つかる
+				concurrent := testkit.MustNewPendingImageFor(t, request.ID(), coverSlot)
+				imageRepo.SaveFn = func(ctx context.Context, _ entity.JourneyImage) error {
+					if err := imageRepo.JourneyImageRepositoryMemory.Save(ctx, concurrent); err != nil {
+						t.Fatalf("save concurrent image: %v", err)
+					}
+					return repository.ErrJourneyImageSlotAlreadyExists
+				}
 			},
 			wantImageCount: 1,
 			wantSaveCalls:  1,
@@ -260,14 +158,28 @@ func TestUseCaseExecute(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			imageRepo := newMockImageRepo()
+			requestRepo := fakes.NewJourneyRequestRepositoryWith(t, request)
+			if tt.requestErr != nil {
+				requestRepo.FindByIDFn = func(context.Context, value_object.ID) (entity.JourneyRequest, error) {
+					return entity.JourneyRequest{}, tt.requestErr
+				}
+			}
+
+			imageRepo := fakes.NewJourneyImageRepository()
 			if tt.setupImageRepo != nil {
 				tt.setupImageRepo(imageRepo)
 			}
-			uc := NewUseCase(
-				&mockRequestRepo{request: request, err: tt.requestErr},
-				imageRepo,
-			)
+			// ユースケース経由の Save 呼び出しを数える。setup が差し替えた SaveFn があればそれへ委譲する。
+			saveCalls := 0
+			innerSave := imageRepo.SaveFn
+			imageRepo.SaveFn = func(ctx context.Context, image entity.JourneyImage) error {
+				saveCalls++
+				if innerSave != nil {
+					return innerSave(ctx, image)
+				}
+				return imageRepo.JourneyImageRepositoryMemory.Save(ctx, image)
+			}
+			uc := NewUseCase(requestRepo, imageRepo)
 
 			output, err := uc.Execute(context.Background(), tt.input)
 			if tt.wantErr != nil {
@@ -286,8 +198,8 @@ func TestUseCaseExecute(t *testing.T) {
 			if len(output.Images) != tt.wantImageCount {
 				t.Fatalf("len(Images) = %d, want %d", len(output.Images), tt.wantImageCount)
 			}
-			if imageRepo.saveCalls != tt.wantSaveCalls {
-				t.Errorf("Save() calls = %d, want %d", imageRepo.saveCalls, tt.wantSaveCalls)
+			if saveCalls != tt.wantSaveCalls {
+				t.Errorf("Save() calls = %d, want %d", saveCalls, tt.wantSaveCalls)
 			}
 			if output.Images[0].Slot != slotDTO(tt.wantFirstSlot) {
 				t.Errorf("first slot = %+v, want %+v", output.Images[0].Slot, slotDTO(tt.wantFirstSlot))
@@ -307,74 +219,8 @@ func TestUseCaseExecute(t *testing.T) {
 	}
 }
 
-func mustNewJourneyRequest(t *testing.T) entity.JourneyRequest {
-	t.Helper()
-
-	departure, err := value_object.NewDeparture("東京", "日本")
-	if err != nil {
-		t.Fatalf("NewDeparture() error = %v", err)
-	}
-	destination, err := value_object.NewDestination("大阪", "日本")
-	if err != nil {
-		t.Fatalf("NewDestination() error = %v", err)
-	}
-	period, err := value_object.NewPeriod(
-		time.Date(2026, time.July, 7, 0, 0, 0, 0, time.UTC),
-		time.Date(2026, time.July, 9, 0, 0, 0, 0, time.UTC),
-	)
-	if err != nil {
-		t.Fatalf("NewPeriod() error = %v", err)
-	}
-	currency, err := value_object.NewCurrency("JPY")
-	if err != nil {
-		t.Fatalf("NewCurrency() error = %v", err)
-	}
-	budget, err := value_object.NewMoney(50000, currency)
-	if err != nil {
-		t.Fatalf("NewMoney() error = %v", err)
-	}
-	request, err := entity.NewJourneyRequest(
-		value_object.NewID(),
-		departure,
-		destination,
-		period,
-		budget,
-	)
-	if err != nil {
-		t.Fatalf("NewJourneyRequest() error = %v", err)
-	}
-
-	return request
-}
-
-func mustNewSlot(t *testing.T, purpose value_object.ImagePurpose, ordinal int) value_object.ImageSlot {
-	t.Helper()
-
-	slot, err := value_object.NewImageSlot(purpose, ordinal)
-	if err != nil {
-		t.Fatalf("NewImageSlot() error = %v", err)
-	}
-
-	return slot
-}
-
-func mustNewImage(
-	t *testing.T,
-	requestID value_object.ID,
-	slot value_object.ImageSlot,
-) entity.JourneyImage {
-	t.Helper()
-
-	image, err := entity.NewJourneyImage(value_object.NewID(), requestID, slot)
-	if err != nil {
-		t.Fatalf("NewJourneyImage() error = %v", err)
-	}
-
-	return image
-}
-
-func slotDTO(slot value_object.ImageSlot) SlotDTO {
-	return SlotDTO{
+func slotDTO(slot value_object.ImageSlot) readmodel.SlotDTO {
+	return readmodel.SlotDTO{
 		Purpose: slot.Purpose().String(),
 		Ordinal: slot.Ordinal(),
 	}

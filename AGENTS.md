@@ -31,18 +31,32 @@
 以下のような構成を基本とする。
 ```
 src/
-├── application/      # アプリケーション層
+├── application/      # アプリケーション層（1ユースケース = 1パッケージ）
+│   └── readmodel/    # ユースケースが返す読み取り専用 DTO と entity→DTO 変換（共有）
 ├── domain/           # ドメイン層
 │   ├── entity/       # エンティティ
+│   ├── event/        # ドメインイベント
 │   ├── repository/   # リポジトリインターフェース
+│   ├── service/      # ドメインサービス（生成ポート、画風選択、失敗コード分類）
 │   └── value_object/ # 値オブジェクト
 ├── infrastructure/   # インフラ層
-│   ├── repository/   # リポジトリ実装
-│   └── service/      # サービス実装
+│   ├── config/       # 環境変数の設定ローダー（既定値・許容範囲・ドライバ名はここだけが持つ）
+│   ├── database/     # GORM クライアント
+│   ├── event/        # イベント Publisher 実装
+│   ├── imagecontent/ # 生成画像のバイト列検証（生成器とストレージが共用）
+│   ├── imagegen/     # ImageGenerator 実装（stub / openrouter、comfyui/ と imageprompt/ を含む）
+│   ├── imagestore/   # ImageStorage 実装（fsstore/）
+│   ├── journeygen/   # JourneyGenerator 実装（stub / openai / openrouter、journeyprompt/ を含む）
+│   ├── openrouterclient/ # OpenRouter SDK の生成とエラー解釈（旅程・画像で共用）
+│   ├── repository/   # リポジトリ実装（postgres/、テスト用の memory/）
+│   └── worker/       # 画像生成ワーカー
+├── internal/testkit/ # テスト専用: エンティティビルダーと fakes/（リポジトリのフェイク）
+├── observability/    # 層をまたぐ横断パッケージ: PII を含まない構造化ログとエラー分類
 ├── presentation/     # インターフェース層
 │   ├── controller/   # コントローラー
 │   └── presenter/    # プレゼンター
-└── main.go           # エントリーポイント
+├── main.go           # エントリーポイント（起動・シグナル処理・停止）
+└── wire.go           # Composition Root（設定読込・実装選択・依存注入）
 └── web/                   ← 新規
     ├── package.json
     ├── vite.config.ts     ← /api プロキシ設定

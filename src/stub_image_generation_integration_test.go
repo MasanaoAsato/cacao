@@ -30,18 +30,20 @@ import (
 	requestjourneyimages "cacao/src/application/request_journey_images"
 	retryjourneyimage "cacao/src/application/retry_journey_image"
 	domainservice "cacao/src/domain/service"
+	"cacao/src/infrastructure/config"
 	"cacao/src/infrastructure/database"
 	"cacao/src/infrastructure/event"
+	"cacao/src/infrastructure/imagegen"
+	"cacao/src/infrastructure/imagestore/fsstore"
 	"cacao/src/infrastructure/repository/postgres"
-	"cacao/src/infrastructure/service"
 	"cacao/src/infrastructure/worker"
 	"cacao/src/presentation/controller"
 )
 
 func TestStubImageGenerationHTTPIntegration(t *testing.T) {
-	databaseConfig, err := database.ConfigFromEnv()
+	databaseConfig, err := config.DatabaseFromEnv()
 	if err != nil {
-		t.Fatalf("database.ConfigFromEnv() error = %v", err)
+		t.Fatalf("config.DatabaseFromEnv() error = %v", err)
 	}
 	db, err := database.CreateGORMClient(context.Background(), databaseConfig)
 	if err != nil {
@@ -55,22 +57,19 @@ func TestStubImageGenerationHTTPIntegration(t *testing.T) {
 
 	requestRepo := postgres.NewJourneyRequestRepository(db)
 	imageRepo := postgres.NewJourneyImageRepository(db)
-	storage, err := service.NewFileSystemImageStorage(service.ImageStorageConfig{
-		Driver:    "filesystem",
-		Root:      t.TempDir(),
-		MaxBytes:  20 * 1024 * 1024,
-		MaxWidth:  4096,
-		MaxHeight: 4096,
-		MaxPixels: 16 * 1024 * 1024,
+	storage, err := fsstore.New(config.ImageStorage{
+		Driver: config.ImageStorageFilesystem,
+		Root:   t.TempDir(),
+		Limits: config.ImageLimits{MaxBytes: 20 * 1024 * 1024, MaxWidth: 4096, MaxHeight: 4096, MaxPixels: 16 * 1024 * 1024},
 	})
 	if err != nil {
-		t.Fatalf("service.NewFileSystemImageStorage() error = %v", err)
+		t.Fatalf("fsstore.New() error = %v", err)
 	}
 	t.Cleanup(func() { _ = storage.Close() })
 
-	imageGenerator := newBlockingIntegrationImageGenerator(service.NewImageGeneratorStub())
+	imageGenerator := newBlockingIntegrationImageGenerator(imagegen.NewStub())
 	t.Cleanup(imageGenerator.releaseGeneration)
-	generateImageUC := generatejourneyimage.NewUseCase(
+	generateImageUC, err := generatejourneyimage.NewUseCase(
 		imageRepo,
 		requestRepo,
 		imageGenerator,
@@ -80,13 +79,14 @@ func TestStubImageGenerationHTTPIntegration(t *testing.T) {
 			LeaseDuration:     2 * time.Second,
 		},
 	)
+	if err != nil {
+		t.Fatalf("generatejourneyimage.NewUseCase() error = %v", err)
+	}
 	imageWorker, err := worker.NewJourneyImageWorker(
-		worker.WorkerConfig{
+		worker.Config{
 			PollInterval:      100 * time.Millisecond,
 			BatchSize:         1,
 			Concurrency:       1,
-			GenerationTimeout: time.Second,
-			LeaseDuration:     2 * time.Second,
 			RecoveryBatchSize: 1,
 		},
 		imageRepo,
@@ -116,21 +116,16 @@ func TestStubImageGenerationHTTPIntegration(t *testing.T) {
 	getImageUC := getjourneyimage.NewUseCase(imageRepo)
 	getContentUC := getjourneyimagecontent.NewUseCase(imageRepo, storage)
 	retryImageUC := retryjourneyimage.NewUseCase(imageRepo)
-	router := controller.NewRouter(
-		createRequestUC,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		controller.ImageRoutes{
+	router := controller.NewRouter(controller.Dependencies{
+		CreateJourneyRequest: createRequestUC,
+		Images: controller.ImageRoutes{
 			Request: requestImagesUC,
 			List:    listImagesUC,
 			Get:     getImageUC,
 			Content: getContentUC,
 			Retry:   retryImageUC,
 		},
-	)
+	})
 	server := httptest.NewServer(router)
 	defer server.Close()
 

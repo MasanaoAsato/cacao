@@ -4,8 +4,7 @@ import (
 	"time"
 
 	generatejourney "cacao/src/application/generate_journey"
-	getjourney "cacao/src/application/get_journey"
-	listjourneys "cacao/src/application/list_journeys"
+	"cacao/src/application/readmodel"
 )
 
 // GenerateJourneyResponse は旅程生成APIのJSONレスポンス。
@@ -45,6 +44,7 @@ type SpotJSON struct {
 	EstimatedCost MoneyJSON `json:"estimated_cost"`
 }
 
+// LegJSON は移動区間のJSON表現。
 type LegJSON struct {
 	ID              string       `json:"id"`
 	From            EndpointJSON `json:"from"`
@@ -60,13 +60,14 @@ type MoneyJSON struct {
 	Currency string `json:"currency"`
 }
 
+// EndpointJSON は区間端点のJSON表現。
 type EndpointJSON struct {
 	SpotID string `json:"spot_id,omitempty"`
 	Label  string `json:"label"`
 }
 
-// ToJourneyResponse は GetJourney のOutputからJourneyResponseを組み立てる。
-func ToJourneyResponse(dto getjourney.JourneyDTO) JourneyResponse {
+// ToJourneyResponse は JourneyDTO から JourneyResponse を組み立てる。
+func ToJourneyResponse(dto readmodel.JourneyDTO) JourneyResponse {
 	return JourneyResponse{
 		ID:        dto.ID,
 		RequestID: dto.RequestID,
@@ -75,47 +76,29 @@ func ToJourneyResponse(dto getjourney.JourneyDTO) JourneyResponse {
 	}
 }
 
-// ToJourneyListResponse は ListJourneys のOutputからJourneyResponseのスライスを組み立てる。
-func ToJourneyListResponse(dtos []listjourneys.JourneyDTO) []JourneyResponse {
+// ToJourneyListResponse は JourneyDTO のスライスから JourneyResponse のスライスを組み立てる。
+func ToJourneyListResponse(dtos []readmodel.JourneyDTO) []JourneyResponse {
 	responses := make([]JourneyResponse, 0, len(dtos))
 	for _, dto := range dtos {
-		responses = append(responses, JourneyResponse{
-			ID:        dto.ID,
-			RequestID: dto.RequestID,
-			DayCount:  dto.DayCount,
-			Days:      toItineraryDayJSONsFromList(dto.Days),
-		})
+		responses = append(responses, ToJourneyResponse(dto))
 	}
 	return responses
 }
 
-func toItineraryDayJSONs(dtos []getjourney.ItineraryDayDTO) []ItineraryDayJSON {
+func toItineraryDayJSONs(dtos []readmodel.ItineraryDayDTO) []ItineraryDayJSON {
 	result := make([]ItineraryDayJSON, 0, len(dtos))
 	for _, dto := range dtos {
 		result = append(result, ItineraryDayJSON{
 			ID:    dto.ID,
 			Date:  dto.Date.Format(time.RFC3339),
-			Spots: toSpotJSONsFromGet(dto.Spots),
-			Legs:  toLegJSONsFromGet(dto.Legs),
+			Spots: toSpotJSONs(dto.Spots),
+			Legs:  toLegJSONs(dto.Legs),
 		})
 	}
 	return result
 }
 
-func toItineraryDayJSONsFromList(dtos []listjourneys.ItineraryDayDTO) []ItineraryDayJSON {
-	result := make([]ItineraryDayJSON, 0, len(dtos))
-	for _, dto := range dtos {
-		result = append(result, ItineraryDayJSON{
-			ID:    dto.ID,
-			Date:  dto.Date.Format(time.RFC3339),
-			Spots: toSpotJSONsFromList(dto.Spots),
-			Legs:  toLegJSONsFromList(dto.Legs),
-		})
-	}
-	return result
-}
-
-func toSpotJSONsFromGet(dtos []getjourney.SpotDTO) []SpotJSON {
+func toSpotJSONs(dtos []readmodel.SpotDTO) []SpotJSON {
 	result := make([]SpotJSON, 0, len(dtos))
 	for _, dto := range dtos {
 		result = append(result, SpotJSON{
@@ -123,27 +106,13 @@ func toSpotJSONsFromGet(dtos []getjourney.SpotDTO) []SpotJSON {
 			Name:          dto.Name,
 			Description:   dto.Description,
 			StartAt:       dto.StartAt.Format(time.RFC3339),
-			EstimatedCost: MoneyJSON{Amount: dto.EstimatedCost.Amount, Currency: dto.EstimatedCost.Currency},
+			EstimatedCost: toMoneyJSON(dto.EstimatedCost),
 		})
 	}
 	return result
 }
 
-func toSpotJSONsFromList(dtos []listjourneys.SpotDTO) []SpotJSON {
-	result := make([]SpotJSON, 0, len(dtos))
-	for _, dto := range dtos {
-		result = append(result, SpotJSON{
-			ID:            dto.ID,
-			Name:          dto.Name,
-			Description:   dto.Description,
-			StartAt:       dto.StartAt.Format(time.RFC3339),
-			EstimatedCost: MoneyJSON{Amount: dto.EstimatedCost.Amount, Currency: dto.EstimatedCost.Currency},
-		})
-	}
-	return result
-}
-
-func toLegJSONsFromGet(dtos []getjourney.LegDTO) []LegJSON {
+func toLegJSONs(dtos []readmodel.LegDTO) []LegJSON {
 	result := make([]LegJSON, 0, len(dtos))
 	for _, dto := range dtos {
 		result = append(result, LegJSON{
@@ -152,23 +121,12 @@ func toLegJSONsFromGet(dtos []getjourney.LegDTO) []LegJSON {
 			To:              EndpointJSON{SpotID: dto.To.SpotID, Label: dto.To.Label},
 			Mode:            dto.Mode,
 			DurationMinutes: dto.DurationMinutes,
-			EstimatedCost:   MoneyJSON{Amount: dto.EstimatedCost.Amount, Currency: dto.EstimatedCost.Currency},
+			EstimatedCost:   toMoneyJSON(dto.EstimatedCost),
 		})
 	}
 	return result
 }
 
-func toLegJSONsFromList(dtos []listjourneys.LegDTO) []LegJSON {
-	result := make([]LegJSON, 0, len(dtos))
-	for _, dto := range dtos {
-		result = append(result, LegJSON{
-			ID:              dto.ID,
-			From:            EndpointJSON{SpotID: dto.From.SpotID, Label: dto.From.Label},
-			To:              EndpointJSON{SpotID: dto.To.SpotID, Label: dto.To.Label},
-			Mode:            dto.Mode,
-			DurationMinutes: dto.DurationMinutes,
-			EstimatedCost:   MoneyJSON{Amount: dto.EstimatedCost.Amount, Currency: dto.EstimatedCost.Currency},
-		})
-	}
-	return result
+func toMoneyJSON(dto readmodel.MoneyDTO) MoneyJSON {
+	return MoneyJSON{Amount: dto.Amount, Currency: dto.Currency}
 }

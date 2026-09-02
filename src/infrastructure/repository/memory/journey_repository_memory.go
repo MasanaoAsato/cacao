@@ -10,11 +10,13 @@ import (
 )
 
 // JourneyRepositoryMemory は JourneyRepository のインメモリ実装。
-// 開発・結合テスト・main.go 起動検証で使用する。
+// ユースケースの単体テストで Postgres 実装の代わりに使用する。
 type JourneyRepositoryMemory struct {
 	mu   sync.RWMutex
 	data map[value_object.ID]entity.Journey
 }
+
+var _ repository.JourneyRepository = (*JourneyRepositoryMemory)(nil)
 
 // NewJourneyRepository は空の JourneyRepositoryMemory を生成する。
 func NewJourneyRepository() *JourneyRepositoryMemory {

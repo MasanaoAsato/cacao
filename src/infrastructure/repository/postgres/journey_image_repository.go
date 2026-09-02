@@ -9,7 +9,7 @@ import (
 	"cacao/src/domain/entity"
 	"cacao/src/domain/repository"
 	"cacao/src/domain/value_object"
-	"cacao/src/infrastructure/observability"
+	"cacao/src/observability"
 
 	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"

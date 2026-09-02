@@ -1,12 +1,11 @@
 package presenter
 
 import (
+	"cacao/src/application/readmodel"
 	"testing"
 	"time"
 
 	createjourneyrequest "cacao/src/application/create_journey_request"
-	getjourneyrequest "cacao/src/application/get_journey_request"
-	listjourneyrequests "cacao/src/application/list_journey_requests"
 )
 
 func TestToCreateJourneyRequestResponse(t *testing.T) {
@@ -20,15 +19,15 @@ func TestToCreateJourneyRequestResponse(t *testing.T) {
 func TestToJourneyRequestResponse(t *testing.T) {
 	start := time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2026, 7, 3, 0, 0, 0, 0, time.UTC)
-	dto := getjourneyrequest.JourneyRequestDTO{
+	dto := readmodel.JourneyRequestDTO{
 		ID:          "request-1",
 		Departure:   "東京, 日本",
 		Destination: "大阪, 日本",
-		Period: getjourneyrequest.PeriodDTO{
+		Period: readmodel.PeriodDTO{
 			StartDate: start,
 			EndDate:   end,
 		},
-		Budget: getjourneyrequest.MoneyDTO{Amount: 30000, Currency: "JPY"},
+		Budget: readmodel.MoneyDTO{Amount: 30000, Currency: "JPY"},
 	}
 
 	resp := ToJourneyRequestResponse(dto)
@@ -53,16 +52,16 @@ func TestToJourneyRequestResponse(t *testing.T) {
 func TestToJourneyRequestListResponse(t *testing.T) {
 	start := time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2026, 7, 3, 0, 0, 0, 0, time.UTC)
-	dtos := []listjourneyrequests.JourneyRequestDTO{
+	dtos := []readmodel.JourneyRequestDTO{
 		{
 			ID:          "request-1",
 			Departure:   "東京, 日本",
 			Destination: "大阪, 日本",
-			Period: listjourneyrequests.PeriodDTO{
+			Period: readmodel.PeriodDTO{
 				StartDate: start,
 				EndDate:   end,
 			},
-			Budget: listjourneyrequests.MoneyDTO{Amount: 30000, Currency: "JPY"},
+			Budget: readmodel.MoneyDTO{Amount: 30000, Currency: "JPY"},
 		},
 	}
 
@@ -79,7 +78,7 @@ func TestToJourneyRequestListResponse(t *testing.T) {
 }
 
 func TestToJourneyRequestListResponse_Empty(t *testing.T) {
-	resp := ToJourneyRequestListResponse([]listjourneyrequests.JourneyRequestDTO{})
+	resp := ToJourneyRequestListResponse([]readmodel.JourneyRequestDTO{})
 	if resp == nil || len(resp) != 0 {
 		t.Errorf("expected empty non-nil slice, got %v", resp)
 	}

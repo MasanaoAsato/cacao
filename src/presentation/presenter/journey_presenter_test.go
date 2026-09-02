@@ -1,14 +1,13 @@
 package presenter
 
 import (
+	"cacao/src/application/readmodel"
 	"encoding/json"
 	"strings"
 	"testing"
 	"time"
 
 	generatejourney "cacao/src/application/generate_journey"
-	getjourney "cacao/src/application/get_journey"
-	listjourneys "cacao/src/application/list_journeys"
 )
 
 func TestToGenerateJourneyResponse(t *testing.T) {
@@ -29,21 +28,21 @@ func TestToGenerateJourneyResponse(t *testing.T) {
 
 func TestToJourneyResponse(t *testing.T) {
 	date := time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC)
-	dto := getjourney.JourneyDTO{
+	dto := readmodel.JourneyDTO{
 		ID:        "journey-1",
 		RequestID: "request-1",
 		DayCount:  1,
-		Days: []getjourney.ItineraryDayDTO{
+		Days: []readmodel.ItineraryDayDTO{
 			{
 				ID:   "day-1",
 				Date: date,
-				Spots: []getjourney.SpotDTO{
+				Spots: []readmodel.SpotDTO{
 					{
 						ID:            "spot-1",
 						Name:          "観光地",
 						Description:   "楽しい場所",
 						StartAt:       date.Add(time.Hour * 9),
-						EstimatedCost: getjourney.MoneyDTO{Amount: 1000, Currency: "JPY"},
+						EstimatedCost: readmodel.MoneyDTO{Amount: 1000, Currency: "JPY"},
 					},
 				},
 			},
@@ -71,32 +70,32 @@ func TestToJourneyResponse(t *testing.T) {
 
 func TestToJourneyResponse_Legs(t *testing.T) {
 	date := time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC)
-	dto := getjourney.JourneyDTO{
+	dto := readmodel.JourneyDTO{
 		ID:        "journey-1",
 		RequestID: "request-1",
 		DayCount:  1,
-		Days: []getjourney.ItineraryDayDTO{
+		Days: []readmodel.ItineraryDayDTO{
 			{
 				ID:   "day-1",
 				Date: date,
-				Spots: []getjourney.SpotDTO{
+				Spots: []readmodel.SpotDTO{
 					{
 						ID:            "spot-1",
 						Name:          "通天閣",
 						Description:   "展望台",
 						StartAt:       date.Add(time.Hour * 9),
-						EstimatedCost: getjourney.MoneyDTO{Amount: 1000, Currency: "JPY"},
+						EstimatedCost: readmodel.MoneyDTO{Amount: 1000, Currency: "JPY"},
 					},
 				},
-				Legs: []getjourney.LegDTO{
+				Legs: []readmodel.LegDTO{
 					{
 						ID: "leg-1",
 						// 旅程外地点（from）は SpotID 省略
-						From: getjourney.EndpointDTO{SpotID: "", Label: "大阪（出発地）"},
+						From: readmodel.EndpointDTO{SpotID: "", Label: "大阪（出発地）"},
 						// スポット参照（to）は SpotID + 解決済み Label
-						To:            getjourney.EndpointDTO{SpotID: "spot-1", Label: "通天閣"},
+						To:            readmodel.EndpointDTO{SpotID: "spot-1", Label: "通天閣"},
 						Mode:          "train",
-						EstimatedCost: getjourney.MoneyDTO{Amount: 240, Currency: "JPY"},
+						EstimatedCost: readmodel.MoneyDTO{Amount: 240, Currency: "JPY"},
 					},
 				},
 			},
@@ -154,16 +153,16 @@ func TestToJourneyResponse_Legs(t *testing.T) {
 
 func TestToJourneyListResponse(t *testing.T) {
 	date := time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC)
-	dtos := []listjourneys.JourneyDTO{
+	dtos := []readmodel.JourneyDTO{
 		{
 			ID:        "journey-1",
 			RequestID: "request-1",
 			DayCount:  1,
-			Days: []listjourneys.ItineraryDayDTO{
+			Days: []readmodel.ItineraryDayDTO{
 				{
 					ID:    "day-1",
 					Date:  date,
-					Spots: []listjourneys.SpotDTO{},
+					Spots: []readmodel.SpotDTO{},
 				},
 			},
 		},
@@ -179,7 +178,7 @@ func TestToJourneyListResponse(t *testing.T) {
 }
 
 func TestToJourneyListResponse_Empty(t *testing.T) {
-	resp := ToJourneyListResponse([]listjourneys.JourneyDTO{})
+	resp := ToJourneyListResponse([]readmodel.JourneyDTO{})
 	if resp == nil || len(resp) != 0 {
 		t.Errorf("expected empty non-nil slice, got %v", resp)
 	}

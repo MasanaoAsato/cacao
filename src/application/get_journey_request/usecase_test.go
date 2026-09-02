@@ -4,59 +4,17 @@ import (
 	"context"
 	"errors"
 	"testing"
-	"time"
 
 	"cacao/src/application"
-	"cacao/src/domain/entity"
-	"cacao/src/domain/repository"
 	"cacao/src/domain/value_object"
+	"cacao/src/internal/testkit"
+	"cacao/src/internal/testkit/fakes"
 )
-
-type mockRequestRepo struct {
-	request entity.JourneyRequest
-	err     error
-}
-
-func (m *mockRequestRepo) Save(_ context.Context, _ entity.JourneyRequest) error {
-	return nil
-}
-
-func (m *mockRequestRepo) FindByID(_ context.Context, _ value_object.ID) (entity.JourneyRequest, error) {
-	if m.err != nil {
-		return entity.JourneyRequest{}, m.err
-	}
-	return m.request, nil
-}
-
-func (m *mockRequestRepo) FindAll(_ context.Context) ([]entity.JourneyRequest, error) {
-	return nil, nil
-}
-
-func (m *mockRequestRepo) Delete(_ context.Context, _ value_object.ID) error {
-	return nil
-}
-
-func mustNewJourneyRequest(t *testing.T) entity.JourneyRequest {
-	t.Helper()
-	departure, _ := value_object.NewDeparture("東京", "日本")
-	destination, _ := value_object.NewDestination("大阪", "日本")
-	period, _ := value_object.NewPeriod(
-		time.Date(2026, 7, 7, 0, 0, 0, 0, time.UTC),
-		time.Date(2026, 7, 9, 0, 0, 0, 0, time.UTC),
-	)
-	currency, _ := value_object.NewCurrency("JPY")
-	budget, _ := value_object.NewMoney(50000, currency)
-	request, err := entity.NewJourneyRequest(value_object.NewID(), departure, destination, period, budget)
-	if err != nil {
-		t.Fatalf("failed to create journey request: %v", err)
-	}
-	return request
-}
 
 func TestUseCase_Execute(t *testing.T) {
 	t.Run("正常系: ID で JourneyRequest を取得できる", func(t *testing.T) {
-		request := mustNewJourneyRequest(t)
-		uc := NewUseCase(&mockRequestRepo{request: request})
+		request := testkit.MustNewJourneyRequest(t)
+		uc := NewUseCase(fakes.NewJourneyRequestRepositoryWith(t, request))
 
 		output, err := uc.Execute(context.Background(), Input{RequestID: request.ID().String()})
 		if err != nil {
@@ -77,7 +35,7 @@ func TestUseCase_Execute(t *testing.T) {
 	})
 
 	t.Run("異常系: 不正な RequestID", func(t *testing.T) {
-		uc := NewUseCase(&mockRequestRepo{})
+		uc := NewUseCase(fakes.NewJourneyRequestRepository())
 		_, err := uc.Execute(context.Background(), Input{RequestID: "not-a-uuid"})
 		if err == nil {
 			t.Fatal("expected error, got nil")
@@ -88,7 +46,8 @@ func TestUseCase_Execute(t *testing.T) {
 	})
 
 	t.Run("異常系: JourneyRequest が存在しない", func(t *testing.T) {
-		uc := NewUseCase(&mockRequestRepo{err: repository.ErrJourneyRequestNotFound})
+		// 空のインメモリリポジトリは repository.ErrJourneyRequestNotFound を返す
+		uc := NewUseCase(fakes.NewJourneyRequestRepository())
 		_, err := uc.Execute(context.Background(), Input{RequestID: value_object.NewID().String()})
 		if err == nil {
 			t.Fatal("expected error, got nil")

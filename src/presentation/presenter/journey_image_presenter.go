@@ -5,6 +5,7 @@ import (
 
 	getjourneyimage "cacao/src/application/get_journey_image"
 	listjourneyimages "cacao/src/application/list_journey_images"
+	"cacao/src/application/readmodel"
 	requestjourneyimages "cacao/src/application/request_journey_images"
 	retryjourneyimage "cacao/src/application/retry_journey_image"
 )
@@ -35,137 +36,55 @@ type JourneyImageListResponse struct {
 }
 
 // ToRequestJourneyImagesResponse は画像生成要求の出力をJSONへ変換する。
-func ToRequestJourneyImagesResponse(
-	output requestjourneyimages.Output,
-) JourneyImageListResponse {
-	images := make([]JourneyImageResponse, 0, len(output.Images))
-	for _, image := range output.Images {
-		images = append(images, imageResponseFromRequest(image))
-	}
-
-	return JourneyImageListResponse{
-		JourneyRequestID: output.JourneyRequestID,
-		Images:           images,
-	}
+func ToRequestJourneyImagesResponse(output requestjourneyimages.Output) JourneyImageListResponse {
+	return toJourneyImageListResponse(output.JourneyRequestID, output.Images)
 }
 
 // ToListJourneyImagesResponse は画像一覧の出力をJSONへ変換する。
 func ToListJourneyImagesResponse(output listjourneyimages.Output) JourneyImageListResponse {
-	images := make([]JourneyImageResponse, 0, len(output.Images))
-	for _, image := range output.Images {
-		images = append(images, imageResponseFromList(image))
-	}
-
-	return JourneyImageListResponse{
-		JourneyRequestID: output.JourneyRequestID,
-		Images:           images,
-	}
+	return toJourneyImageListResponse(output.JourneyRequestID, output.Images)
 }
 
 // ToGetJourneyImageResponse は画像1件の出力をJSONへ変換する。
 func ToGetJourneyImageResponse(output getjourneyimage.Output) JourneyImageResponse {
-	return imageResponseFromGet(output.Image)
+	return ToJourneyImageResponse(output.Image)
 }
 
 // ToRetryJourneyImageResponse はretryの出力をJSONへ変換する。
 func ToRetryJourneyImageResponse(output retryjourneyimage.Output) JourneyImageResponse {
-	return imageResponseFromRetry(output.Image)
+	return ToJourneyImageResponse(output.Image)
 }
 
-type imageResponseInput struct {
-	ID             string
-	Purpose        string
-	Ordinal        int
-	Status         string
-	AttemptCount   int
-	HasContent     bool
-	MediaType      string
-	Width          int
-	Height         int
-	HasFailureCode bool
-	FailureCode    string
+func toJourneyImageListResponse(requestID string, images []readmodel.JourneyImageDTO) JourneyImageListResponse {
+	responses := make([]JourneyImageResponse, 0, len(images))
+	for _, image := range images {
+		responses = append(responses, ToJourneyImageResponse(image))
+	}
+
+	return JourneyImageListResponse{
+		JourneyRequestID: requestID,
+		Images:           responses,
+	}
 }
 
-func imageResponseFromRequest(image requestjourneyimages.JourneyImageDTO) JourneyImageResponse {
-	return imageResponse(imageResponseInput{
-		ID:             image.ID,
-		Purpose:        image.Slot.Purpose,
-		Ordinal:        image.Slot.Ordinal,
-		Status:         image.Status,
-		AttemptCount:   image.AttemptCount,
-		HasContent:     image.HasContent,
-		MediaType:      image.MediaType,
-		Width:          image.Width,
-		Height:         image.Height,
-		HasFailureCode: image.HasFailureCode,
-		FailureCode:    image.FailureCode,
-	})
-}
-
-func imageResponseFromList(image listjourneyimages.JourneyImageDTO) JourneyImageResponse {
-	return imageResponse(imageResponseInput{
-		ID:             image.ID,
-		Purpose:        image.Slot.Purpose,
-		Ordinal:        image.Slot.Ordinal,
-		Status:         image.Status,
-		AttemptCount:   image.AttemptCount,
-		HasContent:     image.HasContent,
-		MediaType:      image.MediaType,
-		Width:          image.Width,
-		Height:         image.Height,
-		HasFailureCode: image.HasFailureCode,
-		FailureCode:    image.FailureCode,
-	})
-}
-
-func imageResponseFromGet(image getjourneyimage.JourneyImageDTO) JourneyImageResponse {
-	return imageResponse(imageResponseInput{
-		ID:             image.ID,
-		Purpose:        image.Slot.Purpose,
-		Ordinal:        image.Slot.Ordinal,
-		Status:         image.Status,
-		AttemptCount:   image.AttemptCount,
-		HasContent:     image.HasContent,
-		MediaType:      image.MediaType,
-		Width:          image.Width,
-		Height:         image.Height,
-		HasFailureCode: image.HasFailureCode,
-		FailureCode:    image.FailureCode,
-	})
-}
-
-func imageResponseFromRetry(image retryjourneyimage.JourneyImageDTO) JourneyImageResponse {
-	return imageResponse(imageResponseInput{
-		ID:             image.ID,
-		Purpose:        image.Slot.Purpose,
-		Ordinal:        image.Slot.Ordinal,
-		Status:         image.Status,
-		AttemptCount:   image.AttemptCount,
-		HasContent:     image.HasContent,
-		MediaType:      image.MediaType,
-		Width:          image.Width,
-		Height:         image.Height,
-		HasFailureCode: image.HasFailureCode,
-		FailureCode:    image.FailureCode,
-	})
-}
-
-func imageResponse(input imageResponseInput) JourneyImageResponse {
+// ToJourneyImageResponse は JourneyImageDTO をJSONレスポンスへ変換する。
+// 「値なし」は DTO の Has* フラグで判定し、JSON では null で表現する。
+func ToJourneyImageResponse(image readmodel.JourneyImageDTO) JourneyImageResponse {
 	response := JourneyImageResponse{
-		ID:           input.ID,
-		Slot:         JourneyImageSlot{Purpose: input.Purpose, Ordinal: input.Ordinal},
-		Status:       input.Status,
-		AttemptCount: input.AttemptCount,
+		ID:           image.ID,
+		Slot:         JourneyImageSlot{Purpose: image.Slot.Purpose, Ordinal: image.Slot.Ordinal},
+		Status:       image.Status,
+		AttemptCount: image.AttemptCount,
 	}
-	if input.HasContent {
-		contentURL := fmt.Sprintf("/api/v1/journey-images/%s/content", input.ID)
+	if image.HasContent {
+		contentURL := fmt.Sprintf("/api/v1/journey-images/%s/content", image.ID)
 		response.ContentURL = &contentURL
-		response.MediaType = &input.MediaType
-		response.Width = &input.Width
-		response.Height = &input.Height
+		response.MediaType = &image.MediaType
+		response.Width = &image.Width
+		response.Height = &image.Height
 	}
-	if input.HasFailureCode {
-		response.FailureCode = &input.FailureCode
+	if image.HasFailureCode {
+		response.FailureCode = &image.FailureCode
 	}
 
 	return response
