@@ -19,6 +19,8 @@ import (
 	sdkerrors "github.com/OpenRouterTeam/go-sdk/models/sdkerrors"
 	"github.com/OpenRouterTeam/go-sdk/optionalnullable"
 	"github.com/OpenRouterTeam/go-sdk/retry"
+
+	"cacao/src/infrastructure/observability"
 )
 
 const openRouterTestAPIKey = "test-openrouter-api-key"
@@ -379,6 +381,90 @@ func TestJourneyGeneratorOpenRouterGenerateRejectsInvalidResponse(t *testing.T) 
 			}
 			if !strings.Contains(err.Error(), testCase.want) {
 				t.Errorf("error = %q, want message containing %q", err, testCase.want)
+			}
+		})
+	}
+}
+
+func TestJourneyGeneratorOpenRouterGenerateIncludesSafeErrorDetail(t *testing.T) {
+	t.Parallel()
+
+	request := newStubTestJourneyRequest(
+		t,
+		time.Date(2026, 8, 1, 0, 0, 0, 0, time.UTC),
+		time.Date(2026, 8, 1, 0, 0, 0, 0, time.UTC),
+		10000,
+	)
+	invalidJSON := "not json"
+	cases := []struct {
+		name     string
+		response *operations.SendChatCompletionRequestResponse
+		want     observability.ErrorDetailCode
+	}{
+		{
+			name:     "missing chat result",
+			response: nil,
+			want:     observability.ErrorDetailOpenRouterResponseMissingChatResult,
+		},
+		{
+			name: "no choices",
+			response: &operations.SendChatCompletionRequestResponse{
+				ChatResult: &components.ChatResult{},
+			},
+			want: observability.ErrorDetailOpenRouterResponseNoChoices,
+		},
+		{
+			name: "empty content",
+			response: &operations.SendChatCompletionRequestResponse{
+				ChatResult: &components.ChatResult{
+					Choices: []components.ChatChoice{{Message: components.ChatAssistantMessage{}}},
+				},
+			},
+			want: observability.ErrorDetailOpenRouterResponseEmptyMessageContent,
+		},
+		{
+			name: "non-string content",
+			response: &operations.SendChatCompletionRequestResponse{
+				ChatResult: &components.ChatResult{
+					Choices: []components.ChatChoice{{
+						Message: components.ChatAssistantMessage{
+							Content: optionalnullable.From(&components.ChatAssistantMessageContent{
+								ArrayOfChatContentItems: []components.ChatContentItems{},
+							}),
+						},
+					}},
+				},
+			},
+			want: observability.ErrorDetailOpenRouterResponseMessageContentNotString,
+		},
+		{
+			name: "route parse failure",
+			response: &operations.SendChatCompletionRequestResponse{
+				ChatResult: &components.ChatResult{
+					Choices: []components.ChatChoice{{
+						Message: components.ChatAssistantMessage{
+							Content: optionalnullable.From(&components.ChatAssistantMessageContent{
+								Str: &invalidJSON,
+							}),
+						},
+					}},
+				},
+			},
+			want: observability.ErrorDetailJourneyRouteParseFailed,
+		},
+	}
+
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			fake := &fakeOpenRouterChatClient{response: testCase.response}
+			generator := newJourneyGeneratorOpenRouter(fake, openRouterTestConfig(), false, slog.Default())
+
+			_, err := generator.Generate(context.Background(), request)
+			if err == nil {
+				t.Fatal("Generate() error = nil, want error")
+			}
+			if got := observability.ErrorDetail(err); got != string(testCase.want) {
+				t.Fatalf("ErrorDetail() = %q, want %q", got, testCase.want)
 			}
 		})
 	}

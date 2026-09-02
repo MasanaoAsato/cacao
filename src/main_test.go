@@ -109,6 +109,21 @@ func TestNewImageGenerator(t *testing.T) {
 			},
 		},
 		{
+			name: "openrouter",
+			config: service.ImageConfig{
+				GeneratorDriver:      "openrouter",
+				OpenRouterAPIKey:     "test-key",
+				OpenRouterImageModel: "provider/image-model",
+				GenerationTimeout:    time.Second,
+				Storage: service.ImageStorageConfig{
+					MaxBytes:  1 << 20,
+					MaxWidth:  1024,
+					MaxHeight: 1024,
+					MaxPixels: 1 << 20,
+				},
+			},
+		},
+		{
 			name:      "unsupported driver",
 			config:    service.ImageConfig{GeneratorDriver: "unknown"},
 			wantError: true,

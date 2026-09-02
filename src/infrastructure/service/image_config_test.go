@@ -54,6 +54,48 @@ func TestImageConfigFromEnvComfyUI(t *testing.T) {
 	}
 }
 
+func TestImageConfigFromEnvOpenRouter(t *testing.T) {
+	clearImageConfigEnv(t)
+	t.Setenv("IMAGE_GENERATOR_DRIVER", "openrouter")
+	t.Setenv("OPENROUTER_API_KEY", "test-openrouter-key")
+	t.Setenv("OPENROUTER_IMAGE_MODEL", "provider/image-model")
+
+	config, err := ImageConfigFromEnv()
+	if err != nil {
+		t.Fatalf("ImageConfigFromEnv() error = %v", err)
+	}
+	if config.OpenRouterAPIKey != "test-openrouter-key" {
+		t.Errorf("OpenRouterAPIKey = %q, want configured key", config.OpenRouterAPIKey)
+	}
+	if config.OpenRouterImageModel != "provider/image-model" {
+		t.Errorf("OpenRouterImageModel = %q, want configured model", config.OpenRouterImageModel)
+	}
+}
+
+func TestImageConfigFromEnvOpenRouterRejectsMissingValues(t *testing.T) {
+	cases := []struct {
+		name  string
+		key   string
+		model string
+	}{
+		{name: "missing key", model: "provider/image-model"},
+		{name: "missing model", key: "test-openrouter-key"},
+		{name: "model url", key: "test-openrouter-key", model: "https://example.invalid/model"},
+		{name: "model shell prefix", key: "test-openrouter-key", model: "~provider/image-model"},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			clearImageConfigEnv(t)
+			t.Setenv("IMAGE_GENERATOR_DRIVER", "openrouter")
+			t.Setenv("OPENROUTER_API_KEY", testCase.key)
+			t.Setenv("OPENROUTER_IMAGE_MODEL", testCase.model)
+			if _, err := ImageConfigFromEnv(); err == nil {
+				t.Fatal("ImageConfigFromEnv() error = nil, want error")
+			}
+		})
+	}
+}
+
 func TestImageConfigFromEnvRejectsInvalidValues(t *testing.T) {
 	cases := []struct {
 		name  string
@@ -182,6 +224,8 @@ func clearImageConfigEnv(t *testing.T) {
 		"COMFYUI_BASE_URL",
 		"COMFYUI_WORKFLOW_PATH",
 		"COMFYUI_MANIFEST_PATH",
+		"OPENROUTER_API_KEY",
+		"OPENROUTER_IMAGE_MODEL",
 		"IMAGE_GENERATION_TIMEOUT",
 		"IMAGE_WORKER_CONCURRENCY",
 		"IMAGE_WORKER_POLL_INTERVAL",

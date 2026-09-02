@@ -104,6 +104,52 @@ func TestLogFailure(t *testing.T) {
 	}
 }
 
+func TestLogFailureIncludesSafeErrorDetail(t *testing.T) {
+	const secret = "provider body contains private itinerary"
+
+	var logs bytes.Buffer
+	logger := slog.New(slog.NewJSONHandler(&logs, nil))
+	cause := errors.New(secret)
+	err := WithErrorDetail(
+		ErrorDetailJourneyRouteParseFailed,
+		cause,
+	)
+
+	LogFailure(
+		context.Background(),
+		logger,
+		slog.LevelError,
+		FailureContext{Operation: "http_request", Status: http.StatusBadGateway},
+		err,
+	)
+
+	logText := logs.String()
+	if !strings.Contains(logText, `"error_detail":"journey_route_parse_failed"`) {
+		t.Errorf("logs = %q, want safe error detail", logText)
+	}
+	if strings.Contains(logText, secret) || strings.Contains(logText, "private itinerary") {
+		t.Errorf("logs expose error detail: %q", logText)
+	}
+	if !errors.Is(err, cause) {
+		t.Fatalf("WithErrorDetail() does not preserve cause: %v", err)
+	}
+}
+
+func TestWithErrorDetailPreservesCause(t *testing.T) {
+	cause := errors.New("provider body contains private itinerary")
+	err := WithErrorDetail(ErrorDetailOpenRouterRequestFailed, cause)
+
+	if !errors.Is(err, cause) {
+		t.Fatalf("WithErrorDetail() does not preserve cause: %v", err)
+	}
+	if got := ErrorDetail(err); got != string(ErrorDetailOpenRouterRequestFailed) {
+		t.Fatalf("ErrorDetail() = %q, want %q", got, ErrorDetailOpenRouterRequestFailed)
+	}
+	if got := ErrorDetail(WithErrorDetail(ErrorDetailCode("unapproved"), cause)); got != "" {
+		t.Fatalf("ErrorDetail() = %q for unapproved detail, want empty", got)
+	}
+}
+
 func TestLogFailureRejectsUntrustedContextValues(t *testing.T) {
 	const secretOperation = "api_key_private_itinerary"
 	const secretRoute = "/api/v1/journeys/private-itinerary"
@@ -144,6 +190,11 @@ func TestWithOperationPreservesOnlyApprovedOperations(t *testing.T) {
 			name:      "正常系: リポジトリ操作を保持する",
 			operation: "find_journey",
 			want:      "find_journey",
+		},
+		{
+			name:      "正常系: OpenRouter画像生成操作を保持する",
+			operation: "openrouter_generate_image",
+			want:      "openrouter_generate_image",
 		},
 		{
 			name:      "異常系: 空の操作名を捨てる",
@@ -240,6 +291,40 @@ func TestLogFailureIncludesApprovedProviderDetails(t *testing.T) {
 	}
 }
 
+func TestLogFailureIncludesOpenRouterImageProviderDetails(t *testing.T) {
+	const secret = "api_key=secret-value provider_body=private-itinerary"
+	var logs bytes.Buffer
+	logger := slog.New(slog.NewJSONHandler(&logs, nil))
+	err := WithOperation(
+		"openrouter_generate_image",
+		sdkerrors.NewAPIError("image request rejected", http.StatusTooManyRequests, secret, nil),
+	)
+
+	LogFailure(
+		context.Background(),
+		logger,
+		slog.LevelError,
+		FailureContext{Operation: "generate_journey_image", Status: http.StatusBadGateway},
+		err,
+	)
+
+	logText := logs.String()
+	for _, want := range []string{
+		`"source_operation":"openrouter_generate_image"`,
+		`"provider_status":429`,
+		`"provider_error_class":"rate_limited"`,
+	} {
+		if !strings.Contains(logText, want) {
+			t.Errorf("logs = %q, want fragment %q", logText, want)
+		}
+	}
+	for _, forbidden := range []string{secret, "secret-value", "private-itinerary"} {
+		if strings.Contains(logText, forbidden) {
+			t.Errorf("logs expose %q: %q", forbidden, logText)
+		}
+	}
+}
+
 func TestLogFailureIncludesPostgresSQLStateWithoutDetails(t *testing.T) {
 	const secret = "Key (journey_id)=(private-itinerary) already exists"
 
@@ -284,6 +369,7 @@ func TestProviderErrorDetails(t *testing.T) {
 		name      string
 		status    int
 		wantClass string
+		err       error
 	}{
 		{
 			name:      "認証失敗: 401",
@@ -300,11 +386,20 @@ func TestProviderErrorDetails(t *testing.T) {
 			status:    http.StatusServiceUnavailable,
 			wantClass: "provider_server_error",
 		},
+		{
+			name:      "typed forbidden response: 403",
+			status:    http.StatusForbidden,
+			wantClass: "authentication_failed",
+			err:       &sdkerrors.ForbiddenResponseError{},
+		},
 	}
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			err := sdkerrors.NewAPIError("provider error", testCase.status, "api_key=secret-value", nil)
+			err := testCase.err
+			if err == nil {
+				err = sdkerrors.NewAPIError("provider error", testCase.status, "api_key=[REDACTED:API key param]", nil)
+			}
 
 			status, errorClass, ok := ProviderErrorDetails(err)
 			if !ok {
