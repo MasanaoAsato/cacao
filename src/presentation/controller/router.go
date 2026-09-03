@@ -7,6 +7,7 @@ import (
 
 	getjourneyimage "cacao/src/application/get_journey_image"
 	getjourneyimagecontent "cacao/src/application/get_journey_image_content"
+
 	"github.com/gin-gonic/gin"
 
 	createjourneyrequest "cacao/src/application/create_journey_request"
@@ -18,7 +19,7 @@ import (
 	listjourneys "cacao/src/application/list_journeys"
 	requestjourneyimages "cacao/src/application/request_journey_images"
 	retryjourneyimage "cacao/src/application/retry_journey_image"
-	"cacao/src/infrastructure/observability"
+	"cacao/src/observability"
 )
 
 // ImageRoutes は画像APIへ注入するユースケース群である。
@@ -30,30 +31,32 @@ type ImageRoutes struct {
 	Retry   retryjourneyimage.UseCase
 }
 
+// Dependencies はルータが必要とするユースケース群である。
+// 位置引数ではなくフィールド名で渡すことで、同型のインターフェースの取り違えを防ぐ。
+type Dependencies struct {
+	CreateJourneyRequest createjourneyrequest.UseCase
+	GenerateJourney      generatejourney.UseCase
+	GetJourney           getjourney.UseCase
+	ListJourneys         listjourneys.UseCase
+	GetJourneyRequest    getjourneyrequest.UseCase
+	ListJourneyRequests  listjourneyrequests.UseCase
+	Images               ImageRoutes
+}
+
 // NewRouter は依存するユースケースを受け取り、Ginのルータを組み立てる。
-func NewRouter(
-	createReqUC createjourneyrequest.UseCase,
-	generateUC generatejourney.UseCase,
-	getJourneyUC getjourney.UseCase,
-	listJourneysUC listjourneys.UseCase,
-	getReqUC getjourneyrequest.UseCase,
-	listReqUC listjourneyrequests.UseCase,
-	imageRoutes ...ImageRoutes,
-) *gin.Engine {
+func NewRouter(deps Dependencies) *gin.Engine {
 	r := gin.New()
 	r.Use(safeRecovery())
 	api := r.Group("/api/v1")
 	{
-		api.POST("/journey-requests", HandleCreate(createReqUC))
-		api.GET("/journey-requests", HandleListRequests(listReqUC))
-		api.GET("/journey-requests/:id", HandleGetRequest(getReqUC))
-		api.POST("/journey-requests/:id/generate", HandleGenerate(generateUC))
-		api.GET("/journeys", HandleListJourneys(listJourneysUC))
-		api.GET("/journeys/:id", HandleGetJourney(getJourneyUC))
+		api.POST("/journey-requests", HandleCreate(deps.CreateJourneyRequest))
+		api.GET("/journey-requests", HandleListRequests(deps.ListJourneyRequests))
+		api.GET("/journey-requests/:id", HandleGetRequest(deps.GetJourneyRequest))
+		api.POST("/journey-requests/:id/generate", HandleGenerate(deps.GenerateJourney))
+		api.GET("/journeys", HandleListJourneys(deps.ListJourneys))
+		api.GET("/journeys/:id", HandleGetJourney(deps.GetJourney))
 	}
-	if len(imageRoutes) > 0 {
-		registerJourneyImageRoutes(api, imageRoutes[0])
-	}
+	registerJourneyImageRoutes(api, deps.Images)
 
 	return r
 }

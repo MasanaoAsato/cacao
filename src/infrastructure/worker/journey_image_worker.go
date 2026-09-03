@@ -10,18 +10,17 @@ import (
 	generatejourneyimage "cacao/src/application/generate_journey_image"
 	"cacao/src/domain/repository"
 	"cacao/src/domain/value_object"
-	"cacao/src/infrastructure/observability"
+	"cacao/src/observability"
 )
 
 const recoveryInterval = time.Minute
 
-// WorkerConfig は画像生成workerの動作設定を表す。
-type WorkerConfig struct {
+// Config は画像生成 worker の動作設定を表す。
+// 生成タイムアウトと lease は worker ではなくユースケース側の設定で扱う。
+type Config struct {
 	PollInterval      time.Duration
 	BatchSize         int
 	Concurrency       int
-	GenerationTimeout time.Duration
-	LeaseDuration     time.Duration
 	RecoveryBatchSize int
 }
 
@@ -46,21 +45,19 @@ func WithLogger(logger *slog.Logger) WorkerOption {
 	}
 }
 
-// DefaultWorkerConfig は設計書で定めた初期設定を返す。
-func DefaultWorkerConfig() WorkerConfig {
-	return WorkerConfig{
+// DefaultConfig は設計書で定めた初期設定を返す。
+func DefaultConfig() Config {
+	return Config{
 		PollInterval:      time.Second,
 		BatchSize:         1,
 		Concurrency:       1,
-		GenerationTimeout: 180 * time.Second,
-		LeaseDuration:     240 * time.Second,
 		RecoveryBatchSize: 10,
 	}
 }
 
 // JourneyImageWorker はpending画像をpollし、画像生成use caseを起動するworkerである。
 type JourneyImageWorker struct {
-	config     WorkerConfig
+	config     Config
 	imageRepo  repository.JourneyImageRepository
 	generateUC generatejourneyimage.UseCase
 	now        func() time.Time
@@ -69,12 +66,12 @@ type JourneyImageWorker struct {
 
 // NewJourneyImageWorker は画像生成workerを生成する。
 func NewJourneyImageWorker(
-	config WorkerConfig,
+	config Config,
 	imageRepo repository.JourneyImageRepository,
 	generateUC generatejourneyimage.UseCase,
 	options ...WorkerOption,
 ) (*JourneyImageWorker, error) {
-	normalizedConfig, err := normalizeWorkerConfig(config)
+	normalizedConfig, err := normalizeConfig(config)
 	if err != nil {
 		return nil, err
 	}
@@ -99,16 +96,6 @@ func NewJourneyImageWorker(
 	}
 
 	return worker, nil
-}
-
-// NewJourneyImage は設計書の短いconstructor名を互換的に提供する。
-func NewJourneyImage(
-	config WorkerConfig,
-	imageRepo repository.JourneyImageRepository,
-	generateUC generatejourneyimage.UseCase,
-	options ...WorkerOption,
-) (*JourneyImageWorker, error) {
-	return NewJourneyImageWorker(config, imageRepo, generateUC, options...)
 }
 
 // Run はworkerを起動し、stopPollingが閉じるかctxがcancelされるまでpollする。
@@ -202,23 +189,9 @@ func (w *JourneyImageWorker) pollPending(
 	}
 }
 
+// executeGeneration はユースケースを起動する。生成タイムアウトと lease はユースケースの設定に従う。
 func (w *JourneyImageWorker) executeGeneration(ctx context.Context, imageID value_object.ID) error {
-	input := generatejourneyimage.Input{ImageID: imageID.String()}
-	if leaseAware, ok := w.generateUC.(generatejourneyimage.LeaseAwareUseCase); ok {
-		return leaseAware.ExecuteWithTimeoutAndLease(
-			ctx,
-			input,
-			w.config.GenerationTimeout,
-			w.config.LeaseDuration,
-		)
-	}
-	if timeoutAware, ok := w.generateUC.(generatejourneyimage.TimeoutAwareUseCase); ok {
-		return timeoutAware.ExecuteWithTimeout(ctx, input, w.config.GenerationTimeout)
-	}
-
-	generationContext, cancel := context.WithTimeout(ctx, w.config.GenerationTimeout)
-	defer cancel()
-	return w.generateUC.Execute(generationContext, input)
+	return w.generateUC.Execute(ctx, generatejourneyimage.Input{ImageID: imageID.String()})
 }
 
 func (w *JourneyImageWorker) recoverExpired(ctx context.Context) {
@@ -256,43 +229,33 @@ func (w *JourneyImageWorker) reportError(ctx context.Context, operation string, 
 	)
 }
 
-func normalizeWorkerConfig(config WorkerConfig) (WorkerConfig, error) {
-	defaults := DefaultWorkerConfig()
+// normalizeConfig は未設定（0）の項目に既定値を入れ、負や 0 の不正値を拒否する。
+// 許容範囲（並列数の上限など）は運用設定側（infrastructure/config）で検証済みとする。
+func normalizeConfig(config Config) (Config, error) {
+	defaults := DefaultConfig()
 	if config.PollInterval == 0 {
 		config.PollInterval = defaults.PollInterval
 	}
-	if config.PollInterval < 100*time.Millisecond {
-		return WorkerConfig{}, fmt.Errorf("poll interval must be at least 100ms")
+	if config.PollInterval < 0 {
+		return Config{}, fmt.Errorf("poll interval must be positive")
 	}
 	if config.BatchSize == 0 {
 		config.BatchSize = defaults.BatchSize
 	}
-	if config.BatchSize < 1 {
-		return WorkerConfig{}, fmt.Errorf("worker batch size must be positive")
+	if config.BatchSize < 0 {
+		return Config{}, fmt.Errorf("worker batch size must be positive")
 	}
 	if config.Concurrency == 0 {
 		config.Concurrency = defaults.Concurrency
 	}
-	if config.Concurrency < 1 || config.Concurrency > 4 {
-		return WorkerConfig{}, fmt.Errorf("worker concurrency must be between 1 and 4")
-	}
-	if config.GenerationTimeout == 0 {
-		config.GenerationTimeout = defaults.GenerationTimeout
-	}
-	if config.GenerationTimeout < time.Second {
-		return WorkerConfig{}, fmt.Errorf("generation timeout must be at least 1s")
-	}
-	if config.LeaseDuration == 0 {
-		config.LeaseDuration = defaults.LeaseDuration
-	}
-	if config.LeaseDuration <= config.GenerationTimeout {
-		return WorkerConfig{}, fmt.Errorf("lease duration must be longer than generation timeout")
+	if config.Concurrency < 0 {
+		return Config{}, fmt.Errorf("worker concurrency must be positive")
 	}
 	if config.RecoveryBatchSize == 0 {
 		config.RecoveryBatchSize = defaults.RecoveryBatchSize
 	}
-	if config.RecoveryBatchSize < 1 {
-		return WorkerConfig{}, fmt.Errorf("recovery batch size must be positive")
+	if config.RecoveryBatchSize < 0 {
+		return Config{}, fmt.Errorf("recovery batch size must be positive")
 	}
 
 	return config, nil

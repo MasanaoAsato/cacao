@@ -4,6 +4,7 @@ import (
 	"cacao/src/domain/entity"
 	"cacao/src/domain/repository"
 	"cacao/src/domain/value_object"
+	"cacao/src/infrastructure/config"
 	"cacao/src/infrastructure/database"
 	"context"
 	"errors"
@@ -47,7 +48,7 @@ func newTestJourneyRequest(t *testing.T) entity.JourneyRequest {
 func skipIfNoDB(t *testing.T) *gorm.DB {
 	t.Helper()
 
-	cfg, err := database.ConfigFromEnv()
+	cfg, err := config.DatabaseFromEnv()
 	if err != nil {
 		t.Fatalf("failed to load database config: %v", err)
 	}

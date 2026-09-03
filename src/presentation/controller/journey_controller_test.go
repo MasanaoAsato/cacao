@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"cacao/src/application/readmodel"
 	"context"
 	"encoding/json"
 	"errors"
@@ -101,15 +102,15 @@ func TestHandleGetJourney_Success(t *testing.T) {
 	r := setupGin()
 	uc := &mockGetJourneyUseCase{
 		output: getjourney.Output{
-			Journey: getjourney.JourneyDTO{
+			Journey: readmodel.JourneyDTO{
 				ID:        "journey-1",
 				RequestID: "request-1",
 				DayCount:  1,
-				Days: []getjourney.ItineraryDayDTO{
+				Days: []readmodel.ItineraryDayDTO{
 					{
 						ID:    "day-1",
 						Date:  time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC),
-						Spots: []getjourney.SpotDTO{},
+						Spots: []readmodel.SpotDTO{},
 					},
 				},
 			},
@@ -146,16 +147,16 @@ func TestHandleListJourneys_Success(t *testing.T) {
 	r := setupGin()
 	uc := &mockListJourneysUseCase{
 		output: listjourneys.Output{
-			Journeys: []listjourneys.JourneyDTO{
+			Journeys: []readmodel.JourneyDTO{
 				{
 					ID:        "journey-1",
 					RequestID: "request-1",
 					DayCount:  1,
-					Days: []listjourneys.ItineraryDayDTO{
+					Days: []readmodel.ItineraryDayDTO{
 						{
 							ID:    "day-1",
 							Date:  time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC),
-							Spots: []listjourneys.SpotDTO{},
+							Spots: []readmodel.SpotDTO{},
 						},
 					},
 				},

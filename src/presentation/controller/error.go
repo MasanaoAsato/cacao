@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"cacao/src/application"
-	"cacao/src/infrastructure/observability"
+	"cacao/src/observability"
 )
 
 // errorResponse はHTTPエラーレスポンスのJSON表現。

@@ -2,6 +2,7 @@ package createjourneyrequest
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"cacao/src/application"
@@ -60,6 +61,9 @@ func (uc *useCase) Execute(ctx context.Context, input Input) (Output, error) {
 	}
 
 	if err := uc.repo.Save(ctx, request); err != nil {
+		if errors.Is(err, repository.ErrDuplicateID) {
+			return Output{}, fmt.Errorf("%w: %w", application.ErrDuplicateID, err)
+		}
 		return Output{}, fmt.Errorf("failed to save journey request: %w", err)
 	}
 

@@ -4,83 +4,19 @@ import (
 	"context"
 	"errors"
 	"testing"
-	"time"
 
 	"cacao/src/application"
 	"cacao/src/domain/entity"
 	"cacao/src/domain/repository"
 	"cacao/src/domain/value_object"
+	"cacao/src/internal/testkit"
+	"cacao/src/internal/testkit/fakes"
 )
 
-type mockImageRepo struct {
-	image      entity.JourneyImage
-	findErr    error
-	saveErr    error
-	savedImage entity.JourneyImage
-	saveCalls  int
-}
-
-func (m *mockImageRepo) Save(_ context.Context, image entity.JourneyImage) error {
-	m.saveCalls++
-	if m.saveErr != nil {
-		return m.saveErr
-	}
-
-	m.savedImage = image
-	return nil
-}
-
-func (m *mockImageRepo) FindByID(_ context.Context, _ value_object.ID) (entity.JourneyImage, error) {
-	if m.findErr != nil {
-		return entity.JourneyImage{}, m.findErr
-	}
-
-	return m.image, nil
-}
-
-func (m *mockImageRepo) FindByRequestID(
-	_ context.Context,
-	_ value_object.ID,
-) ([]entity.JourneyImage, error) {
-	return []entity.JourneyImage{}, nil
-}
-
-func (m *mockImageRepo) FindBySlot(
-	_ context.Context,
-	_ value_object.ID,
-	_ value_object.ImageSlot,
-) (entity.JourneyImage, error) {
-	return entity.JourneyImage{}, repository.ErrJourneyImageNotFound
-}
-
-func (m *mockImageRepo) FindPending(_ context.Context, _ int) ([]entity.JourneyImage, error) {
-	return []entity.JourneyImage{}, nil
-}
-
-func (m *mockImageRepo) FindExpiredProcessing(
-	_ context.Context,
-	_ time.Time,
-	_ int,
-) ([]entity.JourneyImage, error) {
-	return []entity.JourneyImage{}, nil
-}
-
-func (m *mockImageRepo) Claim(
-	_ context.Context,
-	_ value_object.ID,
-	_ time.Time,
-) (entity.JourneyImage, bool, error) {
-	return entity.JourneyImage{}, false, repository.ErrJourneyImageNotFound
-}
-
-func (m *mockImageRepo) Delete(_ context.Context, _ value_object.ID) error {
-	return nil
-}
-
 func TestUseCaseExecute(t *testing.T) {
-	failedImage := mustNewFailedImage(t)
-	pendingImage := mustNewPendingImage(t)
-	failedImageAtLimit := mustNewFailedImageAtLimit(t)
+	failedImage := testkit.MustNewFailedImage(t)
+	pendingImage := testkit.MustNewPendingImage(t)
+	failedImageAtLimit := testkit.MustNewFailedImageAtLimit(t)
 
 	tests := []struct {
 		name     string
@@ -131,10 +67,20 @@ func TestUseCaseExecute(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			repo := &mockImageRepo{
-				image:   tt.image,
-				findErr: tt.findErr,
-				saveErr: tt.saveErr,
+			// 3枚はそれぞれ別の requestID を持つため、同じ cover/1 スロットでも共存できる
+			repo := fakes.NewJourneyImageRepositoryWith(t, failedImage, pendingImage, failedImageAtLimit)
+			if tt.findErr != nil {
+				repo.FindByIDFn = func(context.Context, value_object.ID) (entity.JourneyImage, error) {
+					return entity.JourneyImage{}, tt.findErr
+				}
+			}
+			saveCalls := 0
+			repo.SaveFn = func(ctx context.Context, image entity.JourneyImage) error {
+				saveCalls++
+				if tt.saveErr != nil {
+					return tt.saveErr
+				}
+				return repo.JourneyImageRepositoryMemory.Save(ctx, image)
 			}
 			uc := NewUseCase(repo)
 
@@ -161,71 +107,19 @@ func TestUseCaseExecute(t *testing.T) {
 				}
 			}
 
-			if repo.saveCalls != tt.wantSave {
-				t.Errorf("Save() calls = %d, want %d", repo.saveCalls, tt.wantSave)
+			if saveCalls != tt.wantSave {
+				t.Errorf("Save() calls = %d, want %d", saveCalls, tt.wantSave)
 			}
-			if tt.wantSave == 1 && tt.saveErr == nil && repo.savedImage.Status() != value_object.ImageStatusPending {
-				t.Errorf("saved image status = %q, want %q", repo.savedImage.Status(), value_object.ImageStatusPending)
+			if tt.wantSave == 1 && tt.saveErr == nil {
+				// 保存された状態はインメモリ実装から読み戻して検証する
+				saved, err := repo.JourneyImageRepositoryMemory.FindByID(context.Background(), tt.image.ID())
+				if err != nil {
+					t.Fatalf("FindByID() error = %v", err)
+				}
+				if saved.Status() != value_object.ImageStatusPending {
+					t.Errorf("saved image status = %q, want %q", saved.Status(), value_object.ImageStatusPending)
+				}
 			}
 		})
 	}
-}
-
-func mustNewPendingImage(t *testing.T) entity.JourneyImage {
-	t.Helper()
-
-	slot, err := value_object.NewImageSlot(value_object.ImagePurposeCover, 1)
-	if err != nil {
-		t.Fatalf("NewImageSlot() error = %v", err)
-	}
-	image, err := entity.NewJourneyImage(value_object.NewID(), value_object.NewID(), slot)
-	if err != nil {
-		t.Fatalf("NewJourneyImage() error = %v", err)
-	}
-
-	return image
-}
-
-func mustNewFailedImage(t *testing.T) entity.JourneyImage {
-	t.Helper()
-
-	image := mustNewPendingImage(t)
-	if err := image.Start(); err != nil {
-		t.Fatalf("Start() error = %v", err)
-	}
-	failureCode, err := value_object.NewImageFailureCode("provider_timeout")
-	if err != nil {
-		t.Fatalf("NewImageFailureCode() error = %v", err)
-	}
-	if err := image.Fail(failureCode); err != nil {
-		t.Fatalf("Fail() error = %v", err)
-	}
-
-	return image
-}
-
-func mustNewFailedImageAtLimit(t *testing.T) entity.JourneyImage {
-	t.Helper()
-
-	image := mustNewPendingImage(t)
-	failureCode, err := value_object.NewImageFailureCode("provider_timeout")
-	if err != nil {
-		t.Fatalf("NewImageFailureCode() error = %v", err)
-	}
-	for attempt := 1; attempt <= entity.MaxImageGenerationAttempts; attempt++ {
-		if err := image.Start(); err != nil {
-			t.Fatalf("Start() error = %v", err)
-		}
-		if err := image.Fail(failureCode); err != nil {
-			t.Fatalf("Fail() error = %v", err)
-		}
-		if attempt == entity.MaxImageGenerationAttempts {
-			continue
-		}
-		if err := image.Retry(); err != nil {
-			t.Fatalf("Retry() error = %v", err)
-		}
-	}
-
-	return image
 }

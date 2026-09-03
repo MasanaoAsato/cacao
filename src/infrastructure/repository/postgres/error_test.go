@@ -6,8 +6,8 @@ import (
 
 	"github.com/jackc/pgx/v5/pgconn"
 
-	"cacao/src/application"
-	"cacao/src/infrastructure/observability"
+	"cacao/src/domain/repository"
+	"cacao/src/observability"
 )
 
 func TestMapPostgresError(t *testing.T) {
@@ -29,7 +29,7 @@ func TestMapPostgresError(t *testing.T) {
 			wantSQLState:  "23505",
 		},
 		{
-			name: "異常系: 別の SQLSTATE は元エラーを保持する",
+			name:      "異常系: 別の SQLSTATE は元エラーを保持する",
 			operation: "save_journey",
 			err: &pgconn.PgError{
 				Code: "23514",
@@ -52,8 +52,8 @@ func TestMapPostgresError(t *testing.T) {
 				}
 				return
 			}
-			if errors.Is(got, application.ErrDuplicateID) != testCase.wantDuplicate {
-				t.Errorf("duplicate classification = %t, want %t", errors.Is(got, application.ErrDuplicateID), testCase.wantDuplicate)
+			if errors.Is(got, repository.ErrDuplicateID) != testCase.wantDuplicate {
+				t.Errorf("duplicate classification = %t, want %t", errors.Is(got, repository.ErrDuplicateID), testCase.wantDuplicate)
 			}
 			if gotSQLState := observability.PostgresSQLState(got); gotSQLState != testCase.wantSQLState {
 				t.Errorf("PostgresSQLState() = %q, want %q", gotSQLState, testCase.wantSQLState)

@@ -4,8 +4,7 @@ import (
 	"time"
 
 	createjourneyrequest "cacao/src/application/create_journey_request"
-	getjourneyrequest "cacao/src/application/get_journey_request"
-	listjourneyrequests "cacao/src/application/list_journey_requests"
+	"cacao/src/application/readmodel"
 )
 
 // CreateJourneyRequestResponse は JourneyRequest 作成APIのJSONレスポンス。
@@ -33,8 +32,8 @@ func ToCreateJourneyRequestResponse(output createjourneyrequest.Output) CreateJo
 	return CreateJourneyRequestResponse{RequestID: output.RequestID}
 }
 
-// ToJourneyRequestResponse は GetJourneyRequest のOutputをJSONレスポンスに変換する。
-func ToJourneyRequestResponse(dto getjourneyrequest.JourneyRequestDTO) JourneyRequestResponse {
+// ToJourneyRequestResponse は JourneyRequestDTO をJSONレスポンスに変換する。
+func ToJourneyRequestResponse(dto readmodel.JourneyRequestDTO) JourneyRequestResponse {
 	return JourneyRequestResponse{
 		ID:          dto.ID,
 		Departure:   dto.Departure,
@@ -43,30 +42,15 @@ func ToJourneyRequestResponse(dto getjourneyrequest.JourneyRequestDTO) JourneyRe
 			StartDate: dto.Period.StartDate.Format(time.RFC3339),
 			EndDate:   dto.Period.EndDate.Format(time.RFC3339),
 		},
-		Budget: MoneyJSON{
-			Amount:   dto.Budget.Amount,
-			Currency: dto.Budget.Currency,
-		},
+		Budget: toMoneyJSON(dto.Budget),
 	}
 }
 
-// ToJourneyRequestListResponse は ListJourneyRequests のOutputをJSONレスポンスのスライスに変換する。
-func ToJourneyRequestListResponse(dtos []listjourneyrequests.JourneyRequestDTO) []JourneyRequestResponse {
+// ToJourneyRequestListResponse は JourneyRequestDTO のスライスをJSONレスポンスのスライスに変換する。
+func ToJourneyRequestListResponse(dtos []readmodel.JourneyRequestDTO) []JourneyRequestResponse {
 	responses := make([]JourneyRequestResponse, 0, len(dtos))
 	for _, dto := range dtos {
-		responses = append(responses, JourneyRequestResponse{
-			ID:          dto.ID,
-			Departure:   dto.Departure,
-			Destination: dto.Destination,
-			Period: JourneyRequestPeriod{
-				StartDate: dto.Period.StartDate.Format(time.RFC3339),
-				EndDate:   dto.Period.EndDate.Format(time.RFC3339),
-			},
-			Budget: MoneyJSON{
-				Amount:   dto.Budget.Amount,
-				Currency: dto.Budget.Currency,
-			},
-		})
+		responses = append(responses, ToJourneyRequestResponse(dto))
 	}
 	return responses
 }

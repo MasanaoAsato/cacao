@@ -7,7 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"cacao/src/infrastructure/service"
+	"cacao/src/infrastructure/config"
+	"cacao/src/infrastructure/journeygen"
 )
 
 func TestNewJourneyGeneratorOpenRouter(t *testing.T) {
@@ -20,8 +21,8 @@ func TestNewJourneyGeneratorOpenRouter(t *testing.T) {
 	if err != nil {
 		t.Fatalf("newJourneyGenerator() error = %v", err)
 	}
-	if _, ok := generator.(*service.JourneyGeneratorOpenRouter); !ok {
-		t.Fatalf("generator type = %T, want *service.JourneyGeneratorOpenRouter", generator)
+	if _, ok := generator.(*journeygen.OpenRouterGenerator); !ok {
+		t.Fatalf("generator type = %T, want *journeygen.OpenRouterGenerator", generator)
 	}
 }
 
@@ -32,18 +33,8 @@ func TestNewJourneyGeneratorOpenRouterRejectsMissingConfiguration(t *testing.T) 
 		model  string
 		want   string
 	}{
-		{
-			name:   "missing API key",
-			apiKey: "",
-			model:  "openai/gpt-4o-mini",
-			want:   "api key",
-		},
-		{
-			name:   "missing model",
-			apiKey: "test-openrouter-api-key",
-			model:  "",
-			want:   "model",
-		},
+		{name: "missing API key", apiKey: "", model: "openai/gpt-4o-mini", want: "api key"},
+		{name: "missing model", apiKey: "test-openrouter-api-key", model: "", want: "model"},
 	}
 
 	for _, tt := range tests {
@@ -71,8 +62,17 @@ func TestNewJourneyGeneratorKeepsExistingDrivers(t *testing.T) {
 		if err != nil {
 			t.Fatalf("newJourneyGenerator() error = %v", err)
 		}
-		if _, ok := generator.(*service.JourneyGeneratorStub); !ok {
-			t.Fatalf("generator type = %T, want *service.JourneyGeneratorStub", generator)
+		if _, ok := generator.(*journeygen.Stub); !ok {
+			t.Fatalf("generator type = %T, want *journeygen.Stub", generator)
+		}
+	})
+
+	t.Run("openai requires api key", func(t *testing.T) {
+		t.Setenv("LLM_DRIVER", "openai")
+		t.Setenv("OPENAI_API_KEY", "")
+
+		if _, err := newJourneyGenerator(); err == nil {
+			t.Fatal("newJourneyGenerator() error = nil, want error")
 		}
 	})
 
@@ -90,42 +90,66 @@ func TestNewJourneyGeneratorKeepsExistingDrivers(t *testing.T) {
 }
 
 func TestNewImageGenerator(t *testing.T) {
+	limits := config.ImageLimits{MaxBytes: 1 << 20, MaxWidth: 1024, MaxHeight: 1024, MaxPixels: 1 << 20}
 	tests := []struct {
 		name      string
-		config    service.ImageConfig
+		config    config.Image
 		wantError bool
 	}{
 		{
 			name:   "stub",
-			config: service.ImageConfig{GeneratorDriver: "stub"},
+			config: config.Image{GeneratorDriver: config.ImageGeneratorStub},
 		},
 		{
 			name: "comfyui",
-			config: service.ImageConfig{
-				GeneratorDriver:     "comfyui",
-				ComfyUIBaseURL:      "http://127.0.0.1:8188",
-				ComfyUIWorkflowPath: mainTestConfigPath(t, "journey_image_api.json"),
-				ComfyUIManifestPath: mainTestConfigPath(t, "journey_image_manifest.json"),
+			config: config.Image{
+				GeneratorDriver: config.ImageGeneratorComfyUI,
+				ComfyUI: config.ComfyUI{
+					BaseURL:      "http://127.0.0.1:8188",
+					WorkflowPath: mainTestConfigPath(t, "journey_image_api.json"),
+					ManifestPath: mainTestConfigPath(t, "journey_image_manifest.json"),
+				},
+				Storage: config.ImageStorage{Limits: limits},
 			},
 		},
 		{
-			name: "openrouter",
-			config: service.ImageConfig{
-				GeneratorDriver:      "openrouter",
-				OpenRouterAPIKey:     "test-key",
-				OpenRouterImageModel: "provider/image-model",
-				GenerationTimeout:    time.Second,
-				Storage: service.ImageStorageConfig{
-					MaxBytes:  1 << 20,
-					MaxWidth:  1024,
-					MaxHeight: 1024,
-					MaxPixels: 1 << 20,
+			name: "comfyui rejects invalid base URL at startup",
+			config: config.Image{
+				GeneratorDriver: config.ImageGeneratorComfyUI,
+				ComfyUI: config.ComfyUI{
+					BaseURL:      "http://user@localhost:8188",
+					WorkflowPath: mainTestConfigPath(t, "journey_image_api.json"),
+					ManifestPath: mainTestConfigPath(t, "journey_image_manifest.json"),
 				},
+				Storage: config.ImageStorage{Limits: limits},
+			},
+			wantError: true,
+		},
+		{
+			name: "comfyui rejects unreadable workflow at startup",
+			config: config.Image{
+				GeneratorDriver: config.ImageGeneratorComfyUI,
+				ComfyUI: config.ComfyUI{
+					BaseURL:      "http://127.0.0.1:8188",
+					WorkflowPath: filepath.Join(t.TempDir(), "missing.json"),
+					ManifestPath: mainTestConfigPath(t, "journey_image_manifest.json"),
+				},
+				Storage: config.ImageStorage{Limits: limits},
+			},
+			wantError: true,
+		},
+		{
+			name: "openrouter",
+			config: config.Image{
+				GeneratorDriver:   config.ImageGeneratorOpenRouter,
+				OpenRouterImage:   config.OpenRouterImage{APIKey: "test-key", Model: "provider/image-model"},
+				GenerationTimeout: time.Second,
+				Storage:           config.ImageStorage{Limits: limits},
 			},
 		},
 		{
 			name:      "unsupported driver",
-			config:    service.ImageConfig{GeneratorDriver: "unknown"},
+			config:    config.Image{GeneratorDriver: "unknown"},
 			wantError: true,
 		},
 	}
@@ -147,14 +171,11 @@ func TestNewImageGenerator(t *testing.T) {
 }
 
 func TestNewImageStorage(t *testing.T) {
-	storage, err := newImageStorage(service.ImageConfig{
-		Storage: service.ImageStorageConfig{
-			Driver:    "filesystem",
-			Root:      t.TempDir(),
-			MaxBytes:  1,
-			MaxWidth:  1,
-			MaxHeight: 1,
-			MaxPixels: 1,
+	storage, err := newImageStorage(config.Image{
+		Storage: config.ImageStorage{
+			Driver: config.ImageStorageFilesystem,
+			Root:   t.TempDir(),
+			Limits: config.ImageLimits{MaxBytes: 1, MaxWidth: 1, MaxHeight: 1, MaxPixels: 1},
 		},
 	})
 	if err != nil {
@@ -173,34 +194,28 @@ func TestNewImageStorage(t *testing.T) {
 }
 
 func TestNewImageStorageRejectsUnsupportedDriver(t *testing.T) {
-	_, err := newImageStorage(service.ImageConfig{
-		Storage: service.ImageStorageConfig{Driver: "s3"},
+	_, err := newImageStorage(config.Image{
+		Storage: config.ImageStorage{Driver: "s3"},
 	})
 	if err == nil {
 		t.Fatal("newImageStorage() error = nil, want error")
 	}
 }
 
-func TestImageWorkerConfigUsesImageConfig(t *testing.T) {
-	config := service.ImageConfig{
-		GenerationTimeout:   2 * time.Second,
-		WorkerConcurrency:   4,
-		WorkerPollInterval:  100 * time.Millisecond,
-		WorkerLeaseDuration: 3 * time.Second,
+func TestNewWorkerConfigUsesImageConfig(t *testing.T) {
+	imageConfig := config.Image{
+		Worker: config.ImageWorker{Concurrency: 4, PollInterval: 100 * time.Millisecond},
 	}
-	workerConfig := imageWorkerConfig(config)
+	workerConfig := newWorkerConfig(imageConfig)
 
-	if workerConfig.GenerationTimeout != config.GenerationTimeout {
-		t.Errorf("GenerationTimeout = %s, want %s", workerConfig.GenerationTimeout, config.GenerationTimeout)
+	if workerConfig.Concurrency != 4 {
+		t.Errorf("Concurrency = %d, want 4", workerConfig.Concurrency)
 	}
-	if workerConfig.Concurrency != config.WorkerConcurrency {
-		t.Errorf("Concurrency = %d, want %d", workerConfig.Concurrency, config.WorkerConcurrency)
+	if workerConfig.PollInterval != 100*time.Millisecond {
+		t.Errorf("PollInterval = %s, want 100ms", workerConfig.PollInterval)
 	}
-	if workerConfig.PollInterval != config.WorkerPollInterval {
-		t.Errorf("PollInterval = %s, want %s", workerConfig.PollInterval, config.WorkerPollInterval)
-	}
-	if workerConfig.LeaseDuration != config.WorkerLeaseDuration {
-		t.Errorf("LeaseDuration = %s, want %s", workerConfig.LeaseDuration, config.WorkerLeaseDuration)
+	if workerConfig.BatchSize != 1 || workerConfig.RecoveryBatchSize != 10 {
+		t.Errorf("batch sizes = %d/%d, want worker defaults 1/10", workerConfig.BatchSize, workerConfig.RecoveryBatchSize)
 	}
 }
 

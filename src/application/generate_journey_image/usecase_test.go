@@ -13,16 +13,18 @@ import (
 	"cacao/src/domain/repository"
 	domainservice "cacao/src/domain/service"
 	"cacao/src/domain/value_object"
+	"cacao/src/internal/testkit"
+	"cacao/src/internal/testkit/fakes"
 )
 
 func TestUseCaseExecuteCompletesClaimedImage(t *testing.T) {
-	request := newTestJourneyRequest(t)
-	image := newTestJourneyImage(t, request.ID())
-	imageRepo := &generateImageRepositoryStub{image: image}
-	requestRepo := &generateRequestRepositoryStub{request: request}
+	request := testkit.MustNewJourneyRequest(t)
+	image := testkit.MustNewPendingImageFor(t, request.ID(), testkit.MustNewImageSlot(t, value_object.ImagePurposeCover, 1))
+	imageRepo := fakes.NewJourneyImageRepositoryWith(t, image)
+	requestRepo := fakes.NewJourneyRequestRepositoryWith(t, request)
 	generator := &generateImageGeneratorStub{}
-	storage := &generateImageStorageStub{asset: newTestAssetReference(t)}
-	useCase := NewUseCase(
+	storage := &generateImageStorageStub{asset: testkit.MustNewAssetReference(t)}
+	useCase := mustNewUseCase(t,
 		imageRepo,
 		requestRepo,
 		generator,
@@ -39,15 +41,15 @@ func TestUseCaseExecuteCompletesClaimedImage(t *testing.T) {
 	if !generator.called {
 		t.Error("ImageGenerator.Generate() was not called")
 	}
-	wantStyle, err := selectCoverStyle(image.ID())
+	wantStyle, err := domainservice.SelectCoverStyle(image.ID())
 	if err != nil {
-		t.Fatalf("selectCoverStyle() error = %v", err)
+		t.Fatalf("domainservice.SelectCoverStyle() error = %v", err)
 	}
 	if generator.brief.Style() != wantStyle {
 		t.Errorf("generated brief style = %q, want %q", generator.brief.Style(), wantStyle)
 	}
-	if imageRepo.saved.Status() != value_object.ImageStatusReady {
-		t.Errorf("saved image status = %q, want ready", imageRepo.saved.Status())
+	if saved := mustFindImage(t, imageRepo, image.ID()); saved.Status() != value_object.ImageStatusReady {
+		t.Errorf("saved image status = %q, want ready", saved.Status())
 	}
 	if !storage.saveCalled {
 		t.Error("ImageStorage.Save() was not called")
@@ -55,21 +57,16 @@ func TestUseCaseExecuteCompletesClaimedImage(t *testing.T) {
 }
 
 func TestUseCaseExecuteKeepsIllustrationStyleNone(t *testing.T) {
-	request := newTestJourneyRequest(t)
-	slot, err := value_object.NewImageSlot(value_object.ImagePurposeIllustration, 1)
-	if err != nil {
-		t.Fatalf("NewImageSlot() error = %v", err)
-	}
-	image, err := entity.NewJourneyImage(value_object.NewID(), request.ID(), slot)
-	if err != nil {
-		t.Fatalf("NewJourneyImage() error = %v", err)
-	}
+	request := testkit.MustNewJourneyRequest(t)
+	slot := testkit.MustNewImageSlot(t, value_object.ImagePurposeIllustration, 1)
+	image := testkit.MustNewPendingImageFor(t, request.ID(), slot)
 	generator := &generateImageGeneratorStub{}
-	useCase := NewUseCase(
-		&generateImageRepositoryStub{image: image},
-		&generateRequestRepositoryStub{request: request},
+	useCase := mustNewUseCase(t,
+		fakes.NewJourneyImageRepositoryWith(t, image),
+		fakes.NewJourneyRequestRepositoryWith(t, request),
 		generator,
-		&generateImageStorageStub{asset: newTestAssetReference(t)},
+		&generateImageStorageStub{asset: testkit.MustNewAssetReference(t)},
+		testConfig(),
 	)
 
 	if err := useCase.Execute(context.Background(), Input{ImageID: image.ID().String()}); err != nil {
@@ -83,62 +80,100 @@ func TestUseCaseExecuteKeepsIllustrationStyleNone(t *testing.T) {
 	}
 }
 
-func TestUseCaseExecuteWithTimeoutUsesProvidedLeaseDuration(t *testing.T) {
-	request := newTestJourneyRequest(t)
-	image := newTestJourneyImage(t, request.ID())
-	now := time.Date(2026, time.January, 1, 0, 0, 0, 0, time.UTC)
-	imageRepo := &generateImageRepositoryStub{image: image}
-	useCase := NewUseCase(
+func TestUseCaseExecuteUsesConfiguredLeaseDuration(t *testing.T) {
+	now := time.Date(2026, time.August, 1, 12, 0, 0, 0, time.UTC)
+	request := testkit.MustNewJourneyRequest(t)
+	image := testkit.MustNewPendingImageFor(t, request.ID(), testkit.MustNewImageSlot(t, value_object.ImagePurposeCover, 1))
+	imageRepo := fakes.NewJourneyImageRepositoryWith(t, image)
+	// ready で保存されると lease は解除されるため、Claim に渡された値をここで捕捉する。
+	var claimLeaseUntil time.Time
+	imageRepo.ClaimFn = func(ctx context.Context, id value_object.ID, leaseUntil time.Time) (entity.JourneyImage, bool, error) {
+		claimLeaseUntil = leaseUntil
+		return imageRepo.JourneyImageRepositoryMemory.Claim(ctx, id, leaseUntil)
+	}
+	const leaseDuration = 3 * time.Second
+	useCase := mustNewUseCase(t,
 		imageRepo,
-		&generateRequestRepositoryStub{request: request},
+		fakes.NewJourneyRequestRepositoryWith(t, request),
 		&generateImageGeneratorStub{},
-		&generateImageStorageStub{asset: newTestAssetReference(t)},
+		&generateImageStorageStub{asset: testkit.MustNewAssetReference(t)},
 		Config{
 			GenerationTimeout: time.Second,
-			LeaseDuration:     2 * time.Second,
+			LeaseDuration:     leaseDuration,
 			Now:               func() time.Time { return now },
 		},
 	)
-	leaseAware, ok := useCase.(LeaseAwareUseCase)
-	if !ok {
-		t.Fatal("NewUseCase() does not implement LeaseAwareUseCase")
-	}
 
-	const leaseDuration = 3 * time.Second
-	err := leaseAware.ExecuteWithTimeoutAndLease(
-		context.Background(),
-		Input{ImageID: image.ID().String()},
-		time.Second,
-		leaseDuration,
-	)
-	if err != nil {
-		t.Fatalf("ExecuteWithTimeout() error = %v", err)
+	if err := useCase.Execute(context.Background(), Input{ImageID: image.ID().String()}); err != nil {
+		t.Fatalf("Execute() error = %v", err)
 	}
-	if got, want := imageRepo.claimLeaseUntil, now.Add(leaseDuration); !got.Equal(want) {
+	if got, want := claimLeaseUntil, now.Add(leaseDuration); !got.Equal(want) {
 		t.Errorf("Claim() lease = %s, want %s", got, want)
 	}
 }
 
+func TestNewUseCaseRejectsInvalidConfig(t *testing.T) {
+	cases := []struct {
+		name   string
+		config Config
+	}{
+		{name: "異常系: タイムアウトが 0", config: Config{LeaseDuration: time.Second}},
+		{name: "境界値系: lease がタイムアウトと同じ", config: Config{GenerationTimeout: time.Second, LeaseDuration: time.Second}},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			_, err := NewUseCase(
+				fakes.NewJourneyImageRepository(),
+				fakes.NewJourneyRequestRepository(),
+				&generateImageGeneratorStub{},
+				&generateImageStorageStub{},
+				testCase.config,
+			)
+			if !errors.Is(err, ErrInvalidConfig) {
+				t.Fatalf("NewUseCase() error = %v, want ErrInvalidConfig", err)
+			}
+		})
+	}
+}
+
+func mustNewUseCase(
+	t *testing.T,
+	imageRepo repository.JourneyImageRepository,
+	requestRepo repository.JourneyRequestRepository,
+	generator domainservice.ImageGenerator,
+	storage domainservice.ImageStorage,
+	config Config,
+) UseCase {
+	t.Helper()
+	useCase, err := NewUseCase(imageRepo, requestRepo, generator, storage, config)
+	if err != nil {
+		t.Fatalf("NewUseCase() error = %v", err)
+	}
+	return useCase
+}
+
 func TestUseCaseExecuteClassifiesGeneratorFailure(t *testing.T) {
-	request := newTestJourneyRequest(t)
-	image := newTestJourneyImage(t, request.ID())
-	imageRepo := &generateImageRepositoryStub{image: image}
+	request := testkit.MustNewJourneyRequest(t)
+	image := testkit.MustNewPendingImageFor(t, request.ID(), testkit.MustNewImageSlot(t, value_object.ImagePurposeCover, 1))
+	imageRepo := fakes.NewJourneyImageRepositoryWith(t, image)
 	generator := &generateImageGeneratorStub{err: domainservice.ErrImageGeneratorUnavailable}
-	useCase := NewUseCase(
+	useCase := mustNewUseCase(t,
 		imageRepo,
-		&generateRequestRepositoryStub{request: request},
+		fakes.NewJourneyRequestRepositoryWith(t, request),
 		generator,
 		&generateImageStorageStub{},
+		testConfig(),
 	)
 
 	err := useCase.Execute(context.Background(), Input{ImageID: image.ID().String()})
 	if !errors.Is(err, domainservice.ErrImageGeneratorUnavailable) {
 		t.Errorf("Execute() error = %v, want generator error", err)
 	}
-	if imageRepo.saved.Status() != value_object.ImageStatusFailed {
-		t.Fatalf("saved image status = %q, want failed", imageRepo.saved.Status())
+	saved := mustFindImage(t, imageRepo, image.ID())
+	if saved.Status() != value_object.ImageStatusFailed {
+		t.Fatalf("saved image status = %q, want failed", saved.Status())
 	}
-	failureCode, ok := imageRepo.saved.FailureCode()
+	failureCode, ok := saved.FailureCode()
 	if !ok || failureCode != value_object.ImageFailureCodeProviderUnavailable {
 		t.Errorf("saved failure code = %q, want provider_unavailable", failureCode)
 	}
@@ -173,10 +208,15 @@ func TestUseCaseExecuteClassifiesRequestStorageAndCompleteFailures(t *testing.T)
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			request := newTestJourneyRequest(t)
-			image := newTestJourneyImage(t, request.ID())
-			imageRepo := &generateImageRepositoryStub{image: image}
-			requestRepo := &generateRequestRepositoryStub{request: request, err: testCase.requestErr}
+			request := testkit.MustNewJourneyRequest(t)
+			image := testkit.MustNewPendingImageFor(t, request.ID(), testkit.MustNewImageSlot(t, value_object.ImagePurposeCover, 1))
+			imageRepo := fakes.NewJourneyImageRepositoryWith(t, image)
+			requestRepo := fakes.NewJourneyRequestRepositoryWith(t, request)
+			if testCase.requestErr != nil {
+				requestRepo.FindByIDFn = func(context.Context, value_object.ID) (entity.JourneyRequest, error) {
+					return entity.JourneyRequest{}, testCase.requestErr
+				}
+			}
 			storage := &generateImageStorageStub{
 				asset:   testCase.asset,
 				saveErr: testCase.storageErr,
@@ -184,19 +224,20 @@ func TestUseCaseExecuteClassifiesRequestStorageAndCompleteFailures(t *testing.T)
 			if testCase.asset == (value_object.ImageAssetReference{}) && testCase.storageErr == nil {
 				storage.asset = value_object.ImageAssetReference{}
 			} else if testCase.asset == (value_object.ImageAssetReference{}) {
-				storage.asset = newTestAssetReference(t)
+				storage.asset = testkit.MustNewAssetReference(t)
 			}
-			useCase := NewUseCase(
+			useCase := mustNewUseCase(t,
 				imageRepo,
 				requestRepo,
 				&generateImageGeneratorStub{},
 				storage,
+				testConfig(),
 			)
 
 			if err := useCase.Execute(context.Background(), Input{ImageID: image.ID().String()}); err == nil {
 				t.Fatal("Execute() error = nil, want error")
 			}
-			failureCode, ok := imageRepo.saved.FailureCode()
+			failureCode, ok := mustFindImage(t, imageRepo, image.ID()).FailureCode()
 			if !ok || failureCode != testCase.wantCode {
 				t.Errorf("saved failure code = %q, want %q", failureCode, testCase.wantCode)
 			}
@@ -209,13 +250,13 @@ func TestUseCaseExecuteClassifiesRequestStorageAndCompleteFailures(t *testing.T)
 
 func TestUseCaseExecuteTimeoutAndCompensatesSaveFailure(t *testing.T) {
 	t.Run("timeout", func(t *testing.T) {
-		request := newTestJourneyRequest(t)
-		image := newTestJourneyImage(t, request.ID())
-		imageRepo := &generateImageRepositoryStub{image: image}
+		request := testkit.MustNewJourneyRequest(t)
+		image := testkit.MustNewPendingImageFor(t, request.ID(), testkit.MustNewImageSlot(t, value_object.ImagePurposeCover, 1))
+		imageRepo := fakes.NewJourneyImageRepositoryWith(t, image)
 		generator := &generateImageGeneratorStub{waitForContext: true}
-		useCase := NewUseCase(
+		useCase := mustNewUseCase(t,
 			imageRepo,
-			&generateRequestRepositoryStub{request: request},
+			fakes.NewJourneyRequestRepositoryWith(t, request),
 			generator,
 			&generateImageStorageStub{},
 			Config{GenerationTimeout: time.Millisecond, LeaseDuration: time.Second},
@@ -225,25 +266,24 @@ func TestUseCaseExecuteTimeoutAndCompensatesSaveFailure(t *testing.T) {
 		if !errors.Is(err, context.DeadlineExceeded) {
 			t.Errorf("Execute() error = %v, want context deadline exceeded", err)
 		}
-		failureCode, ok := imageRepo.saved.FailureCode()
+		failureCode, ok := mustFindImage(t, imageRepo, image.ID()).FailureCode()
 		if !ok || failureCode != value_object.ImageFailureCodeProviderTimeout {
 			t.Errorf("saved failure code = %q, want provider_timeout", failureCode)
 		}
 	})
 
 	t.Run("repository failure deletes stored image", func(t *testing.T) {
-		request := newTestJourneyRequest(t)
-		image := newTestJourneyImage(t, request.ID())
-		imageRepo := &generateImageRepositoryStub{
-			image:      image,
-			saveErrors: map[int]error{1: errors.New("ready save failed")},
-		}
-		storage := &generateImageStorageStub{asset: newTestAssetReference(t)}
-		useCase := NewUseCase(
+		request := testkit.MustNewJourneyRequest(t)
+		image := testkit.MustNewPendingImageFor(t, request.ID(), testkit.MustNewImageSlot(t, value_object.ImagePurposeCover, 1))
+		imageRepo := fakes.NewJourneyImageRepositoryWith(t, image)
+		failFirstSave(imageRepo, errors.New("ready save failed"))
+		storage := &generateImageStorageStub{asset: testkit.MustNewAssetReference(t)}
+		useCase := mustNewUseCase(t,
 			imageRepo,
-			&generateRequestRepositoryStub{request: request},
+			fakes.NewJourneyRequestRepositoryWith(t, request),
 			&generateImageGeneratorStub{},
 			storage,
+			testConfig(),
 		)
 
 		err := useCase.Execute(context.Background(), Input{ImageID: image.ID().String()})
@@ -253,30 +293,29 @@ func TestUseCaseExecuteTimeoutAndCompensatesSaveFailure(t *testing.T) {
 		if !storage.deleteCalled {
 			t.Error("ImageStorage.Delete() was not called for compensation")
 		}
-		if imageRepo.saved.Status() != value_object.ImageStatusFailed {
-			t.Errorf("saved image status = %q, want failed", imageRepo.saved.Status())
+		if saved := mustFindImage(t, imageRepo, image.ID()); saved.Status() != value_object.ImageStatusFailed {
+			t.Errorf("saved image status = %q, want failed", saved.Status())
 		}
 	})
 }
 
 func TestUseCaseExecuteIncludesImageIDWhenCompensationDeleteFails(t *testing.T) {
-	request := newTestJourneyRequest(t)
-	image := newTestJourneyImage(t, request.ID())
-	asset := newTestAssetReference(t)
+	request := testkit.MustNewJourneyRequest(t)
+	image := testkit.MustNewPendingImageFor(t, request.ID(), testkit.MustNewImageSlot(t, value_object.ImagePurposeCover, 1))
+	asset := testkit.MustNewAssetReference(t)
 	deleteErr := errors.New("delete failed")
-	imageRepo := &generateImageRepositoryStub{
-		image:      image,
-		saveErrors: map[int]error{1: errors.New("ready save failed")},
-	}
+	imageRepo := fakes.NewJourneyImageRepositoryWith(t, image)
+	failFirstSave(imageRepo, errors.New("ready save failed"))
 	storage := &generateImageStorageStub{
 		asset:     asset,
 		deleteErr: deleteErr,
 	}
-	useCase := NewUseCase(
+	useCase := mustNewUseCase(t,
 		imageRepo,
-		&generateRequestRepositoryStub{request: request},
+		fakes.NewJourneyRequestRepositoryWith(t, request),
 		&generateImageGeneratorStub{},
 		storage,
+		testConfig(),
 	)
 
 	err := useCase.Execute(context.Background(), Input{ImageID: image.ID().String()})
@@ -295,15 +334,16 @@ func TestUseCaseExecuteIncludesImageIDWhenCompensationDeleteFails(t *testing.T) 
 }
 
 func TestUseCaseExecuteRejectsInvalidInputAndSkipsUnclaimedImage(t *testing.T) {
-	request := newTestJourneyRequest(t)
-	image := newTestJourneyImage(t, request.ID())
+	request := testkit.MustNewJourneyRequest(t)
+	image := testkit.MustNewPendingImageFor(t, request.ID(), testkit.MustNewImageSlot(t, value_object.ImagePurposeCover, 1))
 
 	t.Run("invalid ID", func(t *testing.T) {
-		useCase := NewUseCase(
-			&generateImageRepositoryStub{},
-			&generateRequestRepositoryStub{},
+		useCase := mustNewUseCase(t,
+			fakes.NewJourneyImageRepository(),
+			fakes.NewJourneyRequestRepository(),
 			&generateImageGeneratorStub{},
 			&generateImageStorageStub{},
+			testConfig(),
 		)
 		err := useCase.Execute(context.Background(), Input{ImageID: "not-a-uuid"})
 		if !errors.Is(err, application.ErrInvalidInput) {
@@ -312,13 +352,17 @@ func TestUseCaseExecuteRejectsInvalidInputAndSkipsUnclaimedImage(t *testing.T) {
 	})
 
 	t.Run("claim lost", func(t *testing.T) {
-		imageRepo := &generateImageRepositoryStub{image: image, claim: false, claimSet: true}
+		imageRepo := fakes.NewJourneyImageRepositoryWith(t, image)
+		imageRepo.ClaimFn = func(context.Context, value_object.ID, time.Time) (entity.JourneyImage, bool, error) {
+			return image, false, nil
+		}
 		generator := &generateImageGeneratorStub{}
-		useCase := NewUseCase(
+		useCase := mustNewUseCase(t,
 			imageRepo,
-			&generateRequestRepositoryStub{request: request},
+			fakes.NewJourneyRequestRepositoryWith(t, request),
 			generator,
 			&generateImageStorageStub{},
+			testConfig(),
 		)
 		if err := useCase.Execute(context.Background(), Input{ImageID: image.ID().String()}); err != nil {
 			t.Fatalf("Execute() error = %v", err)
@@ -327,100 +371,6 @@ func TestUseCaseExecuteRejectsInvalidInputAndSkipsUnclaimedImage(t *testing.T) {
 			t.Error("ImageGenerator.Generate() was called after claim was lost")
 		}
 	})
-}
-
-type generateImageRepositoryStub struct {
-	image           entity.JourneyImage
-	saved           entity.JourneyImage
-	claim           bool
-	claimSet        bool
-	claimErr        error
-	claimLeaseUntil time.Time
-	saveErrors      map[int]error
-	saveCalls       int
-}
-
-func (r *generateImageRepositoryStub) Save(_ context.Context, image entity.JourneyImage) error {
-	r.saveCalls++
-	r.saved = image
-	if err := r.saveErrors[r.saveCalls]; err != nil {
-		return err
-	}
-	return nil
-}
-
-func (r *generateImageRepositoryStub) FindByID(_ context.Context, id value_object.ID) (entity.JourneyImage, error) {
-	if r.image.ID().Equals(id) {
-		return r.image, nil
-	}
-	return entity.JourneyImage{}, repository.ErrJourneyImageNotFound
-}
-
-func (r *generateImageRepositoryStub) FindByRequestID(_ context.Context, _ value_object.ID) ([]entity.JourneyImage, error) {
-	return []entity.JourneyImage{}, nil
-}
-
-func (r *generateImageRepositoryStub) FindBySlot(_ context.Context, _ value_object.ID, _ value_object.ImageSlot) (entity.JourneyImage, error) {
-	return entity.JourneyImage{}, repository.ErrJourneyImageNotFound
-}
-
-func (r *generateImageRepositoryStub) FindPending(_ context.Context, _ int) ([]entity.JourneyImage, error) {
-	return []entity.JourneyImage{}, nil
-}
-
-func (r *generateImageRepositoryStub) FindExpiredProcessing(_ context.Context, _ time.Time, _ int) ([]entity.JourneyImage, error) {
-	return []entity.JourneyImage{}, nil
-}
-
-func (r *generateImageRepositoryStub) Claim(
-	_ context.Context,
-	id value_object.ID,
-	leaseUntil time.Time,
-) (entity.JourneyImage, bool, error) {
-	r.claimLeaseUntil = leaseUntil
-	if r.claimErr != nil {
-		return entity.JourneyImage{}, false, r.claimErr
-	}
-	if r.claimSet && !r.claim && r.image.ID().Equals(id) {
-		return r.image, false, nil
-	}
-	if !r.image.ID().Equals(id) {
-		return entity.JourneyImage{}, false, repository.ErrJourneyImageNotFound
-	}
-	claimed := r.image
-	if err := claimed.Start(); err != nil {
-		return entity.JourneyImage{}, false, err
-	}
-	r.image = claimed
-	return claimed, true, nil
-}
-
-func (r *generateImageRepositoryStub) Delete(_ context.Context, _ value_object.ID) error {
-	return nil
-}
-
-type generateRequestRepositoryStub struct {
-	request entity.JourneyRequest
-	err     error
-}
-
-func (r *generateRequestRepositoryStub) Save(_ context.Context, _ entity.JourneyRequest) error {
-	return nil
-}
-
-func (r *generateRequestRepositoryStub) FindByID(_ context.Context, _ value_object.ID) (entity.JourneyRequest, error) {
-	if r.err != nil {
-		return entity.JourneyRequest{}, r.err
-	}
-	return r.request, nil
-}
-
-func (r *generateRequestRepositoryStub) FindAll(_ context.Context) ([]entity.JourneyRequest, error) {
-	return []entity.JourneyRequest{}, nil
-}
-
-func (r *generateRequestRepositoryStub) Delete(_ context.Context, _ value_object.ID) error {
-	return nil
 }
 
 type generateImageGeneratorStub struct {
@@ -472,65 +422,30 @@ func (s *generateImageStorageStub) Delete(_ context.Context, _ value_object.Imag
 	return s.deleteErr
 }
 
-func newTestJourneyRequest(t *testing.T) entity.JourneyRequest {
-	t.Helper()
-	departure, err := value_object.NewDeparture("Tokyo", "Japan")
-	if err != nil {
-		t.Fatalf("NewDeparture() error = %v", err)
+// failFirstSave は最初の Save（ready 保存）だけ err で失敗させ、以降はインメモリ実装に委譲する。
+// 補償処理で保存される failed 画像は読み戻せる。
+func failFirstSave(repo *fakes.FakeJourneyImageRepository, err error) {
+	saveCalls := 0
+	repo.SaveFn = func(ctx context.Context, image entity.JourneyImage) error {
+		saveCalls++
+		if saveCalls == 1 {
+			return err
+		}
+		return repo.JourneyImageRepositoryMemory.Save(ctx, image)
 	}
-	destination, err := value_object.NewDestination("Kyoto", "Japan")
-	if err != nil {
-		t.Fatalf("NewDestination() error = %v", err)
-	}
-	period, err := value_object.NewPeriod(
-		time.Date(2026, time.April, 1, 0, 0, 0, 0, time.UTC),
-		time.Date(2026, time.April, 2, 0, 0, 0, 0, time.UTC),
-	)
-	if err != nil {
-		t.Fatalf("NewPeriod() error = %v", err)
-	}
-	currency, err := value_object.NewCurrency("JPY")
-	if err != nil {
-		t.Fatalf("NewCurrency() error = %v", err)
-	}
-	budget, err := value_object.NewMoney(50_000, currency)
-	if err != nil {
-		t.Fatalf("NewMoney() error = %v", err)
-	}
-	request, err := entity.NewJourneyRequest(
-		value_object.NewID(),
-		departure,
-		destination,
-		period,
-		budget,
-	)
-	if err != nil {
-		t.Fatalf("NewJourneyRequest() error = %v", err)
-	}
-
-	return request
 }
 
-func newTestJourneyImage(t *testing.T, requestID value_object.ID) entity.JourneyImage {
+// mustFindImage は差し替えを経由せずインメモリ実装から画像を読み戻す。
+func mustFindImage(t *testing.T, repo *fakes.FakeJourneyImageRepository, id value_object.ID) entity.JourneyImage {
 	t.Helper()
-	slot, err := value_object.NewImageSlot(value_object.ImagePurposeCover, 1)
+	image, err := repo.JourneyImageRepositoryMemory.FindByID(context.Background(), id)
 	if err != nil {
-		t.Fatalf("NewImageSlot() error = %v", err)
+		t.Fatalf("FindByID() error = %v", err)
 	}
-	image, err := entity.NewJourneyImage(value_object.NewID(), requestID, slot)
-	if err != nil {
-		t.Fatalf("NewJourneyImage() error = %v", err)
-	}
-
 	return image
 }
 
-func newTestAssetReference(t *testing.T) value_object.ImageAssetReference {
-	t.Helper()
-	asset, err := value_object.NewImageAssetReference("ab/image.png", "image/png", 2, 2)
-	if err != nil {
-		t.Fatalf("NewImageAssetReference() error = %v", err)
-	}
-
-	return asset
+// testConfig はテスト用の妥当な実行設定を返す。
+func testConfig() Config {
+	return Config{GenerationTimeout: time.Second, LeaseDuration: 2 * time.Second}
 }

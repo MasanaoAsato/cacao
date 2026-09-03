@@ -13,9 +13,9 @@ import (
 	"cacao/src/domain/value_object"
 )
 
-const (
-	defaultGenerationTimeout = 180 * time.Second
-	defaultLeaseDuration     = 240 * time.Second
+var (
+	// ErrInvalidConfig はユースケースの実行設定が不正なことを表す。
+	ErrInvalidConfig = errors.New("invalid generate journey image config")
 )
 
 // Input は画像生成対象を表す。
@@ -24,10 +24,25 @@ type Input struct {
 }
 
 // Config は画像生成ユースケースの実行設定を表す。
+// 値は運用設定（infrastructure/config）から注入し、ここでは既定値を持たない。
 type Config struct {
+	// GenerationTimeout は1枚の生成に許す時間。
 	GenerationTimeout time.Duration
-	LeaseDuration     time.Duration
-	Now               func() time.Time
+	// LeaseDuration は claim から解放までの時間。GenerationTimeout より長くなければならない。
+	LeaseDuration time.Duration
+	// Now は現在時刻を返す。nil のときは time.Now を使う。
+	Now func() time.Time
+}
+
+// Validate は設定の整合性を検証する。
+func (c Config) Validate() error {
+	if c.GenerationTimeout <= 0 {
+		return fmt.Errorf("%w: generation timeout must be positive", ErrInvalidConfig)
+	}
+	if c.LeaseDuration <= c.GenerationTimeout {
+		return fmt.Errorf("%w: lease duration must be longer than generation timeout", ErrInvalidConfig)
+	}
+	return nil
 }
 
 // UseCase は画像を1枚生成するユースケースである。
@@ -35,38 +50,19 @@ type UseCase interface {
 	Execute(ctx context.Context, input Input) error
 }
 
-// TimeoutAwareUseCase はworkerから生成timeoutを明示できるユースケースである。
-type TimeoutAwareUseCase interface {
-	UseCase
-	ExecuteWithTimeout(
-		ctx context.Context,
-		input Input,
-		timeout time.Duration,
-	) error
-}
-
-// LeaseAwareUseCase はworkerから生成timeoutとclaim leaseを明示できるユースケースである。
-type LeaseAwareUseCase interface {
-	TimeoutAwareUseCase
-	ExecuteWithTimeoutAndLease(
-		ctx context.Context,
-		input Input,
-		generationTimeout time.Duration,
-		leaseDuration time.Duration,
-	) error
-}
-
-// NewUseCase は画像生成ユースケースを生成する。
+// NewUseCase は画像生成ユースケースを生成する。設定が不正なときはエラーを返す。
 func NewUseCase(
 	imageRepo repository.JourneyImageRepository,
 	requestRepo repository.JourneyRequestRepository,
 	generator domainservice.ImageGenerator,
 	storage domainservice.ImageStorage,
-	configs ...Config,
-) UseCase {
-	config := defaultConfig()
-	if len(configs) > 0 {
-		config = normalizeConfig(configs[0])
+	config Config,
+) (UseCase, error) {
+	if err := config.Validate(); err != nil {
+		return nil, err
+	}
+	if config.Now == nil {
+		config.Now = time.Now
 	}
 
 	return &useCase{
@@ -75,7 +71,7 @@ func NewUseCase(
 		generator:   generator,
 		storage:     storage,
 		config:      config,
-	}
+	}, nil
 }
 
 type useCase struct {
@@ -104,26 +100,6 @@ func (uc *useCase) Execute(ctx context.Context, input Input) error {
 	return uc.generate(ctx, image)
 }
 
-func (uc *useCase) ExecuteWithTimeout(
-	ctx context.Context,
-	input Input,
-	timeout time.Duration,
-) error {
-	return uc.ExecuteWithTimeoutAndLease(ctx, input, timeout, uc.config.LeaseDuration)
-}
-
-func (uc *useCase) ExecuteWithTimeoutAndLease(
-	ctx context.Context,
-	input Input,
-	generationTimeout time.Duration,
-	leaseDuration time.Duration,
-) error {
-	configured := *uc
-	configured.config.GenerationTimeout = generationTimeout
-	configured.config.LeaseDuration = leaseDuration
-	return configured.Execute(ctx, input)
-}
-
 func (uc *useCase) generate(ctx context.Context, image entity.JourneyImage) error {
 	request, err := uc.requestRepo.FindByID(ctx, image.RequestID())
 	if err != nil {
@@ -135,17 +111,14 @@ func (uc *useCase) generate(ctx context.Context, image entity.JourneyImage) erro
 		)
 	}
 
-	style := value_object.ImageVisualStyleNone
-	if image.Slot().Purpose() == value_object.ImagePurposeCover {
-		style, err = selectCoverStyle(image.ID())
-		if err != nil {
-			return uc.failAndSave(
-				ctx,
-				image,
-				value_object.ImageFailureCodeInternalError,
-				fmt.Errorf("select cover image visual style: %w", err),
-			)
-		}
+	style, err := domainservice.VisualStyleForSlot(image.ID(), image.Slot())
+	if err != nil {
+		return uc.failAndSave(
+			ctx,
+			image,
+			value_object.ImageFailureCodeInternalError,
+			fmt.Errorf("select image visual style: %w", err),
+		)
 	}
 
 	brief, err := domainservice.NewImageBrief(
@@ -175,7 +148,7 @@ func (uc *useCase) generate(ctx context.Context, image entity.JourneyImage) erro
 		return uc.failAndSave(
 			ctx,
 			image,
-			classifyGenerationFailure(generateErr, timedOut),
+			domainservice.ClassifyImageGenerationFailure(generateErr, timedOut),
 			fmt.Errorf("generate image: %w", generateErr),
 		)
 	}
@@ -193,7 +166,7 @@ func (uc *useCase) generate(ctx context.Context, image entity.JourneyImage) erro
 		return uc.failAndSave(
 			ctx,
 			image,
-			classifyStorageFailure(err),
+			domainservice.ClassifyImageStorageFailure(err),
 			fmt.Errorf("save image: %w", err),
 		)
 	}
@@ -259,50 +232,4 @@ func (uc *useCase) compensateAndFail(
 	}
 
 	return failureErr
-}
-
-func classifyGenerationFailure(err error, timedOut bool) value_object.ImageFailureCode {
-	switch {
-	case timedOut || errors.Is(err, context.DeadlineExceeded) || errors.Is(err, domainservice.ErrImageGeneratorTimeout):
-		return value_object.ImageFailureCodeProviderTimeout
-	case errors.Is(err, domainservice.ErrImageGeneratorUnavailable):
-		return value_object.ImageFailureCodeProviderUnavailable
-	case errors.Is(err, domainservice.ErrImageGenerationRejected):
-		return value_object.ImageFailureCodeGenerationRejected
-	case errors.Is(err, domainservice.ErrGeneratedImageInvalid):
-		return value_object.ImageFailureCodeOutputInvalid
-	default:
-		return value_object.ImageFailureCodeInternalError
-	}
-}
-
-func classifyStorageFailure(err error) value_object.ImageFailureCode {
-	if errors.Is(err, domainservice.ErrGeneratedImageInvalid) {
-		return value_object.ImageFailureCodeOutputInvalid
-	}
-
-	return value_object.ImageFailureCodeStorageFailed
-}
-
-func defaultConfig() Config {
-	return Config{
-		GenerationTimeout: defaultGenerationTimeout,
-		LeaseDuration:     defaultLeaseDuration,
-		Now:               time.Now,
-	}
-}
-
-func normalizeConfig(config Config) Config {
-	defaults := defaultConfig()
-	if config.GenerationTimeout <= 0 {
-		config.GenerationTimeout = defaults.GenerationTimeout
-	}
-	if config.LeaseDuration <= 0 {
-		config.LeaseDuration = defaults.LeaseDuration
-	}
-	if config.Now == nil {
-		config.Now = defaults.Now
-	}
-
-	return config
 }
