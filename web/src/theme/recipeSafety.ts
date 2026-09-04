@@ -1,5 +1,6 @@
 import type {
 	BookletThemeCandidate,
+	CoverLayoutDefinition,
 	DensityId,
 	FallbackStep,
 	RequestedBookletTheme,
@@ -172,6 +173,33 @@ function validatePaletteContrast(
 	}
 }
 
+function validateCoverLayoutDefinition(cover: CoverLayoutDefinition): void {
+	if (
+		cover.selectable &&
+		(cover.safeArea.widthMm < 34 || cover.safeArea.heightMm < 62)
+	) {
+		throw new ThemeRecipeValidationError(
+			"表紙文字領域は幅34mm、高さ62mm以上にしてください。",
+		);
+	}
+	if (cover.titleSizePt !== null) {
+		requireRange(cover.titleSizePt, 22, 56, "表紙見出し文字サイズ");
+	}
+}
+
+function validateCoverLayoutDefinitions(
+	references: ThemeCatalogReferences,
+): void {
+	for (const [id, cover] of references.coverLayouts) {
+		if (id !== cover.id) {
+			throw new ThemeRecipeValidationError(
+				`表紙構図のキー「${id}」と定義ID「${cover.id}」が一致しません。`,
+			);
+		}
+		validateCoverLayoutDefinition(cover);
+	}
+}
+
 function validateReferences(
 	recipe: ThemeRecipeDefinition,
 	references: ThemeCatalogReferences,
@@ -187,11 +215,18 @@ function validateReferences(
 			"1冊で使用できる書体ファミリーは2種類までです。",
 		);
 	}
-	if (!references.coverLayouts.has(recipe.coverLayoutId)) {
+	const cover = references.coverLayouts.get(recipe.coverLayoutId);
+	if (!cover) {
 		throw new ThemeRecipeValidationError(
 			`未登録の表紙構図「${recipe.coverLayoutId}」です。`,
 		);
 	}
+	if (!cover.selectable) {
+		throw new ThemeRecipeValidationError(
+			`表紙構図「${recipe.coverLayoutId}」はテーマレシピで選択できません。`,
+		);
+	}
+	validateCoverLayoutDefinition(cover);
 	if (!references.itineraries.has(recipe.itineraryTemplateId)) {
 		throw new ThemeRecipeValidationError(
 			`未登録の本文テンプレート「${recipe.itineraryTemplateId}」です。`,
@@ -226,13 +261,6 @@ function validateReferences(
 	if (templateForSignature[recipe.signatureId] !== recipe.itineraryTemplateId) {
 		throw new ThemeRecipeValidationError(
 			`旅モチーフ「${recipe.signatureId}」と本文テンプレートの組み合わせが不正です。`,
-		);
-	}
-
-	const cover = references.coverLayouts.get(recipe.coverLayoutId);
-	if (!cover || cover.textAreaWidthMm < 34 || cover.textAreaHeightMm < 62) {
-		throw new ThemeRecipeValidationError(
-			"表紙文字領域は幅34mm、高さ62mm以上にしてください。",
 		);
 	}
 }
@@ -425,6 +453,7 @@ export function validateThemeCatalog(
 	recipes: readonly ThemeRecipeDefinition[],
 	references: ThemeCatalogReferences,
 ): void {
+	validateCoverLayoutDefinitions(references);
 	const ids = new Set<string>();
 	for (const recipe of recipes) {
 		if (ids.has(recipe.id)) {

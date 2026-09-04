@@ -106,13 +106,7 @@ test.describe("PDFしおり", () => {
 				const veil = element.querySelector<SVGSVGElement>(
 					".booklet-cover__veil",
 				);
-				const coverLayout = Array.from(
-					element.closest<HTMLElement>(".booklet-theme")?.classList ?? [],
-				)
-					.find((className) => className.startsWith("booklet-theme--cover-"))
-					?.slice("booklet-theme--cover-".length);
 				return {
-					coverLayout,
 					gradientType:
 						veil?.querySelector("linearGradient")?.tagName ??
 						veil?.querySelector("radialGradient")?.tagName,
@@ -123,6 +117,7 @@ test.describe("PDFしおり", () => {
 					).length,
 					textZIndex: styleOf(".booklet-cover__text")?.zIndex,
 					veilBounds: veil?.dataset.bookletCoverVeil,
+					veilKind: veil?.dataset.bookletCoverVeilKind,
 					veilZIndex: styleOf(".booklet-cover__veil")?.zIndex,
 				};
 			});
@@ -131,12 +126,17 @@ test.describe("PDFしおり", () => {
 			expect(coverLayers.veilZIndex).toBe("1");
 			expect(coverLayers.textZIndex).toBe("2");
 			expect(coverLayers.legacyLayerCount).toBe(0);
-			expect(coverLayers.gradientType).toBe(
-				coverLayers.coverLayout === "split-left" ||
-					coverLayers.coverLayout === "horizon"
+			const expectedGradientType =
+				coverLayers.veilKind === "linear-x" ||
+				coverLayers.veilKind === "linear-y"
 					? "linearGradient"
-					: "radialGradient",
+					: coverLayers.veilKind === "radial"
+						? "radialGradient"
+						: undefined;
+			expect(["linear-x", "linear-y", "radial", undefined]).toContain(
+				coverLayers.veilKind,
 			);
+			expect(coverLayers.gradientType).toBe(expectedGradientType);
 			const veilBounds = coverLayers.veilBounds?.split(",").map(Number) ?? [];
 			expect(veilBounds).toHaveLength(4);
 			expect(veilBounds.every((value) => Number.isFinite(value))).toBe(true);
