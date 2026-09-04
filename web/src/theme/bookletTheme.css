@@ -44,16 +44,20 @@
 	isolation: isolate;
 }
 
-.booklet-cover__image,
+.booklet-cover__frame,
 .booklet-cover__veil,
 .booklet-cover__text {
 	position: absolute;
-	inset: 0;
 }
 
-.booklet-cover__text {
-	box-sizing: border-box;
-	z-index: 2;
+.booklet-cover__frame {
+	top: var(--booklet-cover-frame-top);
+	left: var(--booklet-cover-frame-left);
+	width: var(--booklet-cover-frame-width);
+	height: var(--booklet-cover-frame-height);
+	overflow: hidden;
+	border-radius: var(--booklet-cover-frame-radius);
+	z-index: 0;
 }
 
 .booklet-cover__copy {
@@ -71,75 +75,24 @@
 }
 
 .booklet-cover__veil {
+	inset: 0;
 	z-index: 1;
 	pointer-events: none;
 	width: 100%;
 	height: 100%;
 }
 
-.booklet-theme--cover-north-west .booklet-cover__text {
-	inset: 12mm auto auto 12mm;
-	width: 80mm;
-}
-
-.booklet-theme--cover-north-east .booklet-cover__text {
-	inset: 12mm 12mm auto auto;
-	width: 80mm;
-}
-
-.booklet-theme--cover-south-west .booklet-cover__text {
-	inset: auto auto 12mm 12mm;
-	width: 80mm;
-}
-
-.booklet-theme--cover-south-east .booklet-cover__text {
-	inset: auto 12mm 12mm auto;
-	width: 80mm;
-}
-
-.booklet-theme--cover-center .booklet-cover__text {
-	inset: 67mm auto auto 22mm;
-	width: 104mm;
-	text-align: center;
-}
-
-.booklet-theme--cover-split-left .booklet-cover__text {
-	inset: 12mm auto auto 12mm;
-	width: 46mm;
-}
-
-.booklet-theme--cover-horizon .booklet-cover__text {
-	inset: 156mm auto auto 12mm;
-	width: 124mm;
-}
-
-.booklet-theme--cover-safe-cover .booklet-cover__text {
-	inset: 22mm auto auto 22mm;
-	width: 104mm;
-}
-
-.booklet-theme--cover-safe-cover .booklet-cover__text {
-	padding: 8mm;
-}
-
-.booklet-theme--cover-safe-cover .booklet-cover__text,
-.booklet-theme--cover-horizon .booklet-cover__text,
-.booklet-theme--cover-split-left .booklet-cover__text,
-.booklet-theme--cover-center .booklet-cover__text,
-.booklet-theme--cover-north-east .booklet-cover__text,
-.booklet-theme--cover-north-west .booklet-cover__text,
-.booklet-theme--cover-south-east .booklet-cover__text,
-.booklet-theme--cover-south-west .booklet-cover__text {
+.booklet-cover__text {
+	top: var(--booklet-cover-text-top);
+	right: var(--booklet-cover-text-right);
+	bottom: var(--booklet-cover-text-bottom);
+	left: var(--booklet-cover-text-left);
+	box-sizing: border-box;
+	width: var(--booklet-cover-text-width);
+	padding: var(--booklet-cover-text-padding);
 	color: var(--booklet-cover-ink);
-}
-
-.booklet-theme .booklet-cover__text .booklet-eyebrow {
-	color: var(--booklet-cover-ink);
-}
-
-.booklet-theme--cover-horizon .booklet-cover__text,
-.booklet-theme--cover-split-left .booklet-cover__text {
-	padding: 0;
+	text-align: var(--booklet-cover-text-align);
+	z-index: 2;
 }
 
 .booklet-theme .booklet-cover__title {

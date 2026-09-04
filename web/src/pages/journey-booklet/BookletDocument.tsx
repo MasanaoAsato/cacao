@@ -14,6 +14,7 @@ import type {
 import {
 	getBookletPageSurface,
 	getBookletThemeCssVariables,
+	getCoverLayoutDefinition,
 } from "../../theme/bookletTheme";
 import type {
 	BookletThemeCandidate,
@@ -82,6 +83,10 @@ function CoverVeil({
 	readonly bounds: CoverVeilBounds;
 	readonly theme: BookletThemeCandidate;
 }) {
+	const { veil } = getCoverLayoutDefinition(theme.coverLayoutId);
+	if (veil === "none") {
+		return null;
+	}
 	const gradientId = `booklet-cover-veil-${theme.resolvedThemeKey}`.replace(
 		/[^a-z0-9-]/gi,
 		"-",
@@ -94,7 +99,7 @@ function CoverVeil({
 	);
 	let gradient: ReactNode;
 
-	if (theme.coverLayoutId === "split-left") {
+	if (veil === "linear-x") {
 		const solidEdge = bounds.x + bounds.width + VEIL_SOLID_MARGIN;
 		const transparentEdge = solidEdge + VEIL_FADE_LENGTH;
 		gradient = (
@@ -119,7 +124,7 @@ function CoverVeil({
 				/>
 			</linearGradient>
 		);
-	} else if (theme.coverLayoutId === "horizon") {
+	} else if (veil === "linear-y") {
 		const solidEdge = bounds.y - VEIL_SOLID_MARGIN;
 		const transparentEdge = solidEdge - VEIL_FADE_LENGTH;
 		const gradientLength = COVER_HEIGHT - transparentEdge;
@@ -185,6 +190,7 @@ function CoverVeil({
 			aria-hidden="true"
 			className="booklet-cover__veil"
 			data-booklet-cover-veil={`${bounds.x},${bounds.y},${bounds.width},${bounds.height}`}
+			data-booklet-cover-veil-kind={veil}
 			focusable="false"
 			preserveAspectRatio="none"
 			viewBox={`0 0 ${COVER_WIDTH} ${COVER_HEIGHT}`}
@@ -242,15 +248,17 @@ function CoverContent({
 }) {
 	return (
 		<div className="booklet-cover-content">
-			<img
-				className="booklet-cover__image"
-				decoding="async"
-				height={cover.image.height}
-				loading="eager"
-				src={cover.image.contentUrl}
-				alt={`${cover.destination}の表紙画像`}
-				width={cover.image.width}
-			/>
+			<div className="booklet-cover__frame">
+				<img
+					className="booklet-cover__image"
+					decoding="async"
+					height={cover.image.height}
+					loading="eager"
+					src={cover.image.contentUrl}
+					alt={`${cover.destination}の表紙画像`}
+					width={cover.image.width}
+				/>
+			</div>
 			{veilBounds ? <CoverVeil bounds={veilBounds} theme={theme} /> : null}
 			<div className="booklet-cover__text">
 				<div className="booklet-cover__copy" data-booklet-cover-copy="true">

@@ -17,16 +17,15 @@ export type PaletteId =
 	| "cobalt-sunrise"
 	| "night-window";
 
-export type SelectableCoverLayoutId =
+export type CoverLayoutId =
 	| "center"
 	| "north-west"
 	| "north-east"
 	| "south-west"
 	| "south-east"
 	| "split-left"
-	| "horizon";
-
-export type ResolvedCoverLayoutId = SelectableCoverLayoutId | "safe-cover";
+	| "horizon"
+	| "safe-cover";
 
 export type ItineraryTemplateId =
 	| "route-thread"
@@ -107,9 +106,32 @@ export type ItineraryPaletteDefinition = {
 };
 
 export type CoverLayoutDefinition = {
-	readonly id: SelectableCoverLayoutId;
-	readonly textAreaHeightMm: number;
-	readonly textAreaWidthMm: number;
+	readonly id: CoverLayoutId;
+	readonly selectable: boolean;
+	readonly imageFrame: {
+		readonly heightMm: number;
+		readonly shape: "rect" | "arch";
+		readonly widthMm: number;
+		readonly xMm: number;
+		readonly yMm: number;
+	};
+	readonly textBox: {
+		readonly align: "left" | "center";
+		readonly anchorX: "left" | "right";
+		readonly anchorY: "top" | "bottom";
+		readonly offsetXMm: number;
+		readonly offsetYMm: number;
+		readonly paddingMm: number;
+		readonly widthMm: number;
+	};
+	readonly safeArea: {
+		readonly heightMm: number;
+		readonly widthMm: number;
+		readonly xMm: number;
+		readonly yMm: number;
+	};
+	readonly titleSizePt: number | null;
+	readonly veil: "radial" | "linear-x" | "linear-y" | "none";
 };
 
 export type ItineraryTemplateDefinition = {
@@ -131,7 +153,7 @@ export type SignatureDefinition = {
 };
 
 export type ThemeRecipeDefinition = {
-	readonly coverLayoutId: SelectableCoverLayoutId;
+	readonly coverLayoutId: CoverLayoutId;
 	readonly densityId: DensityId;
 	readonly emphasisId: EmphasisId;
 	readonly fontPairId: FontPairId;
@@ -156,7 +178,7 @@ export type FallbackStep =
 	| "safe-geometry";
 
 export type BookletThemeCandidate = {
-	readonly coverLayoutId: ResolvedCoverLayoutId;
+	readonly coverLayoutId: CoverLayoutId;
 	readonly densityId: DensityId;
 	readonly emphasisId: EmphasisId;
 	readonly fallbackStep: FallbackStep;
@@ -176,10 +198,7 @@ export type ResolvedBookletTheme = BookletThemeCandidate & {
 };
 
 export type ThemeCatalogReferences = {
-	readonly coverLayouts: ReadonlyMap<
-		SelectableCoverLayoutId,
-		CoverLayoutDefinition
-	>;
+	readonly coverLayouts: ReadonlyMap<CoverLayoutId, CoverLayoutDefinition>;
 	readonly densities: ReadonlyMap<DensityId, DensityDefinition>;
 	readonly emphasis: ReadonlyMap<EmphasisId, EmphasisDefinition>;
 	readonly fonts: ReadonlyMap<FontPairId, FontPairDefinition>;

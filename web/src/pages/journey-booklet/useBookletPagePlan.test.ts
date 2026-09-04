@@ -9,6 +9,7 @@ import type { BookletThemeCandidate } from "../../theme/types";
 import {
 	BookletLayoutError,
 	measureCoverVeilBounds,
+	waitForFonts,
 } from "./useBookletPagePlan";
 
 function rect(
@@ -30,13 +31,16 @@ function rect(
 	};
 }
 
-function candidate(coverLayoutId: BookletThemeCandidate["coverLayoutId"]) {
+function candidate(
+	coverLayoutId: BookletThemeCandidate["coverLayoutId"],
+	fontPairId?: BookletThemeCandidate["fontPairId"],
+) {
 	const requested = createBookletTheme({ value: 7, version: "v1" });
 	const selected = getThemeCandidates(requested)[0];
 	if (!selected) {
 		throw new Error("テーマ候補がありません。");
 	}
-	return { ...selected, coverLayoutId };
+	return { ...selected, coverLayoutId, ...(fontPairId ? { fontPairId } : {}) };
 }
 
 function measurementRoot(copyRect: DOMRect): HTMLDivElement {
@@ -84,5 +88,85 @@ describe("表紙ベール位置の計測", () => {
 				candidate("safe-cover"),
 			),
 		).toEqual({ height: 190, width: 128, x: 10, y: 10 });
+	});
+});
+
+describe("書体読み込み待ち", () => {
+	it("正常系: 全書体対の全ファミリーを400・700で読み込む", async () => {
+		const loads: string[] = [];
+		const fontSet = {
+			check: () => true,
+			load: async (descriptor: string) => {
+				loads.push(descriptor);
+			},
+			ready: Promise.resolve(),
+		} as unknown as FontFaceSet;
+		const originalFonts = Object.getOwnPropertyDescriptor(document, "fonts");
+		Object.defineProperty(document, "fonts", {
+			configurable: true,
+			value: fontSet,
+		});
+
+		try {
+			for (const fontPairId of [
+				"classic",
+				"literary",
+				"wayfinding",
+				"modern",
+				"round-trip",
+			] as const) {
+				await waitForFonts(candidate("north-west", fontPairId));
+			}
+		} finally {
+			if (originalFonts) {
+				Object.defineProperty(document, "fonts", originalFonts);
+			} else {
+				delete (document as { fonts?: FontFaceSet }).fonts;
+			}
+		}
+
+		expect(loads).toEqual([
+			'400 10pt "Noto Serif JP"',
+			'700 10pt "Noto Serif JP"',
+			'400 10pt "Shippori Mincho"',
+			'700 10pt "Shippori Mincho"',
+			'400 10pt "Noto Sans JP"',
+			'700 10pt "Noto Sans JP"',
+			'400 10pt "Zen Kaku Gothic New"',
+			'700 10pt "Zen Kaku Gothic New"',
+			'400 10pt "Noto Sans JP"',
+			'700 10pt "Noto Sans JP"',
+			'400 10pt "Noto Sans JP"',
+			'700 10pt "Noto Sans JP"',
+			'400 10pt "M PLUS Rounded 1c"',
+			'700 10pt "M PLUS Rounded 1c"',
+			'400 10pt "Noto Sans JP"',
+			'700 10pt "Noto Sans JP"',
+		]);
+	});
+
+	it("異常系: 読み込み確認に失敗した書体を通知する", async () => {
+		const fontSet = {
+			check: () => false,
+			load: async () => [],
+			ready: Promise.resolve(),
+		} as unknown as FontFaceSet;
+		const originalFonts = Object.getOwnPropertyDescriptor(document, "fonts");
+		Object.defineProperty(document, "fonts", {
+			configurable: true,
+			value: fontSet,
+		});
+
+		try {
+			await expect(waitForFonts(candidate("north-west"))).rejects.toThrow(
+				"Noto Serif JP 400 の読み込みを確認できませんでした。",
+			);
+		} finally {
+			if (originalFonts) {
+				Object.defineProperty(document, "fonts", originalFonts);
+			} else {
+				delete (document as { fonts?: FontFaceSet }).fonts;
+			}
+		}
 	});
 });

@@ -221,32 +221,178 @@ const PALETTES = new Map<PaletteDefinition["id"], PaletteDefinition>([
 	],
 ]);
 
-const COVER_LAYOUTS = new Map<
+const FULL_COVER_IMAGE_FRAME = {
+	heightMm: 210,
+	shape: "rect",
+	widthMm: 148,
+	xMm: 0,
+	yMm: 0,
+} as const;
+
+export const COVER_LAYOUTS = new Map<
 	CoverLayoutDefinition["id"],
 	CoverLayoutDefinition
 >([
-	["center", { id: "center", textAreaHeightMm: 76, textAreaWidthMm: 104 }],
 	[
 		"north-west",
-		{ id: "north-west", textAreaHeightMm: 70, textAreaWidthMm: 80 },
+		{
+			id: "north-west",
+			imageFrame: FULL_COVER_IMAGE_FRAME,
+			safeArea: { heightMm: 70, widthMm: 80, xMm: 12, yMm: 12 },
+			selectable: true,
+			textBox: {
+				align: "left",
+				anchorX: "left",
+				anchorY: "top",
+				offsetXMm: 12,
+				offsetYMm: 12,
+				paddingMm: 0,
+				widthMm: 80,
+			},
+			titleSizePt: null,
+			veil: "radial",
+		},
 	],
 	[
 		"north-east",
-		{ id: "north-east", textAreaHeightMm: 70, textAreaWidthMm: 80 },
+		{
+			id: "north-east",
+			imageFrame: FULL_COVER_IMAGE_FRAME,
+			safeArea: { heightMm: 70, widthMm: 80, xMm: 56, yMm: 12 },
+			selectable: true,
+			textBox: {
+				align: "left",
+				anchorX: "right",
+				anchorY: "top",
+				offsetXMm: 12,
+				offsetYMm: 12,
+				paddingMm: 0,
+				widthMm: 80,
+			},
+			titleSizePt: null,
+			veil: "radial",
+		},
 	],
 	[
 		"south-west",
-		{ id: "south-west", textAreaHeightMm: 70, textAreaWidthMm: 80 },
+		{
+			id: "south-west",
+			imageFrame: FULL_COVER_IMAGE_FRAME,
+			safeArea: { heightMm: 70, widthMm: 80, xMm: 12, yMm: 128 },
+			selectable: true,
+			textBox: {
+				align: "left",
+				anchorX: "left",
+				anchorY: "bottom",
+				offsetXMm: 12,
+				offsetYMm: 12,
+				paddingMm: 0,
+				widthMm: 80,
+			},
+			titleSizePt: null,
+			veil: "radial",
+		},
 	],
 	[
 		"south-east",
-		{ id: "south-east", textAreaHeightMm: 70, textAreaWidthMm: 80 },
+		{
+			id: "south-east",
+			imageFrame: FULL_COVER_IMAGE_FRAME,
+			safeArea: { heightMm: 70, widthMm: 80, xMm: 56, yMm: 128 },
+			selectable: true,
+			textBox: {
+				align: "left",
+				anchorX: "right",
+				anchorY: "bottom",
+				offsetXMm: 12,
+				offsetYMm: 12,
+				paddingMm: 0,
+				widthMm: 80,
+			},
+			titleSizePt: null,
+			veil: "radial",
+		},
+	],
+	[
+		"center",
+		{
+			id: "center",
+			imageFrame: FULL_COVER_IMAGE_FRAME,
+			safeArea: { heightMm: 76, widthMm: 104, xMm: 22, yMm: 67 },
+			selectable: true,
+			textBox: {
+				align: "center",
+				anchorX: "left",
+				anchorY: "top",
+				offsetXMm: 22,
+				offsetYMm: 67,
+				paddingMm: 0,
+				widthMm: 104,
+			},
+			titleSizePt: null,
+			veil: "radial",
+		},
 	],
 	[
 		"split-left",
-		{ id: "split-left", textAreaHeightMm: 186, textAreaWidthMm: 58 },
+		{
+			id: "split-left",
+			imageFrame: FULL_COVER_IMAGE_FRAME,
+			safeArea: { heightMm: 210, widthMm: 70, xMm: 0, yMm: 0 },
+			selectable: true,
+			textBox: {
+				align: "left",
+				anchorX: "left",
+				anchorY: "top",
+				offsetXMm: 12,
+				offsetYMm: 12,
+				paddingMm: 0,
+				widthMm: 46,
+			},
+			titleSizePt: null,
+			veil: "linear-x",
+		},
 	],
-	["horizon", { id: "horizon", textAreaHeightMm: 62, textAreaWidthMm: 124 }],
+	[
+		"horizon",
+		{
+			id: "horizon",
+			imageFrame: FULL_COVER_IMAGE_FRAME,
+			safeArea: { heightMm: 62, widthMm: 148, xMm: 0, yMm: 148 },
+			selectable: true,
+			textBox: {
+				align: "left",
+				anchorX: "left",
+				anchorY: "top",
+				offsetXMm: 12,
+				offsetYMm: 156,
+				paddingMm: 0,
+				widthMm: 124,
+			},
+			titleSizePt: null,
+			veil: "linear-y",
+		},
+	],
+	[
+		"safe-cover",
+		{
+			id: "safe-cover",
+			imageFrame: FULL_COVER_IMAGE_FRAME,
+			safeArea: { heightMm: 190, widthMm: 128, xMm: 10, yMm: 10 },
+			selectable: false,
+			textBox: {
+				align: "left",
+				anchorX: "left",
+				anchorY: "top",
+				offsetXMm: 22,
+				offsetYMm: 22,
+				paddingMm: 8,
+				widthMm: 104,
+			},
+			titleSizePt: null,
+			veil: "radial",
+		},
+	],
 ]);
 
 const ITINERARY_LAYOUTS = new Map<
@@ -279,6 +425,26 @@ const SIGNATURES = new Map<SignatureDefinition["id"], SignatureDefinition>([
 	["quiet-gallery", { id: "quiet-gallery" }],
 	["festival-ticket", { id: "festival-ticket" }],
 ]);
+
+export function getCoverLayoutDefinition(
+	id: CoverLayoutDefinition["id"],
+): CoverLayoutDefinition {
+	const coverLayout = COVER_LAYOUTS.get(id);
+	if (!coverLayout) {
+		throw new ThemeRecipeValidationError(`未登録の表紙構図「${id}」です。`);
+	}
+	return coverLayout;
+}
+
+export function getFontPairFamilies(
+	id: FontPairDefinition["id"],
+): readonly string[] {
+	const font = FONT_PAIRS.get(id);
+	if (!font) {
+		throw new ThemeRecipeValidationError(`未登録の書体「${id}」です。`);
+	}
+	return font.families;
+}
 
 export const THEME_CATALOG_REFERENCES: ThemeCatalogReferences = {
 	coverLayouts: COVER_LAYOUTS,
@@ -674,6 +840,14 @@ export function getBookletThemeCssVariables(
 			"テーマの書体または配色がありません。",
 		);
 	}
+	const coverLayout = getCoverLayoutDefinition(theme.coverLayoutId);
+	const coverTitleSizePt =
+		coverLayout.titleSizePt ?? theme.typography.coverTitle.fontSizePt;
+	const { imageFrame, textBox } = coverLayout;
+	const frameRadius =
+		imageFrame.shape === "arch"
+			? `${imageFrame.widthMm / 2}mm ${imageFrame.widthMm / 2}mm 0 0`
+			: "0";
 	const itinerary = palette.itinerary ?? palette;
 	return Object.freeze({
 		"--booklet-accent": palette.accent,
@@ -684,18 +858,32 @@ export function getBookletThemeCssVariables(
 		"--booklet-body-size": `${theme.typography.body.fontSizePt}pt`,
 		"--booklet-border": palette.border,
 		"--booklet-cover-ink": palette.coverInk,
+		"--booklet-cover-frame-height": `${imageFrame.heightMm}mm`,
+		"--booklet-cover-frame-left": `${imageFrame.xMm}mm`,
+		"--booklet-cover-frame-radius": frameRadius,
+		"--booklet-cover-frame-top": `${imageFrame.yMm}mm`,
+		"--booklet-cover-frame-width": `${imageFrame.widthMm}mm`,
+		"--booklet-cover-text-align": textBox.align,
+		"--booklet-cover-text-bottom":
+			textBox.anchorY === "bottom" ? `${textBox.offsetYMm}mm` : "auto",
+		"--booklet-cover-text-left":
+			textBox.anchorX === "left" ? `${textBox.offsetXMm}mm` : "auto",
+		"--booklet-cover-text-padding": `${textBox.paddingMm}mm`,
+		"--booklet-cover-text-right":
+			textBox.anchorX === "right" ? `${textBox.offsetXMm}mm` : "auto",
+		"--booklet-cover-text-top":
+			textBox.anchorY === "top" ? `${textBox.offsetYMm}mm` : "auto",
+		"--booklet-cover-text-width": `${textBox.widthMm}mm`,
 		"--booklet-cover-veil": palette.coverVeil,
 		"--booklet-cover-veil-opacity": `${palette.coverVeilOpacity}`,
 		"--booklet-cover-title-letter-spacing": `${theme.typography.coverTitle.letterSpacingEm}em`,
 		"--booklet-cover-title-line-height": `${theme.typography.coverTitle.lineHeight}`,
-		"--booklet-cover-title-size": formatPoints(
-			theme.typography.coverTitle.fontSizePt,
-		),
+		"--booklet-cover-title-size": formatPoints(coverTitleSizePt),
 		"--booklet-cover-title-size-long": formatPoints(
-			Math.max(22, theme.typography.coverTitle.fontSizePt * 0.8),
+			Math.max(22, coverTitleSizePt * 0.8),
 		),
 		"--booklet-cover-title-size-very-long": formatPoints(
-			Math.max(22, theme.typography.coverTitle.fontSizePt * 0.6),
+			Math.max(22, coverTitleSizePt * 0.6),
 		),
 		"--booklet-itinerary-accent": itinerary.accent,
 		"--booklet-itinerary-border": itinerary.border,

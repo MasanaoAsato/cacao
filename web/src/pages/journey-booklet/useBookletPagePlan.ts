@@ -7,6 +7,8 @@ import {
 	type RecoverableBookletFailureCode,
 } from "../../booklet/paginate";
 import {
+	getCoverLayoutDefinition,
+	getFontPairFamilies,
 	getThemeCandidates,
 	resolveBookletTheme,
 } from "../../theme/bookletTheme";
@@ -98,27 +100,14 @@ async function waitForImageDecode(image: HTMLImageElement): Promise<void> {
 	});
 }
 
-function fontFamiliesFor(theme: BookletThemeCandidate): readonly string[] {
-	switch (theme.fontPairId) {
-		case "classic":
-			return ["Noto Serif JP"];
-		case "literary":
-			return ["Shippori Mincho", "Noto Sans JP"];
-		case "wayfinding":
-			return ["Zen Kaku Gothic New", "Noto Sans JP"];
-		case "modern":
-			return ["Noto Sans JP"];
-		case "round-trip":
-			return ["M PLUS Rounded 1c", "Noto Sans JP"];
-	}
-}
-
-async function waitForFonts(theme: BookletThemeCandidate): Promise<void> {
+export async function waitForFonts(
+	theme: BookletThemeCandidate,
+): Promise<void> {
 	if (!document.fonts) {
 		return;
 	}
 	await document.fonts.ready;
-	for (const family of fontFamiliesFor(theme)) {
+	for (const family of getFontPairFamilies(theme.fontPairId)) {
 		for (const weight of [400, 700] as const) {
 			const descriptor = `${weight} 10pt "${family}"`;
 			await document.fonts.load(descriptor, FONT_SAMPLE_TEXT);
@@ -199,27 +188,6 @@ function queryRequired(
 const COVER_VIEWBOX_WIDTH = 148;
 const COVER_VIEWBOX_HEIGHT = 210;
 
-function coverSafeArea(theme: BookletThemeCandidate): CoverVeilBounds {
-	switch (theme.coverLayoutId) {
-		case "center":
-			return { height: 76, width: 104, x: 22, y: 67 };
-		case "north-west":
-			return { height: 70, width: 80, x: 12, y: 12 };
-		case "north-east":
-			return { height: 70, width: 80, x: 56, y: 12 };
-		case "south-west":
-			return { height: 70, width: 80, x: 12, y: 128 };
-		case "south-east":
-			return { height: 70, width: 80, x: 56, y: 128 };
-		case "split-left":
-			return { height: 210, width: 70, x: 0, y: 0 };
-		case "horizon":
-			return { height: 62, width: 148, x: 0, y: 148 };
-		case "safe-cover":
-			return { height: 190, width: 128, x: 10, y: 10 };
-	}
-}
-
 function validRect(rect: DOMRect): boolean {
 	return (
 		[rect.left, rect.top, rect.width, rect.height].every(Number.isFinite) &&
@@ -275,13 +243,13 @@ export function measureCoverVeilBounds(
 		);
 	}
 
-	const safeArea = coverSafeArea(theme);
+	const safeArea = getCoverLayoutDefinition(theme.coverLayoutId).safeArea;
 	const tolerance = 0.1;
 	if (
-		bounds.x < safeArea.x - tolerance ||
-		bounds.y < safeArea.y - tolerance ||
-		bounds.x + bounds.width > safeArea.x + safeArea.width + tolerance ||
-		bounds.y + bounds.height > safeArea.y + safeArea.height + tolerance
+		bounds.x < safeArea.xMm - tolerance ||
+		bounds.y < safeArea.yMm - tolerance ||
+		bounds.x + bounds.width > safeArea.xMm + safeArea.widthMm + tolerance ||
+		bounds.y + bounds.height > safeArea.yMm + safeArea.heightMm + tolerance
 	) {
 		throw new BookletLayoutError(
 			"cover-bounds-invalid",
@@ -414,13 +382,15 @@ function ensurePagesFit(
 			"印刷ページ数がページ計画と一致しません。",
 		);
 	}
-	const veil = root.querySelector<SVGSVGElement>("svg.booklet-cover__veil");
-	const expectedVeilBounds = `${coverVeilBounds.x},${coverVeilBounds.y},${coverVeilBounds.width},${coverVeilBounds.height}`;
-	if (!veil || veil.dataset.bookletCoverVeil !== expectedVeilBounds) {
-		throw new BookletLayoutError(
-			"cover-bounds-invalid",
-			"表紙ベールと計測した文字位置が一致しません。",
-		);
+	if (getCoverLayoutDefinition(theme.coverLayoutId).veil !== "none") {
+		const veil = root.querySelector<SVGSVGElement>("svg.booklet-cover__veil");
+		const expectedVeilBounds = `${coverVeilBounds.x},${coverVeilBounds.y},${coverVeilBounds.width},${coverVeilBounds.height}`;
+		if (!veil || veil.dataset.bookletCoverVeil !== expectedVeilBounds) {
+			throw new BookletLayoutError(
+				"cover-bounds-invalid",
+				"表紙ベールと計測した文字位置が一致しません。",
+			);
+		}
 	}
 	for (const page of pages) {
 		if (page.dataset.bookletThemeKey !== theme.resolvedThemeKey) {

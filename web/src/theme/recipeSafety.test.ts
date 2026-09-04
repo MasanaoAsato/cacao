@@ -7,7 +7,9 @@ import {
 	validateThemeCatalog,
 } from "./recipeSafety";
 import type {
+	CoverLayoutDefinition,
 	RequestedBookletTheme,
+	ThemeCatalogReferences,
 	ThemeRecipeDefinition,
 	TypographySafety,
 } from "./types";
@@ -28,6 +30,23 @@ function requested(recipe: ThemeRecipeDefinition): RequestedBookletTheme {
 		recipe,
 		seed: { value: 7, version: "v1" },
 		seedToken: "v1-00000007",
+	};
+}
+
+function referencesWithCoverLayout(
+	id: CoverLayoutDefinition["id"],
+	overrides: Partial<CoverLayoutDefinition>,
+): ThemeCatalogReferences {
+	const cover = THEME_CATALOG_REFERENCES.coverLayouts.get(id);
+	if (!cover) {
+		throw new Error(`表紙構図「${id}」がありません。`);
+	}
+	return {
+		...THEME_CATALOG_REFERENCES,
+		coverLayouts: new Map(THEME_CATALOG_REFERENCES.coverLayouts).set(id, {
+			...cover,
+			...overrides,
+		}),
 	};
 }
 
@@ -245,6 +264,37 @@ describe("レシピ安全規格", () => {
 		expect(defineThemeRecipe(makeRecipe(), THEME_CATALOG_REFERENCES).id).toBe(
 			"field-01",
 		);
+	});
+
+	it("異常系: safe-coverを通常のテーマレシピとして選択できない", () => {
+		expect(() =>
+			defineThemeRecipe(
+				makeRecipe({ coverLayoutId: "safe-cover" }),
+				THEME_CATALOG_REFERENCES,
+			),
+		).toThrow(ThemeRecipeValidationError);
+	});
+
+	it("境界値系: 表紙構図の見出しサイズは22ptから56ptを受理する", () => {
+		for (const titleSizePt of [22, 56]) {
+			expect(() =>
+				validateThemeCatalog(
+					[makeRecipe()],
+					referencesWithCoverLayout("center", { titleSizePt }),
+				),
+			).not.toThrow();
+		}
+	});
+
+	it("異常系: 表紙構図の見出しサイズが範囲外ならカタログを拒否する", () => {
+		for (const titleSizePt of [21.99, 56.01]) {
+			expect(() =>
+				validateThemeCatalog(
+					[makeRecipe()],
+					referencesWithCoverLayout("center", { titleSizePt }),
+				),
+			).toThrow(ThemeRecipeValidationError);
+		}
 	});
 
 	it("正常系: 件数に依存しないカタログ安全検査を行う", () => {
