@@ -49,6 +49,10 @@ test.describe("PDFしおり", () => {
 			await expect(page.getByRole("status")).toHaveText(
 				/テーマ .* の印刷準備ができました。/,
 			);
+			await expect(page.locator(".booklet-shell")).toHaveAttribute(
+				"data-booklet-print-state",
+				"ready",
+			);
 			await expect(
 				page.getByRole("button", { name: "PDFを印刷" }),
 			).toBeEnabled();
@@ -230,6 +234,20 @@ test.describe("PDFしおり", () => {
 			}
 		});
 	}
+
+	test("印刷メディアで読み込んでも計測を完了できる", async ({ page }) => {
+		await page.emulateMedia({ media: "print" });
+		await page.goto("/journeys/journey-1/booklet?seed=v1-00000007");
+
+		await expect(page.locator(".booklet-shell")).toHaveAttribute(
+			"data-booklet-print-state",
+			"ready",
+		);
+		await expect(page.locator(".booklet-measurement")).toHaveCSS(
+			"display",
+			"none",
+		);
+	});
 
 	test("代表テーマをA5 PDFとして出力できる", async ({ page }) => {
 		await page.goto("/journeys/journey-1/booklet?seed=v1-00000007");

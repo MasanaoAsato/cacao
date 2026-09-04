@@ -17,6 +17,7 @@ func TestNewRouter_RegistersRoutes(t *testing.T) {
 		ListJourneys:         &mockListJourneysUseCase{},
 		GetJourneyRequest:    &mockGetJourneyRequestUseCase{},
 		ListJourneyRequests:  &mockListJourneyRequestsUseCase{},
+		ExportJourneyBooklet: &bookletExportUseCaseMock{},
 	})
 
 	routes := []struct {
@@ -28,6 +29,7 @@ func TestNewRouter_RegistersRoutes(t *testing.T) {
 		{http.MethodGet, "/api/v1/journey-requests/:id"},
 		{http.MethodPost, "/api/v1/journey-requests/:id/generate"},
 		{http.MethodGet, "/api/v1/journeys"},
+		{http.MethodGet, "/api/v1/journeys/:id/booklet.pdf"},
 		{http.MethodGet, "/api/v1/journeys/:id"},
 	}
 

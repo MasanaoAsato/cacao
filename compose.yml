@@ -1,4 +1,25 @@
 services:
+  gotenberg:
+    image: gotenberg/gotenberg:8.36.0
+    container_name: cacao-gotenberg
+    init: true
+    command:
+      - gotenberg
+      - --api-timeout=60s
+      - --chromium-max-concurrency=2
+      - '--chromium-allow-list=^http://host\.docker\.internal:5173/'
+      - '--chromium-allow-list=^http://host\.docker\.internal:5175/'
+    ports:
+      - "127.0.0.1:${GOTENBERG_PORT:-3002}:3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:3000/health"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+    restart: unless-stopped
+
   db:
     image: postgres:18.4
     container_name: cacao-db

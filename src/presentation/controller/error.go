@@ -41,6 +41,10 @@ func applicationErrorResponse(err error) (int, errorResponse) {
 		return http.StatusConflict, errorResponse{Error: "journey image retry not allowed", Detail: "journey image cannot be retried"}
 	case errors.Is(err, application.ErrGenerationFailed):
 		return http.StatusBadGateway, errorResponse{Error: "generation failed", Detail: "journey generation failed"}
+	case errors.Is(err, application.ErrBookletRendererBusy):
+		return http.StatusServiceUnavailable, errorResponse{Error: "booklet renderer busy", Detail: "booklet renderer is busy"}
+	case errors.Is(err, application.ErrBookletRenderFailed):
+		return http.StatusInternalServerError, errorResponse{Error: "booklet render failed", Detail: "booklet render failed"}
 	case errors.Is(err, application.ErrDuplicateID):
 		return http.StatusConflict, errorResponse{Error: "duplicate id", Detail: "the resource already exists"}
 	default:

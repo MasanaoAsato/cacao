@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net"
 	"os"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -43,6 +44,7 @@ var safeLogOperations = map[string]struct{}{
 	"delete_journey_image":            {},
 	"openrouter_send_chat_completion": {},
 	"openrouter_generate_image":       {},
+	"render_booklet_pdf":              {},
 }
 
 var safeRoutes = map[string]struct{}{
@@ -55,6 +57,7 @@ var safeRoutes = map[string]struct{}{
 	"/api/v1/journey-images/:image_id":         {},
 	"/api/v1/journey-images/:image_id/content": {},
 	"/api/v1/journey-images/:image_id/retry":   {},
+	"/api/v1/journeys/:id/booklet.pdf":         {},
 }
 
 // FailureContext は機微情報を含めずに失敗を識別するログ項目である。
@@ -62,7 +65,9 @@ type FailureContext struct {
 	Operation      string
 	Route          string
 	Status         int
+	JourneyID      string
 	JourneyImageID string
+	ThemeSeed      string
 }
 
 // ErrorDetailCode は構造化失敗ログに記録できる固定の原因コードである。
@@ -175,6 +180,12 @@ func LogFailure(
 	if imageID := safeUUID(failureContext.JourneyImageID); imageID != "" {
 		attrs = append(attrs, slog.String("journey_image_id", imageID))
 	}
+	if journeyID := safeUUID(failureContext.JourneyID); journeyID != "" {
+		attrs = append(attrs, slog.String("journey_id", journeyID))
+	}
+	if themeSeed := safeThemeSeed(failureContext.ThemeSeed); themeSeed != "" {
+		attrs = append(attrs, slog.String("theme_seed", themeSeed))
+	}
 	if SourceOperation := SourceOperation(err); SourceOperation != "" {
 		attrs = append(attrs, slog.String("source_operation", SourceOperation))
 	}
@@ -240,6 +251,10 @@ func errorKind(err error) string {
 		return "journey_image_retry_not_allowed"
 	case errors.Is(err, application.ErrGenerationFailed):
 		return "generation_failed"
+	case errors.Is(err, application.ErrBookletRendererBusy):
+		return "booklet_renderer_busy"
+	case errors.Is(err, application.ErrBookletRenderFailed):
+		return "booklet_render_failed"
 	case errors.Is(err, application.ErrDuplicateID):
 		return "duplicate_id"
 	default:
@@ -264,6 +279,14 @@ func causeKind(err error) string {
 		return "image_generation_rejected"
 	case errors.Is(err, domainservice.ErrGeneratedImageInvalid):
 		return "generated_image_invalid"
+	case errors.Is(err, domainservice.ErrBookletRendererBusy):
+		return "booklet_renderer_busy"
+	case errors.Is(err, domainservice.ErrBookletRenderTimeout):
+		return "booklet_render_timeout"
+	case errors.Is(err, domainservice.ErrBookletRenderFailed):
+		return "booklet_render_failed"
+	case errors.Is(err, domainservice.ErrRenderedBookletInvalid):
+		return "rendered_booklet_invalid"
 	}
 
 	var networkError net.Error
@@ -330,11 +353,17 @@ func isClassificationSentinel(err error) bool {
 		errors.Is(err, application.ErrJourneyImageNotReady) ||
 		errors.Is(err, application.ErrJourneyImageRetryNotAllowed) ||
 		errors.Is(err, application.ErrGenerationFailed) ||
+		errors.Is(err, application.ErrBookletRendererBusy) ||
+		errors.Is(err, application.ErrBookletRenderFailed) ||
 		errors.Is(err, application.ErrDuplicateID) ||
 		errors.Is(err, domainservice.ErrImageGeneratorTimeout) ||
 		errors.Is(err, domainservice.ErrImageGeneratorUnavailable) ||
 		errors.Is(err, domainservice.ErrImageGenerationRejected) ||
-		errors.Is(err, domainservice.ErrGeneratedImageInvalid)
+		errors.Is(err, domainservice.ErrGeneratedImageInvalid) ||
+		errors.Is(err, domainservice.ErrBookletRendererBusy) ||
+		errors.Is(err, domainservice.ErrBookletRenderTimeout) ||
+		errors.Is(err, domainservice.ErrBookletRenderFailed) ||
+		errors.Is(err, domainservice.ErrRenderedBookletInvalid)
 }
 
 type safeOperationCarrier interface {
@@ -476,4 +505,18 @@ func safeUUID(value string) string {
 		return ""
 	}
 	return id.String()
+}
+
+func safeThemeSeed(value string) string {
+	if len(value) != len("v1-00000000") || !strings.EqualFold(value[:3], "v1-") {
+		return ""
+	}
+	for _, character := range value[3:] {
+		if (character < '0' || character > '9') &&
+			(character < 'a' || character > 'f') &&
+			(character < 'A' || character > 'F') {
+			return ""
+		}
+	}
+	return "v1-" + strings.ToLower(value[3:])
 }

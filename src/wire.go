@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	createjourneyrequest "cacao/src/application/create_journey_request"
+	exportjourneybooklet "cacao/src/application/export_journey_booklet"
 	generatejourney "cacao/src/application/generate_journey"
 	generatejourneyimage "cacao/src/application/generate_journey_image"
 	getjourney "cacao/src/application/get_journey"
@@ -20,6 +21,8 @@ import (
 	requestjourneyimages "cacao/src/application/request_journey_images"
 	retryjourneyimage "cacao/src/application/retry_journey_image"
 	domainservice "cacao/src/domain/service"
+	"cacao/src/infrastructure/bookletpdf"
+	bookletgotenberg "cacao/src/infrastructure/bookletpdf/gotenberg"
 	"cacao/src/infrastructure/config"
 	"cacao/src/infrastructure/database"
 	"cacao/src/infrastructure/event"
@@ -68,6 +71,10 @@ func buildApplication(ctx context.Context) (*application, error) {
 	if err != nil {
 		return nil, fmt.Errorf("load image config: %w", err)
 	}
+	bookletConfig, err := config.BookletFromEnv()
+	if err != nil {
+		return nil, fmt.Errorf("load booklet config: %w", err)
+	}
 	journeyGenerator, err := newJourneyGenerator()
 	if err != nil {
 		return nil, fmt.Errorf("setup journey generator: %w", err)
@@ -98,6 +105,11 @@ func buildApplication(ctx context.Context) (*application, error) {
 	if err != nil {
 		app.Close()
 		return nil, fmt.Errorf("setup image generator: %w", err)
+	}
+	bookletRenderer, err := newBookletRenderer(bookletConfig)
+	if err != nil {
+		app.Close()
+		return nil, fmt.Errorf("setup booklet renderer: %w", err)
 	}
 
 	requestRepo := postgres.NewJourneyRequestRepository(db)
@@ -133,6 +145,7 @@ func buildApplication(ctx context.Context) (*application, error) {
 		ListJourneys:         listjourneys.NewUseCase(journeyRepo),
 		GetJourneyRequest:    getjourneyrequest.NewUseCase(requestRepo),
 		ListJourneyRequests:  listjourneyrequests.NewUseCase(requestRepo),
+		ExportJourneyBooklet: exportjourneybooklet.NewUseCase(journeyRepo, imageRepo, bookletRenderer),
 		Images: controller.ImageRoutes{
 			Request: requestjourneyimages.NewUseCase(requestRepo, imageRepo),
 			List:    listjourneyimages.NewUseCase(requestRepo, imageRepo),
@@ -191,6 +204,18 @@ func newImageGenerator(imageConfig config.Image) (domainservice.ImageGenerator, 
 		})
 	default:
 		return nil, fmt.Errorf("unsupported image generator driver: %q", imageConfig.GeneratorDriver)
+	}
+}
+
+// newBookletRenderer は BOOKLET_PDF_DRIVER に応じてPDFレンダラーの実装を選ぶ。
+func newBookletRenderer(bookletConfig config.Booklet) (domainservice.BookletRenderer, error) {
+	switch bookletConfig.PDFDriver {
+	case config.BookletPDFDriverStub:
+		return bookletpdf.NewStub(bookletConfig.PDFMaxBytes), nil
+	case config.BookletPDFDriverGotenberg:
+		return bookletgotenberg.NewRenderer(bookletConfig), nil
+	default:
+		return nil, fmt.Errorf("unsupported booklet pdf driver: %q", bookletConfig.PDFDriver)
 	}
 }
 
