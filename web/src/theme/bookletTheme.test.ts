@@ -173,9 +173,9 @@ describe("V1テーマカタログ", () => {
 			},
 		]);
 		expect(
-			["classic", "literary", "wayfinding", "modern", "round-trip"].map(
-				(fontPairId) => getFontPairFamilies(fontPairId),
-			),
+			(
+				["classic", "literary", "wayfinding", "modern", "round-trip"] as const
+			).map((fontPairId) => getFontPairFamilies(fontPairId)),
 		).toEqual([
 			["Noto Serif JP"],
 			["Shippori Mincho", "Noto Sans JP"],
