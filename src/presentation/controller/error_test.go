@@ -43,6 +43,20 @@ func TestHandleApplicationError(t *testing.T) {
 			wantDetail: "journey image cannot be retried",
 		},
 		{
+			name:       "レンダラーが混雑している場合は503を返す",
+			err:        fmt.Errorf("render booklet: %w", application.ErrBookletRendererBusy),
+			wantStatus: http.StatusServiceUnavailable,
+			wantError:  "booklet renderer busy",
+			wantDetail: "booklet renderer is busy",
+		},
+		{
+			name:       "レンダリングに失敗した場合は500を返す",
+			err:        fmt.Errorf("render booklet: %w", application.ErrBookletRenderFailed),
+			wantStatus: http.StatusInternalServerError,
+			wantError:  "booklet render failed",
+			wantDetail: "booklet render failed",
+		},
+		{
 			name:       "未知のエラーの場合は500を返す",
 			err:        errors.New("unexpected error with database path"),
 			wantStatus: http.StatusInternalServerError,

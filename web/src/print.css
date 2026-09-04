@@ -202,6 +202,11 @@ body {
 	cursor: pointer;
 }
 
+.booklet-controls .booklet-controls__download {
+	color: #2e2318;
+	background: #f1ca78;
+}
+
 .booklet-controls button:disabled {
 	color: #867d76;
 	background: #d9d3ce;
@@ -458,8 +463,11 @@ body {
 		padding: 0;
 	}
 
-	.booklet-controls,
-	.booklet-measurement {
+	.booklet-controls {
+		display: none;
+	}
+
+	.booklet-shell[data-booklet-print-state="ready"] .booklet-measurement {
 		display: none;
 	}
 

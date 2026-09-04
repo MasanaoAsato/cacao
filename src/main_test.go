@@ -1,12 +1,18 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
 	"time"
 
+	domainservice "cacao/src/domain/service"
+	"cacao/src/domain/value_object"
+	"cacao/src/infrastructure/bookletpdf"
+	bookletgotenberg "cacao/src/infrastructure/bookletpdf/gotenberg"
 	"cacao/src/infrastructure/config"
 	"cacao/src/infrastructure/journeygen"
 )
@@ -199,6 +205,73 @@ func TestNewImageStorageRejectsUnsupportedDriver(t *testing.T) {
 	})
 	if err == nil {
 		t.Fatal("newImageStorage() error = nil, want error")
+	}
+}
+
+func TestNewBookletRenderer(t *testing.T) {
+	tests := []struct {
+		name          string
+		config        config.Booklet
+		wantGotenberg bool
+		wantError     bool
+	}{
+		{
+			name:   "正常系: stub",
+			config: config.Booklet{PDFDriver: config.BookletPDFDriverStub},
+		},
+		{
+			name: "正常系: gotenberg",
+			config: config.Booklet{
+				PDFDriver:      config.BookletPDFDriverGotenberg,
+				PDFConcurrency: 1,
+			},
+			wantGotenberg: true,
+		},
+		{
+			name:      "異常系: 未対応ドライバ",
+			config:    config.Booklet{PDFDriver: "unknown"},
+			wantError: true,
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			renderer, err := newBookletRenderer(testCase.config)
+			if (err != nil) != testCase.wantError {
+				t.Fatalf("newBookletRenderer() error = %v, wantError = %v", err, testCase.wantError)
+			}
+			if testCase.wantError {
+				return
+			}
+			if testCase.wantGotenberg {
+				if _, ok := renderer.(*bookletgotenberg.Renderer); !ok {
+					t.Errorf("renderer type = %T, want *gotenberg.Renderer", renderer)
+				}
+				return
+			}
+			if _, ok := renderer.(*bookletpdf.Stub); !ok {
+				t.Errorf("renderer type = %T, want *bookletpdf.Stub", renderer)
+			}
+		})
+	}
+}
+
+func TestNewBookletRendererPassesConfiguredMaximumToStub(t *testing.T) {
+	renderer, err := newBookletRenderer(config.Booklet{
+		PDFDriver:   config.BookletPDFDriverStub,
+		PDFMaxBytes: 1,
+	})
+	if err != nil {
+		t.Fatalf("newBookletRenderer() error = %v", err)
+	}
+
+	request, err := domainservice.NewBookletRenderRequest(value_object.NewID(), nil)
+	if err != nil {
+		t.Fatalf("NewBookletRenderRequest() error = %v", err)
+	}
+	_, err = renderer.Render(context.Background(), request)
+	if !errors.Is(err, domainservice.ErrRenderedBookletInvalid) {
+		t.Errorf("Render() error = %v, want ErrRenderedBookletInvalid", err)
 	}
 }
 

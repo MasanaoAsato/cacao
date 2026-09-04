@@ -90,6 +90,37 @@ IMAGE_GENERATION_TIMEOUT=180s
 
 設定後の画像生成リクエスト、状態確認、PNG取得の手順は [Stub E2E](#stub-e2e) と同じです。カバーには縦長、挿絵には横長の画像を要求し、返却された画像は保存前にPNG形式・バイト数・寸法を検証します。
 
+## 旅のしおりPDFの設定
+
+GET /api/v1/journeys/{id}/booklet.pdf?seed=v1-xxxxxxxx は、表紙画像が ready の旅程を A5 PDF として返します。既定の stub ドライバーは固定PDFを返すため、Gotenbergなしでも API とフロントエンドの連携を確認できます。
+
+実際の画面をPDF化する場合は、次のように設定します。
+
+~~~dotenv
+BOOKLET_PDF_DRIVER=gotenberg
+BOOKLET_RENDER_BASE_URL=http://host.docker.internal:5173
+BOOKLET_GOTENBERG_URL=http://127.0.0.1:3002
+BOOKLET_PDF_TIMEOUT=30s
+BOOKLET_PDF_CONCURRENCY=1
+BOOKLET_PDF_MAX_BYTES=10485760
+~~~
+
+BOOKLET_RENDER_BASE_URL は Gotenberg コンテナから到達でき、SPA と /api/v1 を同一オリジンで配信するURLです。開発用 Vite はこの接続のため 0.0.0.0 に bind し、Host は host.docker.internal を明示的に許可しています。レンダリングは同期で行い、同時実行数を超えた要求は 503 で再試行を案内します。BOOKLET_PDF_CONCURRENCY ごとに約300MBのメモリ余裕を確保してください。
+
+WSL のローカル開発では Gotenberg サービスを起動します。API は既定でホストの 127.0.0.1:3002 のみに公開されます。変更する場合は GOTENBERG_PORT を指定し、BOOKLET_GOTENBERG_URL も同じポートへ合わせてください。
+
+~~~bash
+docker compose up -d gotenberg
+~~~
+
+`curl http://127.0.0.1:3002/health` が `status: up` を返せば準備完了です。Chromium の CDP ポートは公開せず、Compose の Gotenberg は `http://host.docker.internal:5173/` だけを描画対象として許可します。
+
+実サービスで A5 3ページ、文字抽出、ready・error・timeout の動作を確認するには次を実行します。試験用の `http://host.docker.internal:5175/` も allow-list に限定して許可しています。
+
+~~~bash
+mise run test:gotenberg
+~~~
+
 ## DB設定
 `POSTGRESQL_URL` を設定した場合は接続URIを優先します。空の場合は、以下の `POSTGRES_*` 個別設定（未設定なら `compose.yml` 相当の既定値）を使います。
 

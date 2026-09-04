@@ -68,6 +68,14 @@ const imagePayload = {
 const originalDecode = HTMLImageElement.prototype.decode;
 const originalFonts = Object.getOwnPropertyDescriptor(document, "fonts");
 const originalPrint = Object.getOwnPropertyDescriptor(window, "print");
+const originalCreateObjectURL = Object.getOwnPropertyDescriptor(
+	URL,
+	"createObjectURL",
+);
+const originalRevokeObjectURL = Object.getOwnPropertyDescriptor(
+	URL,
+	"revokeObjectURL",
+);
 const originalClientHeight = Object.getOwnPropertyDescriptor(
 	HTMLElement.prototype,
 	"clientHeight",
@@ -237,6 +245,16 @@ function restoreBrowserMocks() {
 	if (originalPrint) {
 		Object.defineProperty(window, "print", originalPrint);
 	}
+	if (originalCreateObjectURL) {
+		Object.defineProperty(URL, "createObjectURL", originalCreateObjectURL);
+	} else {
+		Reflect.deleteProperty(URL, "createObjectURL");
+	}
+	if (originalRevokeObjectURL) {
+		Object.defineProperty(URL, "revokeObjectURL", originalRevokeObjectURL);
+	} else {
+		Reflect.deleteProperty(URL, "revokeObjectURL");
+	}
 	for (const [property, descriptor] of [
 		["clientHeight", originalClientHeight],
 		["clientWidth", originalClientWidth],
@@ -293,6 +311,7 @@ describe("JourneyBookletPage", () => {
 		restoreBrowserMocks();
 		vi.unstubAllGlobals();
 		vi.clearAllMocks();
+		vi.restoreAllMocks();
 	});
 
 	it("正常系: APIデータから表紙と本文を描画し印刷できる", async () => {
@@ -319,6 +338,201 @@ describe("JourneyBookletPage", () => {
 		).toBe(true);
 	});
 
+	it("状態: データ読込中はレンダラーにloadingを通知する", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(() => new Promise<Response>(() => {})),
+		);
+
+		renderPage();
+
+		await waitFor(() =>
+			expect(document.querySelector(".booklet-shell")).toHaveAttribute(
+				"data-booklet-print-state",
+				"loading",
+			),
+		);
+		expect(
+			screen.getByRole("button", { name: "PDFをダウンロード" }),
+		).toBeDisabled();
+	});
+
+	it("状態: ページ計測中はレンダラーにpreparingを通知する", async () => {
+		const imageDecodePending = new Promise<void>(() => {});
+		vi.mocked(HTMLImageElement.prototype.decode).mockReturnValue(
+			imageDecodePending,
+		);
+		installFetchMock();
+
+		renderPage();
+
+		await waitFor(() =>
+			expect(document.querySelector(".booklet-shell")).toHaveAttribute(
+				"data-booklet-print-state",
+				"preparing",
+			),
+		);
+		expect(
+			screen.getByRole("button", { name: "PDFをダウンロード" }),
+		).toBeDisabled();
+	});
+
+	it("正常系: 準備完了したしおりをPDFとしてダウンロードできる", async () => {
+		const fetchMock = installFetchMock();
+		const createObjectURL = vi.fn(() => "blob:journey-booklet");
+		const revokeObjectURL = vi.fn();
+		Object.defineProperty(URL, "createObjectURL", {
+			configurable: true,
+			value: createObjectURL,
+		});
+		Object.defineProperty(URL, "revokeObjectURL", {
+			configurable: true,
+			value: revokeObjectURL,
+		});
+		let clickedFileName = "";
+		vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(
+			function mockAnchorClick(this: HTMLAnchorElement) {
+				clickedFileName = this.download;
+			},
+		);
+
+		renderPage();
+
+		const downloadButton = screen.getByRole("button", {
+			name: "PDFをダウンロード",
+		});
+		await waitFor(() => expect(downloadButton).toBeEnabled());
+		expect(document.querySelector(".booklet-shell")).toHaveAttribute(
+			"data-booklet-print-state",
+			"ready",
+		);
+		fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+			if (String(input).includes("/booklet.pdf")) {
+				return new Response("%PDF-1.4\n", {
+					headers: { "Content-Type": "application/pdf" },
+					status: 200,
+				});
+			}
+			throw new Error("unexpected request");
+		});
+
+		downloadButton.click();
+
+		await waitFor(() => expect(createObjectURL).toHaveBeenCalledTimes(1));
+		const bookletPath = fetchMock.mock.calls
+			.map(([input]) => String(input))
+			.find((path) => path.includes("/booklet.pdf"));
+		expect(bookletPath).toMatch(
+			/^\/api\/v1\/journeys\/journey-1\/booklet\.pdf\?seed=v1-[0-9a-f]{8}$/,
+		);
+		expect(clickedFileName).toBe("旅のしおり-京都-2026-08-28.pdf");
+		expect(revokeObjectURL).toHaveBeenCalledWith("blob:journey-booklet");
+	});
+
+	it("状態: PDF作成中は両方の操作を無効にして進行中を表示する", async () => {
+		const fetchMock = installFetchMock();
+		renderPage();
+
+		const downloadButton = screen.getByRole("button", {
+			name: "PDFをダウンロード",
+		});
+		await waitFor(() => expect(downloadButton).toBeEnabled());
+		fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+			if (String(input).includes("/booklet.pdf")) {
+				return new Promise<Response>(() => {});
+			}
+			throw new Error("unexpected request");
+		});
+
+		downloadButton.click();
+
+		await waitFor(() =>
+			expect(screen.getByRole("status")).toHaveTextContent(
+				"PDFを作成しています…",
+			),
+		);
+		expect(downloadButton).toBeDisabled();
+		expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeDisabled();
+	});
+
+	it("異常系: 混雑時はPDFを再試行できる状態で案内する", async () => {
+		const fetchMock = installFetchMock();
+		renderPage();
+
+		const downloadButton = screen.getByRole("button", {
+			name: "PDFをダウンロード",
+		});
+		await waitFor(() => expect(downloadButton).toBeEnabled());
+		fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+			if (String(input).includes("/booklet.pdf")) {
+				return new Response("", { status: 503 });
+			}
+			throw new Error("unexpected request");
+		});
+
+		downloadButton.click();
+
+		await waitFor(() =>
+			expect(screen.getByRole("status")).toHaveTextContent(
+				"混み合っています。数秒後にもう一度お試しください。",
+			),
+		);
+		expect(downloadButton).toBeEnabled();
+		expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled();
+	});
+
+	it("異常系: 表紙画像が未準備ならPDFを再試行できる状態で案内する", async () => {
+		const fetchMock = installFetchMock();
+		renderPage();
+
+		const downloadButton = screen.getByRole("button", {
+			name: "PDFをダウンロード",
+		});
+		await waitFor(() => expect(downloadButton).toBeEnabled());
+		fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+			if (String(input).includes("/booklet.pdf")) {
+				return new Response("", { status: 409 });
+			}
+			throw new Error("unexpected request");
+		});
+
+		downloadButton.click();
+
+		await waitFor(() =>
+			expect(screen.getByRole("status")).toHaveTextContent(
+				"表紙画像がまだ準備できていません。",
+			),
+		);
+		expect(downloadButton).toBeEnabled();
+		expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled();
+	});
+
+	it("異常系: PDF生成に失敗したら印刷で保存する代替手段を案内する", async () => {
+		const fetchMock = installFetchMock();
+		renderPage();
+
+		const downloadButton = screen.getByRole("button", {
+			name: "PDFをダウンロード",
+		});
+		await waitFor(() => expect(downloadButton).toBeEnabled());
+		fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+			if (String(input).includes("/booklet.pdf")) {
+				return new Response("", { status: 500 });
+			}
+			throw new Error("unexpected request");
+		});
+
+		downloadButton.click();
+
+		await waitFor(() =>
+			expect(screen.getByRole("status")).toHaveTextContent(
+				"PDFを作成できませんでした。「PDFを印刷」からも保存できます。",
+			),
+		);
+		expect(downloadButton).toBeEnabled();
+		expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled();
+	});
+
 	it("異常系: 表紙画像が未準備なら印刷と生成要求を行わない", async () => {
 		const fetchMock = installFetchMock("processing");
 		renderPage();
@@ -329,6 +543,14 @@ describe("JourneyBookletPage", () => {
 		);
 
 		expect(printButton).toBeDisabled();
+		expect(document.querySelector(".booklet-shell")).toHaveAttribute(
+			"data-booklet-print-state",
+			"error",
+		);
+		expect(document.querySelector(".booklet-shell")).toHaveAttribute(
+			"data-booklet-print-error",
+			"表紙画像が準備できていないため、印刷できません。",
+		);
 		expect(window.print).not.toHaveBeenCalled();
 		expect(fetchMock).toHaveBeenCalledTimes(3);
 		expect(

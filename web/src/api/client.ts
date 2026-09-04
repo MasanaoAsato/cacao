@@ -17,8 +17,11 @@ export class ApiError extends Error {
 }
 
 export class ApiResponseError extends ApiError {
-	constructor(message: string) {
-		super(message);
+	constructor(
+		message: string,
+		options?: { readonly cause?: unknown; readonly status?: number },
+	) {
+		super(message, options);
 		this.name = "ApiResponseError";
 	}
 }
@@ -81,6 +84,60 @@ export async function requestJson<T>(
 		}
 
 		throw new ApiResponseError("APIレスポンスの形式が不正です。");
+	}
+}
+
+export async function requestBlob(
+	path: string,
+	options: ApiRequestOptions & {
+		readonly expectedContentType?: string;
+		readonly headers?: HeadersInit;
+		readonly method?: string;
+	} = {},
+): Promise<Blob> {
+	const fetchImpl = options.fetchImpl ?? globalThis.fetch;
+	let response: Response;
+	try {
+		response = await fetchImpl(path, {
+			headers: options.headers,
+			method: options.method ?? "GET",
+			signal: options.signal,
+		});
+	} catch (error) {
+		throw new ApiError("APIへの接続に失敗しました。", { cause: error });
+	}
+
+	if (!response.ok) {
+		throw new ApiError(
+			`APIリクエストに失敗しました（HTTP ${response.status}）。`,
+			{ status: response.status },
+		);
+	}
+
+	const actualContentType = response.headers
+		.get("Content-Type")
+		?.split(";", 1)[0]
+		?.trim()
+		.toLowerCase();
+	if (
+		options.expectedContentType !== undefined &&
+		actualContentType !== options.expectedContentType.toLowerCase()
+	) {
+		throw new ApiResponseError("APIレスポンスのContent-Typeが不正です。", {
+			status: response.status,
+		});
+	}
+
+	try {
+		return await response.blob();
+	} catch (error) {
+		throw new ApiResponseError(
+			"APIレスポンスのバイナリを読み取れませんでした。",
+			{
+				cause: error,
+				status: response.status,
+			},
+		);
 	}
 }
 

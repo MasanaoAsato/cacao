@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { ApiError } from "../../api/client";
+import { downloadJourneyBookletPdf } from "../../api/journeyBooklet";
 import { getJourneyImages, selectCoverImage } from "../../api/journeyImages";
 import { getJourneyRequest } from "../../api/journeyRequests";
 import { getJourney } from "../../api/journeys";
@@ -33,6 +34,11 @@ type ThemeRequestResult = {
 	readonly requestedTheme: RequestedBookletTheme | null;
 };
 
+type BookletPrintState = {
+	readonly error?: string;
+	readonly state: "error" | "loading" | "preparing" | "ready";
+};
+
 function errorMessage(error: unknown, fallback: string): string {
 	if (error instanceof CoverImageNotReadyError) {
 		return error.message;
@@ -41,6 +47,68 @@ function errorMessage(error: unknown, fallback: string): string {
 		return error.message;
 	}
 	return fallback;
+}
+
+function downloadErrorMessage(error: unknown): string {
+	if (error instanceof ApiError) {
+		switch (error.status) {
+			case 503:
+				return "混み合っています。数秒後にもう一度お試しください。";
+			case 409:
+				return "表紙画像がまだ準備できていません。";
+		}
+	}
+	return "PDFを作成できませんでした。「PDFを印刷」からも保存できます。";
+}
+
+function downloadFileName(model: BookletModel): string {
+	const destination = Array.from(model.cover.destination)
+		.map((character) => {
+			const code = character.charCodeAt(0);
+			return character === "/" ||
+				character === "\\" ||
+				code <= 0x1f ||
+				code === 0x7f
+				? "_"
+				: character;
+		})
+		.join("");
+	const startDate = model.cover.period.start_date.slice(0, 10);
+	return `旅のしおり-${destination}-${startDate}.pdf`;
+}
+
+function resolveBookletPrintState(
+	canPrint: boolean,
+	loadState: LoadState,
+	pagePlanError: string | null,
+	pagePlanStatus: string,
+	themeError: string | null,
+): BookletPrintState {
+	if (canPrint) {
+		return { state: "ready" };
+	}
+	if (loadState.status === "loading") {
+		return { state: "loading" };
+	}
+	if (loadState.status === "cover-not-ready") {
+		return {
+			error: "表紙画像が準備できていないため、印刷できません。",
+			state: "error",
+		};
+	}
+	if (loadState.status === "error") {
+		return { error: loadState.error, state: "error" };
+	}
+	if (themeError) {
+		return { error: themeError, state: "error" };
+	}
+	if (pagePlanStatus === "error") {
+		return {
+			error: pagePlanError ?? "印刷前の準備に失敗しました。",
+			state: "error",
+		};
+	}
+	return { state: "preparing" };
 }
 
 function resolveRequestedTheme(
@@ -73,6 +141,8 @@ function LoadingMessage() {
 }
 
 function BookletStatus({
+	downloadError,
+	isDownloading,
 	loadState,
 	pagePlanError,
 	pagePlanStatus,
@@ -80,6 +150,8 @@ function BookletStatus({
 	theme,
 	themeError,
 }: {
+	readonly downloadError: string | null;
+	readonly isDownloading: boolean;
 	readonly loadState: LoadState;
 	readonly pagePlanError: string | null;
 	readonly pagePlanStatus: string;
@@ -87,6 +159,12 @@ function BookletStatus({
 	readonly theme: RequestedBookletTheme | null;
 	readonly themeError: string | null;
 }) {
+	if (isDownloading) {
+		return <p>PDFを作成しています…</p>;
+	}
+	if (downloadError) {
+		return <p>{downloadError}</p>;
+	}
 	if (loadState.status === "loading") {
 		return <LoadingMessage />;
 	}
@@ -129,6 +207,8 @@ export function JourneyBookletPage() {
 	const seedQuery = searchParams.get("seed");
 	const [loadState, setLoadState] = useState<LoadState>({ status: "loading" });
 	const [model, setModel] = useState<BookletModel | null>(null);
+	const [downloadError, setDownloadError] = useState<string | null>(null);
+	const [isDownloading, setIsDownloading] = useState(false);
 	const [rerollError, setRerollError] = useState<string | null>(null);
 	const themeRequest = useMemo(
 		() => resolveRequestedTheme(journeyId, seedQuery),
@@ -151,6 +231,13 @@ export function JourneyBookletPage() {
 		coverVeilBounds !== null &&
 		resolvedTheme !== null &&
 		activeTheme?.resolvedThemeKey === resolvedTheme.resolvedThemeKey;
+	const bookletPrintState = resolveBookletPrintState(
+		canPrint,
+		loadState,
+		pagePlanError,
+		status,
+		themeRequest.error,
+	);
 
 	useEffect(() => {
 		if (!themeRequest.invalidQuery) {
@@ -224,8 +311,38 @@ export function JourneyBookletPage() {
 	}, [journeyId]);
 
 	const handlePrint = () => {
-		if (canPrint) {
+		if (canPrint && !isDownloading) {
 			window.print();
+		}
+	};
+
+	const handleDownload = async () => {
+		const requestedTheme = themeRequest.requestedTheme;
+		if (!canPrint || !journeyId || !model || !requestedTheme) {
+			return;
+		}
+
+		setDownloadError(null);
+		setIsDownloading(true);
+		try {
+			const pdf = await downloadJourneyBookletPdf(journeyId, {
+				seed: formatThemeSeed(requestedTheme.seed),
+			});
+			const objectURL = URL.createObjectURL(pdf);
+			const anchor = document.createElement("a");
+			anchor.download = downloadFileName(model);
+			anchor.href = objectURL;
+			try {
+				document.body.append(anchor);
+				anchor.click();
+			} finally {
+				anchor.remove();
+				URL.revokeObjectURL(objectURL);
+			}
+		} catch (error) {
+			setDownloadError(downloadErrorMessage(error));
+		} finally {
+			setIsDownloading(false);
 		}
 	};
 
@@ -234,6 +351,7 @@ export function JourneyBookletPage() {
 		if (!requestedTheme) {
 			return;
 		}
+		setDownloadError(null);
 		setRerollError(null);
 		try {
 			const nextSeed = createRerollSeed(
@@ -258,7 +376,11 @@ export function JourneyBookletPage() {
 	};
 
 	return (
-		<div className="booklet-shell">
+		<div
+			className="booklet-shell"
+			data-booklet-print-error={bookletPrintState.error}
+			data-booklet-print-state={bookletPrintState.state}
+		>
 			<section className="booklet-controls" aria-label="旅のしおり操作">
 				<div>
 					<p className="booklet-controls__eyebrow">BOOKLET / A5</p>
@@ -267,12 +389,24 @@ export function JourneyBookletPage() {
 				<div className="booklet-controls__actions">
 					<button
 						type="button"
-						disabled={themeRequest.requestedTheme === null}
+						disabled={themeRequest.requestedTheme === null || isDownloading}
 						onClick={handleReroll}
 					>
 						別のデザインを試す
 					</button>
-					<button type="button" disabled={!canPrint} onClick={handlePrint}>
+					<button
+						className="booklet-controls__download"
+						type="button"
+						disabled={!canPrint || isDownloading}
+						onClick={handleDownload}
+					>
+						PDFをダウンロード
+					</button>
+					<button
+						type="button"
+						disabled={!canPrint || isDownloading}
+						onClick={handlePrint}
+					>
 						PDFを印刷
 					</button>
 				</div>
@@ -282,6 +416,8 @@ export function JourneyBookletPage() {
 					aria-live="polite"
 				>
 					<BookletStatus
+						downloadError={downloadError}
+						isDownloading={isDownloading}
 						loadState={loadState}
 						pagePlanError={pagePlanError}
 						pagePlanStatus={status}

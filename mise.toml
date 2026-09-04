@@ -16,6 +16,10 @@ run = "golangci-lint run ./..."
 description = "Goのテストを実行する"
 run = "go test ./..."
 
+[tasks."test:gotenberg"]
+description = "起動済みGotenbergを使ってPDF変換を検証する"
+run = "env BOOKLET_GOTENBERG_URL=http://127.0.0.1:3002 go test -tags=gotenberg ./src/infrastructure/bookletpdf/gotenberg"
+
 [tasks.server]
 description = "Go APIサーバーを起動する"
 run = "go run ./src"

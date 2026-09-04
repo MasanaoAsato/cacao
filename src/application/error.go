@@ -10,5 +10,7 @@ var (
 	ErrJourneyImageNotReady        = errors.New("journey image not ready")
 	ErrJourneyImageRetryNotAllowed = errors.New("journey image retry not allowed")
 	ErrGenerationFailed            = errors.New("journey generation failed")
+	ErrBookletRendererBusy         = errors.New("booklet renderer busy")
+	ErrBookletRenderFailed         = errors.New("booklet render failed")
 	ErrDuplicateID                 = errors.New("duplicate id")
 )

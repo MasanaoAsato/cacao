@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	createjourneyrequest "cacao/src/application/create_journey_request"
+	exportjourneybooklet "cacao/src/application/export_journey_booklet"
 	generatejourney "cacao/src/application/generate_journey"
 	getjourney "cacao/src/application/get_journey"
 	getjourneyrequest "cacao/src/application/get_journey_request"
@@ -40,6 +41,7 @@ type Dependencies struct {
 	ListJourneys         listjourneys.UseCase
 	GetJourneyRequest    getjourneyrequest.UseCase
 	ListJourneyRequests  listjourneyrequests.UseCase
+	ExportJourneyBooklet exportjourneybooklet.UseCase
 	Images               ImageRoutes
 }
 
@@ -54,6 +56,7 @@ func NewRouter(deps Dependencies) *gin.Engine {
 		api.GET("/journey-requests/:id", HandleGetRequest(deps.GetJourneyRequest))
 		api.POST("/journey-requests/:id/generate", HandleGenerate(deps.GenerateJourney))
 		api.GET("/journeys", HandleListJourneys(deps.ListJourneys))
+		api.GET("/journeys/:id/booklet.pdf", HandleExportJourneyBooklet(deps.ExportJourneyBooklet))
 		api.GET("/journeys/:id", HandleGetJourney(deps.GetJourney))
 	}
 	registerJourneyImageRoutes(api, deps.Images)

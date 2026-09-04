@@ -16,6 +16,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 
 	"cacao/src/application"
+	domainservice "cacao/src/domain/service"
 )
 
 func TestLogFailure(t *testing.T) {
@@ -422,4 +423,42 @@ type testProviderError struct {
 
 func (e *testProviderError) Error() string {
 	return e.message
+}
+
+func TestLogFailureIncludesSafeBookletContext(t *testing.T) {
+	var logs bytes.Buffer
+	journeyID := uuid.NewString()
+	err := fmt.Errorf(
+		"private booklet contents: %w: %w",
+		application.ErrBookletRenderFailed,
+		domainservice.ErrBookletRenderTimeout,
+	)
+
+	LogFailure(
+		context.Background(),
+		slog.New(slog.NewJSONHandler(&logs, nil)),
+		slog.LevelError,
+		FailureContext{
+			JourneyID: journeyID,
+			Operation: "render_booklet_pdf",
+			ThemeSeed: "V1-ABCDEF12",
+		},
+		err,
+	)
+
+	logText := logs.String()
+	for _, fragment := range []string{
+		"\"operation\":\"render_booklet_pdf\"",
+		"\"journey_id\":\"" + journeyID + "\"",
+		"\"theme_seed\":\"v1-abcdef12\"",
+		"\"error_kind\":\"booklet_render_failed\"",
+		"\"cause_kind\":\"booklet_render_timeout\"",
+	} {
+		if !strings.Contains(logText, fragment) {
+			t.Errorf("logs = %q, want fragment %q", logText, fragment)
+		}
+	}
+	if strings.Contains(logText, "private booklet contents") {
+		t.Errorf("logs expose renderer error text: %q", logText)
+	}
 }
