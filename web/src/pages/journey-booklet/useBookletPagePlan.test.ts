@@ -34,13 +34,19 @@ function rect(
 function candidate(
 	coverLayoutId: BookletThemeCandidate["coverLayoutId"],
 	fontPairId?: BookletThemeCandidate["fontPairId"],
+	displayFontId?: BookletThemeCandidate["displayFontId"],
 ) {
 	const requested = createBookletTheme({ value: 7, version: "v2" });
 	const selected = getThemeCandidates(requested)[0];
 	if (!selected) {
 		throw new Error("テーマ候補がありません。");
 	}
-	return { ...selected, coverLayoutId, ...(fontPairId ? { fontPairId } : {}) };
+	return {
+		...selected,
+		coverLayoutId,
+		...(fontPairId ? { fontPairId } : {}),
+		...(displayFontId ? { displayFontId } : {}),
+	};
 }
 
 function measurementRoot(copyRect: DOMRect): HTMLDivElement {
@@ -161,6 +167,101 @@ describe("書体読み込み待ち", () => {
 			await expect(
 				waitForFonts(candidate("north-west", "classic")),
 			).rejects.toThrow("Noto Serif JP 400 の読み込みを確認できませんでした。");
+		} finally {
+			if (originalFonts) {
+				Object.defineProperty(document, "fonts", originalFonts);
+			} else {
+				delete (document as { fonts?: FontFaceSet }).fonts;
+			}
+		}
+	});
+
+	it("正常系: 表示書体を定義されたウェイトで読み込む", async () => {
+		const loads: string[] = [];
+		const fontSet = {
+			check: () => true,
+			load: async (descriptor: string) => {
+				loads.push(descriptor);
+			},
+			ready: Promise.resolve(),
+		} as unknown as FontFaceSet;
+		const originalFonts = Object.getOwnPropertyDescriptor(document, "fonts");
+		Object.defineProperty(document, "fonts", {
+			configurable: true,
+			value: fontSet,
+		});
+
+		try {
+			await waitForFonts(candidate("north-west", "classic", "dela-gothic-one"));
+		} finally {
+			if (originalFonts) {
+				Object.defineProperty(document, "fonts", originalFonts);
+			} else {
+				delete (document as { fonts?: FontFaceSet }).fonts;
+			}
+		}
+
+		expect(loads.at(-1)).toBe('400 10pt "Dela Gothic One", sans-serif');
+	});
+
+	it("正常系: 4表示書体をそれぞれの定義ウェイトで読み込む", async () => {
+		const loads: string[] = [];
+		const fontSet = {
+			check: () => true,
+			load: async (descriptor: string) => {
+				loads.push(descriptor);
+			},
+			ready: Promise.resolve(),
+		} as unknown as FontFaceSet;
+		const originalFonts = Object.getOwnPropertyDescriptor(document, "fonts");
+		Object.defineProperty(document, "fonts", {
+			configurable: true,
+			value: fontSet,
+		});
+
+		try {
+			for (const displayFontId of [
+				"dela-gothic-one",
+				"zen-kurenaido",
+				"kaisei-decol",
+				"rocknroll-one",
+			] as const) {
+				await waitForFonts(candidate("north-west", "classic", displayFontId));
+			}
+		} finally {
+			if (originalFonts) {
+				Object.defineProperty(document, "fonts", originalFonts);
+			} else {
+				delete (document as { fonts?: FontFaceSet }).fonts;
+			}
+		}
+
+		expect(loads).toEqual(
+			expect.arrayContaining([
+				'400 10pt "Dela Gothic One", sans-serif',
+				'400 10pt "Zen Kurenaido", sans-serif',
+				'700 10pt "Kaisei Decol", serif',
+				'400 10pt "RocknRoll One", sans-serif',
+			]),
+		);
+	});
+
+	it("異常系: 表示書体の読み込み確認失敗を通知する", async () => {
+		const fontSet = {
+			check: (descriptor: string) => !descriptor.includes("Dela Gothic One"),
+			load: async () => [],
+			ready: Promise.resolve(),
+		} as unknown as FontFaceSet;
+		const originalFonts = Object.getOwnPropertyDescriptor(document, "fonts");
+		Object.defineProperty(document, "fonts", {
+			configurable: true,
+			value: fontSet,
+		});
+
+		try {
+			await expect(
+				waitForFonts(candidate("north-west", "classic", "dela-gothic-one")),
+			).rejects.toThrow("Dela Gothic One");
 		} finally {
 			if (originalFonts) {
 				Object.defineProperty(document, "fonts", originalFonts);

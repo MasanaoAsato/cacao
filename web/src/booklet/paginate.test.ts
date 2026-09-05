@@ -54,8 +54,6 @@ function makeMeasurement(
 	return {
 		contentHeight: 100,
 		contentWidth: 100,
-		coverHeight: 40,
-		coverWidth: 40,
 		days: [{ continuationHeaderHeight: 15, headerHeight: 20, unitHeights }],
 	};
 }
@@ -83,30 +81,6 @@ describe("paginateBooklet", () => {
 		expect(() => paginateBooklet(makeModel(1), makeMeasurement([81]))).toThrow(
 			"収まりません",
 		);
-	});
-
-	it("異常系: 表紙が本文高さを超える場合は停止する", () => {
-		expect(() =>
-			paginateBooklet(makeModel(), {
-				...makeMeasurement([20, 20]),
-				coverHeight: 101,
-			}),
-		).toThrow("表紙");
-	});
-
-	it("境界値系: 表紙幅が本文幅と等しい場合は通し、1px超過で停止する", () => {
-		expect(() =>
-			paginateBooklet(makeModel(), {
-				...makeMeasurement([20, 20]),
-				coverWidth: 100,
-			}),
-		).not.toThrow();
-		expect(() =>
-			paginateBooklet(makeModel(), {
-				...makeMeasurement([20, 20]),
-				coverWidth: 101,
-			}),
-		).toThrow("横幅");
 	});
 
 	it("境界値系: 合計が本文高さと等しい場合は同じページに置く", () => {

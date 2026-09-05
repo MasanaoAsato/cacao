@@ -25,6 +25,10 @@ export type CoverLayoutId =
 	| "south-east"
 	| "split-left"
 	| "horizon"
+	| "panel-bottom"
+	| "panel-top"
+	| "window-arch"
+	| "poster"
 	| "safe-cover";
 
 export type ItineraryTemplateId =
@@ -44,7 +48,12 @@ export type MoodId =
 	| "quiet-gallery"
 	| "festival-ticket";
 
-export type DisplayFontId = "inherit";
+export type DisplayFontId =
+	| "inherit"
+	| "dela-gothic-one"
+	| "zen-kurenaido"
+	| "kaisei-decol"
+	| "rocknroll-one";
 
 export type DecorId = MoodId;
 
@@ -153,7 +162,10 @@ export type DensityDefinition = {
 };
 
 export type DisplayFontDefinition = {
+	readonly family: string | null;
 	readonly id: DisplayFontId;
+	readonly package: string | null;
+	readonly weight: 400 | 700;
 };
 
 export type DecorDefinition = {

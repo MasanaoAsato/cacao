@@ -18,8 +18,8 @@ function selectedTheme(seed = 7) {
 }
 
 describe("V2テーマ定義", () => {
-	it("正常系: 8構図の定義からテーマCSS変数を作る", () => {
-		expect(COVER_LAYOUTS).toHaveLength(8);
+	it("正常系: 12構図の定義からテーマCSS変数を作る", () => {
+		expect(COVER_LAYOUTS).toHaveLength(12);
 		const { candidate } = selectedTheme();
 		expect(getBookletThemeCssVariables(candidate)).toMatchObject({
 			"--booklet-cover-ink": expect.any(String),
@@ -27,6 +27,76 @@ describe("V2テーマ定義", () => {
 			"--booklet-cover-text-width": expect.stringMatching(/mm$/),
 			"--booklet-cover-veil": expect.any(String),
 		});
+	});
+
+	it("正常系: 17.3の単色パネル構図を定義値どおりに変換する", () => {
+		expect(getCoverLayoutDefinition("panel-bottom")).toMatchObject({
+			imageFrame: {
+				heightMm: 128,
+				shape: "rect",
+				widthMm: 148,
+				xMm: 0,
+				yMm: 0,
+			},
+			textBox: {
+				align: "left",
+				anchorX: "left",
+				anchorY: "top",
+				offsetXMm: 12,
+				offsetYMm: 138,
+				paddingMm: 0,
+				widthMm: 124,
+			},
+			safeArea: { heightMm: 66, widthMm: 124, xMm: 12, yMm: 136 },
+			titleSizePt: null,
+			veil: "none",
+		});
+		expect(getCoverLayoutDefinition("panel-top")).toMatchObject({
+			imageFrame: { heightMm: 128, widthMm: 148, xMm: 0, yMm: 82 },
+			safeArea: { heightMm: 66, widthMm: 124, xMm: 12, yMm: 10 },
+			veil: "none",
+		});
+		expect(getCoverLayoutDefinition("window-arch")).toMatchObject({
+			imageFrame: {
+				heightMm: 112,
+				shape: "arch",
+				widthMm: 104,
+				xMm: 22,
+				yMm: 14,
+			},
+			safeArea: { heightMm: 70, widthMm: 124, xMm: 12, yMm: 132 },
+			veil: "none",
+		});
+		expect(getCoverLayoutDefinition("poster")).toMatchObject({
+			imageFrame: {
+				heightMm: 60,
+				shape: "rect",
+				widthMm: 148,
+				xMm: 0,
+				yMm: 150,
+			},
+			safeArea: { heightMm: 132, widthMm: 124, xMm: 12, yMm: 12 },
+			titleSizePt: 44,
+			veil: "none",
+		});
+	});
+
+	it("正常系: 表示書体ごとの題名ファミリーとウェイトをCSS変数へ反映する", () => {
+		const { candidate } = selectedTheme();
+		for (const [displayFontId, family, weight] of [
+			["inherit", '"Zen Kaku Gothic New", sans-serif', "700"],
+			["dela-gothic-one", '"Dela Gothic One", sans-serif', "400"],
+			["zen-kurenaido", '"Zen Kurenaido", sans-serif', "400"],
+			["kaisei-decol", '"Kaisei Decol", serif', "700"],
+			["rocknroll-one", '"RocknRoll One", sans-serif', "400"],
+		] as const) {
+			const variables = getBookletThemeCssVariables({
+				...candidate,
+				displayFontId,
+			});
+			expect(variables["--booklet-cover-title-family"]).toBe(family);
+			expect(variables["--booklet-cover-title-weight"]).toBe(weight);
+		}
 	});
 
 	it("正常系: 全書体対のファミリー一覧を単一定義から返す", () => {

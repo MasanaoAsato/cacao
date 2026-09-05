@@ -8,6 +8,12 @@ importers:
 
   .:
     dependencies:
+      '@fontsource/dela-gothic-one':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/kaisei-decol':
+        specifier: ^5.3.0
+        version: 5.3.0
       '@fontsource/m-plus-rounded-1c':
         specifier: ^5.3.0
         version: 5.3.0
@@ -17,10 +23,16 @@ importers:
       '@fontsource/noto-serif-jp':
         specifier: ^5.3.0
         version: 5.3.0
+      '@fontsource/rocknroll-one':
+        specifier: ^5.3.0
+        version: 5.3.0
       '@fontsource/shippori-mincho':
         specifier: ^5.3.0
         version: 5.3.0
       '@fontsource/zen-kaku-gothic-new':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/zen-kurenaido':
         specifier: ^5.3.0
         version: 5.3.0
       '@tailwindcss/vite':
@@ -213,6 +225,12 @@ packages:
       '@noble/hashes':
         optional: true
 
+  '@fontsource/dela-gothic-one@5.3.0':
+    resolution: {integrity: sha512-4A26Qs7TqYFWegJfYHx7KKWy01YybW/e7uhFDM8A8e1neVPm721laLnh0en60wtKihfNdCbJt0VVcEMHC4pHjw==}
+
+  '@fontsource/kaisei-decol@5.3.0':
+    resolution: {integrity: sha512-87BDgODq9dxQWStT84WQ8E+P9aORgnJvD7IBjkoP4ui1gJEo+pEcf7V5unN1OMRoAKcZGwcogqfrlAKFg0HXwQ==}
+
   '@fontsource/m-plus-rounded-1c@5.3.0':
     resolution: {integrity: sha512-eB/JxJBRXLdfTsBDElsAZDMtHXM58Hf1tKkHoDVZAaUN7a+qYfwNKh4Q2f7Fk9YNg4xPFjTwooVlQyqbhi8CWQ==}
 
@@ -222,11 +240,17 @@ packages:
   '@fontsource/noto-serif-jp@5.3.0':
     resolution: {integrity: sha512-7dRFleN7F+uuJdcMW/fJmnl6KLZSn9dHCjAVTaWjTcT4hg5V4ECbi2qgIamI6rS/+yTt16KDLU+9aJi74r6ZxQ==}
 
+  '@fontsource/rocknroll-one@5.3.0':
+    resolution: {integrity: sha512-ymr4pZqvT/BO6noIlhE0dcbZxEUEnVvOd7k/nrOzjsgYD882uBYamN9y9tvhIo+FkQbxSHeLBGb7SCPa7IRvcQ==}
+
   '@fontsource/shippori-mincho@5.3.0':
     resolution: {integrity: sha512-S41kRxQuubAaYss+LeXu0IOc02RQwsPaJbR1cWZx4VV15hXaYZViH3WAve9HpDVFqKYd/BVk86Bg7lp9ytV3KQ==}
 
   '@fontsource/zen-kaku-gothic-new@5.3.0':
     resolution: {integrity: sha512-2t88gAaUkqIAFARfO8GkT1x57QBRx8A0pWeB0CIrIahnzdanWjcV4thPCSv9BJmpeRndq6qbFx1KYglHykiPhw==}
+
+  '@fontsource/zen-kurenaido@5.3.0':
+    resolution: {integrity: sha512-Oh7XLWpdTV7/f6xgdw3pmDPpu8OHEdXu9QEL2TEjoBeg85z1qWMb4lvQYDtNQx6gaERvKQ0OrgvpS3S/ka/+bA==}
 
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
@@ -1293,15 +1317,23 @@ snapshots:
 
   '@exodus/bytes@1.15.1': {}
 
+  '@fontsource/dela-gothic-one@5.3.0': {}
+
+  '@fontsource/kaisei-decol@5.3.0': {}
+
   '@fontsource/m-plus-rounded-1c@5.3.0': {}
 
   '@fontsource/noto-sans-jp@5.3.0': {}
 
   '@fontsource/noto-serif-jp@5.3.0': {}
 
+  '@fontsource/rocknroll-one@5.3.0': {}
+
   '@fontsource/shippori-mincho@5.3.0': {}
 
   '@fontsource/zen-kaku-gothic-new@5.3.0': {}
+
+  '@fontsource/zen-kurenaido@5.3.0': {}
 
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:

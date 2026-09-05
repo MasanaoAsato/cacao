@@ -221,13 +221,33 @@ function coverLayout(
 	safeArea: CoverLayoutDefinition["safeArea"],
 	veil: CoverLayoutDefinition["veil"],
 ): CoverLayoutDefinition {
+	return coverLayoutWithFrame(
+		id,
+		selectable,
+		FULL_COVER_IMAGE_FRAME,
+		textBox,
+		safeArea,
+		veil,
+		null,
+	);
+}
+
+function coverLayoutWithFrame(
+	id: CoverLayoutDefinition["id"],
+	selectable: boolean,
+	imageFrame: CoverLayoutDefinition["imageFrame"],
+	textBox: CoverLayoutDefinition["textBox"],
+	safeArea: CoverLayoutDefinition["safeArea"],
+	veil: CoverLayoutDefinition["veil"],
+	titleSizePt: number | null = null,
+): CoverLayoutDefinition {
 	return {
 		id,
-		imageFrame: FULL_COVER_IMAGE_FRAME,
+		imageFrame,
 		safeArea,
 		selectable,
 		textBox,
-		titleSizePt: null,
+		titleSizePt,
 		veil,
 	};
 }
@@ -363,6 +383,107 @@ export const COVER_LAYOUTS = new Map<
 		),
 	],
 	[
+		"panel-bottom",
+		coverLayoutWithFrame(
+			"panel-bottom",
+			true,
+			{
+				heightMm: 128,
+				shape: "rect",
+				widthMm: 148,
+				xMm: 0,
+				yMm: 0,
+			},
+			{
+				align: "left",
+				anchorX: "left",
+				anchorY: "top",
+				offsetXMm: 12,
+				offsetYMm: 138,
+				paddingMm: 0,
+				widthMm: 124,
+			},
+			{ heightMm: 66, widthMm: 124, xMm: 12, yMm: 136 },
+			"none",
+		),
+	],
+	[
+		"panel-top",
+		coverLayoutWithFrame(
+			"panel-top",
+			true,
+			{
+				heightMm: 128,
+				shape: "rect",
+				widthMm: 148,
+				xMm: 0,
+				yMm: 82,
+			},
+			{
+				align: "left",
+				anchorX: "left",
+				anchorY: "top",
+				offsetXMm: 12,
+				offsetYMm: 12,
+				paddingMm: 0,
+				widthMm: 124,
+			},
+			{ heightMm: 66, widthMm: 124, xMm: 12, yMm: 10 },
+			"none",
+		),
+	],
+	[
+		"window-arch",
+		coverLayoutWithFrame(
+			"window-arch",
+			true,
+			{
+				heightMm: 112,
+				shape: "arch",
+				widthMm: 104,
+				xMm: 22,
+				yMm: 14,
+			},
+			{
+				align: "center",
+				anchorX: "left",
+				anchorY: "top",
+				offsetXMm: 12,
+				offsetYMm: 134,
+				paddingMm: 0,
+				widthMm: 124,
+			},
+			{ heightMm: 70, widthMm: 124, xMm: 12, yMm: 132 },
+			"none",
+		),
+	],
+	[
+		"poster",
+		coverLayoutWithFrame(
+			"poster",
+			true,
+			{
+				heightMm: 60,
+				shape: "rect",
+				widthMm: 148,
+				xMm: 0,
+				yMm: 150,
+			},
+			{
+				align: "left",
+				anchorX: "left",
+				anchorY: "top",
+				offsetXMm: 12,
+				offsetYMm: 14,
+				paddingMm: 0,
+				widthMm: 124,
+			},
+			{ heightMm: 132, widthMm: 124, xMm: 12, yMm: 12 },
+			"none",
+			44,
+		),
+	],
+	[
 		"safe-cover",
 		coverLayout(
 			"safe-cover",
@@ -407,7 +528,53 @@ export const DENSITIES = new Map<DensityDefinition["id"], DensityDefinition>([
 export const DISPLAY_FONTS = new Map<
 	DisplayFontDefinition["id"],
 	DisplayFontDefinition
->([["inherit", { id: "inherit" }]]);
+>([
+	[
+		"inherit",
+		{
+			family: null,
+			id: "inherit",
+			package: null,
+			weight: 700,
+		},
+	],
+	[
+		"dela-gothic-one",
+		{
+			family: '"Dela Gothic One", sans-serif',
+			id: "dela-gothic-one",
+			package: "@fontsource/dela-gothic-one",
+			weight: 400,
+		},
+	],
+	[
+		"zen-kurenaido",
+		{
+			family: '"Zen Kurenaido", sans-serif',
+			id: "zen-kurenaido",
+			package: "@fontsource/zen-kurenaido",
+			weight: 400,
+		},
+	],
+	[
+		"kaisei-decol",
+		{
+			family: '"Kaisei Decol", serif',
+			id: "kaisei-decol",
+			package: "@fontsource/kaisei-decol",
+			weight: 700,
+		},
+	],
+	[
+		"rocknroll-one",
+		{
+			family: '"RocknRoll One", sans-serif',
+			id: "rocknroll-one",
+			package: "@fontsource/rocknroll-one",
+			weight: 400,
+		},
+	],
+]);
 
 export const DECORS = new Map<DecorDefinition["id"], DecorDefinition>([
 	["field-notes", { id: "field-notes" }],
@@ -447,6 +614,16 @@ export function getFontPairFamilies(
 		throw new ThemeRecipeValidationError(`未登録の書体「${id}」です。`);
 	}
 	return font.families;
+}
+
+export function getDisplayFontDefinition(
+	id: DisplayFontDefinition["id"],
+): DisplayFontDefinition {
+	const font = DISPLAY_FONTS.get(id);
+	if (!font) {
+		throw new ThemeRecipeValidationError(`未登録の表示書体「${id}」です。`);
+	}
+	return font;
 }
 
 export function createBookletTheme(
@@ -490,8 +667,10 @@ export function getBookletThemeCssVariables(
 		);
 	}
 	const coverLayout = getCoverLayoutDefinition(theme.coverLayoutId);
+	const displayFont = getDisplayFontDefinition(theme.displayFontId);
 	const coverTitleSizePt =
 		coverLayout.titleSizePt ?? theme.typography.coverTitle.fontSizePt;
+	const coverTitleFamily = displayFont.family ?? font.headingFamily;
 	const { imageFrame, textBox } = coverLayout;
 	const frameRadius =
 		imageFrame.shape === "arch"
@@ -513,6 +692,7 @@ export function getBookletThemeCssVariables(
 		"--booklet-body-size": `${theme.typography.body.fontSizePt}pt`,
 		"--booklet-border": palette.border,
 		"--booklet-cover-ink": palette.coverInk,
+		"--booklet-cover-surface": palette.surfaceStops[0],
 		"--booklet-cover-frame-height": `${imageFrame.heightMm}mm`,
 		"--booklet-cover-frame-left": `${imageFrame.xMm}mm`,
 		"--booklet-cover-frame-radius": frameRadius,
@@ -531,9 +711,11 @@ export function getBookletThemeCssVariables(
 		"--booklet-cover-text-width": `${textBox.widthMm}mm`,
 		"--booklet-cover-veil": palette.coverVeil,
 		"--booklet-cover-veil-opacity": `${palette.coverVeilOpacity}`,
+		"--booklet-cover-title-family": coverTitleFamily,
 		"--booklet-cover-title-letter-spacing": `${theme.typography.coverTitle.letterSpacingEm}em`,
 		"--booklet-cover-title-line-height": `${theme.typography.coverTitle.lineHeight}`,
 		"--booklet-cover-title-size": formatPoints(coverTitleSizePt),
+		"--booklet-cover-title-weight": `${displayFont.weight}`,
 		"--booklet-cover-title-size-long": formatPoints(
 			Math.max(22, coverTitleSizePt * 0.8),
 		),

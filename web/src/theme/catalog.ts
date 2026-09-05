@@ -1,6 +1,8 @@
 import {
 	ThemeRecipeValidationError,
 	validateCoverLayoutDefinitions,
+	validateFontFamilyCombinations,
+	validatePaletteDefinitions,
 } from "./recipeSafety";
 import type {
 	MoodDefinition,
@@ -12,9 +14,16 @@ export const MOODS = new Map<MoodDefinition["id"], MoodDefinition>([
 	[
 		"field-notes",
 		{
-			coverLayouts: ["north-west", "south-west", "split-left", "horizon"],
+			coverLayouts: [
+				"north-west",
+				"south-west",
+				"split-left",
+				"horizon",
+				"panel-bottom",
+				"window-arch",
+			],
 			decors: ["field-notes"],
-			displayFonts: ["inherit"],
+			displayFonts: ["inherit", "zen-kurenaido"],
 			fontPairs: ["classic", "literary"],
 			id: "field-notes",
 			itineraryTemplates: ["field-journal"],
@@ -24,9 +33,16 @@ export const MOODS = new Map<MoodDefinition["id"], MoodDefinition>([
 	[
 		"wayfinder",
 		{
-			coverLayouts: ["north-east", "split-left", "south-east", "horizon"],
+			coverLayouts: [
+				"north-east",
+				"split-left",
+				"south-east",
+				"horizon",
+				"panel-top",
+				"poster",
+			],
 			decors: ["wayfinder"],
-			displayFonts: ["inherit"],
+			displayFonts: ["inherit", "dela-gothic-one"],
 			fontPairs: ["wayfinding", "modern"],
 			id: "wayfinder",
 			itineraryTemplates: ["route-thread"],
@@ -36,9 +52,16 @@ export const MOODS = new Map<MoodDefinition["id"], MoodDefinition>([
 	[
 		"postcard",
 		{
-			coverLayouts: ["center", "south-east", "north-west", "horizon"],
+			coverLayouts: [
+				"center",
+				"south-east",
+				"north-west",
+				"horizon",
+				"window-arch",
+				"panel-bottom",
+			],
 			decors: ["postcard"],
-			displayFonts: ["inherit"],
+			displayFonts: ["inherit", "zen-kurenaido", "rocknroll-one"],
 			fontPairs: ["round-trip", "literary", "classic"],
 			id: "postcard",
 			itineraryTemplates: ["travel-ticket"],
@@ -48,9 +71,16 @@ export const MOODS = new Map<MoodDefinition["id"], MoodDefinition>([
 	[
 		"night-train",
 		{
-			coverLayouts: ["center", "north-east", "split-left", "south-west"],
+			coverLayouts: [
+				"center",
+				"north-east",
+				"split-left",
+				"south-west",
+				"panel-bottom",
+				"poster",
+			],
 			decors: ["night-train"],
-			displayFonts: ["inherit"],
+			displayFonts: ["inherit", "kaisei-decol", "dela-gothic-one"],
 			fontPairs: ["modern", "literary", "wayfinding", "round-trip"],
 			id: "night-train",
 			itineraryTemplates: ["route-thread"],
@@ -60,9 +90,16 @@ export const MOODS = new Map<MoodDefinition["id"], MoodDefinition>([
 	[
 		"quiet-gallery",
 		{
-			coverLayouts: ["center", "north-west", "south-east", "horizon"],
+			coverLayouts: [
+				"center",
+				"north-west",
+				"south-east",
+				"horizon",
+				"window-arch",
+				"poster",
+			],
 			decors: ["quiet-gallery"],
-			displayFonts: ["inherit"],
+			displayFonts: ["inherit", "kaisei-decol"],
 			fontPairs: ["literary", "classic", "modern"],
 			id: "quiet-gallery",
 			itineraryTemplates: ["field-journal"],
@@ -72,9 +109,16 @@ export const MOODS = new Map<MoodDefinition["id"], MoodDefinition>([
 	[
 		"festival-ticket",
 		{
-			coverLayouts: ["south-west", "north-east", "split-left", "center"],
+			coverLayouts: [
+				"south-west",
+				"north-east",
+				"split-left",
+				"center",
+				"panel-top",
+				"poster",
+			],
 			decors: ["festival-ticket"],
-			displayFonts: ["inherit"],
+			displayFonts: ["inherit", "rocknroll-one", "dela-gothic-one"],
 			fontPairs: ["round-trip", "wayfinding", "modern"],
 			id: "festival-ticket",
 			itineraryTemplates: ["travel-ticket"],
@@ -106,6 +150,8 @@ export function validateCatalog(
 	references: ThemeCatalogReferences,
 ): void {
 	validateCoverLayoutDefinitions(references);
+	validateFontFamilyCombinations(references);
+	validatePaletteDefinitions(references);
 	if (moods.size === 0) {
 		throw new ThemeRecipeValidationError("雰囲気の定義は1件以上必要です。");
 	}
@@ -157,7 +203,7 @@ export type V2RepresentativeSeed = {
 export const V2_REPRESENTATIVE_SEEDS: readonly V2RepresentativeSeed[] = [
 	{
 		expected: {
-			coverLayoutId: "south-east",
+			coverLayoutId: "horizon",
 			decorId: "wayfinder",
 			displayFontId: "inherit",
 			fontPairId: "wayfinding",
@@ -169,9 +215,9 @@ export const V2_REPRESENTATIVE_SEEDS: readonly V2RepresentativeSeed[] = [
 	},
 	{
 		expected: {
-			coverLayoutId: "horizon",
+			coverLayoutId: "window-arch",
 			decorId: "field-notes",
-			displayFontId: "inherit",
+			displayFontId: "zen-kurenaido",
 			fontPairId: "literary",
 			itineraryTemplateId: "field-journal",
 			moodId: "field-notes",
@@ -181,7 +227,7 @@ export const V2_REPRESENTATIVE_SEEDS: readonly V2RepresentativeSeed[] = [
 	},
 	{
 		expected: {
-			coverLayoutId: "center",
+			coverLayoutId: "poster",
 			decorId: "festival-ticket",
 			displayFontId: "inherit",
 			fontPairId: "modern",
@@ -193,9 +239,9 @@ export const V2_REPRESENTATIVE_SEEDS: readonly V2RepresentativeSeed[] = [
 	},
 	{
 		expected: {
-			coverLayoutId: "split-left",
+			coverLayoutId: "south-west",
 			decorId: "night-train",
-			displayFontId: "inherit",
+			displayFontId: "dela-gothic-one",
 			fontPairId: "round-trip",
 			itineraryTemplateId: "route-thread",
 			moodId: "night-train",
@@ -205,7 +251,7 @@ export const V2_REPRESENTATIVE_SEEDS: readonly V2RepresentativeSeed[] = [
 	},
 	{
 		expected: {
-			coverLayoutId: "north-west",
+			coverLayoutId: "south-east",
 			decorId: "quiet-gallery",
 			displayFontId: "inherit",
 			fontPairId: "classic",
@@ -241,14 +287,74 @@ export const V2_REPRESENTATIVE_SEEDS: readonly V2RepresentativeSeed[] = [
 	},
 	{
 		expected: {
-			coverLayoutId: "south-west",
+			coverLayoutId: "poster",
 			decorId: "night-train",
-			displayFontId: "inherit",
+			displayFontId: "kaisei-decol",
 			fontPairId: "wayfinding",
 			itineraryTemplateId: "route-thread",
 			moodId: "night-train",
 			paletteId: "plum-sunset",
 		},
 		seed: 14,
+	},
+	{
+		expected: {
+			coverLayoutId: "panel-top",
+			decorId: "wayfinder",
+			displayFontId: "inherit",
+			fontPairId: "wayfinding",
+			itineraryTemplateId: "route-thread",
+			moodId: "wayfinder",
+			paletteId: "graphite",
+		},
+		seed: 7,
+	},
+	{
+		expected: {
+			coverLayoutId: "panel-bottom",
+			decorId: "night-train",
+			displayFontId: "dela-gothic-one",
+			fontPairId: "wayfinding",
+			itineraryTemplateId: "route-thread",
+			moodId: "night-train",
+			paletteId: "night-window",
+		},
+		seed: 10,
+	},
+	{
+		expected: {
+			coverLayoutId: "south-west",
+			decorId: "festival-ticket",
+			displayFontId: "rocknroll-one",
+			fontPairId: "modern",
+			itineraryTemplateId: "travel-ticket",
+			moodId: "festival-ticket",
+			paletteId: "indigo-mist",
+		},
+		seed: 20,
+	},
+	{
+		expected: {
+			coverLayoutId: "split-left",
+			decorId: "festival-ticket",
+			displayFontId: "inherit",
+			fontPairId: "wayfinding",
+			itineraryTemplateId: "travel-ticket",
+			moodId: "festival-ticket",
+			paletteId: "indigo-mist",
+		},
+		seed: 2,
+	},
+	{
+		expected: {
+			coverLayoutId: "north-west",
+			decorId: "quiet-gallery",
+			displayFontId: "kaisei-decol",
+			fontPairId: "literary",
+			itineraryTemplateId: "field-journal",
+			moodId: "quiet-gallery",
+			paletteId: "graphite",
+		},
+		seed: 5,
 	},
 ];

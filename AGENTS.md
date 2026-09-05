@@ -16,7 +16,7 @@
 
 実装に合わせて、設計やテストを変えるのではなく、設計に合わせてプロダクトを作成する。
 
-Docker に PlayWrightがあるので、必要ならそれを使うこと
+Playwright を使う場合は、下記「Playwright / E2E（Docker）」の手順に従うこと。
 
 # 技術スタック
 - 言語: Go,TS
@@ -83,5 +83,46 @@ unit テストは実装します。
 - 境界値系
 
 テストは、コロケーションパターンを採用し、テスト対象のコードと同じディレクトリに配置します。
+
+## Playwright / E2E（Docker）
+
+### 前提と確認範囲
+
+- **ホストにブラウザーを追加せず、既存の Docker イメージを使う。** 2026-09-05 に `local/playwright:1.62.0` で A5 PDF 出力テストの成功を確認した。コンテナ内 Node は `v24.18.0`、マウントした依存関係の `@playwright/test` は `1.62.1` だった。タグだけでパッケージのバージョンを判断しない。
+- 設定の正本は `web/playwright.config.ts`、テストは `web/e2e/`、API モックは `web/e2e/fixtures/booklet.ts`。`package.json` の `test:e2e` と `mise run web:test:e2e` は単に Playwright を実行するため、ホストで実行しても Docker には切り替わらない。
+- 現在の `booklet-pdf.spec.ts` は API・画像をモックするブラウザーテスト。Go API・DB・LLM・Gotenberg の起動やデータ投入は不要。PDF は Chromium の `page.pdf()` で検証しており、実 API や Gotenberg の結合テストとは別物。
+- `compose.yml` に Playwright サービスはない。`docker compose up playwright` は使わない。
+- 既存の作業差分を確認し、他の作業のテスト・画像・起動済みコンテナを変更しない。ユーザーが設計番号を指定した場合は、その設計書を先に参照する。
+
+### 標準実行手順
+
+以下はリポジトリルートから実行する。シェルコマンドは環境の lean-ctx / RTK 指示に従って実行し、正確なログが必要なときは `lean-ctx raw` を使う。
+
+1. `docker image inspect local/playwright:1.62.0` で既存イメージを確認する。Docker ソケットへのアクセスが拒否されたら、同じ操作に必要な権限を申請する。権限エラーをイメージ・ブラウザー不足と解釈しない。
+2. `web/node_modules` があることを確認する。依存関係が未導入、または lockfile と不整合の場合のみ `mise run web:install` を使う。毎回インストールし直さない。
+3. まず対象テストだけを一時コンテナで実行する。初回の動作確認には次の PDF テストを使える。
+
+```bash
+docker run --rm --pull=never --ipc=host \
+  --mount "type=bind,source=$PWD/web,target=/work" \
+  --workdir /work \
+  local/playwright:1.62.0 \
+  /bin/bash -lc 'corepack pnpm exec playwright test e2e/booklet-pdf.spec.ts --grep "代表テーマをA5" --reporter=line --retries=0 --update-snapshots=none --output=/tmp/cacao-e2e-results'
+```
+
+- 対象の絞り込みは `--grep` のテスト名を変更する。全件実行は `--grep "代表テーマをA5"` を外す。`--update-snapshots=none` により、欠けた期待画像も勝手に生成しない。
+- Playwright の `webServer` が**同じコンテナ内**で Vite を `127.0.0.1:4173` に起動・終了する。通常は手動の Vite 起動、ポート公開、`--network=host`、`host.docker.internal` は不要。ホストに残っている 4173 番のサーバーも、この構成では再利用しない。
+- 既定ブラウザーは Chromium。設定に名前付き `projects` はないので `--project=chromium` を追加しない。`workers: 1` は設定済み。
+- 上のコマンドは生成物をコンテナ内の一時ディレクトリへ出し、終了時に削除する。失敗時の画像・trace を残す必要がある場合だけ、`--output=/work/test-results/<作業固有名>` と `--trace=retain-on-failure` を使う。ホストの `web/test-results/<作業固有名>/` に保存される（コンテナの実行ユーザーによっては root 所有になる）。既存の結果ディレクトリを上書き・削除しない。
+- スクリーンショット調査も、既存 spec・fixture を使った対象テストを優先する。モックが必要なページを単に開くだけでは、同じ検証条件にならない。
+
+### 失敗時の切り分けと停止条件
+
+- **イメージがない**：ローカルのイメージ一覧を一度確認し、利用可能なタグを特定する。見つからなければ不足を報告する。勝手に pull・Dockerfile 作成・別ブラウザーへの移行を始めない。
+- **ブラウザー実行ファイルがない／バージョン不整合**：同じコンテナで `node -p 'require("@playwright/test/package.json").version'` とエラーに示されたブラウザーパスを確認する。`npx playwright install`、`apt install`、ホストへのライブラリ展開、`LD_LIBRARY_PATH` の試行を連鎖させない。既存イメージで解決できなければ不足している組み合わせを報告する。
+- **Vite 起動失敗**：最初の `webServer` エラー、`/work` へのマウント、依存関係、`corepack pnpm` の実行可否を確認する。別ポートのサーバーを増やして回避しない。
+- **assertion／画像比較の失敗**：Docker 環境の失敗と区別し、対象テストの期待値・実際の描画・指定設計を調べる。通すためだけの `--update-snapshots`、期待値の緩和、テストの無効化は禁止。期待画像の更新が作業範囲に含まれる場合のみ、差分を確認して対象を限定して更新する。
+- 同じ原因の失敗を無変更で繰り返さない。原因を示すログを一度取得し、根拠のある修正後に対象だけ再実行する。ログ全文・全件テスト・環境探索を繰り返さず、解消できない環境不足はその内容と未検証範囲を報告する。
+- 通常は `--rm` で一時コンテナを片付ける。起動済みコンテナの無差別な停止・削除、`docker system prune` は行わない。
 
 @RTK.md
