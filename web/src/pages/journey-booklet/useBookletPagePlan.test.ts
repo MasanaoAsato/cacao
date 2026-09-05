@@ -35,7 +35,7 @@ function candidate(
 	coverLayoutId: BookletThemeCandidate["coverLayoutId"],
 	fontPairId?: BookletThemeCandidate["fontPairId"],
 ) {
-	const requested = createBookletTheme({ value: 7, version: "v1" });
+	const requested = createBookletTheme({ value: 7, version: "v2" });
 	const selected = getThemeCandidates(requested)[0];
 	if (!selected) {
 		throw new Error("テーマ候補がありません。");
@@ -158,9 +158,9 @@ describe("書体読み込み待ち", () => {
 		});
 
 		try {
-			await expect(waitForFonts(candidate("north-west"))).rejects.toThrow(
-				"Noto Serif JP 400 の読み込みを確認できませんでした。",
-			);
+			await expect(
+				waitForFonts(candidate("north-west", "classic")),
+			).rejects.toThrow("Noto Serif JP 400 の読み込みを確認できませんでした。");
 		} finally {
 			if (originalFonts) {
 				Object.defineProperty(document, "fonts", originalFonts);

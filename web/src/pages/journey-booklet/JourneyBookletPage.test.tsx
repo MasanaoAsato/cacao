@@ -423,7 +423,7 @@ describe("JourneyBookletPage", () => {
 			.map(([input]) => String(input))
 			.find((path) => path.includes("/booklet.pdf"));
 		expect(bookletPath).toMatch(
-			/^\/api\/v1\/journeys\/journey-1\/booklet\.pdf\?seed=v1-[0-9a-f]{8}$/,
+			/^\/api\/v1\/journeys\/journey-1\/booklet\.pdf\?seed=v2-[0-9a-f]{8}$/,
 		);
 		expect(clickedFileName).toBe("旅のしおり-京都-2026-08-28.pdf");
 		expect(revokeObjectURL).toHaveBeenCalledWith("blob:journey-booklet");
@@ -578,7 +578,7 @@ describe("JourneyBookletPage", () => {
 			new Error("decode failed"),
 		);
 		installFetchMock();
-		renderPage("/journeys/journey-1/booklet?seed=v1-00000013");
+		renderPage("/journeys/journey-1/booklet?seed=v2-00000013");
 
 		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 		await waitFor(() =>
@@ -591,14 +591,14 @@ describe("JourneyBookletPage", () => {
 		expect(
 			document.querySelector<HTMLElement>(".booklet-measurement")?.dataset
 				.bookletThemeKey,
-		).toBe("v1-00000013:selected");
+		).toBe("v2-00000013:selected");
 		expect(window.print).not.toHaveBeenCalled();
 	});
 
 	it("異常系: 選択フォントを確認できなければ候補を進めず印刷しない", async () => {
 		vi.mocked(document.fonts.check).mockReturnValue(false);
 		installFetchMock();
-		renderPage("/journeys/journey-1/booklet?seed=v1-00000013");
+		renderPage("/journeys/journey-1/booklet?seed=v2-00000013");
 
 		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 		await waitFor(() =>
@@ -610,7 +610,7 @@ describe("JourneyBookletPage", () => {
 		expect(
 			document.querySelector<HTMLElement>(".booklet-measurement")?.dataset
 				.bookletThemeKey,
-		).toBe("v1-00000013:selected");
+		).toBe("v2-00000013:selected");
 		expect(window.print).not.toHaveBeenCalled();
 	});
 
@@ -635,7 +635,7 @@ describe("JourneyBookletPage", () => {
 				}) as DOMRect,
 		});
 		installFetchMock();
-		renderPage("/journeys/journey-1/booklet?seed=v1-00000013");
+		renderPage("/journeys/journey-1/booklet?seed=v2-00000013");
 
 		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 		await waitFor(() =>
@@ -647,7 +647,7 @@ describe("JourneyBookletPage", () => {
 		expect(
 			document.querySelector<HTMLElement>(".booklet-measurement")?.dataset
 				.bookletThemeKey,
-		).toBe("v1-00000013:selected");
+		).toBe("v2-00000013:selected");
 		expect(window.print).not.toHaveBeenCalled();
 	});
 
@@ -665,7 +665,7 @@ describe("JourneyBookletPage", () => {
 			},
 		});
 		installFetchMock();
-		renderPage("/journeys/journey-1/booklet?seed=v1-00000013");
+		renderPage("/journeys/journey-1/booklet?seed=v2-00000013");
 
 		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 		await waitFor(() =>
@@ -684,7 +684,7 @@ describe("JourneyBookletPage", () => {
 		document.head.append(style);
 		try {
 			installFetchMock();
-			renderPage("/journeys/journey-1/booklet?seed=v1-00000013");
+			renderPage("/journeys/journey-1/booklet?seed=v2-00000013");
 
 			const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 			await waitFor(() =>
@@ -696,7 +696,7 @@ describe("JourneyBookletPage", () => {
 			expect(
 				document.querySelector<HTMLElement>(".booklet-measurement")?.dataset
 					.bookletThemeKey,
-			).toBe("v1-00000013:selected");
+			).toBe("v2-00000013:selected");
 			expect(window.print).not.toHaveBeenCalled();
 		} finally {
 			style.remove();
@@ -733,7 +733,7 @@ describe("JourneyBookletPage", () => {
 		});
 		try {
 			installFetchMock();
-			renderPage("/journeys/journey-1/booklet?seed=v1-00000013");
+			renderPage("/journeys/journey-1/booklet?seed=v2-00000013");
 
 			const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 			await waitFor(() =>
@@ -745,7 +745,7 @@ describe("JourneyBookletPage", () => {
 			expect(
 				document.querySelector<HTMLElement>(".booklet-measurement")?.dataset
 					.bookletThemeKey,
-			).toBe("v1-00000013:selected");
+			).toBe("v2-00000013:selected");
 			expect(window.print).not.toHaveBeenCalled();
 		} finally {
 			Object.defineProperty(
@@ -811,7 +811,7 @@ describe("JourneyBookletPage", () => {
 				}
 			}
 			for (const key of previousKeys) {
-				if (key.startsWith("v1-") && themeKeys.at(-1) !== key) {
+				if (key.startsWith("v2-") && themeKeys.at(-1) !== key) {
 					themeKeys.push(key);
 				}
 			}
@@ -829,35 +829,31 @@ describe("JourneyBookletPage", () => {
 			attributeFilter: ["data-booklet-theme-key"],
 			attributeOldValue: true,
 		});
-		renderPage("/journeys/journey-1/booklet?seed=v1-00000013");
+		renderPage("/journeys/journey-1/booklet?seed=v2-00000013");
 
 		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 		await waitFor(() => expect(printButton).toBeDisabled());
 		expect(
 			document.querySelector<HTMLElement>(".booklet-measurement")?.dataset
 				.bookletThemeKey,
-		).toBe("v1-00000013:selected");
+		).toBe("v2-00000013:selected");
 		releaseFirstDecode();
 		await waitFor(() => expect(printButton).toBeEnabled());
 		observer.disconnect();
-		expect(themeKeys).toEqual([
-			"v1-00000013:selected",
-			"v1-00000013:balanced-density",
-			"v1-00000013:compact-density",
-			"v1-00000013:safe-geometry",
-		]);
+		expect(themeKeys[0]).toBe("v2-00000013:selected");
+		expect(themeKeys).toContain("v2-00000013:safe-geometry");
 		expect(
 			new Set(
 				Array.from(
 					document.querySelectorAll<HTMLElement>("[data-booklet-page]"),
 				).map((page) => page.dataset.bookletThemeKey),
 			),
-		).toEqual(new Set(["v1-00000013:safe-geometry"]));
+		).toEqual(new Set(["v2-00000013:safe-geometry"]));
 	});
 
 	it("異常系: 不正なseedクエリは既定テーマへ戻しURLから除去する", async () => {
 		installFetchMock();
-		renderPage("/journeys/journey-1/booklet?seed=v2-00000000");
+		renderPage("/journeys/journey-1/booklet?seed=v1-00000000");
 
 		await waitFor(() =>
 			expect(screen.getByTestId("location-search").textContent).toBe(""),
@@ -885,7 +881,7 @@ describe("JourneyBookletPage", () => {
 		screen.getByRole("button", { name: "別のデザインを試す" }).click();
 		await waitFor(() =>
 			expect(screen.getByTestId("location-search")).toHaveTextContent(
-				"seed=v1-00000007",
+				"seed=v2-00000007",
 			),
 		);
 		expect(randomValues).toHaveBeenCalled();

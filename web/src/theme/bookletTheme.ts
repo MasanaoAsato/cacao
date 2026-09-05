@@ -1,97 +1,82 @@
+import { MOODS, validateCatalog } from "./catalog";
 import {
 	buildThemeCandidates,
-	defineThemeRecipe,
 	ThemeRecipeValidationError,
-	validateThemeCatalog,
 } from "./recipeSafety";
-import { formatThemeSeed, mulberry32 } from "./seed";
+import { createV2BookletTheme } from "./resolve";
 import type {
 	BookletThemeCandidate,
 	CoverLayoutDefinition,
+	DecorDefinition,
 	DensityDefinition,
+	DisplayFontDefinition,
 	EmphasisDefinition,
 	FontPairDefinition,
 	ItineraryTemplateDefinition,
 	PaletteDefinition,
 	RequestedBookletTheme,
 	ResolvedBookletTheme,
-	SignatureDefinition,
 	ThemeCatalogReferences,
-	ThemeRecipeDefinition,
+	ThemeContext,
 	ThemeSeed,
-	TypographySafety,
 } from "./types";
 
-const typography = (
-	spacingMultiplier: number,
-	pageMarginMm: number,
-): TypographySafety => ({
-	body: { fontSizePt: 10, letterSpacingEm: 0, lineHeight: 1.65 },
-	coverTitle: { fontSizePt: 34, letterSpacingEm: 0.02, lineHeight: 1.2 },
-	dayTitle: { fontSizePt: 20, letterSpacingEm: 0.02, lineHeight: 1.3 },
-	detailWidthMm: 76,
-	emphasized: { fontSizePt: 11, letterSpacingEm: 0.02, lineHeight: 1.35 },
-	pageMarginMm,
-	spacingMultiplier,
-	spotTitle: { fontSizePt: 15, letterSpacingEm: 0.02, lineHeight: 1.35 },
-	utility: { fontSizePt: 8, letterSpacingEm: 0.06, lineHeight: 1.45 },
-	utilityWidthMm: 22,
-});
+export const FONT_PAIRS = new Map<FontPairDefinition["id"], FontPairDefinition>(
+	[
+		[
+			"classic",
+			{
+				bodyFamily: '"Noto Serif JP", serif',
+				families: ["Noto Serif JP"],
+				headingFamily: '"Noto Serif JP", serif',
+				id: "classic",
+				utilityFamily: '"Noto Serif JP", serif',
+			},
+		],
+		[
+			"literary",
+			{
+				bodyFamily: '"Shippori Mincho", serif',
+				families: ["Shippori Mincho", "Noto Sans JP"],
+				headingFamily: '"Shippori Mincho", serif',
+				id: "literary",
+				utilityFamily: '"Noto Sans JP", sans-serif',
+			},
+		],
+		[
+			"wayfinding",
+			{
+				bodyFamily: '"Zen Kaku Gothic New", sans-serif',
+				families: ["Zen Kaku Gothic New", "Noto Sans JP"],
+				headingFamily: '"Zen Kaku Gothic New", sans-serif',
+				id: "wayfinding",
+				utilityFamily: '"Noto Sans JP", sans-serif',
+			},
+		],
+		[
+			"modern",
+			{
+				bodyFamily: '"Noto Sans JP", sans-serif',
+				families: ["Noto Sans JP"],
+				headingFamily: '"Noto Sans JP", sans-serif',
+				id: "modern",
+				utilityFamily: '"Noto Sans JP", sans-serif',
+			},
+		],
+		[
+			"round-trip",
+			{
+				bodyFamily: '"Noto Sans JP", sans-serif',
+				families: ["M PLUS Rounded 1c", "Noto Sans JP"],
+				headingFamily: '"M PLUS Rounded 1c", sans-serif',
+				id: "round-trip",
+				utilityFamily: '"Noto Sans JP", sans-serif',
+			},
+		],
+	],
+);
 
-const FONT_PAIRS = new Map<FontPairDefinition["id"], FontPairDefinition>([
-	[
-		"classic",
-		{
-			bodyFamily: '"Noto Serif JP", serif',
-			families: ["Noto Serif JP"],
-			headingFamily: '"Noto Serif JP", serif',
-			id: "classic",
-			utilityFamily: '"Noto Serif JP", serif',
-		},
-	],
-	[
-		"literary",
-		{
-			bodyFamily: '"Shippori Mincho", serif',
-			families: ["Shippori Mincho", "Noto Sans JP"],
-			headingFamily: '"Shippori Mincho", serif',
-			id: "literary",
-			utilityFamily: '"Noto Sans JP", sans-serif',
-		},
-	],
-	[
-		"wayfinding",
-		{
-			bodyFamily: '"Zen Kaku Gothic New", sans-serif',
-			families: ["Zen Kaku Gothic New", "Noto Sans JP"],
-			headingFamily: '"Zen Kaku Gothic New", sans-serif',
-			id: "wayfinding",
-			utilityFamily: '"Noto Sans JP", sans-serif',
-		},
-	],
-	[
-		"modern",
-		{
-			bodyFamily: '"Noto Sans JP", sans-serif',
-			families: ["Noto Sans JP"],
-			headingFamily: '"Noto Sans JP", sans-serif',
-			id: "modern",
-			utilityFamily: '"Noto Sans JP", sans-serif',
-		},
-	],
-	[
-		"round-trip",
-		{
-			bodyFamily: '"Noto Sans JP", sans-serif',
-			families: ["M PLUS Rounded 1c", "Noto Sans JP"],
-			headingFamily: '"M PLUS Rounded 1c", sans-serif',
-			id: "round-trip",
-			utilityFamily: '"Noto Sans JP", sans-serif',
-		},
-	],
-]);
-
-const PALETTES = new Map<PaletteDefinition["id"], PaletteDefinition>([
+export const PALETTES = new Map<PaletteDefinition["id"], PaletteDefinition>([
 	[
 		"paper-ink",
 		{
@@ -229,18 +214,34 @@ const FULL_COVER_IMAGE_FRAME = {
 	yMm: 0,
 } as const;
 
+function coverLayout(
+	id: CoverLayoutDefinition["id"],
+	selectable: boolean,
+	textBox: CoverLayoutDefinition["textBox"],
+	safeArea: CoverLayoutDefinition["safeArea"],
+	veil: CoverLayoutDefinition["veil"],
+): CoverLayoutDefinition {
+	return {
+		id,
+		imageFrame: FULL_COVER_IMAGE_FRAME,
+		safeArea,
+		selectable,
+		textBox,
+		titleSizePt: null,
+		veil,
+	};
+}
+
 export const COVER_LAYOUTS = new Map<
 	CoverLayoutDefinition["id"],
 	CoverLayoutDefinition
 >([
 	[
 		"north-west",
-		{
-			id: "north-west",
-			imageFrame: FULL_COVER_IMAGE_FRAME,
-			safeArea: { heightMm: 70, widthMm: 80, xMm: 12, yMm: 12 },
-			selectable: true,
-			textBox: {
+		coverLayout(
+			"north-west",
+			true,
+			{
 				align: "left",
 				anchorX: "left",
 				anchorY: "top",
@@ -249,18 +250,16 @@ export const COVER_LAYOUTS = new Map<
 				paddingMm: 0,
 				widthMm: 80,
 			},
-			titleSizePt: null,
-			veil: "radial",
-		},
+			{ heightMm: 70, widthMm: 80, xMm: 12, yMm: 12 },
+			"radial",
+		),
 	],
 	[
 		"north-east",
-		{
-			id: "north-east",
-			imageFrame: FULL_COVER_IMAGE_FRAME,
-			safeArea: { heightMm: 70, widthMm: 80, xMm: 56, yMm: 12 },
-			selectable: true,
-			textBox: {
+		coverLayout(
+			"north-east",
+			true,
+			{
 				align: "left",
 				anchorX: "right",
 				anchorY: "top",
@@ -269,18 +268,16 @@ export const COVER_LAYOUTS = new Map<
 				paddingMm: 0,
 				widthMm: 80,
 			},
-			titleSizePt: null,
-			veil: "radial",
-		},
+			{ heightMm: 70, widthMm: 80, xMm: 56, yMm: 12 },
+			"radial",
+		),
 	],
 	[
 		"south-west",
-		{
-			id: "south-west",
-			imageFrame: FULL_COVER_IMAGE_FRAME,
-			safeArea: { heightMm: 70, widthMm: 80, xMm: 12, yMm: 128 },
-			selectable: true,
-			textBox: {
+		coverLayout(
+			"south-west",
+			true,
+			{
 				align: "left",
 				anchorX: "left",
 				anchorY: "bottom",
@@ -289,18 +286,16 @@ export const COVER_LAYOUTS = new Map<
 				paddingMm: 0,
 				widthMm: 80,
 			},
-			titleSizePt: null,
-			veil: "radial",
-		},
+			{ heightMm: 70, widthMm: 80, xMm: 12, yMm: 128 },
+			"radial",
+		),
 	],
 	[
 		"south-east",
-		{
-			id: "south-east",
-			imageFrame: FULL_COVER_IMAGE_FRAME,
-			safeArea: { heightMm: 70, widthMm: 80, xMm: 56, yMm: 128 },
-			selectable: true,
-			textBox: {
+		coverLayout(
+			"south-east",
+			true,
+			{
 				align: "left",
 				anchorX: "right",
 				anchorY: "bottom",
@@ -309,18 +304,16 @@ export const COVER_LAYOUTS = new Map<
 				paddingMm: 0,
 				widthMm: 80,
 			},
-			titleSizePt: null,
-			veil: "radial",
-		},
+			{ heightMm: 70, widthMm: 80, xMm: 56, yMm: 128 },
+			"radial",
+		),
 	],
 	[
 		"center",
-		{
-			id: "center",
-			imageFrame: FULL_COVER_IMAGE_FRAME,
-			safeArea: { heightMm: 76, widthMm: 104, xMm: 22, yMm: 67 },
-			selectable: true,
-			textBox: {
+		coverLayout(
+			"center",
+			true,
+			{
 				align: "center",
 				anchorX: "left",
 				anchorY: "top",
@@ -329,18 +322,16 @@ export const COVER_LAYOUTS = new Map<
 				paddingMm: 0,
 				widthMm: 104,
 			},
-			titleSizePt: null,
-			veil: "radial",
-		},
+			{ heightMm: 76, widthMm: 104, xMm: 22, yMm: 67 },
+			"radial",
+		),
 	],
 	[
 		"split-left",
-		{
-			id: "split-left",
-			imageFrame: FULL_COVER_IMAGE_FRAME,
-			safeArea: { heightMm: 210, widthMm: 70, xMm: 0, yMm: 0 },
-			selectable: true,
-			textBox: {
+		coverLayout(
+			"split-left",
+			true,
+			{
 				align: "left",
 				anchorX: "left",
 				anchorY: "top",
@@ -349,18 +340,16 @@ export const COVER_LAYOUTS = new Map<
 				paddingMm: 0,
 				widthMm: 46,
 			},
-			titleSizePt: null,
-			veil: "linear-x",
-		},
+			{ heightMm: 210, widthMm: 70, xMm: 0, yMm: 0 },
+			"linear-x",
+		),
 	],
 	[
 		"horizon",
-		{
-			id: "horizon",
-			imageFrame: FULL_COVER_IMAGE_FRAME,
-			safeArea: { heightMm: 62, widthMm: 148, xMm: 0, yMm: 148 },
-			selectable: true,
-			textBox: {
+		coverLayout(
+			"horizon",
+			true,
+			{
 				align: "left",
 				anchorX: "left",
 				anchorY: "top",
@@ -369,18 +358,16 @@ export const COVER_LAYOUTS = new Map<
 				paddingMm: 0,
 				widthMm: 124,
 			},
-			titleSizePt: null,
-			veil: "linear-y",
-		},
+			{ heightMm: 62, widthMm: 148, xMm: 0, yMm: 148 },
+			"linear-y",
+		),
 	],
 	[
 		"safe-cover",
-		{
-			id: "safe-cover",
-			imageFrame: FULL_COVER_IMAGE_FRAME,
-			safeArea: { heightMm: 190, widthMm: 128, xMm: 10, yMm: 10 },
-			selectable: false,
-			textBox: {
+		coverLayout(
+			"safe-cover",
+			false,
+			{
 				align: "left",
 				anchorX: "left",
 				anchorY: "top",
@@ -389,13 +376,13 @@ export const COVER_LAYOUTS = new Map<
 				paddingMm: 8,
 				widthMm: 104,
 			},
-			titleSizePt: null,
-			veil: "radial",
-		},
+			{ heightMm: 190, widthMm: 128, xMm: 10, yMm: 10 },
+			"radial",
+		),
 	],
 ]);
 
-const ITINERARY_LAYOUTS = new Map<
+export const ITINERARY_LAYOUTS = new Map<
 	ItineraryTemplateDefinition["id"],
 	ItineraryTemplateDefinition
 >([
@@ -404,20 +391,25 @@ const ITINERARY_LAYOUTS = new Map<
 	["travel-ticket", { id: "travel-ticket" }],
 ]);
 
-const EMPHASIS = new Map<EmphasisDefinition["id"], EmphasisDefinition>([
+export const EMPHASIS = new Map<EmphasisDefinition["id"], EmphasisDefinition>([
 	["place-led", { id: "place-led", target: "uniform" }],
 	["time-led", { id: "time-led", target: "time" }],
 	["route-led", { id: "route-led", target: "route" }],
 	["balanced", { id: "balanced", target: "uniform" }],
 ]);
 
-const DENSITIES = new Map<DensityDefinition["id"], DensityDefinition>([
+export const DENSITIES = new Map<DensityDefinition["id"], DensityDefinition>([
 	["compact", { id: "compact", spacingMultiplier: 0.86 }],
 	["balanced", { id: "balanced", spacingMultiplier: 1 }],
 	["airy", { id: "airy", spacingMultiplier: 1.14 }],
 ]);
 
-const SIGNATURES = new Map<SignatureDefinition["id"], SignatureDefinition>([
+export const DISPLAY_FONTS = new Map<
+	DisplayFontDefinition["id"],
+	DisplayFontDefinition
+>([["inherit", { id: "inherit" }]]);
+
+export const DECORS = new Map<DecorDefinition["id"], DecorDefinition>([
 	["field-notes", { id: "field-notes" }],
 	["wayfinder", { id: "wayfinder" }],
 	["postcard", { id: "postcard" }],
@@ -425,6 +417,17 @@ const SIGNATURES = new Map<SignatureDefinition["id"], SignatureDefinition>([
 	["quiet-gallery", { id: "quiet-gallery" }],
 	["festival-ticket", { id: "festival-ticket" }],
 ]);
+
+export const THEME_CATALOG_REFERENCES: ThemeCatalogReferences = {
+	coverLayouts: COVER_LAYOUTS,
+	decors: DECORS,
+	densities: DENSITIES,
+	displayFonts: DISPLAY_FONTS,
+	emphasis: EMPHASIS,
+	fonts: FONT_PAIRS,
+	itineraries: ITINERARY_LAYOUTS,
+	palettes: PALETTES,
+};
 
 export function getCoverLayoutDefinition(
 	id: CoverLayoutDefinition["id"],
@@ -446,371 +449,17 @@ export function getFontPairFamilies(
 	return font.families;
 }
 
-export const THEME_CATALOG_REFERENCES: ThemeCatalogReferences = {
-	coverLayouts: COVER_LAYOUTS,
-	densities: DENSITIES,
-	emphasis: EMPHASIS,
-	fonts: FONT_PAIRS,
-	itineraries: ITINERARY_LAYOUTS,
-	palettes: PALETTES,
-	signatures: SIGNATURES,
-};
-
-type RecipeValues = Omit<ThemeRecipeDefinition, "typography">;
-
-function recipe(values: RecipeValues): ThemeRecipeDefinition {
-	const density = DENSITIES.get(values.densityId);
-	if (!density) {
-		throw new ThemeRecipeValidationError(
-			`密度「${values.densityId}」がありません。`,
-		);
-	}
-	const pageMarginMm =
-		values.densityId === "compact" ? 10 : values.densityId === "airy" ? 14 : 12;
-	return defineThemeRecipe(
-		{
-			...values,
-			typography: typography(density.spacingMultiplier, pageMarginMm),
-		},
-		THEME_CATALOG_REFERENCES,
-	);
-}
-
-export const THEME_RECIPES_V1: readonly ThemeRecipeDefinition[] = Object.freeze(
-	[
-		recipe({
-			coverLayoutId: "north-west",
-			densityId: "balanced",
-			emphasisId: "place-led",
-			fontPairId: "classic",
-			id: "field-01",
-			itineraryTemplateId: "field-journal",
-			paletteId: "paper-ink",
-			signatureId: "field-notes",
-		}),
-		recipe({
-			coverLayoutId: "south-west",
-			densityId: "airy",
-			emphasisId: "route-led",
-			fontPairId: "literary",
-			id: "field-02",
-			itineraryTemplateId: "field-journal",
-			paletteId: "forest-map",
-			signatureId: "field-notes",
-		}),
-		recipe({
-			coverLayoutId: "split-left",
-			densityId: "compact",
-			emphasisId: "balanced",
-			fontPairId: "classic",
-			id: "field-03",
-			itineraryTemplateId: "field-journal",
-			paletteId: "graphite",
-			signatureId: "field-notes",
-		}),
-		recipe({
-			coverLayoutId: "horizon",
-			densityId: "balanced",
-			emphasisId: "time-led",
-			fontPairId: "literary",
-			id: "field-04",
-			itineraryTemplateId: "field-journal",
-			paletteId: "cobalt-sunrise",
-			signatureId: "field-notes",
-		}),
-		recipe({
-			coverLayoutId: "north-east",
-			densityId: "compact",
-			emphasisId: "time-led",
-			fontPairId: "wayfinding",
-			id: "way-01",
-			itineraryTemplateId: "route-thread",
-			paletteId: "graphite",
-			signatureId: "wayfinder",
-		}),
-		recipe({
-			coverLayoutId: "split-left",
-			densityId: "balanced",
-			emphasisId: "route-led",
-			fontPairId: "modern",
-			id: "way-02",
-			itineraryTemplateId: "route-thread",
-			paletteId: "cobalt-sunrise",
-			signatureId: "wayfinder",
-		}),
-		recipe({
-			coverLayoutId: "south-east",
-			densityId: "balanced",
-			emphasisId: "place-led",
-			fontPairId: "wayfinding",
-			id: "way-03",
-			itineraryTemplateId: "route-thread",
-			paletteId: "marine-glass",
-			signatureId: "wayfinder",
-		}),
-		recipe({
-			coverLayoutId: "horizon",
-			densityId: "compact",
-			emphasisId: "time-led",
-			fontPairId: "modern",
-			id: "way-04",
-			itineraryTemplateId: "route-thread",
-			paletteId: "night-window",
-			signatureId: "wayfinder",
-		}),
-		recipe({
-			coverLayoutId: "center",
-			densityId: "airy",
-			emphasisId: "place-led",
-			fontPairId: "round-trip",
-			id: "postcard-01",
-			itineraryTemplateId: "travel-ticket",
-			paletteId: "plum-sunset",
-			signatureId: "postcard",
-		}),
-		recipe({
-			coverLayoutId: "south-east",
-			densityId: "balanced",
-			emphasisId: "place-led",
-			fontPairId: "literary",
-			id: "postcard-02",
-			itineraryTemplateId: "travel-ticket",
-			paletteId: "paper-ink",
-			signatureId: "postcard",
-		}),
-		recipe({
-			coverLayoutId: "north-west",
-			densityId: "balanced",
-			emphasisId: "route-led",
-			fontPairId: "round-trip",
-			id: "postcard-03",
-			itineraryTemplateId: "travel-ticket",
-			paletteId: "cobalt-sunrise",
-			signatureId: "postcard",
-		}),
-		recipe({
-			coverLayoutId: "horizon",
-			densityId: "airy",
-			emphasisId: "balanced",
-			fontPairId: "classic",
-			id: "postcard-04",
-			itineraryTemplateId: "travel-ticket",
-			paletteId: "marine-glass",
-			signatureId: "postcard",
-		}),
-		recipe({
-			coverLayoutId: "center",
-			densityId: "compact",
-			emphasisId: "time-led",
-			fontPairId: "modern",
-			id: "night-01",
-			itineraryTemplateId: "route-thread",
-			paletteId: "night-window",
-			signatureId: "night-train",
-		}),
-		recipe({
-			coverLayoutId: "north-east",
-			densityId: "balanced",
-			emphasisId: "place-led",
-			fontPairId: "literary",
-			id: "night-02",
-			itineraryTemplateId: "route-thread",
-			paletteId: "plum-sunset",
-			signatureId: "night-train",
-		}),
-		recipe({
-			coverLayoutId: "split-left",
-			densityId: "compact",
-			emphasisId: "route-led",
-			fontPairId: "wayfinding",
-			id: "night-03",
-			itineraryTemplateId: "route-thread",
-			paletteId: "night-window",
-			signatureId: "night-train",
-		}),
-		recipe({
-			coverLayoutId: "south-west",
-			densityId: "airy",
-			emphasisId: "balanced",
-			fontPairId: "round-trip",
-			id: "night-04",
-			itineraryTemplateId: "route-thread",
-			paletteId: "indigo-mist",
-			signatureId: "night-train",
-		}),
-		recipe({
-			coverLayoutId: "center",
-			densityId: "airy",
-			emphasisId: "balanced",
-			fontPairId: "literary",
-			id: "quiet-01",
-			itineraryTemplateId: "field-journal",
-			paletteId: "graphite",
-			signatureId: "quiet-gallery",
-		}),
-		recipe({
-			coverLayoutId: "north-west",
-			densityId: "balanced",
-			emphasisId: "place-led",
-			fontPairId: "classic",
-			id: "quiet-02",
-			itineraryTemplateId: "field-journal",
-			paletteId: "paper-ink",
-			signatureId: "quiet-gallery",
-		}),
-		recipe({
-			coverLayoutId: "south-east",
-			densityId: "airy",
-			emphasisId: "time-led",
-			fontPairId: "modern",
-			id: "quiet-03",
-			itineraryTemplateId: "field-journal",
-			paletteId: "marine-glass",
-			signatureId: "quiet-gallery",
-		}),
-		recipe({
-			coverLayoutId: "horizon",
-			densityId: "balanced",
-			emphasisId: "route-led",
-			fontPairId: "literary",
-			id: "quiet-04",
-			itineraryTemplateId: "field-journal",
-			paletteId: "forest-map",
-			signatureId: "quiet-gallery",
-		}),
-		recipe({
-			coverLayoutId: "south-west",
-			densityId: "balanced",
-			emphasisId: "place-led",
-			fontPairId: "round-trip",
-			id: "ticket-01",
-			itineraryTemplateId: "travel-ticket",
-			paletteId: "plum-sunset",
-			signatureId: "festival-ticket",
-		}),
-		recipe({
-			coverLayoutId: "north-east",
-			densityId: "compact",
-			emphasisId: "time-led",
-			fontPairId: "wayfinding",
-			id: "ticket-02",
-			itineraryTemplateId: "travel-ticket",
-			paletteId: "cobalt-sunrise",
-			signatureId: "festival-ticket",
-		}),
-		recipe({
-			coverLayoutId: "split-left",
-			densityId: "balanced",
-			emphasisId: "route-led",
-			fontPairId: "modern",
-			id: "ticket-03",
-			itineraryTemplateId: "travel-ticket",
-			paletteId: "indigo-mist",
-			signatureId: "festival-ticket",
-		}),
-		recipe({
-			coverLayoutId: "center",
-			densityId: "airy",
-			emphasisId: "balanced",
-			fontPairId: "round-trip",
-			id: "ticket-04",
-			itineraryTemplateId: "travel-ticket",
-			paletteId: "forest-map",
-			signatureId: "festival-ticket",
-		}),
-	],
-);
-
-export const V1_REPRESENTATIVE_SEEDS = new Map<number, string>([
-	[0x00000007, "field-01"],
-	[0x00000013, "field-02"],
-	[0x00000017, "field-03"],
-	[0x00000008, "field-04"],
-	[0x00000009, "way-01"],
-	[0x0000000f, "way-02"],
-	[0x00000000, "way-03"],
-	[0x00000018, "way-04"],
-	[0x00000031, "postcard-01"],
-	[0x00000012, "postcard-02"],
-	[0x0000000e, "postcard-03"],
-	[0x0000003a, "postcard-04"],
-	[0x00000006, "night-01"],
-	[0x0000000d, "night-02"],
-	[0x00000016, "night-03"],
-	[0x00000001, "night-04"],
-	[0x00000005, "quiet-01"],
-	[0x00000002, "quiet-02"],
-	[0x00000014, "quiet-03"],
-	[0x00000045, "quiet-04"],
-	[0x0000001e, "ticket-01"],
-	[0x0000008f, "ticket-02"],
-	[0x00000004, "ticket-03"],
-	[0x0000002b, "ticket-04"],
-]);
-
-let catalogValidationError: ThemeRecipeValidationError | null = null;
-let catalogValidated = false;
-
-export function validateV1ThemeCatalog(): void {
-	if (catalogValidated) {
-		if (catalogValidationError) {
-			throw catalogValidationError;
-		}
-		return;
-	}
-	catalogValidated = true;
-	try {
-		if (THEME_RECIPES_V1.length !== 24) {
-			throw new ThemeRecipeValidationError(
-				"V1テーマカタログは24件でなければなりません。",
-			);
-		}
-		validateThemeCatalog(THEME_RECIPES_V1, THEME_CATALOG_REFERENCES);
-		for (const [seedValue, expectedRecipeId] of V1_REPRESENTATIVE_SEEDS) {
-			const recipe = selectV1Recipe({ value: seedValue, version: "v1" });
-			if (recipe.id !== expectedRecipeId) {
-				throw new ThemeRecipeValidationError(
-					`代表シード${seedValue.toString(16)}は${expectedRecipeId}へ解決されなければなりません。`,
-				);
-			}
-		}
-	} catch (error) {
-		catalogValidationError =
-			error instanceof ThemeRecipeValidationError
-				? error
-				: new ThemeRecipeValidationError(
-						"しおりのデザイン定義を読み込めませんでした。",
-					);
-		throw catalogValidationError;
-	}
-}
-
-export function selectV1Recipe(seed: ThemeSeed): ThemeRecipeDefinition {
-	const random = mulberry32(seed.value)();
-	const index = Math.floor(random * THEME_RECIPES_V1.length);
-	const recipe = THEME_RECIPES_V1[index];
-	if (!recipe) {
-		throw new ThemeRecipeValidationError(
-			"テーマレシピを選択できませんでした。",
-		);
-	}
-	return recipe;
-}
-
-export function createBookletTheme(seed: ThemeSeed): RequestedBookletTheme {
-	validateV1ThemeCatalog();
-	return Object.freeze({
-		catalogVersion: "v1",
-		recipe: selectV1Recipe(seed),
-		seed,
-		seedToken: formatThemeSeed(seed),
-	});
+export function createBookletTheme(
+	seed: ThemeSeed,
+	context: ThemeContext = { coverVisualStyle: null },
+): RequestedBookletTheme {
+	validateCatalog(MOODS, THEME_CATALOG_REFERENCES);
+	return createV2BookletTheme(seed, context, MOODS, THEME_CATALOG_REFERENCES);
 }
 
 export function getThemeCandidates(
 	requested: RequestedBookletTheme,
 ): readonly BookletThemeCandidate[] {
-	validateV1ThemeCatalog();
 	return buildThemeCandidates(requested, THEME_CATALOG_REFERENCES);
 }
 
@@ -848,7 +497,13 @@ export function getBookletThemeCssVariables(
 		imageFrame.shape === "arch"
 			? `${imageFrame.widthMm / 2}mm ${imageFrame.widthMm / 2}mm 0 0`
 			: "0";
-	const itinerary = palette.itinerary ?? palette;
+	const itinerary = palette.itinerary ?? {
+		accent: palette.accent,
+		border: palette.border,
+		muted: palette.muted,
+		surfaceStops: palette.surfaceStops,
+		text: palette.text,
+	};
 	return Object.freeze({
 		"--booklet-accent": palette.accent,
 		"--booklet-background": palette.background,
@@ -885,11 +540,6 @@ export function getBookletThemeCssVariables(
 		"--booklet-cover-title-size-very-long": formatPoints(
 			Math.max(22, coverTitleSizePt * 0.6),
 		),
-		"--booklet-itinerary-accent": itinerary.accent,
-		"--booklet-itinerary-border": itinerary.border,
-		"--booklet-itinerary-muted": itinerary.muted,
-		"--booklet-itinerary-surface": itinerary.surfaceStops[0],
-		"--booklet-itinerary-text": itinerary.text,
 		"--booklet-day-title-letter-spacing": `${theme.typography.dayTitle.letterSpacingEm}em`,
 		"--booklet-day-title-line-height": `${theme.typography.dayTitle.lineHeight}`,
 		"--booklet-day-title-size": formatPoints(
@@ -900,6 +550,11 @@ export function getBookletThemeCssVariables(
 			theme.typography.emphasized.fontSizePt,
 		),
 		"--booklet-heading-family": font.headingFamily,
+		"--booklet-itinerary-accent": itinerary.accent,
+		"--booklet-itinerary-border": itinerary.border,
+		"--booklet-itinerary-muted": itinerary.muted,
+		"--booklet-itinerary-surface": itinerary.surfaceStops[0],
+		"--booklet-itinerary-text": itinerary.text,
 		"--booklet-muted": palette.muted,
 		"--booklet-page-margin": `${theme.typography.pageMarginMm}mm`,
 		"--booklet-spacing": `${theme.typography.spacingMultiplier}`,
@@ -921,7 +576,9 @@ export function getBookletPageSurface(
 ): readonly [string, string] {
 	const palette = PALETTES.get(theme.paletteId);
 	if (!palette) {
-		throw new ThemeRecipeValidationError("テーマの配色がありません。");
+		throw new ThemeRecipeValidationError(
+			`未登録の配色「${theme.paletteId}」です。`,
+		);
 	}
 	return palette.itinerary?.surfaceStops ?? palette.surfaceStops;
 }
