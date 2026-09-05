@@ -35,6 +35,7 @@ describe("テーマレシピの静的安全性", () => {
 		expect(candidates.length).toBeLessThanOrEqual(4);
 		expect(candidates[0]?.fallbackStep).toBe("selected");
 		expect(candidates.at(-1)?.fallbackStep).toBe("safe-geometry");
+		expect(candidates.at(-1)?.displayFontId).toBe("inherit");
 	});
 
 	it("異常系: safe-coverを通常レシピとして定義できない", () => {
@@ -55,5 +56,25 @@ describe("テーマレシピの静的安全性", () => {
 				),
 			).not.toThrow();
 		}
+	});
+
+	it("異常系: 表紙紙面とcoverInkの薄いコントラストを拒否する", () => {
+		const palette = THEME_CATALOG_REFERENCES.palettes.get("paper-ink");
+		if (!palette) {
+			throw new Error("paper-ink配色がありません。");
+		}
+		const references: ThemeCatalogReferences = {
+			...THEME_CATALOG_REFERENCES,
+			palettes: new Map(THEME_CATALOG_REFERENCES.palettes).set("paper-ink", {
+				...palette,
+				surfaceStops: [palette.coverInk, palette.coverInk],
+			}),
+		};
+		expect(() =>
+			defineThemeRecipe(
+				{ ...selectedRecipe(), paletteId: "paper-ink" },
+				references,
+			),
+		).toThrow(ThemeRecipeValidationError);
 	});
 });

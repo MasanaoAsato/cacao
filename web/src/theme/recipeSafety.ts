@@ -2,7 +2,10 @@ import type {
 	BookletThemeCandidate,
 	CoverLayoutDefinition,
 	DensityId,
+	DisplayFontDefinition,
 	FallbackStep,
+	FontPairDefinition,
+	PaletteDefinition,
 	RequestedBookletTheme,
 	ThemeCatalogReferences,
 	ThemeRecipeDefinition,
@@ -116,6 +119,10 @@ function validatePaletteContrast(
 			`未登録の配色「${recipe.paletteId}」です。`,
 		);
 	}
+	validatePaletteDefinition(palette);
+}
+
+function validatePaletteDefinition(palette: PaletteDefinition): void {
 	requireRange(
 		palette.coverVeilOpacity,
 		...COVER_VEIL_OPACITY_RANGE,
@@ -171,6 +178,22 @@ function validatePaletteContrast(
 			`配色「${palette.id}」の表紙文字コントラストは${MINIMUM_CONTRAST_RATIO}:1以上にしてください。`,
 		);
 	}
+	for (const background of palette.surfaceStops) {
+		const contrast = contrastRatio(palette.coverInk, background);
+		if (contrast === null || contrast < MINIMUM_CONTRAST_RATIO) {
+			throw new ThemeRecipeValidationError(
+				`配色「${palette.id}」の表紙紙面文字コントラストは${MINIMUM_CONTRAST_RATIO}:1以上にしてください。`,
+			);
+		}
+	}
+}
+
+export function validatePaletteDefinitions(
+	references: ThemeCatalogReferences,
+): void {
+	for (const palette of references.palettes.values()) {
+		validatePaletteDefinition(palette);
+	}
 }
 
 function validateCoverLayoutDefinition(cover: CoverLayoutDefinition): void {
@@ -184,6 +207,67 @@ function validateCoverLayoutDefinition(cover: CoverLayoutDefinition): void {
 	}
 	if (cover.titleSizePt !== null) {
 		requireRange(cover.titleSizePt, 22, 56, "表紙見出し文字サイズ");
+	}
+}
+
+const GENERIC_FONT_FAMILIES = new Set([
+	"cursive",
+	"fantasy",
+	"monospace",
+	"sans-serif",
+	"serif",
+	"system-ui",
+	"ui-monospace",
+	"ui-rounded",
+	"ui-sans-serif",
+	"ui-serif",
+]);
+
+function normalizeFontFamily(family: string): string {
+	return family.trim().replace(/^(?:"([^"]*)"|'([^']*)')$/, "$1$2");
+}
+
+function namedFontFamilies(family: string | null): readonly string[] {
+	if (family === null) {
+		return [];
+	}
+	return family
+		.split(",")
+		.map(normalizeFontFamily)
+		.filter(
+			(value) =>
+				value.length > 0 && !GENERIC_FONT_FAMILIES.has(value.toLowerCase()),
+		);
+}
+
+function validateFontFamilyCombination(
+	font: FontPairDefinition,
+	displayFont: DisplayFontDefinition,
+): void {
+	const fontFamilies = font.families.flatMap(namedFontFamilies);
+	if (new Set(fontFamilies).size > 2) {
+		throw new ThemeRecipeValidationError(
+			"1冊で使用できる書体ファミリーは2種類までです。",
+		);
+	}
+	const familyCount = new Set([
+		...fontFamilies,
+		...namedFontFamilies(displayFont.family),
+	]).size;
+	if (familyCount > 3) {
+		throw new ThemeRecipeValidationError(
+			"1冊で使用できる書体ファミリーは3種類までです。",
+		);
+	}
+}
+
+export function validateFontFamilyCombinations(
+	references: ThemeCatalogReferences,
+): void {
+	for (const font of references.fonts.values()) {
+		for (const displayFont of references.displayFonts.values()) {
+			validateFontFamilyCombination(font, displayFont);
+		}
 	}
 }
 
@@ -208,11 +292,6 @@ function validateReferences(
 	if (!font) {
 		throw new ThemeRecipeValidationError(
 			`未登録の書体「${recipe.fontPairId}」です。`,
-		);
-	}
-	if (new Set(font.families).size > 2) {
-		throw new ThemeRecipeValidationError(
-			"1冊で使用できる書体ファミリーは2種類までです。",
 		);
 	}
 	const cover = references.coverLayouts.get(recipe.coverLayoutId);
@@ -252,6 +331,13 @@ function validateReferences(
 			`未登録の表示書体「${recipe.displayFontId}」です。`,
 		);
 	}
+	const displayFont = references.displayFonts.get(recipe.displayFontId);
+	if (!displayFont) {
+		throw new ThemeRecipeValidationError(
+			`未登録の表示書体「${recipe.displayFontId}」です。`,
+		);
+	}
+	validateFontFamilyCombination(font, displayFont);
 }
 
 function validateTypography(recipe: ThemeRecipeDefinition): void {
@@ -351,7 +437,11 @@ function candidate(
 	overrides: Partial<
 		Pick<
 			BookletThemeCandidate,
-			"coverLayoutId" | "densityId" | "emphasisId" | "itineraryTemplateId"
+			| "coverLayoutId"
+			| "densityId"
+			| "displayFontId"
+			| "emphasisId"
+			| "itineraryTemplateId"
 		>
 	>,
 	references: ThemeCatalogReferences,
@@ -362,7 +452,7 @@ function candidate(
 		coverLayoutId: overrides.coverLayoutId ?? recipe.coverLayoutId,
 		decorId: recipe.decorId,
 		densityId,
-		displayFontId: recipe.displayFontId,
+		displayFontId: overrides.displayFontId ?? recipe.displayFontId,
 		emphasisId: overrides.emphasisId ?? recipe.emphasisId,
 		fallbackStep: step,
 		fontPairId: recipe.fontPairId,
@@ -420,6 +510,7 @@ export function buildThemeCandidates(
 			{
 				coverLayoutId: "safe-cover",
 				densityId: "compact",
+				displayFontId: "inherit",
 				emphasisId: "balanced",
 				itineraryTemplateId: "field-journal",
 			},

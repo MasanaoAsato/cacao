@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { THEME_CATALOG_REFERENCES } from "./bookletTheme";
-import { MOODS, validateCatalog } from "./catalog";
+import { MOODS, V2_REPRESENTATIVE_SEEDS, validateCatalog } from "./catalog";
 import { ThemeRecipeValidationError } from "./recipeSafety";
 import type { PaletteId } from "./types";
 
@@ -240,9 +240,9 @@ function combinationCount(): number {
 }
 
 describe("V2テーマカタログ", () => {
-	it("正常系: 設計表の6雰囲気と3,072通りを検証する", () => {
+	it("正常系: 設計表の6雰囲気と11,808通りを検証する", () => {
 		expect(MOODS).toHaveLength(6);
-		expect(combinationCount()).toBe(3072);
+		expect(combinationCount()).toBe(11808);
 		expect(() =>
 			validateCatalog(MOODS, THEME_CATALOG_REFERENCES),
 		).not.toThrow();
@@ -270,6 +270,41 @@ describe("V2テーマカタログ", () => {
 			expect(THEME_CATALOG_REFERENCES.densities.has(densityId)).toBe(true);
 			expect(THEME_CATALOG_REFERENCES.emphasis.has(emphasisId)).toBe(true);
 		}
+	});
+
+	it("正常系: 代表シード表が登録済みの全軸値を網羅する", () => {
+		const representatives = V2_REPRESENTATIVE_SEEDS.map(
+			({ expected }) => expected,
+		);
+		expect(new Set(representatives.map(({ moodId }) => moodId))).toEqual(
+			new Set(MOODS.keys()),
+		);
+		expect(
+			new Set(representatives.map(({ coverLayoutId }) => coverLayoutId)),
+		).toEqual(
+			new Set(
+				Array.from(THEME_CATALOG_REFERENCES.coverLayouts.keys()).filter(
+					(id) => THEME_CATALOG_REFERENCES.coverLayouts.get(id)?.selectable,
+				),
+			),
+		);
+		expect(new Set(representatives.map(({ paletteId }) => paletteId))).toEqual(
+			new Set(THEME_CATALOG_REFERENCES.palettes.keys()),
+		);
+		expect(
+			new Set(representatives.map(({ fontPairId }) => fontPairId)),
+		).toEqual(new Set(THEME_CATALOG_REFERENCES.fonts.keys()));
+		expect(
+			new Set(representatives.map(({ displayFontId }) => displayFontId)),
+		).toEqual(new Set(THEME_CATALOG_REFERENCES.displayFonts.keys()));
+		expect(
+			new Set(
+				representatives.map(({ itineraryTemplateId }) => itineraryTemplateId),
+			),
+		).toEqual(new Set(THEME_CATALOG_REFERENCES.itineraries.keys()));
+		expect(new Set(representatives.map(({ decorId }) => decorId))).toEqual(
+			new Set(THEME_CATALOG_REFERENCES.decors.keys()),
+		);
 	});
 
 	it("異常系: 同じ許可リストに重複した値があれば拒否する", () => {
@@ -324,6 +359,44 @@ describe("V2テーマカタログ", () => {
 			coverLayouts: ["safe-cover"],
 		});
 		expect(() => validateCatalog(moods, THEME_CATALOG_REFERENCES)).toThrow(
+			ThemeRecipeValidationError,
+		);
+	});
+
+	it("異常系: 本文2書体と表示2書体の組み合わせを拒否する", () => {
+		const displayFont =
+			THEME_CATALOG_REFERENCES.displayFonts.get("dela-gothic-one");
+		if (!displayFont) {
+			throw new Error("表示書体の定義がありません。");
+		}
+		const references = {
+			...THEME_CATALOG_REFERENCES,
+			displayFonts: new Map(THEME_CATALOG_REFERENCES.displayFonts).set(
+				"dela-gothic-one",
+				{
+					...displayFont,
+					family: '"Display One", "Display Two", sans-serif',
+				},
+			),
+		};
+		expect(() => validateCatalog(MOODS, references)).toThrow(
+			ThemeRecipeValidationError,
+		);
+	});
+
+	it("異常系: 未選択の配色でも表紙紙面の薄いコントラストを拒否する", () => {
+		const palette = THEME_CATALOG_REFERENCES.palettes.get("paper-ink");
+		if (!palette) {
+			throw new Error("paper-ink配色がありません。");
+		}
+		const references = {
+			...THEME_CATALOG_REFERENCES,
+			palettes: new Map(THEME_CATALOG_REFERENCES.palettes).set("paper-ink", {
+				...palette,
+				surfaceStops: [palette.coverInk, palette.coverInk] as const,
+			}),
+		};
+		expect(() => validateCatalog(MOODS, references)).toThrow(
 			ThemeRecipeValidationError,
 		);
 	});

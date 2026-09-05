@@ -8,6 +8,7 @@ import {
 } from "../../booklet/paginate";
 import {
 	getCoverLayoutDefinition,
+	getDisplayFontDefinition,
 	getFontPairFamilies,
 	getThemeCandidates,
 	resolveBookletTheme,
@@ -116,6 +117,16 @@ export async function waitForFonts(
 					`${family} ${weight} の読み込みを確認できませんでした。`,
 				);
 			}
+		}
+	}
+	const displayFont = getDisplayFontDefinition(theme.displayFontId);
+	if (displayFont.family !== null) {
+		const descriptor = `${displayFont.weight} 10pt ${displayFont.family}`;
+		await document.fonts.load(descriptor, FONT_SAMPLE_TEXT);
+		if (!document.fonts.check(descriptor, FONT_SAMPLE_TEXT)) {
+			throw new Error(
+				`${displayFont.family} ${displayFont.weight} の読み込みを確認できませんでした。`,
+			);
 		}
 	}
 }
@@ -271,11 +282,6 @@ function collectMeasurement(
 	theme: BookletThemeCandidate,
 ): CollectedMeasurement {
 	const coverVeilBounds = measureCoverVeilBounds(root, theme);
-	const coverText = queryRequired(
-		root,
-		"[data-booklet-cover-copy]",
-		"表紙文字領域",
-	);
 	const dayPages = Array.from(
 		root.querySelectorAll<HTMLElement>(".booklet-page--measurement"),
 	);
@@ -305,8 +311,6 @@ function collectMeasurement(
 		pageMeasurement: {
 			contentHeight: readContentHeight(content),
 			contentWidth: readContentWidth(content),
-			coverHeight: coverText.scrollHeight,
-			coverWidth: coverText.scrollWidth,
 			days: model.days.map((day, dayIndex) => {
 				const page = dayPages[dayIndex];
 				if (!page) {

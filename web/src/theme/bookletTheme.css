@@ -16,7 +16,7 @@
 
 .booklet-theme .booklet-page--cover {
 	padding: 0;
-	background: #111;
+	background: var(--booklet-cover-surface);
 }
 
 .booklet-theme .booklet-page--day,
@@ -99,9 +99,9 @@
 	margin: 0;
 	padding-bottom: 0.1em;
 	color: var(--booklet-cover-ink);
-	font-family: var(--booklet-heading-family);
+	font-family: var(--booklet-cover-title-family);
 	font-size: var(--booklet-cover-title-size);
-	font-weight: 700;
+	font-weight: var(--booklet-cover-title-weight);
 	letter-spacing: var(--booklet-cover-title-letter-spacing);
 	line-height: var(--booklet-cover-title-line-height);
 	line-break: strict;

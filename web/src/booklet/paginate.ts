@@ -9,8 +9,6 @@ export type DayPageMeasurement = {
 export type BookletPageMeasurement = {
 	readonly contentHeight: number;
 	readonly contentWidth: number;
-	readonly coverHeight: number;
-	readonly coverWidth: number;
 	readonly days: readonly DayPageMeasurement[];
 };
 
@@ -63,8 +61,6 @@ function validateMeasurement(
 ): void {
 	requirePositiveFinite(measurement.contentHeight, "ページ本文高さ");
 	requirePositiveFinite(measurement.contentWidth, "ページ本文幅");
-	requireNonNegativeFinite(measurement.coverHeight, "表紙高さ");
-	requireNonNegativeFinite(measurement.coverWidth, "表紙幅");
 	if (measurement.days.length !== model.days.length) {
 		throw new PaginationError(
 			"invalid-measurement",
@@ -113,18 +109,6 @@ export function paginateBooklet(
 	measurement: BookletPageMeasurement,
 ): readonly BookletPagePlan[] {
 	validateMeasurement(model, measurement);
-	ensureFits(
-		measurement.coverWidth,
-		measurement.contentWidth,
-		"cover-inline-overflow",
-		"表紙の横幅",
-	);
-	ensureFits(
-		measurement.coverHeight,
-		measurement.contentHeight,
-		"cover-block-overflow",
-		"表紙の縦幅",
-	);
 
 	const pages: BookletPagePlan[] = [
 		{ kind: "cover", pageId: `cover-${model.journeyId}` },

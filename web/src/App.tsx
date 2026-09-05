@@ -1,13 +1,17 @@
 import "@fontsource/m-plus-rounded-1c/400.css";
 import "@fontsource/m-plus-rounded-1c/700.css";
+import "@fontsource/dela-gothic-one/400.css";
+import "@fontsource/kaisei-decol/700.css";
 import "@fontsource/noto-sans-jp/400.css";
 import "@fontsource/noto-sans-jp/700.css";
 import "@fontsource/noto-serif-jp/400.css";
 import "@fontsource/noto-serif-jp/700.css";
 import "@fontsource/shippori-mincho/400.css";
 import "@fontsource/shippori-mincho/700.css";
+import "@fontsource/rocknroll-one/400.css";
 import "@fontsource/zen-kaku-gothic-new/400.css";
 import "@fontsource/zen-kaku-gothic-new/700.css";
+import "@fontsource/zen-kurenaido/400.css";
 import "./print.css";
 import "./theme/bookletTheme.css";
 import { Route, Routes } from "react-router";

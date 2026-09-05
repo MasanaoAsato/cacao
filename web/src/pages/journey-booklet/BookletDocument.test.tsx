@@ -71,8 +71,8 @@ const pagePlan: readonly BookletPagePlan[] = [
 
 const coverVeilBounds = { height: 48, width: 80, x: 34, y: 81 };
 
-function resolvedTheme() {
-	const requested = createBookletTheme({ value: 7, version: "v2" });
+function resolvedTheme(seed = 7) {
+	const requested = createBookletTheme({ value: seed, version: "v2" });
 	const candidate = getThemeCandidates(requested)[0];
 	if (!candidate) {
 		throw new Error("テーマ候補がありません。");
@@ -83,7 +83,7 @@ function resolvedTheme() {
 describe("BookletDocument", () => {
 	it("正常系: A5全面表紙と実ページへ同一テーマキーを設定する", () => {
 		const rootRef = createRef<HTMLElement>();
-		const theme = resolvedTheme();
+		const theme = resolvedTheme(1);
 		const { container } = render(
 			<BookletDocument
 				coverVeilBounds={coverVeilBounds}
@@ -165,7 +165,7 @@ describe("BookletDocument", () => {
 
 	it("正常系: 継続ページへ継続クラスと表示を付与する", () => {
 		const rootRef = createRef<HTMLElement>();
-		const theme = resolvedTheme();
+		const theme = resolvedTheme(1);
 		const continuationPagePlan: readonly BookletPagePlan[] = [
 			{ kind: "cover", pageId: "cover-journey-1" },
 			{
@@ -191,6 +191,44 @@ describe("BookletDocument", () => {
 		);
 		expect(continuation).toBeInTheDocument();
 		expect(continuation).toHaveTextContent("（続き）");
+	});
+
+	it("正常系: ベールなし構図は表紙ベールを描画しない", () => {
+		const rootRef = createRef<HTMLElement>();
+		const theme = resolvedTheme(7);
+		const { container } = render(
+			<BookletDocument
+				coverVeilBounds={coverVeilBounds}
+				model={model}
+				pagePlan={pagePlan}
+				rootRef={rootRef}
+				theme={theme}
+			/>,
+		);
+
+		expect(theme.coverLayoutId).toBe("panel-top");
+		expect(
+			container.querySelector(".booklet-page--cover svg.booklet-cover__veil"),
+		).not.toBeInTheDocument();
+	});
+
+	it("正常系: poster構図の長い題名に縮小クラスを付ける", () => {
+		const rootRef = createRef<HTMLElement>();
+		const theme = resolvedTheme(14);
+		const { container } = render(
+			<BookletDocument
+				coverVeilBounds={coverVeilBounds}
+				model={model}
+				pagePlan={pagePlan}
+				rootRef={rootRef}
+				theme={theme}
+			/>,
+		);
+
+		expect(theme.coverLayoutId).toBe("poster");
+		expect(container.querySelector(".booklet-cover__title")).toHaveClass(
+			"booklet-cover__title--very-long",
+		);
 	});
 
 	it("境界値系: safe-coverを計測DOMだけでなくそのまま描画できる", () => {

@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
+import { getCoverLayoutDefinition } from "../src/theme/bookletTheme.js";
 import { V2_REPRESENTATIVE_SEEDS } from "../src/theme/catalog.js";
 import { routeBookletApi } from "./fixtures/booklet.js";
 
@@ -95,17 +96,71 @@ test.describe("PDFしおり", () => {
 				"naturalWidth",
 				800,
 			);
+			const titleWeight = await cover
+				.locator(".booklet-cover__title")
+				.evaluate((element) => getComputedStyle(element).fontWeight);
+			expect(titleWeight).toBe(
+				["inherit", "kaisei-decol"].includes(expected.displayFontId)
+					? "700"
+					: "400",
+			);
+			if (expected.coverLayoutId === "poster") {
+				await expect(cover.locator(".booklet-cover__title")).toHaveClass(
+					/booklet-cover__title--very-long/,
+				);
+			}
+			const frame = await cover
+				.locator(".booklet-cover__frame")
+				.evaluate((element) => {
+					const coverElement = element.closest<HTMLElement>(
+						".booklet-page--cover",
+					);
+					if (!coverElement) {
+						throw new Error("表紙の画像枠を計測できません。");
+					}
+					const coverRect = coverElement.getBoundingClientRect();
+					const frameRect = element.getBoundingClientRect();
+					return {
+						height: frameRect.height,
+						left: frameRect.left - coverRect.left,
+						top: frameRect.top - coverRect.top,
+						width: frameRect.width,
+						scaleX: coverRect.width / 148,
+						scaleY: coverRect.height / 210,
+					};
+				});
+			const imageFrame = getCoverLayoutDefinition(
+				expected.coverLayoutId,
+			).imageFrame;
+			expect(Math.abs(frame.left - imageFrame.xMm * frame.scaleX)).toBeLessThan(
+				1,
+			);
+			expect(Math.abs(frame.top - imageFrame.yMm * frame.scaleY)).toBeLessThan(
+				1,
+			);
+			expect(
+				Math.abs(frame.width - imageFrame.widthMm * frame.scaleX),
+			).toBeLessThan(1);
+			expect(
+				Math.abs(frame.height - imageFrame.heightMm * frame.scaleY),
+			).toBeLessThan(1);
 			const veil = cover.locator("svg.booklet-cover__veil");
-			const veilKind = await veil.getAttribute("data-booklet-cover-veil-kind");
-			expect(["linear-x", "linear-y", "radial"]).toContain(veilKind);
-			await expect(veil).toHaveCount(1);
-			await expect(
-				veil.locator(
-					veilKind === "linear-x" || veilKind === "linear-y"
-						? "linearGradient"
-						: "radialGradient",
-				),
-			).toHaveCount(1);
+			if (getCoverLayoutDefinition(expected.coverLayoutId).veil === "none") {
+				await expect(veil).toHaveCount(0);
+			} else {
+				const veilKind = await veil.getAttribute(
+					"data-booklet-cover-veil-kind",
+				);
+				expect(["linear-x", "linear-y", "radial"]).toContain(veilKind);
+				await expect(veil).toHaveCount(1);
+				await expect(
+					veil.locator(
+						veilKind === "linear-x" || veilKind === "linear-y"
+							? "linearGradient"
+							: "radialGradient",
+					),
+				).toHaveCount(1);
+			}
 		});
 	}
 
