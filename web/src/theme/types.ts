@@ -1,4 +1,4 @@
-export type ThemeCatalogVersion = "v1";
+export type ThemeCatalogVersion = "v2";
 
 export type FontPairId =
 	| "classic"
@@ -36,13 +36,17 @@ export type EmphasisId = "place-led" | "balanced" | "route-led" | "time-led";
 
 export type DensityId = "airy" | "balanced" | "compact";
 
-export type SignatureId =
+export type MoodId =
 	| "field-notes"
 	| "wayfinder"
 	| "postcard"
 	| "night-train"
 	| "quiet-gallery"
 	| "festival-ticket";
+
+export type DisplayFontId = "inherit";
+
+export type DecorId = MoodId;
 
 export type ThemeSeed = {
 	readonly value: number;
@@ -148,19 +152,48 @@ export type DensityDefinition = {
 	readonly spacingMultiplier: number;
 };
 
-export type SignatureDefinition = {
-	readonly id: SignatureId;
+export type DisplayFontDefinition = {
+	readonly id: DisplayFontId;
+};
+
+export type DecorDefinition = {
+	readonly id: DecorId;
+};
+
+export type MoodDefinition = {
+	readonly coverLayouts: readonly CoverLayoutId[];
+	readonly decors: readonly DecorId[];
+	readonly displayFonts: readonly DisplayFontId[];
+	readonly fontPairs: readonly FontPairId[];
+	readonly id: MoodId;
+	readonly itineraryTemplates: readonly ItineraryTemplateId[];
+	readonly palettes: readonly PaletteId[];
+};
+
+export type ThemeContext = {
+	readonly coverVisualStyle: null;
+};
+
+export type CompatibilityRule = {
+	readonly exclude: {
+		readonly coverLayouts?: readonly CoverLayoutId[];
+		readonly decors?: readonly DecorId[];
+		readonly palettes?: readonly PaletteId[];
+	};
+	readonly matches: (context: ThemeContext) => boolean;
 };
 
 export type ThemeRecipeDefinition = {
 	readonly coverLayoutId: CoverLayoutId;
+	readonly decorId: DecorId;
 	readonly densityId: DensityId;
+	readonly displayFontId: DisplayFontId;
 	readonly emphasisId: EmphasisId;
 	readonly fontPairId: FontPairId;
 	readonly id: string;
 	readonly itineraryTemplateId: ItineraryTemplateId;
+	readonly moodId: MoodId;
 	readonly paletteId: PaletteId;
-	readonly signatureId: SignatureId;
 	readonly typography: TypographySafety;
 };
 
@@ -179,15 +212,17 @@ export type FallbackStep =
 
 export type BookletThemeCandidate = {
 	readonly coverLayoutId: CoverLayoutId;
+	readonly decorId: DecorId;
 	readonly densityId: DensityId;
+	readonly displayFontId: DisplayFontId;
 	readonly emphasisId: EmphasisId;
 	readonly fallbackStep: FallbackStep;
 	readonly fontPairId: FontPairId;
 	readonly itineraryTemplateId: ItineraryTemplateId;
+	readonly moodId: MoodId;
 	readonly paletteId: PaletteId;
 	readonly requestedRecipeId: string;
 	readonly resolvedThemeKey: string;
-	readonly signatureId: SignatureId;
 	readonly typography: TypographySafety;
 };
 
@@ -199,7 +234,9 @@ export type ResolvedBookletTheme = BookletThemeCandidate & {
 
 export type ThemeCatalogReferences = {
 	readonly coverLayouts: ReadonlyMap<CoverLayoutId, CoverLayoutDefinition>;
+	readonly decors: ReadonlyMap<DecorId, DecorDefinition>;
 	readonly densities: ReadonlyMap<DensityId, DensityDefinition>;
+	readonly displayFonts: ReadonlyMap<DisplayFontId, DisplayFontDefinition>;
 	readonly emphasis: ReadonlyMap<EmphasisId, EmphasisDefinition>;
 	readonly fonts: ReadonlyMap<FontPairId, FontPairDefinition>;
 	readonly itineraries: ReadonlyMap<
@@ -207,5 +244,4 @@ export type ThemeCatalogReferences = {
 		ItineraryTemplateDefinition
 	>;
 	readonly palettes: ReadonlyMap<PaletteId, PaletteDefinition>;
-	readonly signatures: ReadonlyMap<SignatureId, SignatureDefinition>;
 };

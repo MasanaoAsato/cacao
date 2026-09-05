@@ -446,6 +446,21 @@ function nextFrame(): Promise<void> {
 	});
 }
 
+async function waitForDocumentRoot(
+	getDocumentRoot: () => HTMLElement | null,
+	expectedThemeKey: string,
+): Promise<HTMLElement | null> {
+	await nextFrame();
+	for (let frame = 0; frame < 12; frame += 1) {
+		const documentRoot = getDocumentRoot();
+		if (documentRoot?.dataset.bookletThemeKey === expectedThemeKey) {
+			return documentRoot;
+		}
+		await nextFrame();
+	}
+	return null;
+}
+
 export function useBookletPagePlan(
 	model: BookletModel | null,
 	requestedTheme: RequestedBookletTheme | null,
@@ -547,12 +562,13 @@ export function useBookletPagePlan(
 				setCoverVeilBounds(collected.coverVeilBounds);
 				setPagePlan(measuredPlan);
 				setStatus("checking");
-				await nextFrame();
-				await nextFrame();
+				const documentRoot = await waitForDocumentRoot(
+					() => documentRef.current,
+					activeTheme.resolvedThemeKey,
+				);
 				if (cancelled || runId !== runIdRef.current) {
 					return;
 				}
-				const documentRoot = documentRef.current;
 				if (!documentRoot) {
 					throw new BookletLayoutError(
 						"dom-not-ready",

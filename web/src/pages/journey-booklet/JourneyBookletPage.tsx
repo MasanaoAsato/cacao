@@ -11,7 +11,8 @@ import {
 	createBookletModel,
 } from "../../booklet/fromJourney";
 import type { BookletModel } from "../../booklet/model";
-import { createBookletTheme, selectV1Recipe } from "../../theme/bookletTheme";
+import { createBookletTheme } from "../../theme/bookletTheme";
+import { sameDesign } from "../../theme/resolve";
 import {
 	createDefaultThemeSeed,
 	createRerollSeed,
@@ -125,7 +126,7 @@ function resolveRequestedTheme(
 		return {
 			error: null,
 			invalidQuery: parsed.kind === "invalid",
-			requestedTheme: createBookletTheme(seed),
+			requestedTheme: createBookletTheme(seed, { coverVisualStyle: null }),
 		};
 	} catch {
 		return {
@@ -193,7 +194,7 @@ function BookletStatus({
 		return (
 			<p>
 				{theme
-					? `テーマ ${theme.recipe.id} の印刷準備ができました。`
+					? `${theme.seedToken}（${theme.recipe.moodId}・${theme.recipe.paletteId}・${theme.recipe.coverLayoutId}）の印刷準備ができました。`
 					: "印刷の準備ができました。"}
 			</p>
 		);
@@ -357,14 +358,11 @@ export function JourneyBookletPage() {
 			const nextSeed = createRerollSeed(
 				requestedTheme.seed,
 				(candidate) =>
-					selectV1Recipe(candidate).id !== requestedTheme.recipe.id,
+					!sameDesign(
+						createBookletTheme(candidate, { coverVisualStyle: null }).recipe,
+						requestedTheme.recipe,
+					),
 			);
-			if (!nextSeed) {
-				setRerollError(
-					"別のデザインを選べませんでした。現在のテーマを維持します。",
-				);
-				return;
-			}
 			const next = new URLSearchParams(searchParams);
 			next.set("seed", formatThemeSeed(nextSeed));
 			setSearchParams(next);

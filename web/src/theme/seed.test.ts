@@ -1,54 +1,55 @@
 import { describe, expect, it } from "vitest";
 import {
+	axisRandom,
 	createDefaultThemeSeed,
 	createRerollSeed,
-	fnv1a32,
 	formatThemeSeed,
-	mulberry32,
 	parseThemeSeed,
 } from "./seed";
 
 describe("テーマシード", () => {
-	it("正常系: 大文字のURLシードを小文字へ正規化する", () => {
-		expect(parseThemeSeed("v1-ABCDEF01")).toEqual({
+	it("正常系: 大文字のV2 URLシードを小文字へ正規化する", () => {
+		expect(parseThemeSeed("v2-ABCDEF01")).toEqual({
 			kind: "valid",
-			seed: { value: 0xabcdef01, version: "v1" },
-			token: "v1-abcdef01",
+			seed: { value: 0xabcdef01, version: "v2" },
+			token: "v2-abcdef01",
 		});
 	});
 
-	it("異常系: 未対応版と桁不足を拒否する", () => {
-		expect(parseThemeSeed("v2-00000000")).toEqual({ kind: "invalid" });
-		expect(parseThemeSeed("v1-1234")).toEqual({ kind: "invalid" });
+	it("異常系: V1と桁不足のシードを拒否する", () => {
+		expect(parseThemeSeed("v1-00000000")).toEqual({ kind: "invalid" });
+		expect(parseThemeSeed("v2-1234")).toEqual({ kind: "invalid" });
 	});
 
-	it("境界値系: 0と32bit最大値を往復できる", () => {
-		expect(formatThemeSeed({ value: 0, version: "v1" })).toBe("v1-00000000");
-		expect(formatThemeSeed({ value: 0xffffffff, version: "v1" })).toBe(
-			"v1-ffffffff",
+	it("境界値系: 0とuint32最大値をV2シードとして書式化する", () => {
+		expect(formatThemeSeed({ value: 0, version: "v2" })).toBe("v2-00000000");
+		expect(formatThemeSeed({ value: 0xffffffff, version: "v2" })).toBe(
+			"v2-ffffffff",
 		);
 	});
 
-	it("同じ旅程IDからは安定した既定シードを導出する", () => {
+	it("正常系: 軸別乱数と既定シードは決定的に導出される", () => {
 		expect(createDefaultThemeSeed("journey-1")).toEqual(
 			createDefaultThemeSeed("journey-1"),
 		);
-		expect(fnv1a32("booklet-theme:v1:journey-1")).toBe(
-			createDefaultThemeSeed("journey-1").value,
+		expect(axisRandom("v2-00000007", "palette")).toBe(
+			axisRandom("v2-00000007", "palette"),
 		);
-		expect(mulberry32(7)()).toBe(mulberry32(7)());
+		expect(axisRandom("v2-00000007", "palette")).not.toBe(
+			axisRandom("v2-00000007", "coverLayout"),
+		);
 	});
 
-	it("再抽選は異なるレシピになる最初の暗号学的乱数値を選ぶ", () => {
+	it("正常系: 再抽選は異なるデザインになる最初の乱数値を選ぶ", () => {
 		const values = [7, 8];
 		const seed = createRerollSeed(
-			{ value: 1, version: "v1" },
+			{ value: 1, version: "v2" },
 			(candidate) => candidate.value === 8,
 			(target) => {
 				target[0] = values.shift() ?? 0;
 				return target;
 			},
 		);
-		expect(seed).toEqual({ value: 8, version: "v1" });
+		expect(seed).toEqual({ value: 8, version: "v2" });
 	});
 });

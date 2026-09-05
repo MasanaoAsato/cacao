@@ -187,7 +187,7 @@ function validateCoverLayoutDefinition(cover: CoverLayoutDefinition): void {
 	}
 }
 
-function validateCoverLayoutDefinitions(
+export function validateCoverLayoutDefinitions(
 	references: ThemeCatalogReferences,
 ): void {
 	for (const [id, cover] of references.coverLayouts) {
@@ -242,25 +242,14 @@ function validateReferences(
 			`未登録の密度「${recipe.densityId}」です。`,
 		);
 	}
-	if (!references.signatures.has(recipe.signatureId)) {
+	if (!references.decors.has(recipe.decorId)) {
 		throw new ThemeRecipeValidationError(
-			`未登録の旅モチーフ「${recipe.signatureId}」です。`,
+			`未登録の装飾語彙「${recipe.decorId}」です。`,
 		);
 	}
-	const templateForSignature: Record<
-		ThemeRecipeDefinition["signatureId"],
-		ThemeRecipeDefinition["itineraryTemplateId"]
-	> = {
-		"festival-ticket": "travel-ticket",
-		"field-notes": "field-journal",
-		"night-train": "route-thread",
-		postcard: "travel-ticket",
-		"quiet-gallery": "field-journal",
-		wayfinder: "route-thread",
-	};
-	if (templateForSignature[recipe.signatureId] !== recipe.itineraryTemplateId) {
+	if (!references.displayFonts.has(recipe.displayFontId)) {
 		throw new ThemeRecipeValidationError(
-			`旅モチーフ「${recipe.signatureId}」と本文テンプレートの組み合わせが不正です。`,
+			`未登録の表示書体「${recipe.displayFontId}」です。`,
 		);
 	}
 }
@@ -329,7 +318,7 @@ export function defineThemeRecipe(
 	recipe: ThemeRecipeDefinition,
 	references: ThemeCatalogReferences,
 ): ThemeRecipeDefinition {
-	if (!/^[a-z0-9-]+$/.test(recipe.id)) {
+	if (!/^[a-z0-9.-]+$/.test(recipe.id)) {
 		throw new ThemeRecipeValidationError("テーマレシピIDが不正です。");
 	}
 	validateReferences(recipe, references);
@@ -371,16 +360,18 @@ function candidate(
 	const densityId = overrides.densityId ?? recipe.densityId;
 	return Object.freeze({
 		coverLayoutId: overrides.coverLayoutId ?? recipe.coverLayoutId,
+		decorId: recipe.decorId,
 		densityId,
+		displayFontId: recipe.displayFontId,
 		emphasisId: overrides.emphasisId ?? recipe.emphasisId,
 		fallbackStep: step,
 		fontPairId: recipe.fontPairId,
 		itineraryTemplateId:
 			overrides.itineraryTemplateId ?? recipe.itineraryTemplateId,
+		moodId: recipe.moodId,
 		paletteId: recipe.paletteId,
 		requestedRecipeId: recipe.id,
 		resolvedThemeKey: `${requested.seedToken}:${step}`,
-		signatureId: recipe.signatureId,
 		typography: typographyForDensity(recipe.typography, densityId, references),
 	});
 }
@@ -447,28 +438,4 @@ export function buildThemeCandidates(
 		);
 	}
 	return Object.freeze(unique);
-}
-
-export function validateThemeCatalog(
-	recipes: readonly ThemeRecipeDefinition[],
-	references: ThemeCatalogReferences,
-): void {
-	validateCoverLayoutDefinitions(references);
-	const ids = new Set<string>();
-	for (const recipe of recipes) {
-		if (ids.has(recipe.id)) {
-			throw new ThemeRecipeValidationError(
-				`テーマレシピID「${recipe.id}」が重複しています。`,
-			);
-		}
-		ids.add(recipe.id);
-		defineThemeRecipe(recipe, references);
-		const requested: RequestedBookletTheme = {
-			catalogVersion: "v1",
-			recipe,
-			seed: { value: 0, version: "v1" },
-			seedToken: "v1-00000000",
-		};
-		buildThemeCandidates(requested, references);
-	}
 }

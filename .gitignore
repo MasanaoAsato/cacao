@@ -44,3 +44,5 @@ web/test-results/
 
 # some skills
 .agents/skills/vercel-react-best-practices
+
+.vscode/settings.json

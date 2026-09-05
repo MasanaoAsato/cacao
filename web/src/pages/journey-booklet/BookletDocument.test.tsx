@@ -72,7 +72,7 @@ const pagePlan: readonly BookletPagePlan[] = [
 const coverVeilBounds = { height: 48, width: 80, x: 34, y: 81 };
 
 function resolvedTheme() {
-	const requested = createBookletTheme({ value: 7, version: "v1" });
+	const requested = createBookletTheme({ value: 7, version: "v2" });
 	const candidate = getThemeCandidates(requested)[0];
 	if (!candidate) {
 		throw new Error("テーマ候補がありません。");
@@ -95,6 +95,10 @@ describe("BookletDocument", () => {
 		);
 
 		const cover = container.querySelector(".booklet-page--cover");
+		expect(rootRef.current).toHaveAttribute(
+			"data-booklet-theme-key",
+			theme.resolvedThemeKey,
+		);
 		expect(
 			cover?.querySelector(".booklet-cover__frame .booklet-cover__image"),
 		).toHaveAttribute("src", "/cover.png");
@@ -190,7 +194,7 @@ describe("BookletDocument", () => {
 	});
 
 	it("境界値系: safe-coverを計測DOMだけでなくそのまま描画できる", () => {
-		const requested = createBookletTheme({ value: 7, version: "v1" });
+		const requested = createBookletTheme({ value: 7, version: "v2" });
 		const safeCandidate = getThemeCandidates({
 			...requested,
 			recipe: { ...requested.recipe, densityId: "airy" },

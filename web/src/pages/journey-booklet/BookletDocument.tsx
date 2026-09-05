@@ -59,7 +59,8 @@ function themeClass(theme: BookletThemeCandidate): string {
 		`booklet-theme--emphasis-${theme.emphasisId}`,
 		`booklet-theme--density-${theme.densityId}`,
 		`booklet-theme--palette-${theme.paletteId}`,
-		`booklet-theme--signature-${theme.signatureId}`,
+		`booklet-theme--mood-${theme.moodId}`,
+		`booklet-theme--decor-${theme.decorId}`,
 	].join(" ");
 }
 
@@ -476,6 +477,7 @@ export function BookletDocument({
 			ref={rootRef}
 			aria-label="旅のしおり印刷プレビュー"
 			className={`booklet-document ${themeClass(theme)}`}
+			data-booklet-design={theme.requestedRecipeId}
 			data-booklet-theme-key={theme.resolvedThemeKey}
 			style={themeStyle(theme)}
 		>
@@ -536,6 +538,7 @@ export function BookletMeasurement({
 			ref={rootRef}
 			aria-hidden="true"
 			className={`booklet-measurement ${themeClass(theme)}`}
+			data-booklet-design={theme.requestedRecipeId}
 			data-booklet-theme-key={theme.resolvedThemeKey}
 			style={themeStyle(theme)}
 		>

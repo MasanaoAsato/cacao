@@ -369,12 +369,12 @@
 	z-index: 1;
 }
 
-.booklet-theme--signature-field-notes .booklet-page--day::after {
+.booklet-theme--decor-field-notes .booklet-page--day::after {
 	inset: 7mm auto 7mm 5mm;
 	border-left: 1px solid currentcolor;
 }
 
-.booklet-theme--signature-wayfinder .booklet-page--day::after {
+.booklet-theme--decor-wayfinder .booklet-page--day::after {
 	inset: 12mm 8mm auto auto;
 	width: 17mm;
 	height: 17mm;
@@ -382,22 +382,22 @@
 	border-radius: 50%;
 }
 
-.booklet-theme--signature-postcard .booklet-page--day::after {
+.booklet-theme--decor-postcard .booklet-page--day::after {
 	inset: 7mm;
 	border: 1px solid currentcolor;
 }
 
-.booklet-theme--signature-night-train .booklet-page--day::after {
+.booklet-theme--decor-night-train .booklet-page--day::after {
 	inset: 12mm auto 12mm 7mm;
 	border-left: 1px dashed currentcolor;
 }
 
-.booklet-theme--signature-quiet-gallery .booklet-page--day::after {
+.booklet-theme--decor-quiet-gallery .booklet-page--day::after {
 	inset: auto 10mm 8mm;
 	border-bottom: 1px solid currentcolor;
 }
 
-.booklet-theme--signature-festival-ticket .booklet-page--day::after {
+.booklet-theme--decor-festival-ticket .booklet-page--day::after {
 	inset: 8mm 7mm;
 	border: 1px dashed currentcolor;
 }
