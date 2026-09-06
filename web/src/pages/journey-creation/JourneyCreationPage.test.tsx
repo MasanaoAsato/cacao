@@ -12,12 +12,19 @@ import { MemoryRouter, Route, Routes } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	getJourneyImages,
-	requestCoverImage,
+	type JourneyImageApiResponse,
+	requestJourneyImages,
 	retryJourneyImage,
 } from "../../api/journeyImages";
 import { createJourneyRequest } from "../../api/journeyRequests";
 import { generateJourney } from "../../api/journeys";
-import { JourneyCreationPage, waitForCoverImage } from "./JourneyCreationPage";
+import {
+	CoverImageGenerationError,
+	JourneyCreationPage,
+	journeyImageSlotsForPeriod,
+	waitForCoverImage,
+	waitForJourneyImages,
+} from "./JourneyCreationPage";
 
 vi.mock("../../api/journeyRequests", () => ({
 	createJourneyRequest: vi.fn(),
@@ -29,7 +36,7 @@ vi.mock("../../api/journeys", () => ({
 
 vi.mock("../../api/journeyImages", () => ({
 	getJourneyImages: vi.fn(),
-	requestCoverImage: vi.fn(),
+	requestJourneyImages: vi.fn(),
 	retryJourneyImage: vi.fn(),
 	selectCoverImage: (
 		images: readonly { slot: { purpose: string; ordinal: number } }[],
@@ -53,6 +60,26 @@ const readyImage = {
 };
 
 const failedImage = { ...readyImage, status: "failed" as const };
+
+const readyIllustrations = [1, 2, 3].map((ordinal) => ({
+	...readyImage,
+	content_url: `/api/v1/journey-images/illustration-${ordinal}/content`,
+	height: 900,
+	id: `illustration-${ordinal}`,
+	slot: { ordinal, purpose: "illustration" as const },
+	visual_style: null,
+	width: 1200,
+}));
+
+function imageResponse(
+	images: readonly JourneyImageApiResponse[] = [
+		readyImage,
+		...readyIllustrations,
+	],
+	journeyRequestId = "request-1",
+) {
+	return { images, journey_request_id: journeyRequestId };
+}
 
 function renderPage() {
 	return render(
@@ -108,13 +135,9 @@ describe("JourneyCreationPage", () => {
 			request_id: "request-1",
 		});
 		vi.mocked(generateJourney).mockResolvedValue({ journey_id: "journey-1" });
-		vi.mocked(requestCoverImage).mockResolvedValue({
-			images: [readyImage],
-			journey_request_id: "request-1",
-		});
+		vi.mocked(requestJourneyImages).mockResolvedValue(imageResponse());
 		vi.mocked(getJourneyImages).mockResolvedValue({
-			images: [readyImage],
-			journey_request_id: "request-1",
+			...imageResponse(),
 		});
 		vi.mocked(retryJourneyImage).mockResolvedValue(readyImage);
 	});
@@ -122,6 +145,32 @@ describe("JourneyCreationPage", () => {
 	afterEach(() => {
 		cleanup();
 		vi.clearAllMocks();
+	});
+
+	it("正常系: 期間の日数に応じて最大3枚の挿絵スロットを作る", () => {
+		expect(
+			journeyImageSlotsForPeriod(
+				"2026-10-23T00:00:00Z",
+				"2026-10-25T00:00:00Z",
+			),
+		).toEqual([
+			{ ordinal: 1, purpose: "cover" },
+			{ ordinal: 1, purpose: "illustration" },
+			{ ordinal: 2, purpose: "illustration" },
+			{ ordinal: 3, purpose: "illustration" },
+		]);
+	});
+
+	it("境界値系: 1日間は挿絵を1枚だけ要求する", () => {
+		expect(
+			journeyImageSlotsForPeriod(
+				"2026-10-23T00:00:00Z",
+				"2026-10-23T00:00:00Z",
+			),
+		).toEqual([
+			{ ordinal: 1, purpose: "cover" },
+			{ ordinal: 1, purpose: "illustration" },
+		]);
 	});
 
 	it("内部用の画面番号を表示しない", () => {
@@ -154,10 +203,38 @@ describe("JourneyCreationPage", () => {
 			"request-1",
 			expect.anything(),
 		);
-		expect(requestCoverImage).toHaveBeenCalledWith(
+		expect(requestJourneyImages).toHaveBeenCalledWith(
 			"request-1",
+			expect.arrayContaining([
+				{ ordinal: 1, purpose: "cover" },
+				{ ordinal: 1, purpose: "illustration" },
+				{ ordinal: 2, purpose: "illustration" },
+				{ ordinal: 3, purpose: "illustration" },
+			]),
 			expect.anything(),
 		);
+	});
+
+	it("正常系: 挿絵の失敗は無視してしおりへ遷移する", async () => {
+		vi.mocked(requestJourneyImages).mockResolvedValue(
+			imageResponse([
+				readyImage,
+				{ ...readyIllustrations[0], status: "failed" as const },
+				readyIllustrations[1],
+				readyIllustrations[2],
+			]),
+		);
+		renderPage();
+		fillValidForm();
+
+		fireEvent.click(screen.getByRole("button", { name: "旅程を生成する" }));
+
+		await waitFor(() =>
+			expect(screen.getByText("booklet ready")).toBeInTheDocument(),
+		);
+		expect(
+			screen.queryByRole("button", { name: "表紙画像を再試行" }),
+		).not.toBeInTheDocument();
 	});
 
 	it("異常系: 未入力ではAPIを呼ばず最初のエラー項目へフォーカスする", () => {
@@ -186,10 +263,9 @@ describe("JourneyCreationPage", () => {
 	});
 
 	it("異常系: 画像失敗では自動retryせず、明示操作でretryする", async () => {
-		vi.mocked(requestCoverImage).mockResolvedValue({
-			images: [failedImage],
-			journey_request_id: "request-1",
-		});
+		vi.mocked(requestJourneyImages).mockResolvedValue(
+			imageResponse([failedImage, ...readyIllustrations]),
+		);
 		renderPage();
 		fillValidForm();
 
@@ -212,12 +288,9 @@ describe("JourneyCreationPage", () => {
 	});
 
 	it("異常系: 画像要求の失敗後は生成済み旅程の画像状態を再確認できる", async () => {
-		vi.mocked(requestCoverImage)
+		vi.mocked(requestJourneyImages)
 			.mockRejectedValueOnce(new Error("temporary image failure"))
-			.mockResolvedValueOnce({
-				images: [readyImage],
-				journey_request_id: "request-1",
-			});
+			.mockResolvedValueOnce(imageResponse());
 		renderPage();
 		fillValidForm();
 
@@ -239,7 +312,7 @@ describe("JourneyCreationPage", () => {
 			images: readonly (typeof readyImage)[];
 			journey_request_id: string;
 		}>();
-		vi.mocked(requestCoverImage).mockReturnValueOnce(
+		vi.mocked(requestJourneyImages).mockReturnValueOnce(
 			pendingImageRequest.promise,
 		);
 		vi.mocked(generateJourney).mockRejectedValueOnce(
@@ -264,10 +337,9 @@ describe("JourneyCreationPage", () => {
 			.mockImplementationOnce(() => firstCreate.promise)
 			.mockImplementationOnce(() => secondCreate.promise);
 		vi.mocked(generateJourney).mockResolvedValue({ journey_id: "journey-2" });
-		vi.mocked(requestCoverImage).mockResolvedValue({
-			images: [readyImage],
-			journey_request_id: "request-2",
-		});
+		vi.mocked(requestJourneyImages).mockResolvedValue(
+			imageResponse([readyImage, ...readyIllustrations], "request-2"),
+		);
 
 		renderPage();
 		fillValidForm();
@@ -316,6 +388,68 @@ describe("JourneyCreationPage", () => {
 		} finally {
 			vi.useRealTimers();
 		}
+	});
+
+	it("正常系: 全スロットが決着するまで挿絵の状態確認を続ける", async () => {
+		const getImages = vi
+			.fn()
+			.mockResolvedValueOnce(
+				imageResponse([
+					{ ...readyImage, status: "ready" as const },
+					{ ...readyIllustrations[0], status: "processing" as const },
+				]),
+			)
+			.mockResolvedValueOnce(imageResponse());
+		const promise = waitForJourneyImages(
+			"request-1",
+			imageResponse([
+				{ ...readyImage, status: "ready" as const },
+				{ ...readyIllustrations[0], status: "pending" as const },
+			]),
+			[
+				{ ordinal: 1, purpose: "cover" },
+				{ ordinal: 1, purpose: "illustration" },
+			],
+			{ getImages, intervalMs: 0 },
+		);
+
+		expect((await promise).images).toEqual(imageResponse().images);
+		expect(getImages).toHaveBeenCalledTimes(2);
+	});
+
+	it("異常系: 表紙が先に失敗しても全スロットの決着まで待機する", async () => {
+		const getImages = vi
+			.fn()
+			.mockResolvedValue(
+				imageResponse([
+					failedImage,
+					{ ...readyIllustrations[0], status: "ready" as const },
+				]),
+			);
+
+		const promise = waitForJourneyImages(
+			"request-1",
+			imageResponse([
+				failedImage,
+				{ ...readyIllustrations[0], status: "processing" as const },
+			]),
+			[
+				{ ordinal: 1, purpose: "cover" },
+				{ ordinal: 1, purpose: "illustration" },
+			],
+			{ getImages, intervalMs: 0 },
+		);
+
+		await expect(promise).rejects.toBeInstanceOf(CoverImageGenerationError);
+		expect(getImages).toHaveBeenCalledTimes(1);
+	});
+
+	it("異常系: 要求した画像スロットが一覧にない場合は待機を続けない", async () => {
+		await expect(
+			waitForJourneyImages("request-1", imageResponse([]), [
+				{ ordinal: 1, purpose: "cover" },
+			]),
+		).rejects.toThrow("表紙画像スロットが見つかりません。");
 	});
 
 	it("異常系: readyでも表紙画像のメタデータが不足していれば遷移しない", async () => {

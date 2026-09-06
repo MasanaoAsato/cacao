@@ -166,6 +166,70 @@ func TestUseCaseExecuteChecksPrerequisites(t *testing.T) {
 	}
 }
 
+func TestUseCaseExecuteRejectsPendingIllustration(t *testing.T) {
+	journey := testkit.MustNewJourney(t)
+	coverImage := readyCoverImage(t, journey.RequestID())
+	pendingIllustration := testkit.MustNewPendingImageFor(
+		t,
+		journey.RequestID(),
+		testkit.MustNewImageSlot(t, value_object.ImagePurposeIllustration, 1),
+	)
+	imageRepo := fakes.NewJourneyImageRepositoryWith(t, coverImage, pendingIllustration)
+	renderer := &rendererFake{
+		rendered: domainservice.RenderedBooklet{
+			Content:   []byte("%PDF-1.4\n"),
+			MediaType: domainservice.BookletPDFMediaType,
+		},
+	}
+	useCase := NewUseCase(
+		fakes.NewJourneyRepositoryWith(t, journey),
+		imageRepo,
+		renderer,
+	)
+
+	_, err := useCase.Execute(
+		context.Background(),
+		Input{JourneyID: journey.ID().String()},
+	)
+	if !errors.Is(err, application.ErrJourneyImageNotReady) {
+		t.Fatalf("Execute() error = %v, want ErrJourneyImageNotReady", err)
+	}
+	if renderer.calls != 0 {
+		t.Fatalf("Render() calls = %d, want 0", renderer.calls)
+	}
+}
+
+func TestUseCaseExecuteRejectsProcessingIllustration(t *testing.T) {
+	journey := testkit.MustNewJourney(t)
+	coverImage := readyCoverImage(t, journey.RequestID())
+	processingIllustration := testkit.MustNewPendingImageFor(
+		t,
+		journey.RequestID(),
+		testkit.MustNewImageSlot(t, value_object.ImagePurposeIllustration, 1),
+	)
+	if err := processingIllustration.Start(); err != nil {
+		t.Fatalf("Start() error = %v", err)
+	}
+	imageRepo := fakes.NewJourneyImageRepositoryWith(t, coverImage, processingIllustration)
+	renderer := &rendererFake{}
+	useCase := NewUseCase(
+		fakes.NewJourneyRepositoryWith(t, journey),
+		imageRepo,
+		renderer,
+	)
+
+	_, err := useCase.Execute(
+		context.Background(),
+		Input{JourneyID: journey.ID().String()},
+	)
+	if !errors.Is(err, application.ErrJourneyImageNotReady) {
+		t.Fatalf("Execute() error = %v, want ErrJourneyImageNotReady", err)
+	}
+	if renderer.calls != 0 {
+		t.Fatalf("Render() calls = %d, want 0", renderer.calls)
+	}
+}
+
 func TestUseCaseExecuteMapsRendererErrors(t *testing.T) {
 	journey := testkit.MustNewJourney(t)
 	coverImage := readyCoverImage(t, journey.RequestID())

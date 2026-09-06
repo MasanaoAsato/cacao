@@ -2,13 +2,18 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { ApiError } from "../../api/client";
 import { downloadJourneyBookletPdf } from "../../api/journeyBooklet";
-import { getJourneyImages, selectCoverImage } from "../../api/journeyImages";
+import {
+	getJourneyImages,
+	selectCoverImage,
+	selectIllustrations,
+} from "../../api/journeyImages";
 import { getJourneyRequest } from "../../api/journeyRequests";
 import { getJourney } from "../../api/journeys";
 import {
 	BookletDataError,
 	CoverImageNotReadyError,
 	createBookletModel,
+	IllustrationNotReadyError,
 } from "../../booklet/fromJourney";
 import type { BookletModel } from "../../booklet/model";
 import { createBookletTheme } from "../../theme/bookletTheme";
@@ -26,6 +31,7 @@ import { useBookletPagePlan } from "./useBookletPagePlan";
 type LoadState =
 	| { readonly error: string; readonly status: "error" }
 	| { readonly status: "cover-not-ready" }
+	| { readonly status: "illustration-not-ready" }
 	| { readonly status: "loading" }
 	| { readonly status: "ready" };
 
@@ -56,7 +62,7 @@ function downloadErrorMessage(error: unknown): string {
 			case 503:
 				return "混み合っています。数秒後にもう一度お試しください。";
 			case 409:
-				return "表紙画像がまだ準備できていません。";
+				return "表紙または挿絵がまだ準備できていません。";
 		}
 	}
 	return "PDFを作成できませんでした。「PDFを印刷」からも保存できます。";
@@ -94,6 +100,12 @@ function resolveBookletPrintState(
 	if (loadState.status === "cover-not-ready") {
 		return {
 			error: "表紙画像が準備できていないため、印刷できません。",
+			state: "error",
+		};
+	}
+	if (loadState.status === "illustration-not-ready") {
+		return {
+			error: "挿絵がまだ準備できていないため、印刷できません。",
 			state: "error",
 		};
 	}
@@ -139,7 +151,7 @@ function resolveRequestedTheme(
 }
 
 function LoadingMessage() {
-	return <p>旅程と表紙画像の情報を読み込んでいます…</p>;
+	return <p>旅程と画像の情報を読み込んでいます…</p>;
 }
 
 function BookletStatus({
@@ -172,6 +184,9 @@ function BookletStatus({
 	}
 	if (loadState.status === "cover-not-ready") {
 		return <p>表紙画像が準備できていないため、印刷できません。</p>;
+	}
+	if (loadState.status === "illustration-not-ready") {
+		return <p>挿絵がまだ準備できていないため、印刷できません。</p>;
 	}
 	if (loadState.status === "error") {
 		return <p>{loadState.error}</p>;
@@ -275,13 +290,13 @@ export function JourneyBookletPage() {
 					getJourneyImages(journey.request_id, { signal: controller.signal }),
 				]);
 				if (imageList.journey_request_id !== journey.request_id) {
-					throw new BookletDataError(
-						"旅程と表紙画像一覧の識別子が一致しません。",
-					);
+					throw new BookletDataError("旅程と画像一覧の識別子が一致しません。");
 				}
 				const coverImage = selectCoverImage(imageList.images);
+				const illustrationImages = selectIllustrations(imageList.images);
 				const bookletModel = createBookletModel({
 					coverImage,
+					illustrationImages,
 					journey,
 					request,
 				});
@@ -300,7 +315,9 @@ export function JourneyBookletPage() {
 						status:
 							loadError instanceof CoverImageNotReadyError
 								? "cover-not-ready"
-								: "error",
+								: loadError instanceof IllustrationNotReadyError
+									? "illustration-not-ready"
+									: "error",
 					});
 				}
 			}

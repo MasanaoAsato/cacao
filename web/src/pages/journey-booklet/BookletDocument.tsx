@@ -307,14 +307,30 @@ function CoverContent({
 function DayHeader({
 	continuation,
 	day,
+	destination,
+	showIllustration,
 }: {
 	readonly continuation: boolean;
 	readonly day: BookletDay;
+	readonly destination: string;
+	readonly showIllustration: boolean;
 }) {
 	return (
 		<header
 			className={`booklet-day-header${continuation ? " booklet-day-header--continuation" : ""}`}
 		>
+			{!continuation && showIllustration && day.illustration ? (
+				<figure className="booklet-day__illustration">
+					<img
+						alt={`${destination}の挿絵`}
+						decoding="async"
+						height={day.illustration.height}
+						loading="eager"
+						src={day.illustration.contentUrl}
+						width={day.illustration.width}
+					/>
+				</figure>
+			) : null}
 			<p className="booklet-eyebrow" data-booklet-text-role="utility-label">
 				DAY {String(day.dayNumber).padStart(2, "0")}
 				{continuation ? "（続き）" : ""}
@@ -402,14 +418,21 @@ function ArrivalUnitView({
 
 function DayPage({
 	day,
+	destination,
 	page,
 }: {
 	readonly day: BookletDay;
+	readonly destination: string;
 	readonly page: Extract<BookletPagePlan, { readonly kind: "day" }>;
 }) {
 	return (
 		<>
-			<DayHeader continuation={page.continuation} day={day} />
+			<DayHeader
+				continuation={page.continuation}
+				day={day}
+				destination={destination}
+				showIllustration={page.illustration}
+			/>
 			<ol className="booklet-day__units booklet-itinerary" aria-label="旅程">
 				{page.unitIndexes.map((unitIndex) => {
 					const unit = day.units[unitIndex];
@@ -439,7 +462,11 @@ function PhysicalPage({
 				veilBounds={coverVeilBounds}
 			/>
 		) : model.days[page.dayIndex] ? (
-			<DayPage day={model.days[page.dayIndex]} page={page} />
+			<DayPage
+				day={model.days[page.dayIndex]}
+				destination={model.cover.destination}
+				page={page}
+			/>
 		) : null;
 	const pageClassName = [
 		"booklet-page",
@@ -498,10 +525,12 @@ export function BookletDocument({
 function MeasurementDay({
 	day,
 	dayIndex,
+	destination,
 	theme,
 }: {
 	readonly day: BookletDay;
 	readonly dayIndex: number;
+	readonly destination: string;
 	readonly theme: BookletThemeCandidate;
 }) {
 	return (
@@ -512,8 +541,24 @@ function MeasurementDay({
 				data-booklet-measurement-content="true"
 			>
 				<div className="booklet-measurement__sample">
-					<DayHeader continuation={false} day={day} />
-					<DayHeader continuation day={day} />
+					<DayHeader
+						continuation={false}
+						day={day}
+						destination={destination}
+						showIllustration={day.illustration !== null}
+					/>
+					<DayHeader
+						continuation={false}
+						day={day}
+						destination={destination}
+						showIllustration={false}
+					/>
+					<DayHeader
+						continuation
+						day={day}
+						destination={destination}
+						showIllustration={false}
+					/>
 				</div>
 				<ol className="booklet-day__units booklet-itinerary" aria-label="旅程">
 					{day.units.map((unit, unitIndex) => (
@@ -556,6 +601,7 @@ export function BookletMeasurement({
 					key={day.id}
 					day={day}
 					dayIndex={dayIndex}
+					destination={model.cover.destination}
 					theme={theme}
 				/>
 			))}

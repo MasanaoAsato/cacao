@@ -6,8 +6,9 @@ import {
 	getJourneyImages,
 	type JourneyImageApiResponse,
 	type JourneyImageListApiResponse,
+	type JourneyImageSlot,
 	type JourneyImageStatus,
-	requestCoverImage,
+	requestJourneyImages,
 	retryJourneyImage,
 	selectCoverImage,
 } from "../../api/journeyImages";
@@ -26,12 +27,14 @@ import "./JourneyCreationPage.css";
 
 const coverPollingIntervalMs = 2000;
 
-type CoverPollingOptions = {
+type ImagePollingOptions = {
 	readonly getImages?: typeof getJourneyImages;
 	readonly intervalMs?: number;
 	readonly onStatusChange?: (status: JourneyImageStatus) => void;
 	readonly signal?: AbortSignal;
 };
+
+type CoverPollingOptions = ImagePollingOptions;
 
 export class CoverImageGenerationError extends Error {
 	readonly image: JourneyImageApiResponse;
@@ -72,11 +75,82 @@ function wait(milliseconds: number, signal?: AbortSignal): Promise<void> {
 	});
 }
 
-export async function waitForCoverImage(
+function imageMatchesSlot(
+	image: JourneyImageApiResponse,
+	slot: JourneyImageSlot,
+): boolean {
+	return (
+		image.slot.purpose === slot.purpose && image.slot.ordinal === slot.ordinal
+	);
+}
+
+function imageStatusFor(
+	images: readonly JourneyImageApiResponse[],
+	slots: readonly JourneyImageSlot[],
+): JourneyImageStatus {
+	const selected = slots
+		.map((slot) => images.find((image) => imageMatchesSlot(image, slot)))
+		.filter((image): image is JourneyImageApiResponse => image !== undefined);
+	if (selected.some((image) => image.status === "pending")) {
+		return "pending";
+	}
+	if (selected.some((image) => image.status === "processing")) {
+		return "processing";
+	}
+	if (selected.some((image) => image.status === "failed")) {
+		return "failed";
+	}
+	return "ready";
+}
+
+function validateReadyImage(
+	image: JourneyImageApiResponse,
+	label: string,
+): void {
+	if (
+		image.content_url === null ||
+		image.media_type === null ||
+		image.width === null ||
+		image.height === null ||
+		image.width <= 0 ||
+		image.height <= 0
+	) {
+		throw new Error(`${label}のコンテンツ情報が不足しています。`);
+	}
+}
+
+function inclusiveDayCount(startDate: string, endDate: string): number {
+	const start = Date.parse(`${startDate.slice(0, 10)}T00:00:00Z`);
+	const end = Date.parse(`${endDate.slice(0, 10)}T00:00:00Z`);
+	if (!Number.isFinite(start) || !Number.isFinite(end) || end < start) {
+		throw new Error("旅程の期間を計算できませんでした。");
+	}
+	return Math.floor((end - start) / 86_400_000) + 1;
+}
+
+export function journeyImageSlotsForPeriod(
+	startDate: string,
+	endDate: string,
+): readonly JourneyImageSlot[] {
+	const illustrationCount = Math.min(3, inclusiveDayCount(startDate, endDate));
+	return [
+		{ ordinal: 1, purpose: "cover" },
+		...Array.from({ length: illustrationCount }, (_, index) => ({
+			ordinal: index + 1,
+			purpose: "illustration" as const,
+		})),
+	];
+}
+
+export async function waitForJourneyImages(
 	requestId: string,
 	initialResponse: JourneyImageListApiResponse,
-	options: CoverPollingOptions = {},
-): Promise<JourneyImageApiResponse> {
+	slots: readonly JourneyImageSlot[],
+	options: ImagePollingOptions = {},
+): Promise<JourneyImageListApiResponse> {
+	if (slots.length === 0) {
+		throw new Error("画像スロットが指定されていません。");
+	}
 	const getImages = options.getImages ?? getJourneyImages;
 	const intervalMs = options.intervalMs ?? coverPollingIntervalMs;
 	let response = initialResponse;
@@ -86,50 +160,90 @@ export async function waitForCoverImage(
 			throw new Error("画像一覧の識別子が旅程リクエストと一致しません。");
 		}
 
+		const requestedImages = slots.map((slot) =>
+			response.images.find((image) => imageMatchesSlot(image, slot)),
+		);
+		const missingSlotIndex = requestedImages.indexOf(undefined);
+		if (missingSlotIndex >= 0) {
+			const missingSlot = slots[missingSlotIndex];
+			throw new Error(
+				`${missingSlot?.purpose === "illustration" ? "挿絵画像" : "表紙画像"}スロットが見つかりません。`,
+			);
+		}
 		const cover = selectCoverImage(response.images);
-		if (!cover) {
-			throw new Error("表紙画像スロットが見つかりません。");
-		}
-		options.onStatusChange?.(cover.status);
-		if (cover.status === "ready") {
-			if (
-				cover.content_url === null ||
-				cover.media_type === null ||
-				cover.width === null ||
-				cover.height === null ||
-				cover.width <= 0 ||
-				cover.height <= 0
-			) {
-				throw new Error("表紙画像のコンテンツ情報が不足しています。");
-			}
-			return cover;
-		}
-		if (cover.status === "failed") {
-			throw new CoverImageGenerationError(cover);
+		if (cover?.status === "ready") {
+			validateReadyImage(cover, "表紙画像");
 		}
 
+		const allSettled = requestedImages.every(
+			(image) =>
+				image !== undefined &&
+				(image.status === "ready" || image.status === "failed"),
+		);
+		if (allSettled) {
+			for (const image of requestedImages) {
+				if (image?.status === "ready") {
+					validateReadyImage(
+						image,
+						image.slot.purpose === "illustration" ? "挿絵画像" : "表紙画像",
+					);
+				}
+			}
+			if (cover?.status === "failed") {
+				throw new CoverImageGenerationError(cover);
+			}
+			options.onStatusChange?.(imageStatusFor(response.images, slots));
+			return response;
+		}
+
+		options.onStatusChange?.(imageStatusFor(response.images, slots));
 		await wait(intervalMs, options.signal);
 		response = await getImages(requestId, { signal: options.signal });
 	}
 }
 
+export async function waitForCoverImage(
+	requestId: string,
+	initialResponse: JourneyImageListApiResponse,
+	options: CoverPollingOptions = {},
+): Promise<JourneyImageApiResponse> {
+	const response = await waitForJourneyImages(
+		requestId,
+		initialResponse,
+		[{ ordinal: 1, purpose: "cover" }],
+		options,
+	);
+	const cover = selectCoverImage(response.images);
+	if (!cover) {
+		throw new Error("表紙画像スロットが見つかりません。");
+	}
+	return cover;
+}
+
 type FlowState =
 	| { readonly status: "idle" }
 	| { readonly status: "submitting" }
-	| { readonly requestId: string; readonly status: "starting" }
 	| {
+			readonly imageSlots: readonly JourneyImageSlot[];
+			readonly requestId: string;
+			readonly status: "starting";
+	  }
+	| {
+			readonly imageSlots: readonly JourneyImageSlot[];
 			readonly imageStatus: JourneyImageStatus;
 			readonly journeyId: string;
 			readonly requestId: string;
 			readonly status: "polling";
 	  }
 	| {
+			readonly imageSlots: readonly JourneyImageSlot[];
 			readonly imageId: string;
 			readonly journeyId: string;
 			readonly requestId: string;
 			readonly status: "retrying";
 	  }
 	| {
+			readonly imageSlots: readonly JourneyImageSlot[];
 			readonly journeyId: string;
 			readonly requestId: string;
 			readonly status: "refreshing";
@@ -137,6 +251,7 @@ type FlowState =
 	| {
 			readonly action?: "refresh-images" | "retry-image";
 			readonly image?: JourneyImageApiResponse;
+			readonly imageSlots?: readonly JourneyImageSlot[];
 			readonly journeyId?: string;
 			readonly message: string;
 			readonly requestId?: string;
@@ -220,19 +335,19 @@ function errorMessage(error: unknown): string {
 function statusMessage(flow: FlowState): string {
 	switch (flow.status) {
 		case "idle":
-			return "条件を入力して、旅程と表紙画像を作成します。";
+			return "条件を入力して、旅程と表紙・挿絵を作成します。";
 		case "submitting":
 			return "旅程リクエストを作成しています…";
 		case "starting":
-			return "旅程と表紙画像の生成を開始しています…";
+			return "旅程と表紙・挿絵の生成を開始しています…";
 		case "polling":
 			return flow.imageStatus === "pending"
-				? "表紙画像の生成待ちです…"
-				: "表紙画像を生成しています…";
+				? "画像の生成待ちです…"
+				: "画像を生成しています…";
 		case "retrying":
 			return "表紙画像の生成を再試行しています…";
 		case "refreshing":
-			return "表紙画像の状態を確認しています…";
+			return "表紙・挿絵の状態を確認しています…";
 		case "error":
 			return flow.message;
 	}
@@ -314,27 +429,33 @@ export function JourneyCreationPage() {
 	const runImagePolling = async (
 		requestId: string,
 		journeyId: string,
+		imageSlots: readonly JourneyImageSlot[],
 		initialResponse: JourneyImageListApiResponse,
 		controller: AbortController,
 		operationId: number,
 	) => {
-		const cover = await waitForCoverImage(requestId, initialResponse, {
-			onStatusChange: (imageStatus) => {
-				if (!isCurrentOperation(operationId, controller)) {
-					return;
-				}
-				setFlowForOperation(operationId, controller, (current) =>
-					current.status === "polling" && current.requestId === requestId
-						? { ...current, imageStatus }
-						: current,
-				);
+		const imageResponse = await waitForJourneyImages(
+			requestId,
+			initialResponse,
+			imageSlots,
+			{
+				onStatusChange: (imageStatus) => {
+					if (!isCurrentOperation(operationId, controller)) {
+						return;
+					}
+					setFlowForOperation(operationId, controller, (current) =>
+						current.status === "polling" && current.requestId === requestId
+							? { ...current, imageStatus }
+							: current,
+					);
+				},
+				signal: controller.signal,
 			},
-			signal: controller.signal,
-		});
+		);
 		if (isCurrentOperation(operationId, controller)) {
 			navigateToBooklet(journeyId);
 		}
-		return cover;
+		return imageResponse;
 	};
 
 	const submitJourney = async (
@@ -344,6 +465,7 @@ export function JourneyCreationPage() {
 		setFlowForOperation(operationId, controller, { status: "submitting" });
 		let requestId: string | undefined;
 		let journeyId: string | undefined;
+		let imageSlots: readonly JourneyImageSlot[] = [];
 
 		try {
 			const created = await createJourneyRequest(payload, {
@@ -353,12 +475,17 @@ export function JourneyCreationPage() {
 			if (!isCurrentOperation(operationId, controller)) {
 				return;
 			}
+			imageSlots = journeyImageSlotsForPeriod(
+				payload.start_date,
+				payload.end_date,
+			);
 			setFlowForOperation(operationId, controller, {
+				imageSlots,
 				requestId,
 				status: "starting",
 			});
 
-			const imageResultPromise = requestCoverImage(requestId, {
+			const imageResultPromise = requestJourneyImages(requestId, imageSlots, {
 				signal: controller.signal,
 			}).then(
 				(value) => ({ status: "fulfilled" as const, value }),
@@ -378,6 +505,7 @@ export function JourneyCreationPage() {
 			const imageResponse = imageResult.value;
 
 			setFlowForOperation(operationId, controller, {
+				imageSlots,
 				imageStatus: "pending",
 				journeyId,
 				requestId,
@@ -386,6 +514,7 @@ export function JourneyCreationPage() {
 			await runImagePolling(
 				requestId,
 				journeyId,
+				imageSlots,
 				imageResponse,
 				controller,
 				operationId,
@@ -398,6 +527,7 @@ export function JourneyCreationPage() {
 				setFlowForOperation(operationId, controller, {
 					action: "retry-image",
 					image: error.image,
+					imageSlots,
 					journeyId,
 					message: error.message,
 					requestId,
@@ -408,6 +538,7 @@ export function JourneyCreationPage() {
 			setFlowForOperation(operationId, controller, {
 				action: requestId && journeyId ? "refresh-images" : undefined,
 				journeyId,
+				imageSlots: requestId && journeyId ? imageSlots : undefined,
 				message:
 					requestId === undefined
 						? `${errorMessage(error)} 入力値は保持されています。再送すると新しい旅程リクエストになる可能性があります。`
@@ -463,8 +594,11 @@ export function JourneyCreationPage() {
 		}
 
 		const { image, journeyId, requestId } = flow;
+		const imageSlots =
+			flow.imageSlots ?? ([{ ordinal: 1, purpose: "cover" }] as const);
 		const { controller, operationId } = startOperation();
 		setFlowForOperation(operationId, controller, {
+			imageSlots,
 			imageId: image.id,
 			journeyId,
 			requestId,
@@ -475,11 +609,25 @@ export function JourneyCreationPage() {
 				const retriedImage = await retryJourneyImage(image.id, {
 					signal: controller.signal,
 				});
+				const imageResponse = await getJourneyImages(requestId, {
+					signal: controller.signal,
+				});
+				const mergedImageResponse = {
+					...imageResponse,
+					images: imageResponse.images.some(
+						(candidate) => candidate.id === retriedImage.id,
+					)
+						? imageResponse.images.map((candidate) =>
+								candidate.id === retriedImage.id ? retriedImage : candidate,
+							)
+						: [retriedImage, ...imageResponse.images],
+				};
 				if (!isCurrentOperation(operationId, controller)) {
 					return;
 				}
 				setFlowForOperation(operationId, controller, {
-					imageStatus: retriedImage.status,
+					imageSlots,
+					imageStatus: imageStatusFor(mergedImageResponse.images, imageSlots),
 					journeyId,
 					requestId,
 					status: "polling",
@@ -487,10 +635,8 @@ export function JourneyCreationPage() {
 				await runImagePolling(
 					requestId,
 					journeyId,
-					{
-						images: [retriedImage],
-						journey_request_id: requestId,
-					},
+					imageSlots,
+					mergedImageResponse,
 					controller,
 					operationId,
 				);
@@ -499,6 +645,7 @@ export function JourneyCreationPage() {
 					return;
 				}
 				setFlowForOperation(operationId, controller, {
+					imageSlots,
 					action:
 						error instanceof CoverImageGenerationError
 							? "retry-image"
@@ -525,22 +672,28 @@ export function JourneyCreationPage() {
 		}
 
 		const { journeyId, requestId } = flow;
+		const imageSlots =
+			flow.imageSlots ?? ([{ ordinal: 1, purpose: "cover" }] as const);
 		const { controller, operationId } = startOperation();
 		setFlowForOperation(operationId, controller, {
+			imageSlots,
 			journeyId,
 			requestId,
 			status: "refreshing",
 		});
 		void (async () => {
 			try {
-				const imageResponse = await requestCoverImage(requestId, {
-					signal: controller.signal,
-				});
+				const imageResponse = await requestJourneyImages(
+					requestId,
+					imageSlots,
+					{ signal: controller.signal },
+				);
 				if (!isCurrentOperation(operationId, controller)) {
 					return;
 				}
 				setFlowForOperation(operationId, controller, {
-					imageStatus: "pending",
+					imageStatus: imageStatusFor(imageResponse.images, imageSlots),
+					imageSlots,
 					journeyId,
 					requestId,
 					status: "polling",
@@ -548,6 +701,7 @@ export function JourneyCreationPage() {
 				await runImagePolling(
 					requestId,
 					journeyId,
+					imageSlots,
 					imageResponse,
 					controller,
 					operationId,
@@ -560,6 +714,7 @@ export function JourneyCreationPage() {
 					setFlowForOperation(operationId, controller, {
 						action: "retry-image",
 						image: error.image,
+						imageSlots,
 						journeyId,
 						message: error.message,
 						requestId,
@@ -570,6 +725,7 @@ export function JourneyCreationPage() {
 				setFlowForOperation(operationId, controller, {
 					action: "refresh-images",
 					journeyId,
+					imageSlots,
 					message: errorMessage(error),
 					requestId,
 					status: "error",
@@ -586,7 +742,9 @@ export function JourneyCreationPage() {
 					<br />
 					<span>旅をつくる</span>
 				</h1>
-				<p>行き先と日程を預けると、あなただけの旅程と表紙を仕立てます。</p>
+				<p>
+					行き先と日程を預けると、あなただけの旅程と表紙・挿絵を仕立てます。
+				</p>
 			</header>
 
 			<section className="journey-creation-route" aria-label="旅程のルート">
@@ -730,7 +888,7 @@ export function JourneyCreationPage() {
 
 				<div className="journey-creation-form__footer">
 					<p>
-						送信後、旅程と表紙画像の準備が整うまでこの画面でお待ちください。
+						送信後、旅程と表紙・挿絵画像の準備が整うまでこの画面でお待ちください。
 					</p>
 					<button type="submit" disabled={isBusy}>
 						{isBusy ? "旅を仕立てています…" : "旅程を生成する"}

@@ -70,12 +70,25 @@ test.describe("PDFしおり", () => {
 				animations: "disabled",
 				caret: "hide",
 			});
+			const firstDay = page
+				.locator(".booklet-document .booklet-page--day")
+				.first();
 			await expect(
-				page.locator(".booklet-document .booklet-page--day").first(),
-			).toHaveScreenshot(`${seedToken(seed)}-day.png`, {
+				firstDay.locator("figure.booklet-day__illustration"),
+			).toHaveCount(1);
+			await expect(firstDay.locator("figure img")).toHaveAttribute(
+				"alt",
+				"非常に長い目的地名称を含む京都の旅の挿絵",
+			);
+			await expect(firstDay).toHaveScreenshot(`${seedToken(seed)}-day.png`, {
 				animations: "disabled",
 				caret: "hide",
 			});
+			await expect(
+				page.locator(
+					".booklet-document .booklet-page--day-continuation figure",
+				),
+			).toHaveCount(0);
 			await expect(page.locator(".booklet-document")).toHaveAttribute(
 				"data-booklet-design",
 				new RegExp(`^${expected.moodId}\\.`),

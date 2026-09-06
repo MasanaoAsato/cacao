@@ -16,7 +16,7 @@ type UseCase interface {
 	Execute(ctx context.Context, input Input) (Output, error)
 }
 
-// NewUseCase は旅程・表紙画像・レンダラーを使うユースケースを生成する。
+// NewUseCase は旅程・表紙と挿絵画像・レンダラーを使うユースケースを生成する。
 func NewUseCase(
 	journeyRepo repository.JourneyRepository,
 	imageRepo repository.JourneyImageRepository,
@@ -35,7 +35,7 @@ type useCase struct {
 	renderer    domainservice.BookletRenderer
 }
 
-// Execute は表紙が描画可能であることを確認してからPDFを生成する。
+// Execute は表紙と挿絵が描画可能であることを確認してからPDFを生成する。
 func (uc *useCase) Execute(ctx context.Context, input Input) (Output, error) {
 	journeyID, err := value_object.NewIDFromString(input.JourneyID)
 	if err != nil {
@@ -76,6 +76,24 @@ func (uc *useCase) Execute(ctx context.Context, input Input) (Output, error) {
 			application.ErrJourneyImageNotReady,
 			coverImage.Status(),
 		)
+	}
+
+	images, err := uc.imageRepo.FindByRequestID(ctx, journey.RequestID())
+	if err != nil {
+		return Output{}, fmt.Errorf("find journey images: %w", err)
+	}
+	for _, image := range images {
+		if image.Slot().Purpose() != value_object.ImagePurposeIllustration {
+			continue
+		}
+		switch image.Status() {
+		case value_object.ImageStatusPending, value_object.ImageStatusProcessing:
+			return Output{}, fmt.Errorf(
+				"%w: illustration image status is %q",
+				application.ErrJourneyImageNotReady,
+				image.Status(),
+			)
+		}
 	}
 
 	request, err := domainservice.NewBookletRenderRequest(journeyID, seed)

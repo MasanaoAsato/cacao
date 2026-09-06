@@ -324,8 +324,9 @@ function collectMeasurement(
 					".booklet-day-header",
 				);
 				const header = headers[0];
-				const continuationHeader = headers[1];
-				if (!header || !continuationHeader) {
+				const headerWithoutIllustration = headers[1];
+				const continuationHeader = headers[2];
+				if (!header || !headerWithoutIllustration || !continuationHeader) {
 					throw new BookletLayoutError(
 						"dom-not-ready",
 						`Day ${dayIndex + 1}のヘッダーを計測できませんでした。`,
@@ -339,6 +340,10 @@ function collectMeasurement(
 					headerHeight: readOuterHeight(
 						header,
 						`Day ${dayIndex + 1}のヘッダー`,
+					),
+					headerHeightWithoutIllustration: readOuterHeight(
+						headerWithoutIllustration,
+						`Day ${dayIndex + 1}の挿絵なしヘッダー`,
 					),
 					unitHeights: day.units.map((_unit, unitIndex) =>
 						readOuterHeight(

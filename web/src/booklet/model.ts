@@ -37,10 +37,11 @@ export type BookletDay = {
 	readonly date: string;
 	readonly dayNumber: number;
 	readonly id: string;
+	readonly illustration: BookletImage | null;
 	readonly units: readonly ArrivalUnit[];
 };
 
-export type CoverImage = {
+export type BookletImage = {
 	readonly contentUrl: string;
 	readonly height: number;
 	readonly mediaType: string;
@@ -48,11 +49,14 @@ export type CoverImage = {
 	readonly width: number;
 };
 
+/** @deprecated Use BookletImage. */
+export type CoverImage = BookletImage;
+
 export type BookletCover = {
 	readonly budget: BookletMoney;
 	readonly destination: string;
 	readonly departure: string;
-	readonly image: CoverImage;
+	readonly image: BookletImage;
 	readonly period: JourneyRequestApiResponse["period"];
 };
 
@@ -70,6 +74,7 @@ export type CoverPagePlan = {
 export type DayPagePlan = {
 	readonly continuation: boolean;
 	readonly dayIndex: number;
+	readonly illustration: boolean;
 	readonly kind: "day";
 	readonly pageId: string;
 	readonly unitIndexes: readonly number[];
