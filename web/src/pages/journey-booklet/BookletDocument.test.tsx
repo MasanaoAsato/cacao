@@ -21,6 +21,7 @@ const model: BookletModel = {
 			contentUrl: "/cover.png",
 			height: 1200,
 			mediaType: "image/png",
+			visualStyle: null,
 			width: 800,
 		},
 		period: {
