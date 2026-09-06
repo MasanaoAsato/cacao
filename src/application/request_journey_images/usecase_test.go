@@ -20,15 +20,16 @@ func TestUseCaseExecute(t *testing.T) {
 	illustrationThree := testkit.MustNewImageSlot(t, value_object.ImagePurposeIllustration, 3)
 
 	tests := []struct {
-		name           string
-		input          Input
-		requestErr     error
-		setupImageRepo func(*fakes.FakeJourneyImageRepository)
-		wantErr        error
-		wantImageCount int
-		wantSaveCalls  int
-		wantFirstSlot  value_object.ImageSlot
-		wantLastSlot   value_object.ImageSlot
+		name             string
+		input            Input
+		requestErr       error
+		setupImageRepo   func(*fakes.FakeJourneyImageRepository)
+		wantErr          error
+		wantImageCount   int
+		wantSaveCalls    int
+		wantFirstSlot    value_object.ImageSlot
+		wantLastSlot     value_object.ImageSlot
+		maxIllustrations int
 	}{
 		{
 			name: "正常系: 4slotをslot順に要求する",
@@ -146,6 +147,27 @@ func TestUseCaseExecute(t *testing.T) {
 			wantErr: application.ErrInvalidInput,
 		},
 		{
+			name: "境界値系: 設定した上限を超える挿絵を生成しない",
+			input: Input{
+				RequestID: request.ID().String(),
+				Slots: []SlotInput{
+					{Purpose: "cover", Ordinal: 1},
+					{Purpose: "illustration", Ordinal: 1},
+					{Purpose: "illustration", Ordinal: 2},
+					{Purpose: "illustration", Ordinal: 3},
+				},
+			},
+			wantImageCount: 2,
+			wantSaveCalls:  2,
+			wantFirstSlot:  coverSlot,
+			wantLastSlot: testkit.MustNewImageSlot(
+				t,
+				value_object.ImagePurposeIllustration,
+				1,
+			),
+			maxIllustrations: 1,
+		},
+		{
 			name: "異常系: journey requestが存在しない",
 			input: Input{
 				RequestID: request.ID().String(),
@@ -179,7 +201,11 @@ func TestUseCaseExecute(t *testing.T) {
 				}
 				return imageRepo.JourneyImageRepositoryMemory.Save(ctx, image)
 			}
-			uc := NewUseCase(requestRepo, imageRepo)
+			maxIllustrations := tt.maxIllustrations
+			if maxIllustrations == 0 {
+				maxIllustrations = 3
+			}
+			uc := NewUseCase(requestRepo, imageRepo, maxIllustrations)
 
 			output, err := uc.Execute(context.Background(), tt.input)
 			if tt.wantErr != nil {

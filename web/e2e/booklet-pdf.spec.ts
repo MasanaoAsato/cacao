@@ -98,6 +98,9 @@ test.describe("PDFしおり", () => {
 				.evaluate((element) => Array.from(element.classList));
 			expect(themeClasses).toContain(`booklet-theme--mood-${expected.moodId}`);
 			expect(themeClasses).toContain(
+				`booklet-theme--itinerary-${expected.itineraryTemplateId}`,
+			);
+			expect(themeClasses).toContain(
 				`booklet-theme--decor-${expected.decorId}`,
 			);
 			expect(
@@ -181,6 +184,8 @@ test.describe("PDFしおり", () => {
 		"route-thread",
 		"field-journal",
 		"travel-ticket",
+		"rail-ledger",
+		"banner-list",
 	] as const) {
 		test(`${templateId} は長い一日の継続ページを描画する`, async ({ page }) => {
 			await routeBookletApi(page, "long");
@@ -190,6 +195,9 @@ test.describe("PDFしおり", () => {
 			await expect(page.getByRole("status")).toHaveText(
 				/印刷準備ができました。/,
 			);
+			await expect(page.locator(".booklet-document")).toHaveClass(
+				new RegExp(`booklet-theme--itinerary-${templateId}`),
+			);
 			const continuation = page
 				.locator(".booklet-document .booklet-page--day-continuation")
 				.first();
@@ -198,6 +206,11 @@ test.describe("PDFしおり", () => {
 				`long-${templateId}-continuation.png`,
 				{ animations: "disabled", caret: "hide" },
 			);
+			if (templateId === "banner-list") {
+				await expect(continuation.locator(".booklet-day-header")).toContainText(
+					"（続き）",
+				);
+			}
 		});
 	}
 

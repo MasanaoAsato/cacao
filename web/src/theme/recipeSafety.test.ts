@@ -8,6 +8,7 @@ import {
 	defineThemeRecipe,
 	ThemeRecipeValidationError,
 	validateDecorDefinitions,
+	validatePaletteDefinitions,
 } from "./recipeSafety";
 import type { CoverLayoutDefinition, ThemeCatalogReferences } from "./types";
 
@@ -114,5 +115,28 @@ describe("テーマレシピの静的安全性", () => {
 				references,
 			),
 		).toThrow(ThemeRecipeValidationError);
+	});
+
+	it("異常系: 本文帯の混色で文字コントラストが7:1を下回る配色を拒否する", () => {
+		const palette = THEME_CATALOG_REFERENCES.palettes.get("paper-ink");
+		if (!palette) {
+			throw new Error("paper-ink配色がありません。");
+		}
+		const references: ThemeCatalogReferences = {
+			...THEME_CATALOG_REFERENCES,
+			palettes: new Map(THEME_CATALOG_REFERENCES.palettes).set("paper-ink", {
+				...palette,
+				itinerary: {
+					accent: "#30373D",
+					border: palette.border,
+					muted: palette.muted,
+					surfaceStops: palette.surfaceStops,
+					text: "#4D5357",
+				},
+			}),
+		};
+		expect(() => validatePaletteDefinitions(references)).toThrow(
+			ThemeRecipeValidationError,
+		);
 	});
 });

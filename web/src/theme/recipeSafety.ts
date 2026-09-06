@@ -105,6 +105,19 @@ function contrastRatioRgb(
 	);
 }
 
+function mixRgb(
+	foreground: readonly [number, number, number],
+	background: readonly [number, number, number],
+	foregroundWeight: number,
+): readonly [number, number, number] {
+	const mixed = foreground.map(
+		(component, index) =>
+			component * foregroundWeight +
+			(background[index] ?? 0) * (1 - foregroundWeight),
+	) as [number, number, number];
+	return [mixed[0], mixed[1], mixed[2]];
+}
+
 function backgroundEndpoints(background: string): readonly string[] {
 	const colors = background.match(/#[0-9a-f]{6}/gi);
 	return colors ?? [];
@@ -150,6 +163,22 @@ function validatePaletteDefinition(palette: PaletteDefinition): void {
 		) {
 			throw new ThemeRecipeValidationError(
 				`配色「${palette.id}」の本文文字コントラストは${MINIMUM_ITINERARY_TEXT_CONTRAST_RATIO}:1以上にしてください。`,
+			);
+		}
+
+		const accent = parseHexColor(itinerary.accent);
+		const surface = parseHexColor(background);
+		const text = parseHexColor(itinerary.text);
+		const bannerSurface =
+			accent && surface ? mixRgb(accent, surface, 0.12) : null;
+		const bannerContrast =
+			text && bannerSurface ? contrastRatioRgb(text, bannerSurface) : null;
+		if (
+			bannerContrast === null ||
+			bannerContrast < MINIMUM_ITINERARY_TEXT_CONTRAST_RATIO
+		) {
+			throw new ThemeRecipeValidationError(
+				`配色「${palette.id}」の本文帯文字コントラストは${MINIMUM_ITINERARY_TEXT_CONTRAST_RATIO}:1以上にしてください。`,
 			);
 		}
 		for (const foreground of [itinerary.muted, itinerary.accent]) {

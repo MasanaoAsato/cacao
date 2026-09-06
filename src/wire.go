@@ -147,7 +147,11 @@ func buildApplication(ctx context.Context) (*application, error) {
 		ListJourneyRequests:  listjourneyrequests.NewUseCase(requestRepo),
 		ExportJourneyBooklet: exportjourneybooklet.NewUseCase(journeyRepo, imageRepo, bookletRenderer),
 		Images: controller.ImageRoutes{
-			Request: requestjourneyimages.NewUseCase(requestRepo, imageRepo),
+			Request: requestjourneyimages.NewUseCase(
+				requestRepo,
+				imageRepo,
+				imageConfig.MaxIllustrations,
+			),
 			List:    listjourneyimages.NewUseCase(requestRepo, imageRepo),
 			Get:     getjourneyimage.NewUseCase(imageRepo),
 			Content: getjourneyimagecontent.NewUseCase(imageRepo, imageStorage),

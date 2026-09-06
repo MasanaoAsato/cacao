@@ -44,6 +44,9 @@ vi.mock("../../api/journeyImages", () => ({
 		images.find(
 			(image) => image.slot.purpose === "cover" && image.slot.ordinal === 1,
 		) ?? null,
+	selectIllustrations: (
+		images: readonly { slot: { purpose: string; ordinal: number } }[],
+	) => images.filter((image) => image.slot.purpose === "illustration"),
 }));
 
 const readyImage = {
@@ -213,6 +216,21 @@ describe("JourneyCreationPage", () => {
 			]),
 			expect.anything(),
 		);
+	});
+
+	it("正常系: 受理された挿絵だけを待ち、上限で省かれた挿絵を待たない", async () => {
+		vi.mocked(requestJourneyImages).mockResolvedValue(
+			imageResponse([readyImage, readyIllustrations[0]]),
+		);
+		renderPage();
+		fillValidForm();
+
+		fireEvent.click(screen.getByRole("button", { name: "旅程を生成する" }));
+
+		await waitFor(() =>
+			expect(screen.getByText("booklet ready")).toBeInTheDocument(),
+		);
+		expect(getJourneyImages).not.toHaveBeenCalled();
 	});
 
 	it("正常系: 挿絵の失敗は無視してしおりへ遷移する", async () => {

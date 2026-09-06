@@ -22,16 +22,19 @@ type UseCase interface {
 func NewUseCase(
 	requestRepo repository.JourneyRequestRepository,
 	imageRepo repository.JourneyImageRepository,
+	maxIllustrations int,
 ) UseCase {
 	return &useCase{
-		requestRepo: requestRepo,
-		imageRepo:   imageRepo,
+		requestRepo:      requestRepo,
+		imageRepo:        imageRepo,
+		maxIllustrations: maxIllustrations,
 	}
 }
 
 type useCase struct {
-	requestRepo repository.JourneyRequestRepository
-	imageRepo   repository.JourneyImageRepository
+	requestRepo      repository.JourneyRequestRepository
+	imageRepo        repository.JourneyImageRepository
+	maxIllustrations int
 }
 
 // Execute は指定されたスロットの画像を冪等に要求する。
@@ -41,7 +44,7 @@ func (uc *useCase) Execute(ctx context.Context, input Input) (Output, error) {
 		return Output{}, fmt.Errorf("%w: request id: %w", application.ErrInvalidInput, err)
 	}
 
-	slots, err := toImageSlots(input.Slots)
+	slots, err := toImageSlots(input.Slots, uc.maxIllustrations)
 	if err != nil {
 		return Output{}, err
 	}
@@ -73,7 +76,7 @@ func (uc *useCase) Execute(ctx context.Context, input Input) (Output, error) {
 	}, nil
 }
 
-func toImageSlots(inputs []SlotInput) ([]value_object.ImageSlot, error) {
+func toImageSlots(inputs []SlotInput, maxIllustrations int) ([]value_object.ImageSlot, error) {
 	if len(inputs) < 1 || len(inputs) > 4 {
 		return nil, fmt.Errorf("%w: slots must contain between 1 and 4 entries", application.ErrInvalidInput)
 	}
@@ -85,6 +88,9 @@ func toImageSlots(inputs []SlotInput) ([]value_object.ImageSlot, error) {
 		if err != nil {
 			return nil, fmt.Errorf("%w: image purpose: %w", application.ErrInvalidInput, err)
 		}
+		if purpose == value_object.ImagePurposeIllustration && input.Ordinal > maxIllustrations {
+			continue
+		}
 		slot, err := value_object.NewImageSlot(purpose, input.Ordinal)
 		if err != nil {
 			return nil, fmt.Errorf("%w: image slot: %w", application.ErrInvalidInput, err)
@@ -95,6 +101,9 @@ func toImageSlots(inputs []SlotInput) ([]value_object.ImageSlot, error) {
 
 		seen[slot] = struct{}{}
 		slots = append(slots, slot)
+	}
+	if len(slots) == 0 {
+		return nil, fmt.Errorf("%w: no image slots are permitted", application.ErrInvalidInput)
 	}
 	sort.Slice(slots, func(i, j int) bool {
 		return slots[i].Less(slots[j])

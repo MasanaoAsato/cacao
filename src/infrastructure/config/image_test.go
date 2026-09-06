@@ -1,7 +1,9 @@
 package config
 
 import (
+	"fmt"
 	"os"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -18,6 +20,9 @@ func TestImageFromEnvDefaults(t *testing.T) {
 	}
 	if config.GenerationTimeout != DefaultImageGenerationTimeout {
 		t.Errorf("GenerationTimeout = %s, want %s", config.GenerationTimeout, DefaultImageGenerationTimeout)
+	}
+	if config.MaxIllustrations != 3 {
+		t.Errorf("MaxIllustrations = %d, want 3", config.MaxIllustrations)
 	}
 	if config.Worker.Concurrency != 1 {
 		t.Errorf("Worker.Concurrency = %d, want 1", config.Worker.Concurrency)
@@ -89,6 +94,8 @@ func TestImageFromEnvRejectsInvalidValues(t *testing.T) {
 		{name: "境界値系: 生成タイムアウトが下限未満", env: map[string]string{"IMAGE_GENERATION_TIMEOUT": "999ms"}},
 		{name: "境界値系: 並列数が上限超過", env: map[string]string{"IMAGE_WORKER_CONCURRENCY": "5"}},
 		{name: "境界値系: 並列数が 0", env: map[string]string{"IMAGE_WORKER_CONCURRENCY": "0"}},
+		{name: "異常系: 挿絵上限が 0", env: map[string]string{"IMAGE_MAX_ILLUSTRATIONS": "0"}},
+		{name: "異常系: 挿絵上限が 4", env: map[string]string{"IMAGE_MAX_ILLUSTRATIONS": "4"}},
 		{name: "境界値系: ポーリング間隔が下限未満", env: map[string]string{"IMAGE_WORKER_POLL_INTERVAL": "99ms"}},
 		{name: "境界値系: lease がタイムアウトと同じ", env: map[string]string{"IMAGE_GENERATION_TIMEOUT": "10s", "IMAGE_WORKER_LEASE_DURATION": "10s"}},
 		{name: "異常系: ストレージドライバ未対応", env: map[string]string{"IMAGE_STORAGE_DRIVER": "s3"}},
@@ -103,6 +110,23 @@ func TestImageFromEnvRejectsInvalidValues(t *testing.T) {
 			}
 			if _, err := ImageFromEnv(); err == nil {
 				t.Fatal("ImageFromEnv() error = nil, want error")
+			}
+		})
+	}
+}
+
+func TestImageFromEnvMaxIllustrations(t *testing.T) {
+	for _, want := range []int{MinImageIllustrations, MaxImageIllustrations} {
+		t.Run(fmt.Sprintf("境界値系: 挿絵上限%d枚", want), func(t *testing.T) {
+			clearImageEnv(t)
+			t.Setenv("IMAGE_MAX_ILLUSTRATIONS", strconv.Itoa(want))
+
+			config, err := ImageFromEnv()
+			if err != nil {
+				t.Fatalf("ImageFromEnv() error = %v", err)
+			}
+			if config.MaxIllustrations != want {
+				t.Errorf("MaxIllustrations = %d, want %d", config.MaxIllustrations, want)
 			}
 		})
 	}
@@ -132,6 +156,7 @@ func TestImageValidateBoundaries(t *testing.T) {
 	base := Image{
 		GeneratorDriver:   ImageGeneratorStub,
 		GenerationTimeout: MinImageGenerationTimeout,
+		MaxIllustrations:  MinImageIllustrations,
 		Worker:            ImageWorker{Concurrency: 1, PollInterval: MinImageWorkerPollInterval, LeaseDuration: 2 * time.Second},
 		Storage:           ImageStorage{Driver: ImageStorageFilesystem, Root: ".", Limits: ImageLimits{MaxBytes: 1, MaxWidth: 1, MaxHeight: 1, MaxPixels: 1}},
 	}
@@ -169,6 +194,7 @@ func clearImageEnv(t *testing.T) {
 		"OPENROUTER_API_KEY",
 		"OPENROUTER_IMAGE_MODEL",
 		"IMAGE_GENERATION_TIMEOUT",
+		"IMAGE_MAX_ILLUSTRATIONS",
 		"IMAGE_WORKER_CONCURRENCY",
 		"IMAGE_WORKER_POLL_INTERVAL",
 		"IMAGE_WORKER_LEASE_DURATION",

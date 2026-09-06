@@ -760,6 +760,67 @@
 	grid-column: 1 / -1;
 }
 
+.booklet-theme--itinerary-rail-ledger .booklet-unit__spot {
+	display: grid;
+	grid-template-areas:
+		"time label"
+		"time title"
+		"cost description"
+		"leg leg";
+	grid-template-columns: 34mm minmax(0, 1fr);
+	column-gap: calc(4mm * var(--booklet-spacing));
+	align-items: start;
+}
+
+.booklet-theme--itinerary-rail-ledger .booklet-unit__label {
+	grid-area: label;
+}
+
+.booklet-theme--itinerary-rail-ledger .booklet-unit__time {
+	grid-area: time;
+	margin: 0;
+}
+
+.booklet-theme--itinerary-rail-ledger .booklet-unit__spot h3 {
+	grid-area: title;
+}
+
+.booklet-theme--itinerary-rail-ledger .booklet-unit__description {
+	grid-area: description;
+}
+
+.booklet-theme--itinerary-rail-ledger .booklet-unit__cost {
+	grid-area: cost;
+	margin: 0;
+}
+
+.booklet-theme--itinerary-rail-ledger .booklet-unit__leg {
+	grid-area: leg;
+}
+
+.booklet-theme--itinerary-rail-ledger .booklet-unit__leg .booklet-unit__label {
+	grid-area: auto;
+}
+
+.booklet-theme--itinerary-rail-ledger .booklet-unit__details {
+	grid-template-columns: repeat(3, minmax(22mm, 1fr));
+}
+
+.booklet-theme--itinerary-banner-list .booklet-day-header {
+	padding: calc(4mm * var(--booklet-spacing));
+	border-bottom: 0;
+	border-left: 3mm solid var(--booklet-itinerary-accent);
+	background: color-mix(
+		in srgb,
+		var(--booklet-itinerary-accent) 12%,
+		var(--booklet-itinerary-surface)
+	);
+}
+
+.booklet-theme--itinerary-banner-list .booklet-day-header .booklet-eyebrow {
+	margin-bottom: calc(1mm * var(--booklet-spacing));
+}
+
 .booklet-theme--cover-safe-cover .booklet-page--day::after {
 	display: none;
 	content: none;

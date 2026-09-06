@@ -11,6 +11,7 @@ import {
 	requestJourneyImages,
 	retryJourneyImage,
 	selectCoverImage,
+	selectIllustrations,
 } from "../../api/journeyImages";
 import { createJourneyRequest } from "../../api/journeyRequests";
 import { generateJourney } from "../../api/journeys";
@@ -137,6 +138,22 @@ export function journeyImageSlotsForPeriod(
 		{ ordinal: 1, purpose: "cover" },
 		...Array.from({ length: illustrationCount }, (_, index) => ({
 			ordinal: index + 1,
+			purpose: "illustration" as const,
+		})),
+	];
+}
+
+function acceptedImageSlots(
+	images: readonly JourneyImageApiResponse[],
+): readonly JourneyImageSlot[] {
+	const cover = selectCoverImage(images);
+	if (!cover) {
+		throw new Error("表紙画像スロットが見つかりません。");
+	}
+	return [
+		{ ordinal: 1, purpose: "cover" },
+		...selectIllustrations(images).map((image) => ({
+			ordinal: image.slot.ordinal,
 			purpose: "illustration" as const,
 		})),
 	];
@@ -503,6 +520,7 @@ export function JourneyCreationPage() {
 				throw imageResult.reason;
 			}
 			const imageResponse = imageResult.value;
+			imageSlots = acceptedImageSlots(imageResponse.images);
 
 			setFlowForOperation(operationId, controller, {
 				imageSlots,
