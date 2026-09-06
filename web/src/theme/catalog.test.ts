@@ -240,12 +240,39 @@ function combinationCount(): number {
 }
 
 describe("V2テーマカタログ", () => {
-	it("正常系: 設計表の6雰囲気と23,616通りを検証する", () => {
+	it("正常系: 設計表の6雰囲気と47,232通りを検証する", () => {
 		expect(MOODS).toHaveLength(6);
-		expect(combinationCount()).toBe(23616);
+		expect(combinationCount()).toBe(47232);
 		expect(() =>
 			validateCatalog(MOODS, THEME_CATALOG_REFERENCES),
 		).not.toThrow();
+	});
+
+	it("正常系: 各雰囲気は設計どおり2つの本文テンプレートから選ぶ", () => {
+		expect(MOODS.get("field-notes")?.itineraryTemplates).toEqual([
+			"field-journal",
+			"rail-ledger",
+		]);
+		expect(MOODS.get("wayfinder")?.itineraryTemplates).toEqual([
+			"route-thread",
+			"banner-list",
+		]);
+		expect(MOODS.get("postcard")?.itineraryTemplates).toEqual([
+			"travel-ticket",
+			"banner-list",
+		]);
+		expect(MOODS.get("night-train")?.itineraryTemplates).toEqual([
+			"route-thread",
+			"rail-ledger",
+		]);
+		expect(MOODS.get("quiet-gallery")?.itineraryTemplates).toEqual([
+			"field-journal",
+			"rail-ledger",
+		]);
+		expect(MOODS.get("festival-ticket")?.itineraryTemplates).toEqual([
+			"travel-ticket",
+			"banner-list",
+		]);
 	});
 
 	it("正常系: v1の24レシピの全軸がv2の許可リストに含まれる", () => {

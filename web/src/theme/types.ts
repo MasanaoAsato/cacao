@@ -34,7 +34,9 @@ export type CoverLayoutId =
 export type ItineraryTemplateId =
 	| "route-thread"
 	| "field-journal"
-	| "travel-ticket";
+	| "travel-ticket"
+	| "rail-ledger"
+	| "banner-list";
 
 export type EmphasisId = "place-led" | "balanced" | "route-led" | "time-led";
 

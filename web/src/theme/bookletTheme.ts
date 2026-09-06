@@ -510,6 +510,8 @@ export const ITINERARY_LAYOUTS = new Map<
 	["route-thread", { id: "route-thread" }],
 	["field-journal", { id: "field-journal" }],
 	["travel-ticket", { id: "travel-ticket" }],
+	["rail-ledger", { id: "rail-ledger" }],
+	["banner-list", { id: "banner-list" }],
 ]);
 
 export const EMPHASIS = new Map<EmphasisDefinition["id"], EmphasisDefinition>([

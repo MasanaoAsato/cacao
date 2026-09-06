@@ -32,12 +32,15 @@ const (
 	MinImageWorkerPollInterval = 100 * time.Millisecond
 	MinImageWorkerConcurrency  = 1
 	MaxImageWorkerConcurrency  = 4
+	MinImageIllustrations      = 1
+	MaxImageIllustrations      = 3
 )
 
 // Image は画像生成・worker・storage の運用設定を表す。
 type Image struct {
 	GeneratorDriver   string        `env:"IMAGE_GENERATOR_DRIVER" envDefault:"stub"`
 	GenerationTimeout time.Duration `env:"IMAGE_GENERATION_TIMEOUT"`
+	MaxIllustrations  int           `env:"IMAGE_MAX_ILLUSTRATIONS" envDefault:"3"`
 	ComfyUI           ComfyUI
 	OpenRouterImage   OpenRouterImage
 	Worker            ImageWorker
@@ -112,6 +115,13 @@ func (c Image) normalized() Image {
 func (c Image) Validate() error {
 	if c.GenerationTimeout < MinImageGenerationTimeout {
 		return fmt.Errorf("image generation timeout must be at least %s", MinImageGenerationTimeout)
+	}
+	if c.MaxIllustrations < MinImageIllustrations || c.MaxIllustrations > MaxImageIllustrations {
+		return fmt.Errorf(
+			"image maximum illustrations must be between %d and %d",
+			MinImageIllustrations,
+			MaxImageIllustrations,
+		)
 	}
 	if err := c.Worker.validate(c.GenerationTimeout); err != nil {
 		return err

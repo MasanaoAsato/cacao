@@ -111,7 +111,7 @@ func TestStubImageGenerationHTTPIntegration(t *testing.T) {
 	}()
 
 	createRequestUC := createjourneyrequest.NewUseCase(requestRepo, event.NewPublisherMock())
-	requestImagesUC := requestjourneyimages.NewUseCase(requestRepo, imageRepo)
+	requestImagesUC := requestjourneyimages.NewUseCase(requestRepo, imageRepo, 3)
 	listImagesUC := listjourneyimages.NewUseCase(requestRepo, imageRepo)
 	getImageUC := getjourneyimage.NewUseCase(imageRepo)
 	getContentUC := getjourneyimagecontent.NewUseCase(imageRepo, storage)
