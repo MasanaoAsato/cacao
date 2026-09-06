@@ -110,11 +110,12 @@ function mixRgb(
 	background: readonly [number, number, number],
 	foregroundWeight: number,
 ): readonly [number, number, number] {
-	return foreground.map(
+	const mixed = foreground.map(
 		(component, index) =>
 			component * foregroundWeight +
 			(background[index] ?? 0) * (1 - foregroundWeight),
-	) as readonly [number, number, number];
+		) as [number, number, number];
+	return [mixed[0], mixed[1], mixed[2]];
 }
 
 function backgroundEndpoints(background: string): readonly string[] {
