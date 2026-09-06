@@ -115,6 +115,7 @@ function resolveBookletPrintState(
 function resolveRequestedTheme(
 	journeyId: string | undefined,
 	seedQuery: string | null,
+	coverVisualStyle: BookletModel["cover"]["image"]["visualStyle"],
 ): ThemeRequestResult {
 	if (!journeyId) {
 		return { error: null, invalidQuery: false, requestedTheme: null };
@@ -126,7 +127,7 @@ function resolveRequestedTheme(
 		return {
 			error: null,
 			invalidQuery: parsed.kind === "invalid",
-			requestedTheme: createBookletTheme(seed, { coverVisualStyle: null }),
+			requestedTheme: createBookletTheme(seed, { coverVisualStyle }),
 		};
 	} catch {
 		return {
@@ -211,9 +212,10 @@ export function JourneyBookletPage() {
 	const [downloadError, setDownloadError] = useState<string | null>(null);
 	const [isDownloading, setIsDownloading] = useState(false);
 	const [rerollError, setRerollError] = useState<string | null>(null);
+	const coverVisualStyle = model?.cover.image.visualStyle ?? null;
 	const themeRequest = useMemo(
-		() => resolveRequestedTheme(journeyId, seedQuery),
-		[journeyId, seedQuery],
+		() => resolveRequestedTheme(journeyId, seedQuery, coverVisualStyle),
+		[journeyId, seedQuery, coverVisualStyle],
 	);
 	const {
 		activeTheme,
@@ -359,7 +361,7 @@ export function JourneyBookletPage() {
 				requestedTheme.seed,
 				(candidate) =>
 					!sameDesign(
-						createBookletTheme(candidate, { coverVisualStyle: null }).recipe,
+						createBookletTheme(candidate, { coverVisualStyle }).recipe,
 						requestedTheme.recipe,
 					),
 			);

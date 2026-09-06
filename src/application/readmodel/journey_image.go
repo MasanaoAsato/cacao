@@ -12,6 +12,8 @@ type JourneyImageDTO struct {
 	MediaType      string
 	Width          int
 	Height         int
+	HasVisualStyle bool
+	VisualStyle    string
 	HasFailureCode bool
 	FailureCode    string
 }
@@ -38,6 +40,10 @@ func NewJourneyImageDTO(image entity.JourneyImage) JourneyImageDTO {
 		dto.MediaType = assetReference.MediaType()
 		dto.Width = assetReference.Width()
 		dto.Height = assetReference.Height()
+	}
+	if visualStyle, ok := image.VisualStyle(); ok {
+		dto.HasVisualStyle = true
+		dto.VisualStyle = visualStyle.String()
 	}
 	if failureCode, ok := image.FailureCode(); ok {
 		dto.HasFailureCode = true

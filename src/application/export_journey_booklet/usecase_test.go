@@ -214,7 +214,10 @@ func readyCoverImage(t *testing.T, requestID value_object.ID) entity.JourneyImag
 	if err := image.Start(); err != nil {
 		t.Fatalf("Start() error = %v", err)
 	}
-	if err := image.Complete(testkit.MustNewAssetReference(t)); err != nil {
+	if err := image.Complete(
+		testkit.MustNewAssetReference(t),
+		value_object.ImageVisualStyleEditorialPhotograph,
+	); err != nil {
 		t.Fatalf("Complete() error = %v", err)
 	}
 

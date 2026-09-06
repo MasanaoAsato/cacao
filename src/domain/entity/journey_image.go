@@ -22,6 +22,7 @@ type JourneyImage struct {
 	requestID    value_object.ID
 	slot         value_object.ImageSlot
 	assetRef     value_object.ImageAssetReference
+	visualStyle  value_object.ImageVisualStyle
 	status       value_object.ImageStatus
 	failureCode  value_object.ImageFailureCode
 	attemptCount int // Start成功回数
@@ -46,6 +47,7 @@ func NewJourneyImage(id, requestID value_object.ID, slot value_object.ImageSlot)
 		slot:         slot,
 		status:       value_object.ImageStatusPending,
 		assetRef:     value_object.ImageAssetReference{},
+		visualStyle:  value_object.ImageVisualStyle(""),
 		failureCode:  value_object.ImageFailureCode(""),
 		attemptCount: 0,
 	}, nil
@@ -60,6 +62,7 @@ func RestoreJourneyImage(
 	status value_object.ImageStatus,
 	assetRef value_object.ImageAssetReference,
 	failureCode value_object.ImageFailureCode,
+	visualStyle value_object.ImageVisualStyle,
 	attemptCount int,
 ) (JourneyImage, error) {
 	if id.IsEmpty() {
@@ -75,7 +78,13 @@ func RestoreJourneyImage(
 		return JourneyImage{}, fmt.Errorf("%w: invalid status: %w", ErrInvalidJourneyImage, err)
 	}
 
-	if err := validateJourneyImageState(status, assetRef, failureCode, attemptCount); err != nil {
+	if visualStyle != "" {
+		if err := visualStyle.ValidateFor(slot.Purpose()); err != nil {
+			return JourneyImage{}, fmt.Errorf("%w: invalid visual style: %w", ErrInvalidJourneyImage, err)
+		}
+	}
+
+	if err := validateJourneyImageState(status, assetRef, failureCode, visualStyle, attemptCount); err != nil {
 		return JourneyImage{}, err
 	}
 
@@ -85,6 +94,7 @@ func RestoreJourneyImage(
 		slot:         slot,
 		status:       status,
 		assetRef:     assetRef,
+		visualStyle:  visualStyle,
 		failureCode:  failureCode,
 		attemptCount: attemptCount,
 	}, nil
@@ -94,6 +104,7 @@ func validateJourneyImageState(
 	status value_object.ImageStatus,
 	assetRef value_object.ImageAssetReference,
 	failureCode value_object.ImageFailureCode,
+	visualStyle value_object.ImageVisualStyle,
 	attemptCount int,
 ) error {
 	switch status {
@@ -112,6 +123,9 @@ func validateJourneyImageState(
 		if failureCode != "" {
 			return fmt.Errorf("%w: pending image must not have a failure code", ErrInvalidJourneyImage)
 		}
+		if visualStyle != "" {
+			return fmt.Errorf("%w: pending image must not have a visual style", ErrInvalidJourneyImage)
+		}
 	case value_object.ImageStatusProcessing:
 		if err := validateStartedImageAttemptCount(attemptCount); err != nil {
 			return err
@@ -121,6 +135,9 @@ func validateJourneyImageState(
 		}
 		if failureCode != "" {
 			return fmt.Errorf("%w: processing image must not have a failure code", ErrInvalidJourneyImage)
+		}
+		if visualStyle != "" {
+			return fmt.Errorf("%w: processing image must not have a visual style", ErrInvalidJourneyImage)
 		}
 	case value_object.ImageStatusReady:
 		if err := validateStartedImageAttemptCount(attemptCount); err != nil {
@@ -141,6 +158,9 @@ func validateJourneyImageState(
 		}
 		if err := failureCode.Validate(); err != nil {
 			return fmt.Errorf("%w: invalid failure code: %w", ErrInvalidJourneyImage, err)
+		}
+		if visualStyle != "" {
+			return fmt.Errorf("%w: failed image must not have a visual style", ErrInvalidJourneyImage)
 		}
 	}
 
@@ -197,6 +217,16 @@ func (i JourneyImage) AssetReference() (value_object.ImageAssetReference, bool) 
 	return i.assetRef, true
 }
 
+// VisualStyle はready状態で保存された画風を返す。
+// 既存のready画像など、画風が保存されていない場合は false を返す。
+func (i JourneyImage) VisualStyle() (value_object.ImageVisualStyle, bool) {
+	if i.status != value_object.ImageStatusReady || i.visualStyle == "" {
+		return value_object.ImageVisualStyle(""), false
+	}
+
+	return i.visualStyle, true
+}
+
 // FailureCode はfailed状態の有効なfailure codeがあれば返す。
 func (i JourneyImage) FailureCode() (value_object.ImageFailureCode, bool) {
 	if i.status != value_object.ImageStatusFailed {
@@ -231,7 +261,10 @@ func (i *JourneyImage) Start() error {
 	return nil
 }
 
-func (i *JourneyImage) Complete(assetRef value_object.ImageAssetReference) error {
+func (i *JourneyImage) Complete(
+	assetRef value_object.ImageAssetReference,
+	visualStyle value_object.ImageVisualStyle,
+) error {
 	if i.status != value_object.ImageStatusProcessing {
 		return fmt.Errorf(
 			"%w: cannot complete from status %q",
@@ -243,9 +276,13 @@ func (i *JourneyImage) Complete(assetRef value_object.ImageAssetReference) error
 	if err := assetRef.Validate(); err != nil {
 		return fmt.Errorf("%w: invalid asset reference: %w", ErrInvalidJourneyImage, err)
 	}
+	if err := visualStyle.ValidateFor(i.slot.Purpose()); err != nil {
+		return fmt.Errorf("%w: invalid visual style: %w", ErrInvalidJourneyImage, err)
+	}
 
 	i.status = value_object.ImageStatusReady
 	i.assetRef = assetRef
+	i.visualStyle = visualStyle
 	i.failureCode = value_object.ImageFailureCode("")
 
 	return nil
@@ -266,6 +303,7 @@ func (i *JourneyImage) Fail(failureCode value_object.ImageFailureCode) error {
 
 	i.status = value_object.ImageStatusFailed
 	i.assetRef = value_object.ImageAssetReference{}
+	i.visualStyle = value_object.ImageVisualStyle("")
 	i.failureCode = failureCode
 
 	return nil
@@ -289,6 +327,7 @@ func (i *JourneyImage) Retry() error {
 
 	i.status = value_object.ImageStatusPending
 	i.assetRef = value_object.ImageAssetReference{}
+	i.visualStyle = value_object.ImageVisualStyle("")
 	i.failureCode = value_object.ImageFailureCode("")
 
 	return nil

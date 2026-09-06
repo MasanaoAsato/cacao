@@ -299,7 +299,7 @@ func completeTestJourneyImage(t *testing.T, image *entity.JourneyImage) {
 	if err != nil {
 		t.Fatalf("NewImageAssetReference() error = %v", err)
 	}
-	if err := image.Complete(assetReference); err != nil {
+	if err := image.Complete(assetReference, value_object.ImageVisualStyleEditorialPhotograph); err != nil {
 		t.Fatalf("Complete() error = %v", err)
 	}
 }

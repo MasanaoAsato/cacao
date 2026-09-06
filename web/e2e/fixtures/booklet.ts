@@ -77,6 +77,7 @@ const imageList = {
 			media_type: "image/svg+xml",
 			slot: { ordinal: 1, purpose: "cover" },
 			status: "ready",
+			visual_style: "editorial-photograph",
 			width: 800,
 		},
 	],

@@ -99,6 +99,9 @@ func TestNewJourneyImageDTO(t *testing.T) {
 		if dto.Status != "ready" || !dto.HasContent || dto.HasFailureCode {
 			t.Fatalf("dto = %+v", dto)
 		}
+		if !dto.HasVisualStyle || dto.VisualStyle != "editorial-photograph" {
+			t.Fatalf("visual style = %q, %v", dto.VisualStyle, dto.HasVisualStyle)
+		}
 		if dto.MediaType != "image/jpeg" || dto.Width != 1600 || dto.Height != 900 {
 			t.Fatalf("asset = %q %dx%d", dto.MediaType, dto.Width, dto.Height)
 		}
@@ -121,7 +124,7 @@ func TestNewJourneyImageDTO(t *testing.T) {
 	t.Run("境界値系: pending 画像はどちらも持たない", func(t *testing.T) {
 		dto := NewJourneyImageDTO(testkit.MustNewPendingImage(t))
 
-		if dto.Status != "pending" || dto.HasContent || dto.HasFailureCode || dto.AttemptCount != 0 {
+		if dto.Status != "pending" || dto.HasContent || dto.HasVisualStyle || dto.HasFailureCode || dto.AttemptCount != 0 {
 			t.Fatalf("dto = %+v", dto)
 		}
 		if got := NewJourneyImageDTOs(nil); got == nil || len(got) != 0 {

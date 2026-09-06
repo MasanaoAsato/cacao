@@ -1,6 +1,24 @@
 import type { CompatibilityRule, MoodDefinition, ThemeContext } from "./types";
 
-export const COMPATIBILITY_RULES: readonly CompatibilityRule[] = [];
+export const COMPATIBILITY_RULES: readonly CompatibilityRule[] = [
+	{
+		exclude: {
+			decors: ["stripe-band", "dashed-ticket"],
+		},
+		when: {
+			coverVisualStyle: ["oil-painting", "gouache"],
+		},
+	},
+	{
+		exclude: {
+			decors: ["stripe-band", "dashed-ticket"],
+			palettes: ["night-window"],
+		},
+		when: {
+			coverVisualStyle: ["watercolor", "pastel"],
+		},
+	},
+];
 
 function withoutExcluded<T>(
 	values: readonly T[],
@@ -15,7 +33,11 @@ export function applyCompatibility(
 	context: ThemeContext,
 	rules: readonly CompatibilityRule[] = COMPATIBILITY_RULES,
 ): MoodDefinition {
-	const matchingRules = rules.filter((rule) => rule.matches(context));
+	const matchingRules = rules.filter(
+		(rule) =>
+			context.coverVisualStyle !== null &&
+			rule.when.coverVisualStyle.includes(context.coverVisualStyle),
+	);
 	const excludedCoverLayouts = matchingRules.flatMap(
 		(rule) => rule.exclude.coverLayouts ?? [],
 	);

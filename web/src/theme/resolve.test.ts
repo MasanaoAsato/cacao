@@ -82,6 +82,26 @@ describe("V2テーマ解決", () => {
 		}
 	});
 
+	it("境界値系: 写真系の画風文脈はnullと同じデザインを選ぶ", () => {
+		const seed = { value: 0x12345678, version: "v2" as const };
+		const withoutContext = resolveTheme(
+			seed,
+			{ coverVisualStyle: null },
+			MOODS,
+			THEME_CATALOG_REFERENCES,
+		);
+		const withPhotograph = resolveTheme(
+			seed,
+			{ coverVisualStyle: "editorial-photograph" },
+			MOODS,
+			THEME_CATALOG_REFERENCES,
+		);
+
+		expect(designKey(withPhotograph.recipe)).toBe(
+			designKey(withoutContext.recipe),
+		);
+	});
+
 	it("境界値系: 同一の軸値を持つテーマを同じデザインとして判定する", () => {
 		const theme = resolve(0).recipe;
 		expect(sameDesign(theme, { ...theme })).toBe(true);

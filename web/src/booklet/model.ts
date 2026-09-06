@@ -5,6 +5,7 @@ import type {
 	MoneyApiResponse,
 	SpotApiResponse,
 } from "../api/journeys";
+import type { CoverVisualStyle } from "../theme/types";
 
 export type BookletMoney = MoneyApiResponse;
 
@@ -43,6 +44,7 @@ export type CoverImage = {
 	readonly contentUrl: string;
 	readonly height: number;
 	readonly mediaType: string;
+	readonly visualStyle: CoverVisualStyle | null;
 	readonly width: number;
 };
 

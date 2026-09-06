@@ -55,6 +55,7 @@ const coverImage: JourneyImageApiResponse = {
 	media_type: "image/png",
 	slot: { ordinal: 1, purpose: "cover" },
 	status: "ready",
+	visual_style: "editorial-photograph",
 	width: 800,
 };
 
@@ -65,6 +66,16 @@ describe("createBookletModel", () => {
 		expect(model.cover.destination).toBe("京都");
 		expect(model.days[0]?.units[0]?.leg.to.spot_id).toBe("spot-1");
 		expect(model.days[0]?.units[0]?.spot.name).toBe("浅草");
+	});
+
+	it("正常系: 未知の画風はnullとしてモデルへ変換する", () => {
+		const model = createBookletModel({
+			coverImage: { ...coverImage, visual_style: "unknown-style" },
+			journey,
+			request,
+		});
+
+		expect(model.cover.image.visualStyle).toBeNull();
 	});
 
 	it("異常系: 表紙画像が未準備ならモデルを作らない", () => {

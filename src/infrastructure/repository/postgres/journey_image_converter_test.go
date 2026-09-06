@@ -94,6 +94,11 @@ func TestJourneyImageModelConverter(t *testing.T) {
 			if got.Status() != testCase.image.Status() {
 				t.Errorf("Status() = %q, want %q", got.Status(), testCase.image.Status())
 			}
+			gotStyle, gotHasStyle := got.VisualStyle()
+			wantStyle, wantHasStyle := testCase.image.VisualStyle()
+			if gotHasStyle != wantHasStyle || gotStyle != wantStyle {
+				t.Errorf("VisualStyle() = %q, %v, want %q, %v", gotStyle, gotHasStyle, wantStyle, wantHasStyle)
+			}
 			if got.AttemptCount() != testCase.image.AttemptCount() {
 				t.Errorf(
 					"AttemptCount() = %d, want %d",
@@ -156,6 +161,15 @@ func TestJourneyImageModelConverterRejectsInvalidRow(t *testing.T) {
 			model: func() JourneyImageModel {
 				model := readyModel
 				model.StorageKey = nil
+				return model
+			}(),
+		},
+		{
+			name: "異常系: visual_styleが未知",
+			model: func() JourneyImageModel {
+				model := readyModel
+				style := "unknown-style"
+				model.VisualStyle = &style
 				return model
 			}(),
 		},
@@ -227,7 +241,11 @@ func mustNewJourneyImageForConverter(
 		if err != nil {
 			t.Fatalf("NewImageAssetReference() error = %v", err)
 		}
-		if err := image.Complete(assetReference); err != nil {
+		visualStyle := value_object.ImageVisualStyleEditorialPhotograph
+		if purpose == value_object.ImagePurposeIllustration {
+			visualStyle = value_object.ImageVisualStyleNone
+		}
+		if err := image.Complete(assetReference, visualStyle); err != nil {
 			t.Fatalf("Complete() error = %v", err)
 		}
 		return image

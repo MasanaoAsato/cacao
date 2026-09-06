@@ -16,6 +16,7 @@ const readyCover: JourneyImageApiResponse = {
 	media_type: "image/png",
 	slot: { ordinal: 1, purpose: "cover" },
 	status: "ready",
+	visual_style: "editorial-photograph",
 	width: 800,
 };
 

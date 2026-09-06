@@ -38,14 +38,16 @@ func TestToRequestJourneyImagesResponse(t *testing.T) {
 				JourneyRequestID: "request-1",
 				Images: []readmodel.JourneyImageDTO{
 					{
-						ID:           "image-1",
-						Slot:         readmodel.SlotDTO{Purpose: "cover", Ordinal: 1},
-						Status:       "ready",
-						AttemptCount: 1,
-						HasContent:   true,
-						MediaType:    "image/png",
-						Width:        896,
-						Height:       1280,
+						ID:             "image-1",
+						Slot:           readmodel.SlotDTO{Purpose: "cover", Ordinal: 1},
+						Status:         "ready",
+						AttemptCount:   1,
+						HasContent:     true,
+						HasVisualStyle: true,
+						MediaType:      "image/png",
+						VisualStyle:    "watercolor",
+						Width:          896,
+						Height:         1280,
 					},
 				},
 			},
@@ -96,6 +98,11 @@ func TestToRequestJourneyImagesResponse(t *testing.T) {
 			image := response.Images[0]
 			if (image.ContentURL != nil) != testCase.wantContent {
 				t.Errorf("ContentURL present = %t, want %t", image.ContentURL != nil, testCase.wantContent)
+			}
+			if testCase.name == "ready image exposes content metadata" {
+				if image.VisualStyle == nil || *image.VisualStyle != "watercolor" {
+					t.Errorf("VisualStyle = %v, want watercolor", image.VisualStyle)
+				}
 			}
 			if (image.FailureCode != nil) != testCase.wantFailure {
 				t.Errorf("FailureCode present = %t, want %t", image.FailureCode != nil, testCase.wantFailure)

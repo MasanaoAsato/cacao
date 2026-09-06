@@ -64,6 +64,14 @@ export type DecorId =
 	| "gallery-rule"
 	| "none";
 
+export type CoverVisualStyle =
+	| "editorial-photograph"
+	| "cinematic-photograph"
+	| "watercolor"
+	| "gouache"
+	| "oil-painting"
+	| "pastel";
+
 export type ThemeSeed = {
 	readonly value: number;
 	readonly version: ThemeCatalogVersion;
@@ -192,16 +200,18 @@ export type MoodDefinition = {
 };
 
 export type ThemeContext = {
-	readonly coverVisualStyle: null;
+	readonly coverVisualStyle: CoverVisualStyle | null;
 };
 
 export type CompatibilityRule = {
+	readonly when: {
+		readonly coverVisualStyle: readonly CoverVisualStyle[];
+	};
 	readonly exclude: {
 		readonly coverLayouts?: readonly CoverLayoutId[];
 		readonly decors?: readonly DecorId[];
 		readonly palettes?: readonly PaletteId[];
 	};
-	readonly matches: (context: ThemeContext) => boolean;
 };
 
 export type ThemeRecipeDefinition = {
