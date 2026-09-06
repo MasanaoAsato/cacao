@@ -4,7 +4,11 @@ import {
 	getThemeCandidates,
 	THEME_CATALOG_REFERENCES,
 } from "./bookletTheme";
-import { defineThemeRecipe, ThemeRecipeValidationError } from "./recipeSafety";
+import {
+	defineThemeRecipe,
+	ThemeRecipeValidationError,
+	validateDecorDefinitions,
+} from "./recipeSafety";
 import type { CoverLayoutDefinition, ThemeCatalogReferences } from "./types";
 
 function selectedRecipe() {
@@ -35,6 +39,7 @@ describe("テーマレシピの静的安全性", () => {
 		expect(candidates.length).toBeLessThanOrEqual(4);
 		expect(candidates[0]?.fallbackStep).toBe("selected");
 		expect(candidates.at(-1)?.fallbackStep).toBe("safe-geometry");
+		expect(candidates.at(-1)?.decorId).toBe("none");
 		expect(candidates.at(-1)?.displayFontId).toBe("inherit");
 	});
 
@@ -56,6 +61,39 @@ describe("テーマレシピの静的安全性", () => {
 				),
 			).not.toThrow();
 		}
+	});
+
+	it("境界値系: 装飾余白の許容範囲を受理する", () => {
+		const stripeBand = THEME_CATALOG_REFERENCES.decors.get("stripe-band");
+		if (!stripeBand) {
+			throw new Error("stripe-bandの定義がありません。");
+		}
+		const references = {
+			...THEME_CATALOG_REFERENCES,
+			decors: new Map(THEME_CATALOG_REFERENCES.decors).set("stripe-band", {
+				...stripeBand,
+				contentInsetTopMm: 0,
+				coverPaddingMm: 4,
+			}),
+		};
+		expect(() => validateDecorDefinitions(references)).not.toThrow();
+	});
+
+	it("異常系: 装飾余白が上限を超えた定義を拒否する", () => {
+		const stripeBand = THEME_CATALOG_REFERENCES.decors.get("stripe-band");
+		if (!stripeBand) {
+			throw new Error("stripe-bandの定義がありません。");
+		}
+		const references = {
+			...THEME_CATALOG_REFERENCES,
+			decors: new Map(THEME_CATALOG_REFERENCES.decors).set("stripe-band", {
+				...stripeBand,
+				contentInsetTopMm: 6.1,
+			}),
+		};
+		expect(() => validateDecorDefinitions(references)).toThrow(
+			ThemeRecipeValidationError,
+		);
 	});
 
 	it("異常系: 表紙紙面とcoverInkの薄いコントラストを拒否する", () => {

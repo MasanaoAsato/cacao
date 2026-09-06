@@ -262,6 +262,7 @@ function CoverContent({
 			</div>
 			{veilBounds ? <CoverVeil bounds={veilBounds} theme={theme} /> : null}
 			<div className="booklet-cover__text">
+				<div aria-hidden="true" className="booklet-cover__decor" />
 				<div className="booklet-cover__copy" data-booklet-cover-copy="true">
 					<p className="booklet-eyebrow" data-booklet-text-role="utility-label">
 						TRAVEL JOURNAL

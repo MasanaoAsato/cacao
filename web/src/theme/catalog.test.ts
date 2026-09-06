@@ -240,9 +240,9 @@ function combinationCount(): number {
 }
 
 describe("V2テーマカタログ", () => {
-	it("正常系: 設計表の6雰囲気と11,808通りを検証する", () => {
+	it("正常系: 設計表の6雰囲気と23,616通りを検証する", () => {
 		expect(MOODS).toHaveLength(6);
-		expect(combinationCount()).toBe(11808);
+		expect(combinationCount()).toBe(23616);
 		expect(() =>
 			validateCatalog(MOODS, THEME_CATALOG_REFERENCES),
 		).not.toThrow();
@@ -263,7 +263,7 @@ describe("V2テーマカタログ", () => {
 				throw new Error(`雰囲気「${moodId}」の定義がありません。`);
 			}
 			expect(mood.coverLayouts).toContain(coverLayoutId);
-			expect(mood.decors).toContain(moodId);
+			expect(mood.decors).toHaveLength(2);
 			expect(mood.fontPairs).toContain(fontPairId);
 			expect(mood.itineraryTemplates).toContain(itineraryTemplateId);
 			expect(mood.palettes).toContain(paletteId);
@@ -303,7 +303,11 @@ describe("V2テーマカタログ", () => {
 			),
 		).toEqual(new Set(THEME_CATALOG_REFERENCES.itineraries.keys()));
 		expect(new Set(representatives.map(({ decorId }) => decorId))).toEqual(
-			new Set(THEME_CATALOG_REFERENCES.decors.keys()),
+			new Set(
+				Array.from(THEME_CATALOG_REFERENCES.decors.keys()).filter(
+					(id) => id !== "none",
+				),
+			),
 		);
 	});
 
@@ -316,6 +320,21 @@ describe("V2テーマカタログ", () => {
 			...fieldNotes,
 			palettes: ["paper-ink", "paper-ink"],
 		});
+		expect(() => validateCatalog(moods, THEME_CATALOG_REFERENCES)).toThrow(
+			ThemeRecipeValidationError,
+		);
+	});
+
+	it("異常系: noneを雰囲気の装飾許可リストに指定すると拒否する", () => {
+		const fieldNotes = MOODS.get("field-notes");
+		if (!fieldNotes) {
+			throw new Error("field-notesの定義がありません。");
+		}
+		const moods = new Map(MOODS).set("field-notes", {
+			...fieldNotes,
+			decors: ["none", "hairline-frame"],
+		});
+
 		expect(() => validateCatalog(moods, THEME_CATALOG_REFERENCES)).toThrow(
 			ThemeRecipeValidationError,
 		);
@@ -412,7 +431,7 @@ describe("V2テーマカタログ", () => {
 				{
 					...fieldNotes,
 					coverLayouts: ["north-west"] as const,
-					decors: ["field-notes"] as const,
+					decors: ["dotted-grid"] as const,
 					displayFonts: ["inherit"] as const,
 					fontPairs: ["classic"] as const,
 					itineraryTemplates: ["field-journal"] as const,

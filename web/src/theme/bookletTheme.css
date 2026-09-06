@@ -21,7 +21,8 @@
 
 .booklet-theme .booklet-page--day,
 .booklet-theme .booklet-page--measurement {
-	padding: var(--booklet-page-margin);
+	padding: calc(var(--booklet-page-margin) + var(--booklet-decor-inset-top))
+		var(--booklet-page-margin) var(--booklet-page-margin);
 }
 
 .booklet-theme [data-booklet-text-role] {
@@ -61,8 +62,17 @@
 }
 
 .booklet-cover__copy {
+	position: relative;
+	z-index: 1;
 	display: inline-block;
 	max-width: 100%;
+}
+
+.booklet-cover__decor {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	pointer-events: none;
 }
 
 .booklet-cover__image {
@@ -344,7 +354,8 @@
 	font-size: clamp(13pt, 1.45em, 18pt);
 }
 
-.booklet-theme .booklet-page--day::after {
+.booklet-theme .booklet-page--day::after,
+.booklet-theme .booklet-page--measurement::after {
 	position: absolute;
 	z-index: 0;
 	pointer-events: none;
@@ -369,37 +380,105 @@
 	z-index: 1;
 }
 
-.booklet-theme--decor-field-notes .booklet-page--day::after {
-	inset: 7mm auto 7mm 5mm;
-	border-left: 1px solid currentcolor;
-}
-
-.booklet-theme--decor-wayfinder .booklet-page--day::after {
-	inset: 12mm 8mm auto auto;
-	width: 17mm;
-	height: 17mm;
-	border: 1px solid currentcolor;
-	border-radius: 50%;
-}
-
-.booklet-theme--decor-postcard .booklet-page--day::after {
+.booklet-theme--decor-hairline-frame .booklet-page--day::after,
+.booklet-theme--decor-hairline-frame .booklet-page--measurement::after {
 	inset: 7mm;
 	border: 1px solid currentcolor;
 }
 
-.booklet-theme--decor-night-train .booklet-page--day::after {
-	inset: 12mm auto 12mm 7mm;
+.booklet-theme--decor-dashed-ticket .booklet-page--day::after,
+.booklet-theme--decor-dashed-ticket .booklet-page--measurement::after {
+	inset: 7mm;
+	border: 1px dashed currentcolor;
+}
+
+.booklet-theme--decor-dotted-grid .booklet-page--day::after,
+.booklet-theme--decor-dotted-grid .booklet-page--measurement::after {
+	inset: 0;
+	color: var(--booklet-itinerary-border);
+	background-image: radial-gradient(
+		circle,
+		currentcolor 0.2mm,
+		transparent 0.2mm
+	);
+	background-size: 4mm 4mm;
+	opacity: 0.3;
+}
+
+.booklet-theme--decor-stripe-band .booklet-page--day::after,
+.booklet-theme--decor-stripe-band .booklet-page--measurement::after {
+	inset: 0 0 auto;
+	height: 6mm;
+	background: repeating-linear-gradient(
+		45deg,
+		transparent 0 2mm,
+		var(--booklet-itinerary-accent) 2mm 3mm
+	);
+	opacity: 0.35;
+}
+
+.booklet-theme--decor-route-dash .booklet-page--day::after,
+.booklet-theme--decor-route-dash .booklet-page--measurement::after {
+	inset: 7mm auto 7mm 7mm;
+	color: var(--booklet-itinerary-accent);
 	border-left: 1px dashed currentcolor;
 }
 
-.booklet-theme--decor-quiet-gallery .booklet-page--day::after {
-	inset: auto 10mm 8mm;
-	border-bottom: 1px solid currentcolor;
+.booklet-theme--decor-gallery-rule .booklet-page--day::after,
+.booklet-theme--decor-gallery-rule .booklet-page--measurement::after {
+	inset: auto 10mm calc(var(--booklet-page-margin) - 3mm);
+	height: 3mm;
+	background:
+		linear-gradient(currentcolor, currentcolor) right bottom / 3mm 3mm no-repeat,
+		linear-gradient(currentcolor, currentcolor) left bottom / 100% 1px no-repeat;
 }
 
-.booklet-theme--decor-festival-ticket .booklet-page--day::after {
-	inset: 8mm 7mm;
+.booklet-theme--decor-none .booklet-page--day::after,
+.booklet-theme--decor-none .booklet-page--measurement::after {
+	display: none;
+	content: none;
+}
+
+.booklet-theme--decor-hairline-frame .booklet-cover__decor {
+	border: 1px solid var(--booklet-cover-ink);
+}
+
+.booklet-theme--decor-dashed-ticket .booklet-cover__decor {
+	border: 1px dashed var(--booklet-cover-ink);
+}
+
+.booklet-theme--decor-dashed-ticket .booklet-eyebrow,
+.booklet-theme--decor-dashed-ticket .booklet-unit__label {
+	display: inline-block;
+	padding: 0.5mm 2mm;
 	border: 1px dashed currentcolor;
+	border-radius: 1mm;
+}
+
+.booklet-theme--decor-dotted-grid .booklet-cover__copy .booklet-eyebrow {
+	border-bottom: 1px dotted currentcolor;
+}
+
+.booklet-theme--decor-stripe-band .booklet-cover__decor {
+	inset: 0 0 auto;
+	height: 6mm;
+	background: repeating-linear-gradient(
+		45deg,
+		transparent 0 2mm,
+		var(--booklet-accent) 2mm 3mm
+	);
+	opacity: 0.35;
+}
+
+.booklet-theme--decor-route-dash .booklet-cover__title {
+	border-bottom: 1px dashed currentcolor;
+}
+
+.booklet-theme--decor-gallery-rule .booklet-cover__copy .booklet-eyebrow {
+	background-image: linear-gradient(currentcolor, currentcolor);
+	background-position: left top;
+	background-repeat: no-repeat;
+	background-size: 12mm 1px;
 }
 
 /* Itinerary page system: the data order is the visual order, and the route

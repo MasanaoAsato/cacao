@@ -55,7 +55,14 @@ export type DisplayFontId =
 	| "kaisei-decol"
 	| "rocknroll-one";
 
-export type DecorId = MoodId;
+export type DecorId =
+	| "hairline-frame"
+	| "dashed-ticket"
+	| "dotted-grid"
+	| "stripe-band"
+	| "route-dash"
+	| "gallery-rule"
+	| "none";
 
 export type ThemeSeed = {
 	readonly value: number;
@@ -169,6 +176,8 @@ export type DisplayFontDefinition = {
 };
 
 export type DecorDefinition = {
+	readonly contentInsetTopMm: number;
+	readonly coverPaddingMm: number;
 	readonly id: DecorId;
 };
 

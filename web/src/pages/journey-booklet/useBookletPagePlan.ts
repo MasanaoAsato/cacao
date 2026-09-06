@@ -212,14 +212,15 @@ export function measureCoverVeilBounds(
 	theme: BookletThemeCandidate,
 ): CoverVeilBounds {
 	const cover = queryRequired(root, ".booklet-cover-content", "表紙");
-	const text = queryRequired(root, "[data-booklet-cover-copy]", "表紙文字領域");
-	if (text.scrollWidth > text.clientWidth) {
+	const textBox = queryRequired(root, ".booklet-cover__text", "表紙文字領域");
+	const copy = queryRequired(root, "[data-booklet-cover-copy]", "表紙文字");
+	if (copy.scrollWidth > copy.clientWidth) {
 		throw new BookletLayoutError(
 			"cover-inline-overflow",
 			"表紙の横方向の文字が収まりません。",
 		);
 	}
-	if (text.scrollHeight > text.clientHeight) {
+	if (copy.scrollHeight > copy.clientHeight) {
 		throw new BookletLayoutError(
 			"cover-block-overflow",
 			"表紙の縦方向の文字が収まりません。",
@@ -227,7 +228,7 @@ export function measureCoverVeilBounds(
 	}
 
 	const coverRect = cover.getBoundingClientRect();
-	const textRect = text.getBoundingClientRect();
+	const textRect = textBox.getBoundingClientRect();
 	if (!validRect(coverRect) || !validRect(textRect)) {
 		throw new BookletLayoutError(
 			"cover-bounds-invalid",

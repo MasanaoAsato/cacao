@@ -212,6 +212,17 @@ function installBrowserMocks() {
 			if (this.classList.contains("booklet-cover-content")) {
 				return domRect(0, 0, 560, 794);
 			}
+			if (this.classList.contains("booklet-cover__text")) {
+				const safeArea = coverSafeAreaFor(this);
+				const scaleX = 560 / 148;
+				const scaleY = 794 / 210;
+				return domRect(
+					safeArea.x * scaleX,
+					safeArea.y * scaleY,
+					Math.min(58, safeArea.width) * scaleX,
+					Math.min(38, safeArea.height) * scaleY,
+				);
+			}
 			if (this.hasAttribute("data-booklet-cover-copy")) {
 				const safeArea = coverSafeAreaFor(this);
 				const scaleX = 560 / 148;
@@ -657,6 +668,9 @@ describe("JourneyBookletPage", () => {
 			value: function outsideCoverSafeArea(this: HTMLElement) {
 				if (this.classList.contains("booklet-cover-content")) {
 					return domRect(0, 0, 560, 794);
+				}
+				if (this.classList.contains("booklet-cover__text")) {
+					return domRect(0, 0, 200, 80);
 				}
 				if (this.hasAttribute("data-booklet-cover-copy")) {
 					return domRect(0, 0, 200, 80);
