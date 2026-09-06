@@ -25,6 +25,7 @@ export type JourneyImageApiResponse = {
 	readonly width: number | null;
 	readonly height: number | null;
 	readonly failure_code: string | null;
+	readonly visual_style: string | null;
 };
 
 export type JourneyImageListApiResponse = {
@@ -68,6 +69,7 @@ export function decodeJourneyImage(
 			purpose: readNonEmptyString(slot, "purpose", `${context}.slot`),
 		},
 		status: decodeStatus(record.status, context),
+		visual_style: readNullableString(record, "visual_style", context),
 		width: readNullableInteger(record, "width", context),
 	};
 }

@@ -86,6 +86,83 @@ func TestNewJourneyImage(t *testing.T) {
 	}
 }
 
+func TestJourneyImageVisualStyle(t *testing.T) {
+	assetReference, err := value_object.NewImageAssetReference(
+		"journey-images/example.png",
+		"image/png",
+		1200,
+		800,
+	)
+	if err != nil {
+		t.Fatalf("NewImageAssetReference() error = %v", err)
+	}
+
+	t.Run("正常系: 表紙の画風をreadyへ保存して取得できる", func(t *testing.T) {
+		slot, err := value_object.NewImageSlot(value_object.ImagePurposeCover, 1)
+		if err != nil {
+			t.Fatalf("NewImageSlot() error = %v", err)
+		}
+		image, err := NewJourneyImage(value_object.NewID(), value_object.NewID(), slot)
+		if err != nil {
+			t.Fatalf("NewJourneyImage() error = %v", err)
+		}
+		if err := image.Start(); err != nil {
+			t.Fatalf("Start() error = %v", err)
+		}
+		if err := image.Complete(assetReference, value_object.ImageVisualStyleWatercolor); err != nil {
+			t.Fatalf("Complete() error = %v", err)
+		}
+
+		style, ok := image.VisualStyle()
+		if !ok || style != value_object.ImageVisualStyleWatercolor {
+			t.Fatalf("VisualStyle() = %q, %v", style, ok)
+		}
+	})
+
+	t.Run("正常系: 既存ready画像の画風なしを取得できる", func(t *testing.T) {
+		slot, err := value_object.NewImageSlot(value_object.ImagePurposeCover, 1)
+		if err != nil {
+			t.Fatalf("NewImageSlot() error = %v", err)
+		}
+		image, err := RestoreJourneyImage(
+			value_object.NewID(),
+			value_object.NewID(),
+			slot,
+			value_object.ImageStatusReady,
+			assetReference,
+			value_object.ImageFailureCode(""),
+			value_object.ImageVisualStyle(""),
+			1,
+		)
+		if err != nil {
+			t.Fatalf("RestoreJourneyImage() error = %v", err)
+		}
+		if _, ok := image.VisualStyle(); ok {
+			t.Fatal("VisualStyle() has value for a legacy ready image")
+		}
+	})
+
+	t.Run("異常系: 表紙にnoneを指定できない", func(t *testing.T) {
+		slot, err := value_object.NewImageSlot(value_object.ImagePurposeCover, 1)
+		if err != nil {
+			t.Fatalf("NewImageSlot() error = %v", err)
+		}
+		image, err := NewJourneyImage(value_object.NewID(), value_object.NewID(), slot)
+		if err != nil {
+			t.Fatalf("NewJourneyImage() error = %v", err)
+		}
+		if err := image.Start(); err != nil {
+			t.Fatalf("Start() error = %v", err)
+		}
+		if err := image.Complete(assetReference, value_object.ImageVisualStyleNone); !errors.Is(err, ErrInvalidJourneyImage) {
+			t.Fatalf("Complete() error = %v, want ErrInvalidJourneyImage", err)
+		}
+		if image.Status() != value_object.ImageStatusProcessing {
+			t.Fatalf("Status() = %q, want processing", image.Status())
+		}
+	})
+}
+
 func TestJourneyImageStateTransitions(t *testing.T) {
 	validID := value_object.NewID()
 	validRequestID := value_object.NewID()
@@ -177,7 +254,7 @@ func TestJourneyImageStateTransitions(t *testing.T) {
 					return err
 				}
 
-				return image.Complete(validAssetReference)
+				return image.Complete(validAssetReference, value_object.ImageVisualStyleEditorialPhotograph)
 			},
 			wantStatus:  value_object.ImageStatusReady,
 			wantAttempt: 1,
@@ -210,7 +287,7 @@ func TestJourneyImageStateTransitions(t *testing.T) {
 			name:    "異常系: pendingからcomplete",
 			prepare: newImage,
 			transition: func(image *JourneyImage) error {
-				return image.Complete(validAssetReference)
+				return image.Complete(validAssetReference, value_object.ImageVisualStyleEditorialPhotograph)
 			},
 			wantErr:     ErrInvalidImageTransition,
 			wantStatus:  value_object.ImageStatusPending,
@@ -230,7 +307,7 @@ func TestJourneyImageStateTransitions(t *testing.T) {
 			name:    "異常系: processingで無効なasset reference",
 			prepare: startImage,
 			transition: func(image *JourneyImage) error {
-				return image.Complete(value_object.ImageAssetReference{})
+				return image.Complete(value_object.ImageAssetReference{}, value_object.ImageVisualStyleEditorialPhotograph)
 			},
 			wantErr:     ErrInvalidJourneyImage,
 			wantStatus:  value_object.ImageStatusProcessing,
@@ -352,6 +429,7 @@ func TestRestoreJourneyImage(t *testing.T) {
 		status       value_object.ImageStatus
 		assetRef     value_object.ImageAssetReference
 		failureCode  value_object.ImageFailureCode
+		visualStyle  value_object.ImageVisualStyle
 		attemptCount int
 		wantAsset    bool
 		wantFailure  bool
@@ -579,6 +657,7 @@ func TestRestoreJourneyImage(t *testing.T) {
 				tt.status,
 				tt.assetRef,
 				tt.failureCode,
+				tt.visualStyle,
 				tt.attemptCount,
 			)
 			if (err != nil) != tt.wantErr {

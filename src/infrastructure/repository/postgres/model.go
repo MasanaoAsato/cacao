@@ -100,6 +100,7 @@ type JourneyImageModel struct {
 	MediaType        *string    `gorm:"column:media_type;type:varchar(50)"`
 	Width            *int       `gorm:"column:width"`
 	Height           *int       `gorm:"column:height"`
+	VisualStyle      *string    `gorm:"column:visual_style;type:varchar(40)"`
 	FailureCode      *string    `gorm:"column:failure_code;type:varchar(50)"`
 	AttemptCount     int        `gorm:"column:attempt_count"`
 	LeaseUntil       *time.Time `gorm:"column:lease_until;type:timestamptz"`

@@ -297,6 +297,7 @@ func journeyImageUpdateValues(
 		"media_type":         model.MediaType,
 		"width":              model.Width,
 		"height":             model.Height,
+		"visual_style":       model.VisualStyle,
 		"failure_code":       model.FailureCode,
 		"attempt_count":      model.AttemptCount,
 		"lease_until":        model.LeaseUntil,

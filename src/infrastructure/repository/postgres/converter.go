@@ -384,6 +384,9 @@ func journeyImageToModel(image entity.JourneyImage) (JourneyImageModel, error) {
 		model.Width = pointer(assetReference.Width())
 		model.Height = pointer(assetReference.Height())
 	}
+	if visualStyle, ok := image.VisualStyle(); ok {
+		model.VisualStyle = pointer(visualStyle.String())
+	}
 	if failureCode, ok := image.FailureCode(); ok {
 		model.FailureCode = pointer(failureCode.String())
 	}
@@ -427,6 +430,13 @@ func modelToJourneyImage(model JourneyImageModel) (entity.JourneyImage, error) {
 			return entity.JourneyImage{}, fmt.Errorf("journey image failure code: %w", err)
 		}
 	}
+	visualStyle := value_object.ImageVisualStyle("")
+	if model.VisualStyle != nil {
+		visualStyle, err = value_object.NewImageVisualStyle(*model.VisualStyle)
+		if err != nil {
+			return entity.JourneyImage{}, fmt.Errorf("journey image visual style: %w", err)
+		}
+	}
 
 	image, err := entity.RestoreJourneyImage(
 		id,
@@ -435,6 +445,7 @@ func modelToJourneyImage(model JourneyImageModel) (entity.JourneyImage, error) {
 		status,
 		assetReference,
 		failureCode,
+		visualStyle,
 		model.AttemptCount,
 	)
 	if err != nil {

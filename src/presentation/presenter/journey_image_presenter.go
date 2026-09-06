@@ -20,6 +20,7 @@ type JourneyImageResponse struct {
 	MediaType    *string          `json:"media_type"`
 	Width        *int             `json:"width"`
 	Height       *int             `json:"height"`
+	VisualStyle  *string          `json:"visual_style"`
 	FailureCode  *string          `json:"failure_code"`
 }
 
@@ -82,6 +83,9 @@ func ToJourneyImageResponse(image readmodel.JourneyImageDTO) JourneyImageRespons
 		response.MediaType = &image.MediaType
 		response.Width = &image.Width
 		response.Height = &image.Height
+	}
+	if image.HasVisualStyle {
+		response.VisualStyle = &image.VisualStyle
 	}
 	if image.HasFailureCode {
 		response.FailureCode = &image.FailureCode

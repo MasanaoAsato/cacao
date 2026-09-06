@@ -128,7 +128,11 @@ func mustNewReadyImageFor(t *testing.T, requestID value_object.ID, slot value_ob
 	if err := image.Start(); err != nil {
 		t.Fatalf("Start() error = %v", err)
 	}
-	if err := image.Complete(testkit.MustNewAssetReference(t)); err != nil {
+	visualStyle := value_object.ImageVisualStyleEditorialPhotograph
+	if slot.Purpose() == value_object.ImagePurposeIllustration {
+		visualStyle = value_object.ImageVisualStyleNone
+	}
+	if err := image.Complete(testkit.MustNewAssetReference(t), visualStyle); err != nil {
 		t.Fatalf("Complete() error = %v", err)
 	}
 

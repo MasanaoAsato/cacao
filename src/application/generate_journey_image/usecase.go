@@ -172,7 +172,7 @@ func (uc *useCase) generate(ctx context.Context, image entity.JourneyImage) erro
 	}
 
 	processingImage := image
-	if err := image.Complete(assetReference); err != nil {
+	if err := image.Complete(assetReference, brief.Style()); err != nil {
 		return uc.compensateAndFail(
 			ctx,
 			processingImage,

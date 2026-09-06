@@ -10,6 +10,7 @@ import type {
 	LegApiResponse,
 	SpotApiResponse,
 } from "../api/journeys";
+import type { CoverVisualStyle } from "../theme/types";
 import type {
 	ArrivalUnit,
 	BookletDay,
@@ -19,6 +20,15 @@ import type {
 	BookletSpot,
 	CoverImage,
 } from "./model";
+
+const COVER_VISUAL_STYLES = [
+	"editorial-photograph",
+	"cinematic-photograph",
+	"watercolor",
+	"gouache",
+	"oil-painting",
+	"pastel",
+] as const satisfies readonly CoverVisualStyle[];
 
 export class BookletDataError extends Error {
 	constructor(message: string) {
@@ -190,8 +200,20 @@ function convertCoverImage(image: JourneyImageApiResponse): CoverImage {
 		contentUrl: image.content_url,
 		height: image.height,
 		mediaType: image.media_type,
+		visualStyle: toCoverVisualStyle(image.visual_style),
 		width: image.width,
 	};
+}
+
+function toCoverVisualStyle(value: string | null): CoverVisualStyle | null {
+	if (
+		value !== null &&
+		(COVER_VISUAL_STYLES as readonly string[]).includes(value)
+	) {
+		return value as CoverVisualStyle;
+	}
+
+	return null;
 }
 
 function isExpectedContentUrl(image: JourneyImageApiResponse): boolean {

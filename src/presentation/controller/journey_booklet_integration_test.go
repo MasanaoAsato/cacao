@@ -27,7 +27,10 @@ func TestBookletPDFEndpointWithStubRenderer(t *testing.T) {
 	if err := coverImage.Start(); err != nil {
 		t.Fatalf("Start() error = %v", err)
 	}
-	if err := coverImage.Complete(testkit.MustNewAssetReference(t)); err != nil {
+	if err := coverImage.Complete(
+		testkit.MustNewAssetReference(t),
+		value_object.ImageVisualStyleEditorialPhotograph,
+	); err != nil {
 		t.Fatalf("Complete() error = %v", err)
 	}
 

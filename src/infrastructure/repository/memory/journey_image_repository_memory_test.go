@@ -157,7 +157,10 @@ func TestJourneyImageRepositoryMemory_ClaimAndLease(t *testing.T) {
 
 	t.Run("正常系: processing 以外で Save すると lease が解除される", func(t *testing.T) {
 		image, _ := repo.FindByID(ctx, first.ID())
-		if err := image.Complete(testkit.MustNewAssetReference(t)); err != nil {
+		if err := image.Complete(
+			testkit.MustNewAssetReference(t),
+			value_object.ImageVisualStyleEditorialPhotograph,
+		); err != nil {
 			t.Fatalf("Complete() error = %v", err)
 		}
 		if err := repo.Save(ctx, image); err != nil {

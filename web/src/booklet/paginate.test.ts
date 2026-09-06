@@ -12,6 +12,7 @@ function makeModel(unitCount = 2): BookletModel {
 				contentUrl: "/api/v1/journey-images/image-1/content",
 				height: 1200,
 				mediaType: "image/png",
+				visualStyle: null,
 				width: 800,
 			},
 			period: {

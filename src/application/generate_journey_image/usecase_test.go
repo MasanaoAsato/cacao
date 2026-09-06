@@ -51,6 +51,10 @@ func TestUseCaseExecuteCompletesClaimedImage(t *testing.T) {
 	if saved := mustFindImage(t, imageRepo, image.ID()); saved.Status() != value_object.ImageStatusReady {
 		t.Errorf("saved image status = %q, want ready", saved.Status())
 	}
+	saved := mustFindImage(t, imageRepo, image.ID())
+	if style, ok := saved.VisualStyle(); !ok || style != wantStyle {
+		t.Errorf("saved image visual style = %q, %v, want %q, true", style, ok, wantStyle)
+	}
 	if !storage.saveCalled {
 		t.Error("ImageStorage.Save() was not called")
 	}
@@ -61,8 +65,9 @@ func TestUseCaseExecuteKeepsIllustrationStyleNone(t *testing.T) {
 	slot := testkit.MustNewImageSlot(t, value_object.ImagePurposeIllustration, 1)
 	image := testkit.MustNewPendingImageFor(t, request.ID(), slot)
 	generator := &generateImageGeneratorStub{}
+	imageRepo := fakes.NewJourneyImageRepositoryWith(t, image)
 	useCase := mustNewUseCase(t,
-		fakes.NewJourneyImageRepositoryWith(t, image),
+		imageRepo,
 		fakes.NewJourneyRequestRepositoryWith(t, request),
 		generator,
 		&generateImageStorageStub{asset: testkit.MustNewAssetReference(t)},
@@ -77,6 +82,10 @@ func TestUseCaseExecuteKeepsIllustrationStyleNone(t *testing.T) {
 	}
 	if generator.brief.Style() != value_object.ImageVisualStyleNone {
 		t.Errorf("generated illustration brief style = %q, want none", generator.brief.Style())
+	}
+	saved := mustFindImage(t, imageRepo, image.ID())
+	if style, ok := saved.VisualStyle(); !ok || style != value_object.ImageVisualStyleNone {
+		t.Errorf("saved illustration visual style = %q, %v, want none, true", style, ok)
 	}
 }
 

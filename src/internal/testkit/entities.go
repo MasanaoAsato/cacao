@@ -201,7 +201,10 @@ func MustNewProcessingImage(t testing.TB) entity.JourneyImage {
 func MustNewReadyImage(t testing.TB) entity.JourneyImage {
 	t.Helper()
 	image := MustNewProcessingImage(t)
-	if err := image.Complete(MustNewAssetReference(t)); err != nil {
+	if err := image.Complete(
+		MustNewAssetReference(t),
+		value_object.ImageVisualStyleEditorialPhotograph,
+	); err != nil {
 		t.Fatalf("Complete() error = %v", err)
 	}
 	return image
