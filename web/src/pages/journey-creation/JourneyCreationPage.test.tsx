@@ -12,6 +12,7 @@ import { MemoryRouter, Route, Routes } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	getJourneyImages,
+	type JourneyImageApiResponse,
 	requestJourneyImages,
 	retryJourneyImage,
 } from "../../api/journeyImages";
@@ -71,10 +72,10 @@ const readyIllustrations = [1, 2, 3].map((ordinal) => ({
 }));
 
 function imageResponse(
-	images: readonly (
-		| typeof readyImage
-		| (typeof readyIllustrations)[number]
-	)[] = [readyImage, ...readyIllustrations],
+	images: readonly JourneyImageApiResponse[] = [
+		readyImage,
+		...readyIllustrations,
+	],
 	journeyRequestId = "request-1",
 ) {
 	return { images, journey_request_id: journeyRequestId };
