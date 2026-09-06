@@ -99,6 +99,41 @@ describe("V2テーマ定義", () => {
 		}
 	});
 
+	it("正常系: 装飾語彙の余白をCSS変数へ反映する", () => {
+		const { candidate } = selectedTheme();
+		expect(
+			getBookletThemeCssVariables({ ...candidate, decorId: "stripe-band" }),
+		).toMatchObject({
+			"--booklet-cover-text-padding": "0mm",
+			"--booklet-decor-inset-top": "6mm",
+		});
+		expect(
+			getBookletThemeCssVariables({
+				...candidate,
+				decorId: "hairline-frame",
+			}),
+		).toMatchObject({
+			"--booklet-cover-text-padding": "4mm",
+			"--booklet-decor-inset-top": "0mm",
+		});
+	});
+
+	it("正常系: 枠装飾でも表紙文字箱を安全領域内に維持する", () => {
+		const { candidate } = selectedTheme();
+		expect(
+			getBookletThemeCssVariables({
+				...candidate,
+				coverLayoutId: "north-west",
+				decorId: "hairline-frame",
+			}),
+		).toMatchObject({
+			"--booklet-cover-text-left": "12mm",
+			"--booklet-cover-text-padding": "4mm",
+			"--booklet-cover-text-top": "12mm",
+			"--booklet-cover-text-width": "80mm",
+		});
+	});
+
 	it("正常系: 全書体対のファミリー一覧を単一定義から返す", () => {
 		expect([
 			["classic", getFontPairFamilies("classic")],

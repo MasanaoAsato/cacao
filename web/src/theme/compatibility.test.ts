@@ -24,7 +24,7 @@ describe("テーマ相性表", () => {
 		}
 		const result = applyCompatibility(mood, { coverVisualStyle: null }, [
 			{
-				exclude: { decors: ["field-notes"] },
+				exclude: { decors: ["dotted-grid", "hairline-frame"] },
 				matches: () => true,
 			},
 		]);

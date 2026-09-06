@@ -49,11 +49,17 @@ function candidate(
 	};
 }
 
-function measurementRoot(copyRect: DOMRect): HTMLDivElement {
+function measurementRoot(
+	copyRect: DOMRect,
+	textBoxRect: DOMRect = copyRect,
+): HTMLDivElement {
 	const root = document.createElement("div");
 	const cover = document.createElement("div");
 	cover.className = "booklet-cover-content";
 	cover.getBoundingClientRect = () => rect(0, 0, 1480, 2100);
+	const textBox = document.createElement("div");
+	textBox.className = "booklet-cover__text";
+	textBox.getBoundingClientRect = () => textBoxRect;
 	const copy = document.createElement("div");
 	copy.dataset.bookletCoverCopy = "true";
 	copy.getBoundingClientRect = () => copyRect;
@@ -63,7 +69,8 @@ function measurementRoot(copyRect: DOMRect): HTMLDivElement {
 		scrollHeight: { configurable: true, value: copyRect.height },
 		scrollWidth: { configurable: true, value: copyRect.width },
 	});
-	cover.append(copy);
+	textBox.append(copy);
+	cover.append(textBox);
 	root.append(cover);
 	return root;
 }
@@ -83,6 +90,15 @@ describe("表紙ベール位置の計測", () => {
 			measureCoverVeilBounds(
 				measurementRoot(rect(0, 0, 400, 300)),
 				candidate("center"),
+			),
+		).toThrow(BookletLayoutError);
+	});
+
+	it("異常系: 装飾を含む外側の文字箱が安全領域外なら拒否する", () => {
+		expect(() =>
+			measureCoverVeilBounds(
+				measurementRoot(rect(120, 120, 800, 700), rect(80, 80, 880, 780)),
+				candidate("north-west"),
 			),
 		).toThrow(BookletLayoutError);
 	});

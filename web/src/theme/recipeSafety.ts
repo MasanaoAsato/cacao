@@ -1,6 +1,7 @@
 import type {
 	BookletThemeCandidate,
 	CoverLayoutDefinition,
+	DecorDefinition,
 	DensityId,
 	DisplayFontDefinition,
 	FallbackStep,
@@ -210,6 +211,11 @@ function validateCoverLayoutDefinition(cover: CoverLayoutDefinition): void {
 	}
 }
 
+function validateDecorDefinition(decor: DecorDefinition): void {
+	requireRange(decor.contentInsetTopMm, 0, 6, "装飾本文上端余白");
+	requireRange(decor.coverPaddingMm, 0, 4, "表紙装飾余白");
+}
+
 const GENERIC_FONT_FAMILIES = new Set([
 	"cursive",
 	"fantasy",
@@ -284,6 +290,19 @@ export function validateCoverLayoutDefinitions(
 	}
 }
 
+export function validateDecorDefinitions(
+	references: ThemeCatalogReferences,
+): void {
+	for (const [id, decor] of references.decors) {
+		if (id !== decor.id) {
+			throw new ThemeRecipeValidationError(
+				`装飾語彙のキー「${id}」と定義ID「${decor.id}」が一致しません。`,
+			);
+		}
+		validateDecorDefinition(decor);
+	}
+}
+
 function validateReferences(
 	recipe: ThemeRecipeDefinition,
 	references: ThemeCatalogReferences,
@@ -338,6 +357,13 @@ function validateReferences(
 		);
 	}
 	validateFontFamilyCombination(font, displayFont);
+	const decor = references.decors.get(recipe.decorId);
+	if (!decor) {
+		throw new ThemeRecipeValidationError(
+			`未登録の装飾語彙「${recipe.decorId}」です。`,
+		);
+	}
+	validateDecorDefinition(decor);
 }
 
 function validateTypography(recipe: ThemeRecipeDefinition): void {
@@ -438,6 +464,7 @@ function candidate(
 		Pick<
 			BookletThemeCandidate,
 			| "coverLayoutId"
+			| "decorId"
 			| "densityId"
 			| "displayFontId"
 			| "emphasisId"
@@ -450,7 +477,7 @@ function candidate(
 	const densityId = overrides.densityId ?? recipe.densityId;
 	return Object.freeze({
 		coverLayoutId: overrides.coverLayoutId ?? recipe.coverLayoutId,
-		decorId: recipe.decorId,
+		decorId: overrides.decorId ?? recipe.decorId,
 		densityId,
 		displayFontId: overrides.displayFontId ?? recipe.displayFontId,
 		emphasisId: overrides.emphasisId ?? recipe.emphasisId,
@@ -509,6 +536,7 @@ export function buildThemeCandidates(
 			"safe-geometry",
 			{
 				coverLayoutId: "safe-cover",
+				decorId: "none",
 				densityId: "compact",
 				displayFontId: "inherit",
 				emphasisId: "balanced",

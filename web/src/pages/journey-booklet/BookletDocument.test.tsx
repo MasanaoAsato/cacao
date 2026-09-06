@@ -102,6 +102,7 @@ describe("BookletDocument", () => {
 		expect(
 			cover?.querySelector(".booklet-cover__frame .booklet-cover__image"),
 		).toHaveAttribute("src", "/cover.png");
+		expect(cover?.querySelector(".booklet-cover__decor")).toBeInTheDocument();
 		expect(cover?.querySelector("svg.booklet-cover__veil")).toHaveAttribute(
 			"data-booklet-cover-veil",
 			"34,81,80,48",

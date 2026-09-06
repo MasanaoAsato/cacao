@@ -577,12 +577,28 @@ export const DISPLAY_FONTS = new Map<
 ]);
 
 export const DECORS = new Map<DecorDefinition["id"], DecorDefinition>([
-	["field-notes", { id: "field-notes" }],
-	["wayfinder", { id: "wayfinder" }],
-	["postcard", { id: "postcard" }],
-	["night-train", { id: "night-train" }],
-	["quiet-gallery", { id: "quiet-gallery" }],
-	["festival-ticket", { id: "festival-ticket" }],
+	[
+		"hairline-frame",
+		{ contentInsetTopMm: 0, coverPaddingMm: 4, id: "hairline-frame" },
+	],
+	[
+		"dashed-ticket",
+		{ contentInsetTopMm: 0, coverPaddingMm: 4, id: "dashed-ticket" },
+	],
+	[
+		"dotted-grid",
+		{ contentInsetTopMm: 0, coverPaddingMm: 0, id: "dotted-grid" },
+	],
+	[
+		"stripe-band",
+		{ contentInsetTopMm: 6, coverPaddingMm: 0, id: "stripe-band" },
+	],
+	["route-dash", { contentInsetTopMm: 0, coverPaddingMm: 0, id: "route-dash" }],
+	[
+		"gallery-rule",
+		{ contentInsetTopMm: 0, coverPaddingMm: 0, id: "gallery-rule" },
+	],
+	["none", { contentInsetTopMm: 0, coverPaddingMm: 0, id: "none" }],
 ]);
 
 export const THEME_CATALOG_REFERENCES: ThemeCatalogReferences = {
@@ -668,6 +684,12 @@ export function getBookletThemeCssVariables(
 	}
 	const coverLayout = getCoverLayoutDefinition(theme.coverLayoutId);
 	const displayFont = getDisplayFontDefinition(theme.displayFontId);
+	const decor = DECORS.get(theme.decorId);
+	if (!decor) {
+		throw new ThemeRecipeValidationError(
+			`未登録の装飾語彙「${theme.decorId}」です。`,
+		);
+	}
 	const coverTitleSizePt =
 		coverLayout.titleSizePt ?? theme.typography.coverTitle.fontSizePt;
 	const coverTitleFamily = displayFont.family ?? font.headingFamily;
@@ -703,7 +725,7 @@ export function getBookletThemeCssVariables(
 			textBox.anchorY === "bottom" ? `${textBox.offsetYMm}mm` : "auto",
 		"--booklet-cover-text-left":
 			textBox.anchorX === "left" ? `${textBox.offsetXMm}mm` : "auto",
-		"--booklet-cover-text-padding": `${textBox.paddingMm}mm`,
+		"--booklet-cover-text-padding": `${textBox.paddingMm + decor.coverPaddingMm}mm`,
 		"--booklet-cover-text-right":
 			textBox.anchorX === "right" ? `${textBox.offsetXMm}mm` : "auto",
 		"--booklet-cover-text-top":
@@ -716,6 +738,7 @@ export function getBookletThemeCssVariables(
 		"--booklet-cover-title-line-height": `${theme.typography.coverTitle.lineHeight}`,
 		"--booklet-cover-title-size": formatPoints(coverTitleSizePt),
 		"--booklet-cover-title-weight": `${displayFont.weight}`,
+		"--booklet-decor-inset-top": `${decor.contentInsetTopMm}mm`,
 		"--booklet-cover-title-size-long": formatPoints(
 			Math.max(22, coverTitleSizePt * 0.8),
 		),
