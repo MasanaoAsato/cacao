@@ -147,6 +147,21 @@
 	border-bottom: 1px solid var(--booklet-border);
 }
 
+.booklet-theme .booklet-day__illustration {
+	width: 100%;
+	height: 40mm;
+	margin: 0 0 calc(4mm * var(--booklet-spacing));
+	overflow: hidden;
+}
+
+.booklet-theme .booklet-day__illustration img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: center;
+}
+
 .booklet-theme .booklet-day-header .booklet-eyebrow {
 	margin: 0 0 calc(1.5mm * var(--booklet-spacing));
 	color: var(--booklet-accent);
@@ -445,6 +460,14 @@
 
 .booklet-theme--decor-dashed-ticket .booklet-cover__decor {
 	border: 1px dashed var(--booklet-cover-ink);
+}
+
+.booklet-theme--decor-hairline-frame .booklet-day__illustration {
+	border: 1px solid var(--booklet-itinerary-border);
+}
+
+.booklet-theme--decor-dashed-ticket .booklet-day__illustration {
+	border: 1px dashed var(--booklet-itinerary-border);
 }
 
 .booklet-theme--decor-dashed-ticket .booklet-eyebrow,

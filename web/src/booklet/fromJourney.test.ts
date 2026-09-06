@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest";
 import type { JourneyImageApiResponse } from "../api/journeyImages";
 import type { JourneyRequestApiResponse } from "../api/journeyRequests";
 import type { JourneyApiResponse } from "../api/journeys";
-import { CoverImageNotReadyError, createBookletModel } from "./fromJourney";
+import {
+	CoverImageNotReadyError,
+	createBookletModel,
+	IllustrationNotReadyError,
+} from "./fromJourney";
 
 const journey: JourneyApiResponse = {
 	days: [
@@ -58,6 +62,20 @@ const coverImage: JourneyImageApiResponse = {
 	visual_style: "editorial-photograph",
 	width: 800,
 };
+
+const illustrationImage = (
+	ordinal: number,
+	status: JourneyImageApiResponse["status"] = "ready",
+): JourneyImageApiResponse => ({
+	...coverImage,
+	content_url: `/api/v1/journey-images/illustration-${ordinal}/content`,
+	height: 900,
+	id: `illustration-${ordinal}`,
+	slot: { ordinal, purpose: "illustration" },
+	status,
+	visual_style: null,
+	width: 1200,
+});
 
 describe("createBookletModel", () => {
 	it("正常系: APIデータを到着単位のモデルへ変換する", () => {
@@ -127,5 +145,40 @@ describe("createBookletModel", () => {
 			createBookletModel({ coverImage, journey, request: sameDayRequest }).cover
 				.period,
 		).toEqual(sameDayRequest.period);
+	});
+
+	it("正常系: 挿絵を序数順に日へ割り当てる", () => {
+		const model = createBookletModel({
+			coverImage,
+			illustrationImages: [illustrationImage(3), illustrationImage(1)],
+			journey,
+			request,
+		});
+
+		expect(model.days[0]?.illustration?.contentUrl).toBe(
+			"/api/v1/journey-images/illustration-1/content",
+		);
+	});
+
+	it("異常系: 未決着の挿絵があればモデル化を停止する", () => {
+		expect(() =>
+			createBookletModel({
+				coverImage,
+				illustrationImages: [illustrationImage(1, "processing")],
+				journey,
+				request,
+			}),
+		).toThrow(IllustrationNotReadyError);
+	});
+
+	it("境界値系: 挿絵がすべて失敗なら日へnullを割り当てる", () => {
+		const model = createBookletModel({
+			coverImage,
+			illustrationImages: [illustrationImage(1, "failed")],
+			journey,
+			request,
+		});
+
+		expect(model.days[0]?.illustration).toBeNull();
 	});
 });

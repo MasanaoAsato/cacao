@@ -15,10 +15,10 @@ import type {
 	ArrivalUnit,
 	BookletDay,
 	BookletEndpoint,
+	BookletImage,
 	BookletLeg,
 	BookletModel,
 	BookletSpot,
-	CoverImage,
 } from "./model";
 
 const COVER_VISUAL_STYLES = [
@@ -45,6 +45,13 @@ export class CoverImageNotReadyError extends BookletDataError {
 				: "表紙画像がまだ準備できていません。",
 		);
 		this.name = "CoverImageNotReadyError";
+	}
+}
+
+export class IllustrationNotReadyError extends BookletDataError {
+	constructor(_status?: JourneyImageStatus) {
+		super("挿絵がまだ準備できていません。");
+		this.name = "IllustrationNotReadyError";
 	}
 }
 
@@ -166,12 +173,25 @@ function convertDay(
 		};
 	});
 
-	return { date, dayNumber: dayIndex + 1, id: dayId, units };
+	return {
+		date,
+		dayNumber: dayIndex + 1,
+		id: dayId,
+		illustration: null,
+		units,
+	};
 }
 
-function convertCoverImage(image: JourneyImageApiResponse): CoverImage {
+function convertImage(
+	image: JourneyImageApiResponse,
+	label: "表紙画像" | "挿絵画像",
+	visualStyle: CoverVisualStyle | null,
+): BookletImage {
 	if (image.status !== "ready") {
-		throw new CoverImageNotReadyError(image.status);
+		if (label === "表紙画像") {
+			throw new CoverImageNotReadyError(image.status);
+		}
+		throw new IllustrationNotReadyError(image.status);
 	}
 	if (
 		image.content_url === null ||
@@ -179,13 +199,13 @@ function convertCoverImage(image: JourneyImageApiResponse): CoverImage {
 		image.width === null ||
 		image.height === null
 	) {
-		throw new BookletDataError("readyの表紙画像に必要な情報がありません。");
+		throw new BookletDataError(`readyの${label}に必要な情報がありません。`);
 	}
 	if (!/^image\/[a-z0-9.+-]+$/i.test(image.media_type)) {
-		throw new BookletDataError("表紙画像のメディア型が画像ではありません。");
+		throw new BookletDataError(`${label}のメディア型が画像ではありません。`);
 	}
 	if (!isExpectedContentUrl(image)) {
-		throw new BookletDataError("表紙画像のURLが不正です。");
+		throw new BookletDataError(`${label}のURLが不正です。`);
 	}
 	if (
 		!Number.isInteger(image.width) ||
@@ -193,16 +213,30 @@ function convertCoverImage(image: JourneyImageApiResponse): CoverImage {
 		!Number.isInteger(image.height) ||
 		image.height <= 0
 	) {
-		throw new BookletDataError("表紙画像の寸法が不正です。");
+		throw new BookletDataError(`${label}の寸法が不正です。`);
 	}
 
 	return {
 		contentUrl: image.content_url,
 		height: image.height,
 		mediaType: image.media_type,
-		visualStyle: toCoverVisualStyle(image.visual_style),
+		visualStyle,
 		width: image.width,
 	};
+}
+
+function convertCoverImage(image: JourneyImageApiResponse): BookletImage {
+	return convertImage(
+		image,
+		"表紙画像",
+		toCoverVisualStyle(image.visual_style),
+	);
+}
+
+function convertIllustrationImage(
+	image: JourneyImageApiResponse,
+): BookletImage {
+	return convertImage(image, "挿絵画像", null);
 }
 
 function toCoverVisualStyle(value: string | null): CoverVisualStyle | null {
@@ -225,10 +259,11 @@ function isExpectedContentUrl(image: JourneyImageApiResponse): boolean {
 
 export function createBookletModel(input: {
 	readonly coverImage: JourneyImageApiResponse | null;
+	readonly illustrationImages?: readonly JourneyImageApiResponse[];
 	readonly journey: JourneyApiResponse;
 	readonly request: JourneyRequestApiResponse;
 }): BookletModel {
-	const { coverImage, journey, request } = input;
+	const { coverImage, illustrationImages = [], journey, request } = input;
 	const journeyId = requireNonEmpty(journey.id, "journey.id");
 	const journeyRequestId = requireNonEmpty(
 		journey.request_id,
@@ -268,6 +303,26 @@ export function createBookletModel(input: {
 	if (image === null) {
 		throw new CoverImageNotReadyError();
 	}
+	const readyIllustrations = [...illustrationImages]
+		.filter((illustration) => illustration.slot.purpose === "illustration")
+		.sort((left, right) => left.slot.ordinal - right.slot.ordinal)
+		.filter((illustration) => {
+			if (
+				illustration.status === "pending" ||
+				illustration.status === "processing"
+			) {
+				throw new IllustrationNotReadyError(illustration.status);
+			}
+			return illustration.status === "ready";
+		})
+		.map(convertIllustrationImage);
+	const daysWithIllustrations = days.map((day, dayIndex) => ({
+		...day,
+		illustration:
+			readyIllustrations.length === 0
+				? null
+				: (readyIllustrations[dayIndex % readyIllustrations.length] ?? null),
+	}));
 
 	return {
 		cover: {
@@ -283,7 +338,7 @@ export function createBookletModel(input: {
 			image,
 			period,
 		},
-		days,
+		days: daysWithIllustrations,
 		journeyId,
 	};
 }

@@ -34,6 +34,7 @@ const model: BookletModel = {
 			date: "2026-08-28T00:00:00+09:00",
 			dayNumber: 1,
 			id: "day-1",
+			illustration: null,
 			units: [
 				{
 					id: "unit-1",
@@ -64,6 +65,7 @@ const pagePlan: readonly BookletPagePlan[] = [
 	{
 		continuation: false,
 		dayIndex: 0,
+		illustration: false,
 		kind: "day",
 		pageId: "day-day-1-2",
 		unitIndexes: [0],
@@ -173,6 +175,7 @@ describe("BookletDocument", () => {
 			{
 				continuation: true,
 				dayIndex: 0,
+				illustration: false,
 				kind: "day",
 				pageId: "day-day-1-continued",
 				unitIndexes: [0],
@@ -193,6 +196,71 @@ describe("BookletDocument", () => {
 		);
 		expect(continuation).toBeInTheDocument();
 		expect(continuation).toHaveTextContent("（続き）");
+	});
+
+	it("正常系: 日の最初のページに挿絵を描き、継続ページには描かない", () => {
+		const rootRef = createRef<HTMLElement>();
+		const theme = resolvedTheme(1);
+		const modelWithIllustration: BookletModel = {
+			...model,
+			days: [
+				{
+					...model.days[0],
+					illustration: {
+						contentUrl: "/illustration.png",
+						height: 900,
+						mediaType: "image/png",
+						visualStyle: null,
+						width: 1200,
+					},
+				},
+			],
+		};
+		const withIllustration: readonly BookletPagePlan[] = [
+			{ kind: "cover", pageId: "cover-journey-1" },
+			{
+				continuation: false,
+				dayIndex: 0,
+				illustration: true,
+				kind: "day",
+				pageId: "day-day-1-2",
+				unitIndexes: [0],
+			},
+			{
+				continuation: true,
+				dayIndex: 0,
+				illustration: false,
+				kind: "day",
+				pageId: "day-day-1-3",
+				unitIndexes: [0],
+			},
+		];
+
+		const { container } = render(
+			<BookletDocument
+				coverVeilBounds={coverVeilBounds}
+				model={modelWithIllustration}
+				pagePlan={withIllustration}
+				rootRef={rootRef}
+				theme={theme}
+			/>,
+		);
+
+		expect(
+			container.querySelector(
+				".booklet-page--day:not(.booklet-page--day-continuation) figure.booklet-day__illustration",
+			),
+		).toBeInTheDocument();
+		expect(
+			container.querySelector(
+				".booklet-page--day:not(.booklet-page--day-continuation) figure img",
+			),
+		).toHaveAttribute("alt", "非常に長い目的地名を含む美しい旅先の挿絵");
+		expect(
+			container.querySelector(
+				".booklet-page--day-continuation figure.booklet-day__illustration",
+			),
+		).not.toBeInTheDocument();
 	});
 
 	it("正常系: ベールなし構図は表紙ベールを描画しない", () => {

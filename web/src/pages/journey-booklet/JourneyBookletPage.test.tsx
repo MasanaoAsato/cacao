@@ -62,6 +62,18 @@ const imagePayload = {
 			visual_style: "editorial-photograph",
 			width: 800,
 		},
+		{
+			attempt_count: 1,
+			content_url: "/api/v1/journey-images/illustration-1/content",
+			failure_code: null,
+			height: 900,
+			id: "illustration-1",
+			media_type: "image/png",
+			slot: { ordinal: 1, purpose: "illustration" },
+			status: "ready",
+			visual_style: null,
+			width: 1200,
+		},
 	],
 	journey_request_id: "request-1",
 };
@@ -289,6 +301,7 @@ function restoreBrowserMocks() {
 function installFetchMock(
 	imageStatus: string = "ready",
 	imageRequestId = "request-1",
+	illustrationStatus: string = "ready",
 ) {
 	const fetchMock = vi.fn(
 		async (input: RequestInfo | URL, _init?: RequestInit) => {
@@ -300,7 +313,10 @@ function installFetchMock(
 				return new Response(
 					JSON.stringify({
 						...imagePayload,
-						images: [{ ...imagePayload.images[0], status: imageStatus }],
+						images: [
+							{ ...imagePayload.images[0], status: imageStatus },
+							{ ...imagePayload.images[1], status: illustrationStatus },
+						],
 						journey_request_id: imageRequestId,
 					}),
 					{ status: 200 },
@@ -512,7 +528,7 @@ describe("JourneyBookletPage", () => {
 
 		await waitFor(() =>
 			expect(screen.getByRole("status")).toHaveTextContent(
-				"表紙画像がまだ準備できていません。",
+				"表紙または挿絵がまだ準備できていません。",
 			),
 		);
 		expect(downloadButton).toBeEnabled();
@@ -568,6 +584,24 @@ describe("JourneyBookletPage", () => {
 		expect(
 			fetchMock.mock.calls.every((call) => call[1]?.method === "GET"),
 		).toBe(true);
+	});
+
+	it("異常系: 挿絵が未準備なら印刷を無効にする", async () => {
+		installFetchMock("ready", "request-1", "processing");
+		renderPage();
+
+		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
+		await waitFor(() =>
+			expect(screen.getByRole("status")).toHaveTextContent(
+				"挿絵がまだ準備できていない",
+			),
+		);
+
+		expect(printButton).toBeDisabled();
+		expect(document.querySelector(".booklet-shell")).toHaveAttribute(
+			"data-booklet-print-state",
+			"error",
+		);
 	});
 
 	it("異常系: 表紙画像一覧が別のリクエストなら印刷しない", async () => {

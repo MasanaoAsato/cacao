@@ -3,6 +3,7 @@ import type { BookletModel, BookletPagePlan } from "./model";
 export type DayPageMeasurement = {
 	readonly continuationHeaderHeight: number;
 	readonly headerHeight: number;
+	readonly headerHeightWithoutIllustration: number;
 	readonly unitHeights: readonly number[];
 };
 
@@ -73,6 +74,10 @@ function validateMeasurement(
 			`Day ${dayIndex + 1}のヘッダー高さ`,
 		);
 		requireNonNegativeFinite(
+			dayMeasurement.headerHeightWithoutIllustration,
+			`Day ${dayIndex + 1}の挿絵なしヘッダー高さ`,
+		);
+		requireNonNegativeFinite(
 			dayMeasurement.continuationHeaderHeight,
 			`Day ${dayIndex + 1}の継続ヘッダー高さ`,
 		);
@@ -123,9 +128,17 @@ export function paginateBooklet(
 		}
 
 		let continuation = false;
-		let headerHeight = dayMeasurement.headerHeight;
+		let illustration = day.illustration !== null;
+		let headerHeight = illustration
+			? dayMeasurement.headerHeight
+			: dayMeasurement.headerHeightWithoutIllustration;
 		let usedHeight = headerHeight;
 		let unitIndexes: number[] = [];
+		if (headerHeight > measurement.contentHeight && illustration) {
+			illustration = false;
+			headerHeight = dayMeasurement.headerHeightWithoutIllustration;
+			usedHeight = headerHeight;
+		}
 		ensureFits(
 			headerHeight,
 			measurement.contentHeight,
@@ -137,6 +150,7 @@ export function paginateBooklet(
 			pages.push({
 				continuation,
 				dayIndex,
+				illustration: !continuation && illustration,
 				kind: "day",
 				pageId: `day-${day.id}-${pages.length + 1}`,
 				unitIndexes,
@@ -150,6 +164,18 @@ export function paginateBooklet(
 					"invalid-measurement",
 					`Day ${dayIndex + 1}のSpot計測結果がありません。`,
 				);
+			}
+			if (
+				unitIndexes.length === 0 &&
+				!continuation &&
+				illustration &&
+				headerHeight + unitHeight > measurement.contentHeight &&
+				dayMeasurement.headerHeightWithoutIllustration + unitHeight <=
+					measurement.contentHeight
+			) {
+				illustration = false;
+				headerHeight = dayMeasurement.headerHeightWithoutIllustration;
+				usedHeight = headerHeight;
 			}
 			ensureFits(
 				headerHeight + unitHeight,

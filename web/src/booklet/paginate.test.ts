@@ -25,6 +25,7 @@ function makeModel(unitCount = 2): BookletModel {
 				date: "2026-08-28T00:00:00+09:00",
 				dayNumber: 1,
 				id: "day-1",
+				illustration: null,
 				units: Array.from({ length: unitCount }, (_, index) => ({
 					id: `unit-${index + 1}`,
 					leg: {
@@ -55,7 +56,14 @@ function makeMeasurement(
 	return {
 		contentHeight: 100,
 		contentWidth: 100,
-		days: [{ continuationHeaderHeight: 15, headerHeight: 20, unitHeights }],
+		days: [
+			{
+				continuationHeaderHeight: 15,
+				headerHeight: 20,
+				headerHeightWithoutIllustration: 20,
+				unitHeights,
+			},
+		],
 	};
 }
 
@@ -89,5 +97,42 @@ describe("paginateBooklet", () => {
 
 		expect(pages).toHaveLength(2);
 		expect(pages[1]).toMatchObject({ unitIndexes: [0, 1] });
+	});
+
+	it("正常系: 挿絵込みでは収まらない最初のSpotから挿絵を外す", () => {
+		const model = makeModel(1);
+		const day = model.days[0];
+		if (!day) {
+			throw new Error("日がありません。");
+		}
+		const modelWithIllustration: BookletModel = {
+			...model,
+			days: [
+				{
+					...day,
+					illustration: {
+						contentUrl: "/illustration.png",
+						height: 900,
+						mediaType: "image/png",
+						visualStyle: null,
+						width: 1200,
+					},
+				},
+			],
+		};
+		const pages = paginateBooklet(modelWithIllustration, {
+			contentHeight: 100,
+			contentWidth: 100,
+			days: [
+				{
+					continuationHeaderHeight: 15,
+					headerHeight: 80,
+					headerHeightWithoutIllustration: 20,
+					unitHeights: [25],
+				},
+			],
+		});
+
+		expect(pages[1]).toMatchObject({ illustration: false, unitIndexes: [0] });
 	});
 });

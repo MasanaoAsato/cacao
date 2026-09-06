@@ -12,6 +12,13 @@ import {
 
 export type JourneyImageStatus = "pending" | "processing" | "ready" | "failed";
 
+export type JourneyImagePurpose = "cover" | "illustration";
+
+export type JourneyImageSlot = {
+	readonly ordinal: number;
+	readonly purpose: JourneyImagePurpose;
+};
+
 export type JourneyImageApiResponse = {
 	readonly id: string;
 	readonly slot: {
@@ -31,6 +38,10 @@ export type JourneyImageApiResponse = {
 export type JourneyImageListApiResponse = {
 	readonly journey_request_id: string;
 	readonly images: readonly JourneyImageApiResponse[];
+};
+
+export type JourneyImagesRequestPayload = {
+	readonly slots: readonly JourneyImageSlot[];
 };
 
 export type CoverImageRequestPayload = {
@@ -114,8 +125,31 @@ export function selectCoverImage(
 	return covers[0] ?? null;
 }
 
-export function requestCoverImage(
+export function selectIllustrations(
+	images: readonly JourneyImageApiResponse[],
+): readonly JourneyImageApiResponse[] {
+	const illustrations = images.filter(
+		(image) => image.slot.purpose === "illustration",
+	);
+	const seenOrdinals = new Set<number>();
+	for (const image of illustrations) {
+		if (image.slot.ordinal < 1 || image.slot.ordinal > 3) {
+			throw new ApiResponseError("挿絵画像スロットの序数が不正です。");
+		}
+		if (seenOrdinals.has(image.slot.ordinal)) {
+			throw new ApiResponseError("挿絵画像スロットが重複しています。");
+		}
+		seenOrdinals.add(image.slot.ordinal);
+	}
+
+	return [...illustrations].sort(
+		(left, right) => left.slot.ordinal - right.slot.ordinal,
+	);
+}
+
+export function requestJourneyImages(
 	requestId: string,
+	slots: readonly JourneyImageSlot[],
 	options: ApiRequestOptions = {},
 ): Promise<JourneyImageListApiResponse> {
 	return requestJson(
@@ -123,13 +157,22 @@ export function requestCoverImage(
 		decodeJourneyImageList,
 		{
 			...options,
-			body: { slots: [{ ordinal: 1, purpose: "cover" }] },
+			body: { slots },
 			method: "POST",
 		},
 	);
 }
 
-export const requestJourneyImages = requestCoverImage;
+export function requestCoverImage(
+	requestId: string,
+	options: ApiRequestOptions = {},
+): Promise<JourneyImageListApiResponse> {
+	return requestJourneyImages(
+		requestId,
+		[{ ordinal: 1, purpose: "cover" }],
+		options,
+	);
+}
 
 export function retryJourneyImage(
 	imageId: string,

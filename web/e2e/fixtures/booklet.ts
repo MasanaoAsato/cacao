@@ -80,6 +80,30 @@ const imageList = {
 			visual_style: "editorial-photograph",
 			width: 800,
 		},
+		{
+			attempt_count: 1,
+			content_url: "/api/v1/journey-images/illustration-1/content",
+			failure_code: null,
+			height: 900,
+			id: "illustration-1",
+			media_type: "image/svg+xml",
+			slot: { ordinal: 1, purpose: "illustration" },
+			status: "ready",
+			visual_style: null,
+			width: 1200,
+		},
+		{
+			attempt_count: 1,
+			content_url: null,
+			failure_code: "provider_rejected",
+			height: null,
+			id: "illustration-2",
+			media_type: null,
+			slot: { ordinal: 2, purpose: "illustration" },
+			status: "failed",
+			visual_style: null,
+			width: null,
+		},
 	],
 	journey_request_id: "request-1",
 };
@@ -141,6 +165,11 @@ const longImageList = {
 			content_url: "/api/v1/journey-images/image-long/content",
 			id: "image-long",
 		},
+		{
+			...imageList.images[1],
+			content_url: "/api/v1/journey-images/illustration-long/content",
+			id: "illustration-long",
+		},
 	],
 	journey_request_id: "request-long",
 };
@@ -183,9 +212,7 @@ export async function routeBookletApi(
 			await route.fulfill({ json: fixture.request });
 			return;
 		}
-		if (
-			url.endsWith(`/journey-images/${fixture.imageList.images[0]?.id}/content`)
-		) {
+		if (url.includes("/journey-images/") && url.endsWith("/content")) {
 			await route.fulfill({ body: coverSvg, contentType: "image/svg+xml" });
 			return;
 		}
