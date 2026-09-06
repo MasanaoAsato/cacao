@@ -114,7 +114,7 @@ function mixRgb(
 		(component, index) =>
 			component * foregroundWeight +
 			(background[index] ?? 0) * (1 - foregroundWeight),
-		) as [number, number, number];
+	) as [number, number, number];
 	return [mixed[0], mixed[1], mixed[2]];
 }
 
