@@ -144,6 +144,17 @@ describe("BookletDocument", () => {
 				).map((page) => page.dataset.bookletThemeKey),
 			),
 		).toEqual(new Set([theme.resolvedThemeKey]));
+		expect(rootRef.current).toHaveClass(
+			`booklet-theme--unit-${theme.unitFormId}`,
+			`booklet-theme--composition-${theme.compositionId}`,
+			`booklet-theme--ink-${theme.inkStyleId}`,
+		);
+		const dayPage = container.querySelector<HTMLElement>(".booklet-page--day");
+		expect(dayPage?.dataset.bookletComposition).toBe(theme.compositionId);
+		expect(dayPage?.dataset.bookletColumns).toBe(
+			theme.compositionId === "two-column" ? "2" : "1",
+		);
+		expect(cover?.getAttribute("data-booklet-composition")).toBeNull();
 
 		const unitRoles = Array.from(
 			container.querySelectorAll<HTMLElement>(
@@ -165,6 +176,78 @@ describe("BookletDocument", () => {
 			"spot-description",
 			"unit-cost",
 		]);
+	});
+
+	it("正常系: 日ページの装飾層に地・図形・パネルをSVGで描く", () => {
+		const rootRef = createRef<HTMLElement>();
+		const base = resolvedTheme(1);
+		const withPanel = {
+			...base,
+			compositionId: "top-stack" as const,
+			decorId: "sheet-on-dots" as const,
+		};
+		const { container } = render(
+			<BookletDocument
+				coverVeilBounds={coverVeilBounds}
+				model={model}
+				pagePlan={pagePlan}
+				rootRef={rootRef}
+				theme={withPanel}
+			/>,
+		);
+		const surface = container.querySelector(
+			".booklet-page--day svg.booklet-page__surface",
+		);
+		expect(surface).toHaveAttribute("data-booklet-decor", "sheet-on-dots");
+		expect(surface?.querySelector("pattern")).toBeInTheDocument();
+		expect(
+			surface?.querySelector('[data-booklet-ground="pattern"]'),
+		).toBeInTheDocument();
+		expect(surface?.querySelector("[data-booklet-panel]")).toHaveAttribute(
+			"x",
+			"6",
+		);
+		expect(rootRef.current).toHaveClass("booklet-theme--rule-solid");
+
+		const { container: withMotifs } = render(
+			<BookletDocument
+				coverVeilBounds={coverVeilBounds}
+				model={model}
+				pagePlan={pagePlan}
+				rootRef={createRef<HTMLElement>()}
+				theme={{
+					...base,
+					compositionId: "top-stack",
+					decorId: "confetti-corners",
+				}}
+			/>,
+		);
+		const motifs = withMotifs.querySelectorAll(
+			".booklet-page--day [data-booklet-motif]",
+		);
+		expect(motifs).toHaveLength(4);
+		expect(motifs[0]).toHaveAttribute("data-booklet-motif", "corner-nw");
+		expect(motifs[0]?.getAttribute("data-booklet-motif-bounds")).toMatch(
+			/^[\d.]+,[\d.]+,[\d.]+,[\d.]+$/,
+		);
+		expect(withMotifs.querySelector(".booklet-document")).toHaveClass(
+			"booklet-theme--rule-dotted",
+		);
+
+		const { container: withImage } = render(
+			<BookletDocument
+				coverVeilBounds={coverVeilBounds}
+				model={model}
+				pagePlan={pagePlan}
+				rootRef={createRef<HTMLElement>()}
+				theme={{ ...base, compositionId: "top-stack", decorId: "photo-wash" }}
+			/>,
+		);
+		expect(
+			withImage.querySelector(
+				'.booklet-page--day [data-booklet-ground="image"]',
+			),
+		).toHaveAttribute("href", "/cover.png");
 	});
 
 	it("正常系: 継続ページへ継続クラスと表示を付与する", () => {

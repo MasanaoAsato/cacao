@@ -47,10 +47,18 @@ export function applyCompatibility(
 	const excludedPalettes = matchingRules.flatMap(
 		(rule) => rule.exclude.palettes ?? [],
 	);
+	const excludedCompositions = matchingRules.flatMap(
+		(rule) => rule.exclude.compositions ?? [],
+	);
+	const excludedInkStyles = matchingRules.flatMap(
+		(rule) => rule.exclude.inkStyles ?? [],
+	);
 	return {
 		...mood,
+		compositions: withoutExcluded(mood.compositions, excludedCompositions),
 		coverLayouts: withoutExcluded(mood.coverLayouts, excludedCoverLayouts),
 		decors: withoutExcluded(mood.decors, excludedDecors),
+		inkStyles: withoutExcluded(mood.inkStyles, excludedInkStyles),
 		palettes: withoutExcluded(mood.palettes, excludedPalettes),
 	};
 }

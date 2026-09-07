@@ -1,4 +1,6 @@
 import { MOODS, validateCatalog } from "./catalog";
+import { decorContentInset } from "./decorGeometry";
+import { MOTIFS } from "./motifs";
 import {
 	buildThemeCandidates,
 	ThemeRecipeValidationError,
@@ -6,12 +8,15 @@ import {
 import { createV2BookletTheme } from "./resolve";
 import type {
 	BookletThemeCandidate,
+	CompositionDefinition,
+	ContentInsetMm,
 	CoverLayoutDefinition,
 	DecorDefinition,
 	DensityDefinition,
 	DisplayFontDefinition,
 	EmphasisDefinition,
 	FontPairDefinition,
+	InkStyleDefinition,
 	ItineraryTemplateDefinition,
 	PaletteDefinition,
 	RequestedBookletTheme,
@@ -19,6 +24,7 @@ import type {
 	ThemeCatalogReferences,
 	ThemeContext,
 	ThemeSeed,
+	UnitFormDefinition,
 } from "./types";
 
 export const FONT_PAIRS = new Map<FontPairDefinition["id"], FontPairDefinition>(
@@ -507,12 +513,173 @@ export const ITINERARY_LAYOUTS = new Map<
 	ItineraryTemplateDefinition["id"],
 	ItineraryTemplateDefinition
 >([
-	["route-thread", { id: "route-thread" }],
-	["field-journal", { id: "field-journal" }],
-	["travel-ticket", { id: "travel-ticket" }],
-	["rail-ledger", { id: "rail-ledger" }],
-	["banner-list", { id: "banner-list" }],
+	[
+		"route-thread",
+		{
+			id: "route-thread",
+			reservedWidthMm: { compact: 20, full: 20, line: 20 },
+		},
+	],
+	[
+		"field-journal",
+		{
+			id: "field-journal",
+			reservedWidthMm: { compact: 30, full: 18, line: 0 },
+		},
+	],
+	[
+		"travel-ticket",
+		{
+			id: "travel-ticket",
+			reservedWidthMm: { compact: 34, full: 34, line: 0 },
+		},
+	],
+	[
+		"rail-ledger",
+		{
+			id: "rail-ledger",
+			reservedWidthMm: { compact: 38, full: 38, line: 0 },
+		},
+	],
+	[
+		"banner-list",
+		{ id: "banner-list", reservedWidthMm: { compact: 0, full: 0, line: 0 } },
+	],
 ]);
+
+export const UNIT_FORMS = new Map<UnitFormDefinition["id"], UnitFormDefinition>(
+	[
+		[
+			"full",
+			{
+				detailColumns: 3,
+				id: "full",
+				minDescriptionWidthMm: 76,
+				minDetailCellWidthMm: 22,
+			},
+		],
+		[
+			"compact",
+			{
+				detailColumns: 0,
+				id: "compact",
+				minDescriptionWidthMm: 56,
+				minDetailCellWidthMm: 0,
+			},
+		],
+		[
+			"line",
+			{
+				detailColumns: 0,
+				id: "line",
+				minDescriptionWidthMm: 48,
+				minDetailCellWidthMm: 0,
+			},
+		],
+	],
+);
+
+const NO_CONTENT_INSET = { bottom: 0, left: 0, right: 0, top: 0 } as const;
+
+export const COMPOSITIONS = new Map<
+	CompositionDefinition["id"],
+	CompositionDefinition
+>([
+	[
+		"top-stack",
+		{
+			align: "top",
+			columnGapMm: 0,
+			columns: 1,
+			contentInsetMm: NO_CONTENT_INSET,
+			header: {
+				bandWidthMm: null,
+				placement: "top",
+				writingMode: "horizontal",
+			},
+			id: "top-stack",
+			selectable: true,
+			unitForms: ["full", "compact", "line"],
+		},
+	],
+	[
+		"side-band",
+		{
+			align: "top",
+			columnGapMm: 0,
+			columns: 1,
+			contentInsetMm: { bottom: 0, left: 0, right: 26, top: 0 },
+			header: {
+				bandWidthMm: 22,
+				placement: "side-right",
+				writingMode: "vertical",
+			},
+			id: "side-band",
+			selectable: true,
+			unitForms: ["compact", "line"],
+		},
+	],
+	[
+		"two-column",
+		{
+			align: "top",
+			columnGapMm: 6,
+			columns: 2,
+			contentInsetMm: NO_CONTENT_INSET,
+			header: {
+				bandWidthMm: null,
+				placement: "top",
+				writingMode: "horizontal",
+			},
+			id: "two-column",
+			selectable: true,
+			unitForms: ["line"],
+		},
+	],
+	[
+		"center-column",
+		{
+			align: "top",
+			columnGapMm: 0,
+			columns: 1,
+			contentInsetMm: { bottom: 0, left: 12, right: 12, top: 0 },
+			header: {
+				bandWidthMm: null,
+				placement: "top",
+				writingMode: "horizontal",
+			},
+			id: "center-column",
+			selectable: true,
+			unitForms: ["compact", "line"],
+		},
+	],
+	[
+		"bottom-anchored",
+		{
+			align: "bottom",
+			columnGapMm: 0,
+			columns: 1,
+			contentInsetMm: NO_CONTENT_INSET,
+			header: {
+				bandWidthMm: null,
+				placement: "top",
+				writingMode: "horizontal",
+			},
+			id: "bottom-anchored",
+			selectable: true,
+			unitForms: ["full", "compact", "line"],
+		},
+	],
+]);
+
+export const INK_STYLES = new Map<InkStyleDefinition["id"], InkStyleDefinition>(
+	[
+		["text", { id: "text" }],
+		["pill", { id: "pill" }],
+		["band", { id: "band" }],
+		["zebra", { id: "zebra" }],
+	],
+);
 
 export const EMPHASIS = new Map<EmphasisDefinition["id"], EmphasisDefinition>([
 	["place-led", { id: "place-led", target: "uniform" }],
@@ -578,41 +745,362 @@ export const DISPLAY_FONTS = new Map<
 	],
 ]);
 
+const PLAIN_HEADING: DecorDefinition["heading"] = {
+	font: "heading",
+	outline: false,
+	shadow: "none",
+};
+const DISPLAY_HEADING: DecorDefinition["heading"] = {
+	font: "display",
+	outline: false,
+	shadow: "none",
+};
+const NO_PANEL: DecorDefinition["panel"] = { kind: "none" };
+const PLAIN_GROUND: DecorDefinition["ground"] = { kind: "plain" };
+
+function decorSet(
+	id: DecorDefinition["id"],
+	definition: Omit<DecorDefinition, "id">,
+): readonly [DecorDefinition["id"], DecorDefinition] {
+	return [id, { id, ...definition }];
+}
+
+/**
+ * Decor sets (18.4). The first seven re-express the 17.4 vocabulary with the
+ * same geometry; the rest add grounds, panels and motifs. Content insets are
+ * derived from these definitions by `decorContentInset`.
+ */
 export const DECORS = new Map<DecorDefinition["id"], DecorDefinition>([
-	[
-		"hairline-frame",
-		{ contentInsetTopMm: 0, coverPaddingMm: 4, id: "hairline-frame" },
-	],
-	[
-		"dashed-ticket",
-		{ contentInsetTopMm: 0, coverPaddingMm: 4, id: "dashed-ticket" },
-	],
-	[
-		"dotted-grid",
-		{ contentInsetTopMm: 0, coverPaddingMm: 0, id: "dotted-grid" },
-	],
-	[
-		"stripe-band",
-		{ contentInsetTopMm: 6, coverPaddingMm: 0, id: "stripe-band" },
-	],
-	["route-dash", { contentInsetTopMm: 0, coverPaddingMm: 0, id: "route-dash" }],
-	[
-		"gallery-rule",
-		{ contentInsetTopMm: 0, coverPaddingMm: 0, id: "gallery-rule" },
-	],
-	["none", { contentInsetTopMm: 0, coverPaddingMm: 0, id: "none" }],
+	decorSet("hairline-frame", {
+		coverPaddingMm: 4,
+		ground: {
+			color: "border",
+			edgeMm: 7,
+			kind: "frame",
+			opacity: 0.55,
+			stroke: "solid",
+			widthMm: 0.26,
+		},
+		heading: PLAIN_HEADING,
+		motifs: [],
+		panel: NO_PANEL,
+		rule: "solid",
+	}),
+	decorSet("dashed-ticket", {
+		coverPaddingMm: 4,
+		ground: {
+			color: "border",
+			edgeMm: 7,
+			kind: "frame",
+			opacity: 0.55,
+			stroke: "dashed",
+			widthMm: 0.26,
+		},
+		heading: PLAIN_HEADING,
+		motifs: [],
+		panel: NO_PANEL,
+		rule: "solid",
+	}),
+	decorSet("dotted-grid", {
+		coverPaddingMm: 0,
+		ground: {
+			color: "border",
+			kind: "pattern",
+			motif: "dot",
+			opacity: 0.3,
+			sizeMm: 0.4,
+			tileMm: 4,
+		},
+		heading: PLAIN_HEADING,
+		motifs: [],
+		panel: NO_PANEL,
+		rule: "solid",
+	}),
+	decorSet("stripe-band", {
+		coverPaddingMm: 0,
+		ground: PLAIN_GROUND,
+		heading: PLAIN_HEADING,
+		motifs: [
+			{
+				anchor: "page-edge",
+				color: "accent",
+				count: 1,
+				motif: "stripe",
+				opacity: 0.35,
+				rotateDeg: [0, 0],
+				sizeMm: [6, 6],
+				slot: "band-top",
+			},
+		],
+		panel: NO_PANEL,
+		rule: "solid",
+	}),
+	decorSet("route-dash", {
+		coverPaddingMm: 0,
+		ground: PLAIN_GROUND,
+		heading: PLAIN_HEADING,
+		motifs: [
+			{
+				anchor: "content-edge",
+				color: "accent",
+				count: 1,
+				motif: "dash-rail",
+				opacity: 0.55,
+				rotateDeg: [0, 0],
+				sizeMm: [196, 196],
+				slot: "margin-left",
+			},
+		],
+		panel: NO_PANEL,
+		rule: "solid",
+	}),
+	decorSet("gallery-rule", {
+		coverPaddingMm: 0,
+		ground: PLAIN_GROUND,
+		heading: PLAIN_HEADING,
+		motifs: [
+			{
+				anchor: "content-edge",
+				color: "border",
+				count: 1,
+				motif: "rule-square",
+				opacity: 0.55,
+				rotateDeg: [0, 0],
+				sizeMm: [3, 3],
+				slot: "band-bottom",
+			},
+		],
+		panel: NO_PANEL,
+		rule: "solid",
+	}),
+	decorSet("none", {
+		coverPaddingMm: 0,
+		ground: PLAIN_GROUND,
+		heading: PLAIN_HEADING,
+		motifs: [],
+		panel: NO_PANEL,
+		rule: "solid",
+	}),
+	decorSet("wave-margins", {
+		coverPaddingMm: 0,
+		ground: PLAIN_GROUND,
+		heading: DISPLAY_HEADING,
+		motifs: [
+			{
+				anchor: "content-edge",
+				color: "accent",
+				count: 24,
+				motif: "wave",
+				opacity: 0.6,
+				rotateDeg: [0, 0],
+				sizeMm: [2.5, 2.5],
+				slot: "band-top",
+			},
+			{
+				anchor: "content-edge",
+				color: "accent",
+				count: 24,
+				motif: "wave",
+				opacity: 0.6,
+				rotateDeg: [0, 0],
+				sizeMm: [2.5, 2.5],
+				slot: "band-bottom",
+			},
+		],
+		panel: NO_PANEL,
+		rule: "wavy",
+	}),
+	decorSet("confetti-corners", {
+		coverPaddingMm: 0,
+		ground: PLAIN_GROUND,
+		heading: { font: "display", outline: false, shadow: "offset" },
+		motifs: [
+			{
+				anchor: "content-edge",
+				color: "accent",
+				count: 1,
+				motif: "star",
+				opacity: 0.9,
+				rotateDeg: [-20, 20],
+				sizeMm: [3, 5],
+				slot: "corner-nw",
+			},
+			{
+				anchor: "content-edge",
+				color: "border",
+				count: 1,
+				motif: "ring",
+				opacity: 0.9,
+				rotateDeg: [0, 0],
+				sizeMm: [3, 5],
+				slot: "corner-ne",
+			},
+			{
+				anchor: "content-edge",
+				color: "accent",
+				count: 1,
+				motif: "sparkle",
+				opacity: 0.9,
+				rotateDeg: [-30, 30],
+				sizeMm: [3, 5],
+				slot: "corner-sw",
+			},
+			{
+				anchor: "content-edge",
+				color: "muted",
+				count: 1,
+				motif: "triangle",
+				opacity: 0.8,
+				rotateDeg: [-45, 45],
+				sizeMm: [3, 5],
+				slot: "corner-se",
+			},
+		],
+		panel: NO_PANEL,
+		rule: "dotted",
+	}),
+	decorSet("bold-frame", {
+		coverPaddingMm: 0,
+		ground: {
+			color: "accent",
+			edgeMm: 3,
+			kind: "frame",
+			opacity: 1,
+			stroke: "solid",
+			widthMm: 3,
+		},
+		heading: { font: "display", outline: true, shadow: "none" },
+		motifs: [],
+		panel: NO_PANEL,
+		rule: "solid",
+	}),
+	decorSet("sheet-on-dots", {
+		coverPaddingMm: 0,
+		ground: {
+			color: "accent",
+			kind: "pattern",
+			motif: "dot",
+			opacity: 0.45,
+			sizeMm: 1.2,
+			tileMm: 3.5,
+		},
+		heading: PLAIN_HEADING,
+		motifs: [],
+		panel: { insetMm: 6, kind: "sheet", opacity: 0.94, radiusMm: 2 },
+		rule: "solid",
+	}),
+	decorSet("ring-binder", {
+		coverPaddingMm: 0,
+		ground: PLAIN_GROUND,
+		heading: PLAIN_HEADING,
+		motifs: [
+			{
+				anchor: "content-edge",
+				color: "border",
+				count: 9,
+				motif: "binder-hole",
+				opacity: 0.8,
+				rotateDeg: [0, 0],
+				sizeMm: [4, 4],
+				slot: "margin-left",
+			},
+		],
+		panel: NO_PANEL,
+		rule: "dashed",
+	}),
+	decorSet("photo-wash", {
+		coverPaddingMm: 0,
+		ground: {
+			kind: "image",
+			opacity: 0.35,
+			source: "cover",
+			treatment: "blur",
+		},
+		heading: DISPLAY_HEADING,
+		motifs: [],
+		panel: { insetMm: 7, kind: "sheet", opacity: 0.95, radiusMm: 1 },
+		rule: "solid",
+	}),
+	decorSet("ticket-notches", {
+		coverPaddingMm: 0,
+		ground: PLAIN_GROUND,
+		heading: DISPLAY_HEADING,
+		motifs: [
+			{
+				anchor: "content-edge",
+				color: "border",
+				count: 14,
+				motif: "notch",
+				opacity: 0.7,
+				rotateDeg: [0, 0],
+				sizeMm: [3, 3],
+				slot: "margin-left",
+			},
+			{
+				anchor: "content-edge",
+				color: "border",
+				count: 14,
+				motif: "notch",
+				opacity: 0.7,
+				rotateDeg: [180, 180],
+				sizeMm: [3, 3],
+				slot: "margin-right",
+			},
+		],
+		panel: NO_PANEL,
+		rule: "dashed",
+	}),
 ]);
 
 export const THEME_CATALOG_REFERENCES: ThemeCatalogReferences = {
+	compositions: COMPOSITIONS,
 	coverLayouts: COVER_LAYOUTS,
 	decors: DECORS,
 	densities: DENSITIES,
 	displayFonts: DISPLAY_FONTS,
 	emphasis: EMPHASIS,
 	fonts: FONT_PAIRS,
+	inkStyles: INK_STYLES,
 	itineraries: ITINERARY_LAYOUTS,
+	motifs: MOTIFS,
 	palettes: PALETTES,
+	unitForms: UNIT_FORMS,
 };
+
+export function getDecorDefinition(id: DecorDefinition["id"]): DecorDefinition {
+	const decor = DECORS.get(id);
+	if (!decor) {
+		throw new ThemeRecipeValidationError(`未登録の装飾語彙「${id}」です。`);
+	}
+	return decor;
+}
+
+/** Body inset on each side: the decor set's derived inset plus the composition's. */
+export function getBodyContentInset(
+	theme: Pick<BookletThemeCandidate, "compositionId" | "decorId">,
+): ContentInsetMm {
+	const composition = getCompositionDefinition(theme.compositionId);
+	const decorInset = decorContentInset(
+		getDecorDefinition(theme.decorId),
+		MOTIFS,
+	);
+	return {
+		bottom: decorInset.bottom + composition.contentInsetMm.bottom,
+		left: decorInset.left + composition.contentInsetMm.left,
+		right: decorInset.right + composition.contentInsetMm.right,
+		top: decorInset.top + composition.contentInsetMm.top,
+	};
+}
+
+export function getCompositionDefinition(
+	id: CompositionDefinition["id"],
+): CompositionDefinition {
+	const composition = COMPOSITIONS.get(id);
+	if (!composition) {
+		throw new ThemeRecipeValidationError(`未登録のページ構図「${id}」です。`);
+	}
+	return composition;
+}
 
 export function getCoverLayoutDefinition(
 	id: CoverLayoutDefinition["id"],
@@ -686,15 +1174,14 @@ export function getBookletThemeCssVariables(
 	}
 	const coverLayout = getCoverLayoutDefinition(theme.coverLayoutId);
 	const displayFont = getDisplayFontDefinition(theme.displayFontId);
-	const decor = DECORS.get(theme.decorId);
-	if (!decor) {
-		throw new ThemeRecipeValidationError(
-			`未登録の装飾語彙「${theme.decorId}」です。`,
-		);
-	}
+	const composition = getCompositionDefinition(theme.compositionId);
+	const decor = getDecorDefinition(theme.decorId);
+	const contentInset = getBodyContentInset(theme);
 	const coverTitleSizePt =
 		coverLayout.titleSizePt ?? theme.typography.coverTitle.fontSizePt;
 	const coverTitleFamily = displayFont.family ?? font.headingFamily;
+	const dayTitleUsesDisplay =
+		decor.heading.font === "display" && displayFont.family !== null;
 	const { imageFrame, textBox } = coverLayout;
 	const frameRadius =
 		imageFrame.shape === "arch"
@@ -740,18 +1227,35 @@ export function getBookletThemeCssVariables(
 		"--booklet-cover-title-line-height": `${theme.typography.coverTitle.lineHeight}`,
 		"--booklet-cover-title-size": formatPoints(coverTitleSizePt),
 		"--booklet-cover-title-weight": `${displayFont.weight}`,
-		"--booklet-decor-inset-top": `${decor.contentInsetTopMm}mm`,
+		"--booklet-column-gap": `${composition.columnGapMm}mm`,
+		"--booklet-columns": `${composition.columns}`,
+		"--booklet-content-inset-bottom": `${contentInset.bottom}mm`,
+		"--booklet-content-inset-left": `${contentInset.left}mm`,
+		"--booklet-content-inset-right": `${contentInset.right}mm`,
+		"--booklet-content-inset-top": `${contentInset.top}mm`,
+		"--booklet-side-band-width": `${composition.header.bandWidthMm ?? 0}mm`,
 		"--booklet-cover-title-size-long": formatPoints(
 			Math.max(22, coverTitleSizePt * 0.8),
 		),
 		"--booklet-cover-title-size-very-long": formatPoints(
 			Math.max(22, coverTitleSizePt * 0.6),
 		),
+		"--booklet-day-title-family": dayTitleUsesDisplay
+			? coverTitleFamily
+			: font.headingFamily,
 		"--booklet-day-title-letter-spacing": `${theme.typography.dayTitle.letterSpacingEm}em`,
 		"--booklet-day-title-line-height": `${theme.typography.dayTitle.lineHeight}`,
+		"--booklet-day-title-shadow":
+			decor.heading.shadow === "offset"
+				? "0.5mm 0.5mm 0 color-mix(in srgb, var(--booklet-itinerary-accent) 35%, transparent)"
+				: "none",
 		"--booklet-day-title-size": formatPoints(
 			theme.typography.dayTitle.fontSizePt,
 		),
+		"--booklet-day-title-stroke": decor.heading.outline ? "0.4mm" : "0",
+		"--booklet-day-title-weight": dayTitleUsesDisplay
+			? `${displayFont.weight}`
+			: "700",
 		"--booklet-emphasis-line-height": `${theme.typography.emphasized.lineHeight}`,
 		"--booklet-emphasis-size": formatPoints(
 			theme.typography.emphasized.fontSizePt,
@@ -764,6 +1268,7 @@ export function getBookletThemeCssVariables(
 		"--booklet-itinerary-text": itinerary.text,
 		"--booklet-muted": palette.muted,
 		"--booklet-page-margin": `${theme.typography.pageMarginMm}mm`,
+		"--booklet-rule-style": decor.rule === "wavy" ? "solid" : decor.rule,
 		"--booklet-spacing": `${theme.typography.spacingMultiplier}`,
 		"--booklet-spot-title-letter-spacing": `${theme.typography.spotTitle.letterSpacingEm}em`,
 		"--booklet-spot-title-line-height": `${theme.typography.spotTitle.lineHeight}`,

@@ -237,6 +237,7 @@ export function JourneyBookletPage() {
 		coverVeilBounds,
 		documentRef,
 		error: pagePlanError,
+		fallbackLog,
 		measurementRef,
 		pagePlan,
 		resolvedTheme,
@@ -395,6 +396,9 @@ export function JourneyBookletPage() {
 	return (
 		<div
 			className="booklet-shell"
+			data-booklet-fallback-log={
+				fallbackLog.length > 0 ? fallbackLog.join("\n") : undefined
+			}
 			data-booklet-print-error={bookletPrintState.error}
 			data-booklet-print-state={bookletPrintState.state}
 		>

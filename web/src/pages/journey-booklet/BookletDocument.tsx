@@ -14,11 +14,17 @@ import type {
 import {
 	getBookletPageSurface,
 	getBookletThemeCssVariables,
+	getCompositionDefinition,
 	getCoverLayoutDefinition,
+	getDecorDefinition,
 } from "../../theme/bookletTheme";
+import { motifColorVariable } from "../../theme/decorGeometry";
+import { getDecorLayer } from "../../theme/decorLayer";
+import { MOTIFS } from "../../theme/motifs";
 import type {
 	BookletThemeCandidate,
 	CoverVeilBounds,
+	MotifDefinition,
 	ResolvedBookletTheme,
 } from "../../theme/types";
 
@@ -61,6 +67,10 @@ function themeClass(theme: BookletThemeCandidate): string {
 		`booklet-theme--palette-${theme.paletteId}`,
 		`booklet-theme--mood-${theme.moodId}`,
 		`booklet-theme--decor-${theme.decorId}`,
+		`booklet-theme--unit-${theme.unitFormId}`,
+		`booklet-theme--composition-${theme.compositionId}`,
+		`booklet-theme--ink-${theme.inkStyleId}`,
+		`booklet-theme--rule-${getDecorDefinition(theme.decorId).rule}`,
 	].join(" ");
 }
 
@@ -206,23 +216,159 @@ function CoverVeil({
 	);
 }
 
+function svgId(...parts: readonly string[]): string {
+	return parts.join("-").replace(/[^a-z0-9-]/gi, "-");
+}
+
+function paint(
+	value: "color" | "none",
+	color: string | null,
+): string | undefined {
+	if (value === "none") {
+		return "none";
+	}
+	return color ?? undefined;
+}
+
+/** Draws one motif's shapes in its unit box (`aspect` wide, 1 high). */
+function MotifShapes({
+	color,
+	definition,
+	maskId,
+}: {
+	readonly color: string | null;
+	readonly definition: MotifDefinition;
+	readonly maskId: string;
+}) {
+	if (definition.kind === "asset") {
+		if (definition.recolor === "mask" && color) {
+			return (
+				<>
+					<mask id={maskId}>
+						<image
+							height="1"
+							href={definition.src}
+							preserveAspectRatio="none"
+							width={definition.aspect}
+						/>
+					</mask>
+					<rect
+						fill={color}
+						height="1"
+						mask={`url(#${maskId})`}
+						width={definition.aspect}
+					/>
+				</>
+			);
+		}
+		return (
+			<image
+				height="1"
+				href={definition.src}
+				preserveAspectRatio="none"
+				width={definition.aspect}
+			/>
+		);
+	}
+	return (
+		<>
+			{definition.shapes.map((shape, index) => {
+				const key = `${definition.id}-${index}`;
+				const common = {
+					fill: paint(shape.fill, color),
+					stroke: paint(shape.stroke, color),
+					strokeWidth: shape.strokeWidth,
+				};
+				switch (shape.kind) {
+					case "circle":
+						return (
+							<circle
+								key={key}
+								cx={shape.cx}
+								cy={shape.cy}
+								r={shape.r}
+								{...common}
+							/>
+						);
+					case "rect":
+						return (
+							<rect
+								key={key}
+								height={shape.height}
+								width={shape.width}
+								x={shape.x}
+								y={shape.y}
+								{...common}
+							/>
+						);
+					default:
+						return (
+							<path
+								key={key}
+								d={shape.d}
+								strokeDasharray={
+									shape.dashed
+										? `${shape.strokeWidth * 3} ${shape.strokeWidth * 3}`
+										: undefined
+								}
+								{...common}
+							/>
+						);
+				}
+			})}
+		</>
+	);
+}
+
+function formatBounds(bounds: {
+	readonly xMm: number;
+	readonly yMm: number;
+	readonly widthMm: number;
+	readonly heightMm: number;
+}): string {
+	return [bounds.xMm, bounds.yMm, bounds.widthMm, bounds.heightMm]
+		.map((value) => value.toFixed(2))
+		.join(",");
+}
+
+/**
+ * The page decor (18.4): page gradient, then the decor set's ground, its
+ * motifs, and finally the sheet panel the body text sits on. All of it is one
+ * inline SVG under the body content, so the PDF keeps it as vectors.
+ */
 function BookletPageSurface({
+	groundImageUrl,
 	pageId,
 	theme,
 }: {
+	readonly groundImageUrl: string | null;
 	readonly pageId: string;
 	readonly theme: BookletThemeCandidate;
 }) {
 	const [startColor, endColor] = getBookletPageSurface(theme);
-	const gradientId =
-		`booklet-page-surface-${pageId}-${theme.resolvedThemeKey}`.replace(
-			/[^a-z0-9-]/gi,
-			"-",
-		);
+	const layer = getDecorLayer(theme);
+	const { decor } = layer;
+	const idBase = svgId("booklet-page-surface", pageId, theme.resolvedThemeKey);
+	const gradientId = idBase;
+	const patternId = svgId(idBase, "pattern");
+	const blurId = svgId(idBase, "blur");
+	const imageTileId = svgId(idBase, "image-tile");
+	const groundColor =
+		decor.ground.kind === "pattern" || decor.ground.kind === "frame"
+			? motifColorVariable(decor.ground.color)
+			: null;
+	const patternMotif =
+		decor.ground.kind === "pattern"
+			? (MOTIFS.get(decor.ground.motif) ?? null)
+			: null;
+	const image = decor.ground.kind === "image" ? decor.ground : null;
+	const imageHref = image && groundImageUrl ? groundImageUrl : null;
+
 	return (
 		<svg
 			aria-hidden="true"
 			className="booklet-page__surface"
+			data-booklet-decor={decor.id}
 			focusable="false"
 			preserveAspectRatio="none"
 			viewBox="0 0 148 210"
@@ -232,10 +378,143 @@ function BookletPageSurface({
 					<stop offset="0" stopColor={startColor} />
 					<stop offset="1" stopColor={endColor} />
 				</linearGradient>
+				{decor.ground.kind === "pattern" && patternMotif ? (
+					<pattern
+						height={decor.ground.tileMm}
+						id={patternId}
+						patternUnits="userSpaceOnUse"
+						width={decor.ground.tileMm}
+					>
+						<g
+							transform={`translate(${(decor.ground.tileMm - decor.ground.sizeMm * patternMotif.aspect) / 2} ${(decor.ground.tileMm - decor.ground.sizeMm) / 2}) scale(${decor.ground.sizeMm})`}
+						>
+							<MotifShapes
+								color={groundColor}
+								definition={patternMotif}
+								maskId={svgId(patternId, "mask")}
+							/>
+						</g>
+					</pattern>
+				) : null}
+				{image?.treatment === "blur" ? (
+					<filter id={blurId}>
+						<feGaussianBlur stdDeviation="2" />
+					</filter>
+				) : null}
+				{image?.treatment === "tile" && imageHref ? (
+					<pattern
+						height="30"
+						id={imageTileId}
+						patternUnits="userSpaceOnUse"
+						width="30"
+					>
+						<image
+							height="30"
+							href={imageHref}
+							preserveAspectRatio="xMidYMid slice"
+							width="30"
+						/>
+					</pattern>
+				) : null}
 			</defs>
 			<rect fill={`url(#${gradientId})`} height="210" width="148" />
+			{decor.ground.kind === "pattern" ? (
+				<rect
+					data-booklet-ground="pattern"
+					fill={`url(#${patternId})`}
+					height="210"
+					opacity={decor.ground.opacity}
+					width="148"
+				/>
+			) : null}
+			{decor.ground.kind === "frame" ? (
+				<rect
+					data-booklet-ground="frame"
+					fill="none"
+					height={210 - 2 * decor.ground.edgeMm - decor.ground.widthMm}
+					opacity={decor.ground.opacity}
+					stroke={groundColor ?? undefined}
+					strokeDasharray={
+						decor.ground.stroke === "dashed"
+							? `${Math.max(0.8, decor.ground.widthMm * 3)} ${Math.max(0.8, decor.ground.widthMm * 3)}`
+							: undefined
+					}
+					strokeWidth={decor.ground.widthMm}
+					width={148 - 2 * decor.ground.edgeMm - decor.ground.widthMm}
+					x={decor.ground.edgeMm + decor.ground.widthMm / 2}
+					y={decor.ground.edgeMm + decor.ground.widthMm / 2}
+				/>
+			) : null}
+			{image && imageHref ? (
+				image.treatment === "tile" ? (
+					<rect
+						data-booklet-ground="image"
+						fill={`url(#${imageTileId})`}
+						height="210"
+						opacity={image.opacity}
+						width="148"
+					/>
+				) : (
+					<image
+						data-booklet-ground="image"
+						filter={image.treatment === "blur" ? `url(#${blurId})` : undefined}
+						height="210"
+						href={imageHref}
+						opacity={image.opacity}
+						preserveAspectRatio="xMidYMid slice"
+						style={
+							image.treatment === "tint"
+								? { mixBlendMode: "multiply" }
+								: undefined
+						}
+						width="148"
+					/>
+				)
+			) : null}
+			{layer.motifs.map((motif) => (
+				<g
+					key={`${motif.slot}-${motif.index}`}
+					data-booklet-motif={motif.slot}
+					data-booklet-motif-bounds={formatBounds(motif.boundsMm)}
+					opacity={motif.opacity}
+					transform={`translate(${(motif.xMm + motif.widthMm / 2).toFixed(3)} ${(motif.yMm + motif.heightMm / 2).toFixed(3)}) rotate(${motif.rotateDeg.toFixed(2)}) translate(${(-motif.widthMm / 2).toFixed(3)} ${(-motif.heightMm / 2).toFixed(3)}) scale(${motif.heightMm.toFixed(4)})`}
+				>
+					<MotifShapes
+						color={motifColorVariable(motif.color)}
+						definition={motif.definition}
+						maskId={svgId(idBase, motif.slot, String(motif.index), "mask")}
+					/>
+				</g>
+			))}
+			{layer.panel ? (
+				<rect
+					data-booklet-panel="true"
+					fill="var(--booklet-itinerary-surface)"
+					height={layer.panel.heightMm}
+					opacity={layer.panel.opacity}
+					rx={layer.panel.radiusMm}
+					width={layer.panel.widthMm}
+					x={layer.panel.xMm}
+					y={layer.panel.yMm}
+				/>
+			) : null}
 		</svg>
 	);
+}
+
+function groundImageFor(
+	theme: BookletThemeCandidate,
+	model: BookletModel,
+	day: BookletDay | null,
+): string | null {
+	const decor = getDecorDefinition(theme.decorId);
+	if (decor.ground.kind !== "image") {
+		return null;
+	}
+	if (decor.ground.source === "illustration" && day?.illustration) {
+		return day.illustration.contentUrl;
+	}
+	return model.cover.image.contentUrl;
 }
 
 function CoverContent({
@@ -478,15 +757,28 @@ function PhysicalPage({
 		.filter(Boolean)
 		.join(" ");
 
+	const composition =
+		page.kind === "day" ? getCompositionDefinition(theme.compositionId) : null;
+
 	return (
 		<article
 			className={pageClassName}
+			data-booklet-columns={composition?.columns}
+			data-booklet-composition={composition?.id}
 			data-booklet-page="true"
 			data-booklet-theme-key={theme.resolvedThemeKey}
 			data-page-id={page.pageId}
 		>
 			{page.kind === "day" ? (
-				<BookletPageSurface pageId={page.pageId} theme={theme} />
+				<BookletPageSurface
+					groundImageUrl={groundImageFor(
+						theme,
+						model,
+						model.days[page.dayIndex] ?? null,
+					)}
+					pageId={page.pageId}
+					theme={theme}
+				/>
 			) : null}
 			<div className="booklet-page__content">{pageContent}</div>
 		</article>
@@ -526,16 +818,22 @@ function MeasurementDay({
 	day,
 	dayIndex,
 	destination,
+	model,
 	theme,
 }: {
 	readonly day: BookletDay;
 	readonly dayIndex: number;
 	readonly destination: string;
+	readonly model: BookletModel;
 	readonly theme: BookletThemeCandidate;
 }) {
 	return (
 		<article className="booklet-page booklet-page--measurement">
-			<BookletPageSurface pageId={`measurement-${day.id}`} theme={theme} />
+			<BookletPageSurface
+				groundImageUrl={groundImageFor(theme, model, day)}
+				pageId={`measurement-${day.id}`}
+				theme={theme}
+			/>
 			<div
 				className="booklet-page__content"
 				data-booklet-measurement-content="true"
@@ -602,6 +900,7 @@ export function BookletMeasurement({
 					day={day}
 					dayIndex={dayIndex}
 					destination={model.cover.destination}
+					model={model}
 					theme={theme}
 				/>
 			))}

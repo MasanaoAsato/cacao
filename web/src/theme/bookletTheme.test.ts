@@ -101,20 +101,89 @@ describe("V2テーマ定義", () => {
 
 	it("正常系: 装飾語彙の余白をCSS変数へ反映する", () => {
 		const { candidate } = selectedTheme();
+		const topStack = { ...candidate, compositionId: "top-stack" as const };
 		expect(
-			getBookletThemeCssVariables({ ...candidate, decorId: "stripe-band" }),
+			getBookletThemeCssVariables({ ...topStack, decorId: "stripe-band" }),
 		).toMatchObject({
+			"--booklet-content-inset-top": "6mm",
 			"--booklet-cover-text-padding": "0mm",
-			"--booklet-decor-inset-top": "6mm",
+			"--booklet-rule-style": "solid",
+		});
+		expect(
+			getBookletThemeCssVariables({
+				...topStack,
+				decorId: "hairline-frame",
+			}),
+		).toMatchObject({
+			"--booklet-content-inset-top": "0mm",
+			"--booklet-cover-text-padding": "4mm",
+		});
+		expect(
+			getBookletThemeCssVariables({ ...topStack, decorId: "photo-wash" }),
+		).toMatchObject({
+			"--booklet-content-inset-left": "1mm",
+			"--booklet-content-inset-right": "1mm",
+			"--booklet-day-title-family": expect.any(String),
+		});
+		expect(
+			getBookletThemeCssVariables({
+				...topStack,
+				decorId: "confetti-corners",
+				displayFontId: "rocknroll-one",
+			}),
+		).toMatchObject({
+			"--booklet-content-inset-top": "2.4085638205578856mm",
+			"--booklet-day-title-family": '"RocknRoll One", sans-serif',
+			"--booklet-day-title-shadow": expect.stringContaining("0.5mm 0.5mm"),
+			"--booklet-day-title-weight": "400",
+			"--booklet-rule-style": "dotted",
+		});
+		expect(
+			getBookletThemeCssVariables({ ...topStack, decorId: "wave-margins" }),
+		).toMatchObject({ "--booklet-rule-style": "solid" });
+		expect(
+			getBookletThemeCssVariables({ ...topStack, decorId: "bold-frame" }),
+		).toMatchObject({ "--booklet-day-title-stroke": "0.4mm" });
+	});
+
+	it("正常系: ページ構図の内側余白と列数をCSS変数へ反映する", () => {
+		const { candidate } = selectedTheme();
+		expect(
+			getBookletThemeCssVariables({
+				...candidate,
+				compositionId: "side-band",
+				decorId: "stripe-band",
+			}),
+		).toMatchObject({
+			"--booklet-column-gap": "0mm",
+			"--booklet-columns": "1",
+			"--booklet-content-inset-bottom": "0mm",
+			"--booklet-content-inset-left": "0mm",
+			"--booklet-content-inset-right": "26mm",
+			"--booklet-content-inset-top": "6mm",
+			"--booklet-side-band-width": "22mm",
 		});
 		expect(
 			getBookletThemeCssVariables({
 				...candidate,
+				compositionId: "two-column",
 				decorId: "hairline-frame",
 			}),
 		).toMatchObject({
-			"--booklet-cover-text-padding": "4mm",
-			"--booklet-decor-inset-top": "0mm",
+			"--booklet-column-gap": "6mm",
+			"--booklet-columns": "2",
+			"--booklet-content-inset-right": "0mm",
+			"--booklet-content-inset-top": "0mm",
+			"--booklet-side-band-width": "0mm",
+		});
+		expect(
+			getBookletThemeCssVariables({
+				...candidate,
+				compositionId: "center-column",
+			}),
+		).toMatchObject({
+			"--booklet-content-inset-left": "12mm",
+			"--booklet-content-inset-right": "12mm",
 		});
 	});
 

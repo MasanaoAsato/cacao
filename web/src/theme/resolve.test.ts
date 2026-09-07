@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { THEME_CATALOG_REFERENCES } from "./bookletTheme";
 import { MOODS, V2_REPRESENTATIVE_SEEDS } from "./catalog";
-import { designKey, resolveTheme, sameDesign } from "./resolve";
+import { designKey, resolveTheme, sameDesign, unitFormsFor } from "./resolve";
 import type { PaletteId, ThemeCatalogReferences } from "./types";
 
 function resolve(seed: number) {
@@ -37,6 +37,15 @@ describe("V2テーマ解決", () => {
 				theme.recipe.itineraryTemplateId,
 			);
 			expect(mood.palettes).toContain(theme.recipe.paletteId);
+			expect(mood.compositions).toContain(theme.recipe.compositionId);
+			expect(mood.inkStyles).toContain(theme.recipe.inkStyleId);
+			expect(
+				unitFormsFor(
+					mood,
+					theme.recipe.compositionId,
+					THEME_CATALOG_REFERENCES,
+				),
+			).toContain(theme.recipe.unitFormId);
 			expect(
 				THEME_CATALOG_REFERENCES.densities.has(theme.recipe.densityId),
 			).toBe(true);
@@ -44,8 +53,49 @@ describe("V2テーマ解決", () => {
 				THEME_CATALOG_REFERENCES.emphasis.has(theme.recipe.emphasisId),
 			).toBe(true);
 			expect(theme.recipe.id).toBe(designKey(theme.recipe));
+			expect(theme.recipe.typography.detailWidthMm).toBe(
+				THEME_CATALOG_REFERENCES.unitForms.get(theme.recipe.unitFormId)
+					?.minDescriptionWidthMm,
+			);
 		}
 	}, 10_000);
+
+	it("正常系: ページ構図の追加は構図と単位形式以外の軸の選択結果を変えない", () => {
+		const fieldNotes = MOODS.get("field-notes");
+		if (!fieldNotes) {
+			throw new Error("テスト用のカタログ定義がありません。");
+		}
+		const moods = new Map(MOODS).set("field-notes", {
+			...fieldNotes,
+			compositions: [...fieldNotes.compositions, "bottom-anchored"],
+		});
+
+		for (let seed = 0; seed < 1_000; seed += 1) {
+			const original = resolve(seed).recipe;
+			const changed = resolveTheme(
+				{ value: seed, version: "v2" },
+				{ coverVisualStyle: null },
+				moods,
+				THEME_CATALOG_REFERENCES,
+			).recipe;
+			const neutral = {
+				compositionId: "",
+				id: "",
+				typography: null,
+				unitFormId: "",
+			};
+			expect({ ...changed, ...neutral }).toEqual({ ...original, ...neutral });
+		}
+	});
+
+	it("境界値系: 2列の構図ではlineだけを選ぶ", () => {
+		for (let seed = 0; seed < 2_000; seed += 1) {
+			const recipe = resolve(seed).recipe;
+			if (recipe.compositionId === "two-column") {
+				expect(recipe.unitFormId).toBe("line");
+			}
+		}
+	});
 
 	it("正常系: 配色の追加は他の軸の選択結果を変えない", () => {
 		const fieldNotes = MOODS.get("field-notes");
@@ -108,5 +158,11 @@ describe("V2テーマ解決", () => {
 		expect(sameDesign(theme, { ...theme, emphasisId: "balanced" })).toBe(
 			theme.emphasisId === "balanced",
 		);
+		expect(
+			sameDesign(theme, {
+				...theme,
+				inkStyleId: theme.inkStyleId === "text" ? "pill" : "text",
+			}),
+		).toBe(false);
 	});
 });

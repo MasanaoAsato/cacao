@@ -7,6 +7,7 @@ import {
 	type RecoverableBookletFailureCode,
 } from "../../booklet/paginate";
 import {
+	getCompositionDefinition,
 	getCoverLayoutDefinition,
 	getDisplayFontDefinition,
 	getFontPairFamilies,
@@ -32,15 +33,28 @@ export type BookletPagePlanResult = {
 	readonly coverVeilBounds: CoverVeilBounds | null;
 	readonly documentRef: React.RefObject<HTMLElement | null>;
 	readonly error: string | null;
+	/** One entry per candidate that failed the fit check: `step:code:message`. */
+	readonly fallbackLog: readonly string[];
 	readonly measurementRef: React.RefObject<HTMLDivElement | null>;
 	readonly pagePlan: ReturnType<typeof paginateBooklet> | null;
 	readonly resolvedTheme: ResolvedBookletTheme | null;
 	readonly status: BookletPagePlanStatus;
 };
 
+function failureCode(error: unknown): string {
+	if (error instanceof BookletLayoutError) {
+		return error.code;
+	}
+	if (error && typeof error === "object" && "code" in error) {
+		return String((error as { code: unknown }).code);
+	}
+	return "unknown";
+}
+
 type LayoutFailureCode =
 	| RecoverableBookletFailureCode
 	| "cover-bounds-invalid"
+	| "cover-safe-area-overflow"
 	| "dom-not-ready"
 	| "hidden-text";
 
@@ -263,8 +277,10 @@ export function measureCoverVeilBounds(
 		bounds.x + bounds.width > safeArea.xMm + safeArea.widthMm + tolerance ||
 		bounds.y + bounds.height > safeArea.yMm + safeArea.heightMm + tolerance
 	) {
+		// A data-dependent layout failure (long title, wide font): recoverable,
+		// so the candidate chain can fall back to a denser or safer cover.
 		throw new BookletLayoutError(
-			"cover-bounds-invalid",
+			"cover-safe-area-overflow",
 			"表紙文字が安全領域をはみ出しました。",
 		);
 	}
@@ -310,6 +326,7 @@ function collectMeasurement(
 	return {
 		coverVeilBounds,
 		pageMeasurement: {
+			columns: getCompositionDefinition(theme.compositionId).columns,
 			contentHeight: readContentHeight(content),
 			contentWidth: readContentWidth(content),
 			days: model.days.map((day, dayIndex) => {
@@ -487,6 +504,7 @@ export function useBookletPagePlan(
 	const [resolvedTheme, setResolvedTheme] =
 		useState<ResolvedBookletTheme | null>(null);
 	const [error, setError] = useState<string | null>(null);
+	const [fallbackLog, setFallbackLog] = useState<readonly string[]>([]);
 	const [status, setStatus] = useState<BookletPagePlanStatus>("idle");
 
 	const candidateResult = useMemo(() => {
@@ -524,6 +542,7 @@ export function useBookletPagePlan(
 		setCoverVeilBounds(null);
 		setPagePlan(null);
 		setResolvedTheme(null);
+		setFallbackLog([]);
 		setError(candidateResult.error);
 		setStatus(
 			model && requestedTheme && !candidateResult.error
@@ -601,6 +620,10 @@ export function useBookletPagePlan(
 					isRecoverableLayoutFailure(runError) &&
 					candidateIndex + 1 < candidateResult.candidates.length
 				) {
+					setFallbackLog((log) => [
+						...log,
+						`${activeTheme.fallbackStep}:${failureCode(runError)}:${errorMessage(runError, "")}`,
+					]);
 					setCandidateIndex(candidateIndex + 1);
 					return;
 				}
@@ -622,6 +645,7 @@ export function useBookletPagePlan(
 		coverVeilBounds,
 		documentRef,
 		error,
+		fallbackLog,
 		measurementRef,
 		pagePlan,
 		resolvedTheme,

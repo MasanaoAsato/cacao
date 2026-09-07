@@ -21,8 +21,10 @@
 
 .booklet-theme .booklet-page--day,
 .booklet-theme .booklet-page--measurement {
-	padding: calc(var(--booklet-page-margin) + var(--booklet-decor-inset-top))
-		var(--booklet-page-margin) var(--booklet-page-margin);
+	padding: calc(var(--booklet-page-margin) + var(--booklet-content-inset-top))
+		calc(var(--booklet-page-margin) + var(--booklet-content-inset-right))
+		calc(var(--booklet-page-margin) + var(--booklet-content-inset-bottom))
+		calc(var(--booklet-page-margin) + var(--booklet-content-inset-left));
 }
 
 .booklet-theme [data-booklet-text-role] {
@@ -144,7 +146,7 @@
 .booklet-theme .booklet-day-header {
 	margin: 0 0 calc(5mm * var(--booklet-spacing));
 	padding-bottom: calc(3mm * var(--booklet-spacing));
-	border-bottom: 1px solid var(--booklet-border);
+	border-bottom: 1px var(--booklet-rule-style) var(--booklet-border);
 }
 
 .booklet-theme .booklet-day__illustration {
@@ -170,214 +172,16 @@
 .booklet-theme .booklet-day-header h2 {
 	margin: 0;
 	color: var(--booklet-text);
-	font-family: var(--booklet-heading-family);
+	font-family: var(--booklet-day-title-family);
 	font-size: var(--booklet-day-title-size);
-	font-weight: 700;
+	font-weight: var(--booklet-day-title-weight);
 	letter-spacing: var(--booklet-day-title-letter-spacing);
 	line-height: var(--booklet-day-title-line-height);
 	overflow-wrap: anywhere;
-}
-
-.booklet-theme .booklet-day__units {
-	display: flex;
-	flex-direction: column;
-	gap: calc(5mm * var(--booklet-spacing));
-	min-width: 0;
-}
-
-.booklet-theme .booklet-unit {
-	display: grid;
-	grid-template-columns: minmax(46mm, 1fr) minmax(56mm, 1fr);
-	gap: calc(4mm * var(--booklet-spacing));
-	min-width: 0;
-	padding-bottom: calc(5mm * var(--booklet-spacing));
-	border-bottom: 1px solid var(--booklet-border);
-	break-inside: avoid;
-}
-
-.booklet-theme .booklet-unit__leg,
-.booklet-theme .booklet-unit__spot {
-	box-sizing: border-box;
-	min-width: 0;
-}
-
-.booklet-theme .booklet-unit__label {
-	margin: 0 0 calc(1.5mm * var(--booklet-spacing));
-	color: var(--booklet-accent);
-}
-
-.booklet-theme .booklet-unit__route,
-.booklet-theme .booklet-unit__time,
-.booklet-theme .booklet-unit__spot p,
-.booklet-theme .booklet-unit__spot h3 {
-	overflow-wrap: anywhere;
-	word-break: normal;
-}
-
-.booklet-theme .booklet-unit__route {
-	margin: 0;
-	font-size: var(--booklet-emphasis-size);
-	font-weight: 700;
-	line-height: var(--booklet-emphasis-line-height);
-}
-
-.booklet-theme .booklet-unit__details {
-	display: grid;
-	grid-template-columns: repeat(2, minmax(22mm, 1fr));
-	gap: calc(2mm * var(--booklet-spacing));
-	margin: calc(3mm * var(--booklet-spacing)) 0 0;
-	font-family: var(--booklet-utility-family);
-	font-size: var(--booklet-utility-size);
-	line-height: var(--booklet-utility-line-height);
-}
-
-.booklet-theme .booklet-unit__details div,
-.booklet-theme .booklet-unit__details dt,
-.booklet-theme .booklet-unit__details dd {
-	min-width: 0;
-	margin: 0;
-	overflow-wrap: anywhere;
-}
-
-.booklet-theme .booklet-unit__details dt {
-	color: var(--booklet-muted);
-	font-weight: 700;
-}
-
-.booklet-theme .booklet-unit__time {
-	margin: 0;
-	font-family: var(--booklet-utility-family);
-	font-size: var(--booklet-emphasis-size);
-	font-weight: 700;
-	line-height: var(--booklet-emphasis-line-height);
-}
-
-.booklet-theme .booklet-unit__spot h3 {
-	margin: calc(2mm * var(--booklet-spacing)) 0 0;
-	font-family: var(--booklet-heading-family);
-	font-size: var(--booklet-spot-title-size);
-	font-weight: 700;
-	letter-spacing: var(--booklet-spot-title-letter-spacing);
-	line-height: var(--booklet-spot-title-line-height);
-}
-
-.booklet-theme
-	.booklet-unit__spot
-	p:not(.booklet-unit__label):not(.booklet-unit__time) {
-	margin: calc(2mm * var(--booklet-spacing)) 0 0;
-}
-
-.booklet-theme .booklet-unit__cost {
-	font-family: var(--booklet-utility-family);
-	font-size: var(--booklet-utility-size);
-	font-weight: 700;
-	line-height: var(--booklet-utility-line-height);
-}
-
-.booklet-theme--itinerary-split-reverse .booklet-unit {
-	grid-template-columns: minmax(56mm, 1fr) minmax(56mm, 1fr);
-}
-
-.booklet-theme--itinerary-route-rail .booklet-unit {
-	grid-template-columns: 24mm minmax(56mm, 1fr);
-	gap: calc(4mm * var(--booklet-spacing));
-}
-
-.booklet-theme--itinerary-route-rail .booklet-unit__leg {
-	position: relative;
-	padding-right: calc(1mm * var(--booklet-spacing));
-	border-right: 0;
-}
-
-.booklet-theme--itinerary-route-rail .booklet-unit__leg::after {
-	position: absolute;
-	inset: 0 0 0 auto;
-	width: 1px;
-	background: var(--booklet-accent);
-	content: "";
-}
-
-.booklet-theme--itinerary-route-rail .booklet-unit__details {
-	grid-template-columns: minmax(0, 1fr);
-}
-
-.booklet-theme--itinerary-center-column .booklet-day-header,
-.booklet-theme--itinerary-center-column .booklet-day__units {
-	width: 98mm;
-	margin-right: auto;
-	margin-left: auto;
-}
-
-.booklet-theme--itinerary-center-column .booklet-unit,
-.booklet-theme--itinerary-upper-right .booklet-unit,
-.booklet-theme--itinerary-lower-right .booklet-unit {
-	grid-template-columns: minmax(0, 1fr);
-}
-
-.booklet-theme--itinerary-upper-right .booklet-day-header,
-.booklet-theme--itinerary-upper-right .booklet-day__units {
-	width: 98mm;
-	margin-left: auto;
-}
-
-.booklet-theme--itinerary-lower-right .booklet-day__units {
-	width: 98mm;
-	margin-top: auto;
-	margin-left: auto;
-}
-
-.booklet-theme--itinerary-lower-right .booklet-page__content {
-	display: flex;
-}
-
-.booklet-theme--itinerary-stacked-ledger .booklet-unit {
-	grid-template-columns: minmax(0, 1fr);
-	gap: calc(3mm * var(--booklet-spacing));
-}
-
-.booklet-theme--itinerary-stacked-ledger .booklet-unit__leg {
-	display: grid;
-	grid-template-columns: minmax(0, 1fr) auto;
-	gap: calc(1.5mm * var(--booklet-spacing)) calc(4mm * var(--booklet-spacing));
-	padding-bottom: calc(3mm * var(--booklet-spacing));
-	border-bottom: 1px solid var(--booklet-border);
-}
-
-.booklet-theme--itinerary-stacked-ledger .booklet-unit__label,
-.booklet-theme--itinerary-stacked-ledger .booklet-unit__route {
-	grid-column: 1;
-}
-
-.booklet-theme--itinerary-stacked-ledger .booklet-unit__details {
-	grid-column: 2;
-	grid-row: 1 / span 2;
-	min-width: 46mm;
-	margin: 0;
-}
-
-.booklet-theme--emphasis-place-led .booklet-unit__spot h3 {
-	font-size: clamp(16pt, 1.22em, 20pt);
-}
-
-.booklet-theme--emphasis-time-led .booklet-unit__time {
-	font-family: var(--booklet-heading-family);
-	font-size: clamp(13pt, 1.45em, 18pt);
-}
-
-.booklet-theme--emphasis-route-led .booklet-unit__route {
-	font-family: var(--booklet-heading-family);
-	font-size: clamp(13pt, 1.45em, 18pt);
-}
-
-.booklet-theme .booklet-page--day::after,
-.booklet-theme .booklet-page--measurement::after {
-	position: absolute;
-	z-index: 0;
-	pointer-events: none;
-	color: var(--booklet-border);
-	content: "";
-	border-color: currentcolor;
-	opacity: 0.55;
+	text-shadow: var(--booklet-day-title-shadow);
+	paint-order: stroke fill;
+	-webkit-text-stroke: var(--booklet-day-title-stroke)
+		var(--booklet-itinerary-surface);
 }
 
 .booklet-theme .booklet-page__surface {
@@ -393,65 +197,6 @@
 .booklet-theme .booklet-page--measurement > .booklet-page__content {
 	position: relative;
 	z-index: 1;
-}
-
-.booklet-theme--decor-hairline-frame .booklet-page--day::after,
-.booklet-theme--decor-hairline-frame .booklet-page--measurement::after {
-	inset: 7mm;
-	border: 1px solid currentcolor;
-}
-
-.booklet-theme--decor-dashed-ticket .booklet-page--day::after,
-.booklet-theme--decor-dashed-ticket .booklet-page--measurement::after {
-	inset: 7mm;
-	border: 1px dashed currentcolor;
-}
-
-.booklet-theme--decor-dotted-grid .booklet-page--day::after,
-.booklet-theme--decor-dotted-grid .booklet-page--measurement::after {
-	inset: 0;
-	color: var(--booklet-itinerary-border);
-	background-image: radial-gradient(
-		circle,
-		currentcolor 0.2mm,
-		transparent 0.2mm
-	);
-	background-size: 4mm 4mm;
-	opacity: 0.3;
-}
-
-.booklet-theme--decor-stripe-band .booklet-page--day::after,
-.booklet-theme--decor-stripe-band .booklet-page--measurement::after {
-	inset: 0 0 auto;
-	height: 6mm;
-	background: repeating-linear-gradient(
-		45deg,
-		transparent 0 2mm,
-		var(--booklet-itinerary-accent) 2mm 3mm
-	);
-	opacity: 0.35;
-}
-
-.booklet-theme--decor-route-dash .booklet-page--day::after,
-.booklet-theme--decor-route-dash .booklet-page--measurement::after {
-	inset: 7mm auto 7mm 7mm;
-	color: var(--booklet-itinerary-accent);
-	border-left: 1px dashed currentcolor;
-}
-
-.booklet-theme--decor-gallery-rule .booklet-page--day::after,
-.booklet-theme--decor-gallery-rule .booklet-page--measurement::after {
-	inset: auto 10mm calc(var(--booklet-page-margin) - 3mm);
-	height: 3mm;
-	background:
-		linear-gradient(currentcolor, currentcolor) right bottom / 3mm 3mm no-repeat,
-		linear-gradient(currentcolor, currentcolor) left bottom / 100% 1px no-repeat;
-}
-
-.booklet-theme--decor-none .booklet-page--day::after,
-.booklet-theme--decor-none .booklet-page--measurement::after {
-	display: none;
-	content: none;
 }
 
 .booklet-theme--decor-hairline-frame .booklet-cover__decor {
@@ -542,14 +287,31 @@
 	min-width: 0;
 	margin: 0;
 	padding: 0 0 calc(5mm * var(--booklet-spacing));
-	border-color: var(--booklet-itinerary-border);
+	border-bottom: 1px var(--booklet-rule-style) var(--booklet-itinerary-border);
 	break-inside: avoid;
 }
 
 .booklet-theme .booklet-unit__spot,
 .booklet-theme .booklet-unit__leg {
+	box-sizing: border-box;
 	min-width: 0;
 	margin: 0;
+}
+
+.booklet-theme .booklet-unit__route,
+.booklet-theme .booklet-unit__time,
+.booklet-theme .booklet-unit__spot p,
+.booklet-theme .booklet-unit__spot h3 {
+	overflow-wrap: anywhere;
+	word-break: normal;
+}
+
+/* Matches the specificity of print.css's base rule for spot paragraphs so the
+ * route, description and cost share the same 2mm top margin. */
+.booklet-theme .booklet-unit__spot p.booklet-unit__route,
+.booklet-theme .booklet-unit__spot p.booklet-unit__description,
+.booklet-theme .booklet-unit__spot p.booklet-unit__cost {
+	margin: calc(2mm * var(--booklet-spacing)) 0 0;
 }
 
 .booklet-theme .booklet-unit__label {
@@ -593,7 +355,7 @@
 .booklet-theme .booklet-unit__leg {
 	margin-top: calc(2.5mm * var(--booklet-spacing));
 	padding-top: calc(2mm * var(--booklet-spacing));
-	border-top: 1px solid var(--booklet-itinerary-border);
+	border-top: 1px var(--booklet-rule-style) var(--booklet-itinerary-border);
 }
 
 .booklet-theme .booklet-unit__route {
@@ -670,7 +432,7 @@
 	.booklet-page--day.booklet-page--day-continuation::before {
 	position: absolute;
 	inset: var(--booklet-page-margin) auto 0
-		calc(var(--booklet-page-margin) + 7mm);
+		calc(var(--booklet-page-margin) + var(--booklet-content-inset-left) + 7mm);
 	z-index: 0;
 	width: 1px;
 	background: var(--booklet-itinerary-accent);
@@ -821,11 +583,6 @@
 	margin-bottom: calc(1mm * var(--booklet-spacing));
 }
 
-.booklet-theme--cover-safe-cover .booklet-page--day::after {
-	display: none;
-	content: none;
-}
-
 .booklet-theme .booklet-page--day,
 .booklet-theme .booklet-page--measurement {
 	background: var(--booklet-itinerary-surface);
@@ -843,4 +600,445 @@
 .booklet-theme--emphasis-route-led .booklet-unit__route {
 	font-family: var(--booklet-heading-family);
 	font-size: clamp(13pt, 1.45em, 18pt);
+}
+
+/* Page composition (18.2): where the day header sits, how many unit columns
+ * the units flow into, and where the unit column is anchored. The DOM and the
+ * measured elements are unchanged; only CSS places them. */
+.booklet-theme--composition-bottom-anchored .booklet-itinerary {
+	margin-top: auto;
+}
+
+.booklet-theme--composition-two-column .booklet-itinerary {
+	display: block;
+	flex: 1 1 auto;
+	min-height: 0;
+	columns: 2;
+	column-gap: var(--booklet-column-gap);
+	column-fill: auto;
+}
+
+.booklet-theme--composition-two-column .booklet-unit {
+	margin-bottom: calc(4mm * var(--booklet-spacing));
+}
+
+/* The band lives in the composition's right inset, outside the unit column, so
+ * it never takes height from the units. The measurement DOM hides it so the
+ * header height handed to pagination is zero. */
+.booklet-theme--composition-side-band
+	.booklet-page--measurement
+	.booklet-day-header {
+	display: none;
+}
+
+.booklet-theme--composition-side-band .booklet-day-header {
+	position: absolute;
+	top: 0;
+	right: calc(4mm - var(--booklet-content-inset-right));
+	bottom: 0;
+	display: flex;
+	flex-direction: column;
+	gap: calc(3mm * var(--booklet-spacing));
+	align-items: flex-start;
+	box-sizing: border-box;
+	width: var(--booklet-side-band-width);
+	margin: 0;
+	padding: calc(3mm * var(--booklet-spacing));
+	border-bottom: 0;
+	border-left: 1px solid var(--booklet-itinerary-border);
+}
+
+.booklet-theme--composition-side-band.booklet-theme--itinerary-banner-list
+	.booklet-day-header {
+	border-left: 3mm solid var(--booklet-itinerary-accent);
+}
+
+.booklet-theme--composition-side-band .booklet-day-header .booklet-eyebrow,
+.booklet-theme--composition-side-band .booklet-day-header h2 {
+	margin: 0;
+	writing-mode: vertical-rl;
+	text-orientation: mixed;
+}
+
+.booklet-theme--composition-side-band .booklet-day__illustration {
+	width: 100%;
+	height: 40mm;
+	margin: 0;
+}
+
+/* Unit form (18.1): how much of the arrival unit is spelled out. `full` is the
+ * template's own skeleton; `compact` folds the labels and the leg details into
+ * single lines while keeping the template skeleton; `line` also collapses the
+ * template's reserved columns so narrow columns stay readable. */
+.booklet-theme--unit-compact .booklet-unit__label,
+.booklet-theme--unit-line .booklet-unit__label {
+	display: none;
+}
+
+.booklet-theme--unit-compact .booklet-unit {
+	padding-bottom: calc(3.5mm * var(--booklet-spacing));
+}
+
+.booklet-theme--unit-line .booklet-unit {
+	padding-bottom: calc(2.5mm * var(--booklet-spacing));
+}
+
+.booklet-theme--unit-compact .booklet-unit__time,
+.booklet-theme--unit-line .booklet-unit__time {
+	font-size: var(--booklet-emphasis-size);
+}
+
+.booklet-theme--unit-compact .booklet-unit__leg,
+.booklet-theme--unit-line .booklet-unit__leg {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 calc(3mm * var(--booklet-spacing));
+	align-items: baseline;
+	margin-top: calc(1.5mm * var(--booklet-spacing));
+	padding-top: calc(1.5mm * var(--booklet-spacing));
+}
+
+.booklet-theme--unit-compact .booklet-unit__spot p.booklet-unit__route,
+.booklet-theme--unit-line .booklet-unit__spot p.booklet-unit__route {
+	margin: 0;
+}
+
+.booklet-theme--unit-compact .booklet-unit__details,
+.booklet-theme--unit-line .booklet-unit__details {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0;
+	margin: 0;
+}
+
+.booklet-theme--unit-compact .booklet-unit__details dt,
+.booklet-theme--unit-line .booklet-unit__details dt {
+	display: none;
+}
+
+.booklet-theme--unit-compact .booklet-unit__details div,
+.booklet-theme--unit-line .booklet-unit__details div {
+	display: flex;
+	align-items: baseline;
+}
+
+.booklet-theme--unit-compact .booklet-unit__details div::before,
+.booklet-theme--unit-line .booklet-unit__details div::before {
+	margin: 0 calc(1.2mm * var(--booklet-spacing));
+	color: var(--booklet-itinerary-muted);
+	content: "·";
+}
+
+.booklet-theme--unit-compact .booklet-unit__spot p.booklet-unit__description,
+.booklet-theme--unit-line .booklet-unit__spot p.booklet-unit__description {
+	margin-top: calc(1.5mm * var(--booklet-spacing));
+}
+
+/* compact: time and cost share the first row on templates that have no grid
+ * of their own. */
+.booklet-theme--unit-compact:not(.booklet-theme--itinerary-rail-ledger):not(
+	.booklet-theme--itinerary-travel-ticket
+):not(.booklet-theme--itinerary-field-journal) .booklet-unit__spot {
+	display: grid;
+	grid-template-areas:
+		"time cost"
+		"title title"
+		"leg leg"
+		"description description";
+	grid-template-columns: minmax(0, 1fr) auto;
+	column-gap: calc(3mm * var(--booklet-spacing));
+	align-items: baseline;
+}
+
+.booklet-theme--unit-compact:not(.booklet-theme--itinerary-rail-ledger):not(
+		.booklet-theme--itinerary-travel-ticket
+	):not(.booklet-theme--itinerary-field-journal)
+	.booklet-unit__time {
+	grid-area: time;
+}
+
+.booklet-theme--unit-compact:not(.booklet-theme--itinerary-rail-ledger):not(
+		.booklet-theme--itinerary-travel-ticket
+	):not(.booklet-theme--itinerary-field-journal)
+	.booklet-unit__spot
+	h3 {
+	grid-area: title;
+}
+
+.booklet-theme--unit-compact:not(.booklet-theme--itinerary-rail-ledger):not(
+		.booklet-theme--itinerary-travel-ticket
+	):not(.booklet-theme--itinerary-field-journal)
+	.booklet-unit__leg {
+	grid-area: leg;
+}
+
+.booklet-theme--unit-compact:not(.booklet-theme--itinerary-rail-ledger):not(
+		.booklet-theme--itinerary-travel-ticket
+	):not(.booklet-theme--itinerary-field-journal)
+	.booklet-unit__spot
+	p.booklet-unit__description {
+	grid-area: description;
+}
+
+.booklet-theme--unit-compact:not(.booklet-theme--itinerary-rail-ledger):not(
+		.booklet-theme--itinerary-travel-ticket
+	):not(.booklet-theme--itinerary-field-journal)
+	.booklet-unit__spot
+	p.booklet-unit__cost {
+	grid-area: cost;
+	margin: 0;
+}
+
+/* compact + travel-ticket: preserve its time column, while moving the cost to
+ * the first row's right edge. */
+.booklet-theme--unit-compact.booklet-theme--itinerary-travel-ticket
+.booklet-unit__spot {
+	display: grid;
+	grid-template-areas:
+		"time title cost"
+		"leg leg leg"
+		"description description description";
+	grid-template-columns: 30mm minmax(0, 1fr) auto;
+	column-gap: calc(2mm * var(--booklet-spacing));
+	align-items: baseline;
+}
+
+.booklet-theme--unit-compact.booklet-theme--itinerary-travel-ticket
+	.booklet-unit__time {
+	grid-area: time;
+}
+
+.booklet-theme--unit-compact.booklet-theme--itinerary-travel-ticket
+	.booklet-unit__spot
+	h3 {
+	grid-area: title;
+}
+
+.booklet-theme--unit-compact.booklet-theme--itinerary-travel-ticket
+	.booklet-unit__spot
+	.booklet-unit__leg {
+	grid-area: leg;
+}
+
+.booklet-theme--unit-compact.booklet-theme--itinerary-travel-ticket
+	.booklet-unit__spot
+	p.booklet-unit__description {
+	grid-area: description;
+}
+
+.booklet-theme--unit-compact.booklet-theme--itinerary-travel-ticket
+	.booklet-unit__spot
+	p.booklet-unit__cost {
+	grid-area: cost;
+	margin: 0;
+}
+
+/* compact + rail-ledger: retain its time ledger, with the cost at the first
+ * row's right edge rather than below the title. */
+.booklet-theme--unit-compact.booklet-theme--itinerary-rail-ledger
+.booklet-unit__spot {
+	grid-template-areas:
+		"time title cost"
+		"leg leg leg"
+		"description description description";
+	grid-template-columns: 34mm minmax(0, 1fr) auto;
+	column-gap: calc(2mm * var(--booklet-spacing));
+	align-items: baseline;
+}
+
+/* compact + field-journal: the hanging time stays in its 16mm gutter but as a
+ * grid column, so it can never overlap the title. */
+.booklet-theme--unit-compact.booklet-theme--itinerary-field-journal
+.booklet-unit__spot {
+	display: grid;
+	grid-template-areas:
+		"time title cost"
+		"time leg leg"
+		"time description description";
+	grid-template-columns: 28mm minmax(0, 1fr) auto;
+	column-gap: 2mm;
+	align-items: baseline;
+	padding-left: 0;
+}
+
+.booklet-theme--unit-compact.booklet-theme--itinerary-field-journal
+	.booklet-unit__time {
+	position: static;
+	grid-area: time;
+	width: auto;
+}
+
+.booklet-theme--unit-compact.booklet-theme--itinerary-field-journal
+	.booklet-unit__spot
+	h3 {
+	grid-area: title;
+	margin-top: 0;
+}
+
+.booklet-theme--unit-compact.booklet-theme--itinerary-field-journal
+	.booklet-unit__leg {
+	grid-area: leg;
+}
+
+.booklet-theme--unit-compact.booklet-theme--itinerary-field-journal
+	.booklet-unit__spot
+	p.booklet-unit__description {
+	grid-area: description;
+}
+
+.booklet-theme--unit-compact.booklet-theme--itinerary-field-journal
+	.booklet-unit__spot
+	p.booklet-unit__cost {
+	grid-area: cost;
+	margin: 0;
+}
+
+/* line: one skeleton for every template, description at utility size. */
+.booklet-theme.booklet-theme--unit-line .booklet-unit__spot {
+	display: grid;
+	grid-template-areas:
+		"time cost"
+		"title title"
+		"leg leg"
+		"description description";
+	grid-template-columns: minmax(0, 1fr) auto;
+	column-gap: calc(3mm * var(--booklet-spacing));
+	align-items: baseline;
+	padding-left: 0;
+}
+
+.booklet-theme.booklet-theme--unit-line .booklet-unit__time {
+	position: static;
+	grid-area: time;
+	width: auto;
+}
+
+.booklet-theme.booklet-theme--unit-line .booklet-unit__spot h3 {
+	grid-area: title;
+	margin-top: calc(1mm * var(--booklet-spacing));
+}
+
+.booklet-theme.booklet-theme--unit-line .booklet-unit__leg {
+	display: flex;
+	grid-area: leg;
+}
+
+.booklet-theme.booklet-theme--unit-line
+	.booklet-unit__spot
+	p.booklet-unit__description {
+	grid-area: description;
+	font-size: var(--booklet-utility-size);
+	line-height: var(--booklet-utility-line-height);
+}
+
+.booklet-theme.booklet-theme--unit-line
+	.booklet-unit__spot
+	p.booklet-unit__cost {
+	grid-area: cost;
+	margin: 0;
+}
+
+.booklet-theme.booklet-theme--unit-line .booklet-unit__details {
+	grid-column: auto;
+}
+
+/* Ink style (18.3): where the accent colour is allowed to cover an area. */
+.booklet-theme--ink-pill .booklet-unit__time {
+	justify-self: start;
+	box-sizing: border-box;
+	width: fit-content;
+	max-width: 100%;
+	padding: 0.5mm 2mm;
+	border: 1px solid var(--booklet-itinerary-accent);
+	border-radius: 2mm;
+}
+
+.booklet-theme--ink-pill.booklet-theme--itinerary-field-journal
+	.booklet-unit__time {
+	width: 16mm;
+	padding: 0.5mm 1mm;
+}
+
+.booklet-theme--ink-pill.booklet-theme--unit-compact.booklet-theme--itinerary-field-journal
+	.booklet-unit__time {
+	width: fit-content;
+	max-width: 28mm;
+	padding: 0.5mm 2mm;
+}
+
+.booklet-theme--ink-band .booklet-day-header {
+	padding: calc(4mm * var(--booklet-spacing));
+	border-bottom: 0;
+	background: var(--booklet-itinerary-accent);
+}
+
+.booklet-theme--ink-band .booklet-day-header .booklet-eyebrow,
+.booklet-theme--ink-band .booklet-day-header h2 {
+	color: var(--booklet-itinerary-surface);
+}
+
+.booklet-theme--ink-zebra .booklet-unit {
+	padding: calc(3mm * var(--booklet-spacing));
+	border-bottom: 0;
+	border-radius: 1mm;
+}
+
+.booklet-theme--ink-zebra.booklet-theme--itinerary-route-thread .booklet-unit {
+	padding-left: 20mm;
+}
+
+.booklet-theme--ink-zebra .booklet-unit:nth-child(odd) {
+	background-color: color-mix(
+		in srgb,
+		var(--booklet-itinerary-accent) 8%,
+		var(--booklet-itinerary-surface)
+	);
+}
+
+/* Rule quality (18.4): solid/dashed/dotted/double come from --booklet-rule-style;
+ * wavy replaces the unit and leg hairlines with a 4mm scallop drawn by gradients. */
+.booklet-theme--rule-wavy .booklet-unit {
+	padding-bottom: calc(5mm * var(--booklet-spacing) + 1.2mm);
+	border-bottom: 0;
+	background-image:
+		radial-gradient(
+			circle at 1mm 1.2mm,
+			transparent 0.5mm,
+			var(--booklet-itinerary-accent) 0.55mm,
+			var(--booklet-itinerary-accent) 0.8mm,
+			transparent 0.85mm
+		),
+		radial-gradient(
+			circle at 3mm 0,
+			transparent 0.5mm,
+			var(--booklet-itinerary-accent) 0.55mm,
+			var(--booklet-itinerary-accent) 0.8mm,
+			transparent 0.85mm
+		);
+	background-position: left bottom;
+	background-repeat: repeat-x;
+	background-size: 4mm 1.2mm;
+}
+
+.booklet-theme--rule-wavy .booklet-unit__leg {
+	padding-top: calc(2mm * var(--booklet-spacing) + 1.2mm);
+	border-top: 0;
+	background-image:
+		radial-gradient(
+			circle at 1mm 1.2mm,
+			transparent 0.5mm,
+			var(--booklet-itinerary-border) 0.55mm,
+			var(--booklet-itinerary-border) 0.8mm,
+			transparent 0.85mm
+		),
+		radial-gradient(
+			circle at 3mm 0,
+			transparent 0.5mm,
+			var(--booklet-itinerary-border) 0.55mm,
+			var(--booklet-itinerary-border) 0.8mm,
+			transparent 0.85mm
+		);
+	background-position: left top;
+	background-repeat: repeat-x;
+	background-size: 4mm 1.2mm;
 }

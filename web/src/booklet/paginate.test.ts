@@ -99,6 +99,43 @@ describe("paginateBooklet", () => {
 		expect(pages[1]).toMatchObject({ unitIndexes: [0, 1] });
 	});
 
+	it("正常系: 2列では1列目が埋まってから2列目、両列が埋まってから次ページへ送る", () => {
+		const pages = paginateBooklet(makeModel(5), {
+			...makeMeasurement([50, 40, 60, 30, 30]),
+			columns: 2,
+		});
+
+		// 列の高さは 100 - 20 = 80: 1列目 [50]、2列目 [40] で両列が埋まり、
+		// 継続ページ（高さ 100 - 15 = 85）は 1列目 [60]、2列目 [30, 30]。
+		expect(pages).toHaveLength(3);
+		expect(pages[1]).toMatchObject({
+			continuation: false,
+			unitIndexes: [0, 1],
+		});
+		expect(pages[2]).toMatchObject({
+			continuation: true,
+			unitIndexes: [2, 3, 4],
+		});
+	});
+
+	it("境界値系: 2列でも1単位が列の高さを超えれば停止する", () => {
+		expect(() =>
+			paginateBooklet(makeModel(1), {
+				...makeMeasurement([81]),
+				columns: 2,
+			}),
+		).toThrow("収まりません");
+	});
+
+	it("異常系: 3列の計測値を拒否する", () => {
+		expect(() =>
+			paginateBooklet(makeModel(1), {
+				...makeMeasurement([10]),
+				columns: 3 as unknown as 2,
+			}),
+		).toThrow("列数が不正です");
+	});
+
 	it("正常系: 挿絵込みでは収まらない最初のSpotから挿絵を外す", () => {
 		const model = makeModel(1);
 		const day = model.days[0];
