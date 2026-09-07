@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { THEME_CATALOG_REFERENCES } from "./bookletTheme";
 import { MOODS, V2_REPRESENTATIVE_SEEDS, validateCatalog } from "./catalog";
 import { ThemeRecipeValidationError } from "./recipeSafety";
-import type { PaletteId } from "./types";
+import { unitFormsFor } from "./resolve";
+import type { PaletteId, ThemeCatalogReferences } from "./types";
 
 const V1_RECIPE_AXES = [
 	[
@@ -224,8 +225,14 @@ const V1_RECIPE_AXES = [
 ] as const;
 
 function combinationCount(): number {
-	return Array.from(MOODS.values()).reduce(
-		(total, mood) =>
+	return Array.from(MOODS.values()).reduce((total, mood) => {
+		const bodyCombinations = mood.compositions.reduce(
+			(sum, compositionId) =>
+				sum +
+				unitFormsFor(mood, compositionId, THEME_CATALOG_REFERENCES).length,
+			0,
+		);
+		return (
 			total +
 			mood.coverLayouts.length *
 				mood.decors.length *
@@ -233,19 +240,54 @@ function combinationCount(): number {
 				mood.fontPairs.length *
 				mood.itineraryTemplates.length *
 				mood.palettes.length *
+				mood.inkStyles.length *
+				bodyCombinations *
 				THEME_CATALOG_REFERENCES.densities.size *
-				THEME_CATALOG_REFERENCES.emphasis.size,
-		0,
-	);
+				THEME_CATALOG_REFERENCES.emphasis.size
+		);
+	}, 0);
 }
 
 describe("V2テーマカタログ", () => {
-	it("正常系: 設計表の6雰囲気と47,232通りを検証する", () => {
+	it("正常系: 設計表の6雰囲気と452,736通りを検証する", () => {
 		expect(MOODS).toHaveLength(6);
-		expect(combinationCount()).toBe(47232);
+		expect(combinationCount()).toBe(452736);
 		expect(() =>
 			validateCatalog(MOODS, THEME_CATALOG_REFERENCES),
 		).not.toThrow();
+	});
+
+	it("正常系: 各雰囲気は設計どおりの構図・単位形式・色の載せ方から選ぶ", () => {
+		expect(MOODS.get("field-notes")).toMatchObject({
+			compositions: ["top-stack", "center-column"],
+			inkStyles: ["text", "pill"],
+			unitForms: ["full", "compact"],
+		});
+		expect(MOODS.get("wayfinder")).toMatchObject({
+			compositions: ["top-stack", "side-band"],
+			inkStyles: ["band", "text"],
+			unitForms: ["compact", "line"],
+		});
+		expect(MOODS.get("postcard")).toMatchObject({
+			compositions: ["two-column", "bottom-anchored"],
+			inkStyles: ["pill", "zebra"],
+			unitForms: ["compact", "line"],
+		});
+		expect(MOODS.get("night-train")).toMatchObject({
+			compositions: ["side-band", "top-stack"],
+			inkStyles: ["band", "text"],
+			unitForms: ["full", "compact"],
+		});
+		expect(MOODS.get("quiet-gallery")).toMatchObject({
+			compositions: ["center-column", "bottom-anchored"],
+			inkStyles: ["text", "pill"],
+			unitForms: ["full", "compact"],
+		});
+		expect(MOODS.get("festival-ticket")).toMatchObject({
+			compositions: ["two-column", "side-band"],
+			inkStyles: ["zebra", "pill"],
+			unitForms: ["compact", "line"],
+		});
 	});
 
 	it("正常系: 各雰囲気は設計どおり2つの本文テンプレートから選ぶ", () => {
@@ -290,7 +332,7 @@ describe("V2テーマカタログ", () => {
 				throw new Error(`雰囲気「${moodId}」の定義がありません。`);
 			}
 			expect(mood.coverLayouts).toContain(coverLayoutId);
-			expect(mood.decors).toHaveLength(2);
+			expect(mood.decors.length).toBeGreaterThanOrEqual(3);
 			expect(mood.fontPairs).toContain(fontPairId);
 			expect(mood.itineraryTemplates).toContain(itineraryTemplateId);
 			expect(mood.palettes).toContain(paletteId);
@@ -335,6 +377,68 @@ describe("V2テーマカタログ", () => {
 					(id) => id !== "none",
 				),
 			),
+		);
+		expect(
+			new Set(representatives.map(({ unitFormId }) => unitFormId)),
+		).toEqual(new Set(THEME_CATALOG_REFERENCES.unitForms.keys()));
+		expect(
+			new Set(representatives.map(({ compositionId }) => compositionId)),
+		).toEqual(
+			new Set(
+				Array.from(THEME_CATALOG_REFERENCES.compositions.keys()).filter(
+					(id) => THEME_CATALOG_REFERENCES.compositions.get(id)?.selectable,
+				),
+			),
+		);
+		expect(
+			new Set(representatives.map(({ inkStyleId }) => inkStyleId)),
+		).toEqual(new Set(THEME_CATALOG_REFERENCES.inkStyles.keys()));
+	});
+
+	it("異常系: 単位形式とページ構図に共通の値がない雰囲気を拒否する", () => {
+		const postcard = MOODS.get("postcard");
+		if (!postcard) {
+			throw new Error("postcardの定義がありません。");
+		}
+		const moods = new Map(MOODS).set("postcard", {
+			...postcard,
+			unitForms: ["compact"],
+		});
+		expect(() => validateCatalog(moods, THEME_CATALOG_REFERENCES)).toThrow(
+			ThemeRecipeValidationError,
+		);
+	});
+
+	it("異常系: 幅の規則を満たさない構図を持つ雰囲気を拒否する", () => {
+		const fieldNotes = MOODS.get("field-notes");
+		if (!fieldNotes) {
+			throw new Error("field-notesの定義がありません。");
+		}
+		const moods = new Map(MOODS).set("field-notes", {
+			...fieldNotes,
+			compositions: ["two-column"],
+			unitForms: ["full", "line"],
+		});
+		const centerColumn =
+			THEME_CATALOG_REFERENCES.compositions.get("center-column");
+		if (!centerColumn) {
+			throw new Error("center-columnの定義がありません。");
+		}
+		const references: ThemeCatalogReferences = {
+			...THEME_CATALOG_REFERENCES,
+			compositions: new Map(THEME_CATALOG_REFERENCES.compositions).set(
+				"two-column",
+				{
+					...centerColumn,
+					columnGapMm: 6,
+					columns: 2,
+					id: "two-column",
+					unitForms: ["full", "line"],
+				},
+			),
+		};
+		expect(() => validateCatalog(moods, references)).toThrow(
+			ThemeRecipeValidationError,
 		);
 	});
 
@@ -457,12 +561,15 @@ describe("V2テーマカタログ", () => {
 				fieldNotes.id,
 				{
 					...fieldNotes,
+					compositions: ["top-stack"] as const,
 					coverLayouts: ["north-west"] as const,
 					decors: ["dotted-grid"] as const,
 					displayFonts: ["inherit"] as const,
 					fontPairs: ["classic"] as const,
+					inkStyles: ["text"] as const,
 					itineraryTemplates: ["field-journal"] as const,
 					palettes: ["paper-ink"] as const,
+					unitForms: ["full"] as const,
 				},
 			],
 		]);

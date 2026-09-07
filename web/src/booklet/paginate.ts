@@ -8,6 +8,8 @@ export type DayPageMeasurement = {
 };
 
 export type BookletPageMeasurement = {
+	/** Unit columns per page. The day header spans the full width above them. */
+	readonly columns?: 1 | 2;
 	readonly contentHeight: number;
 	readonly contentWidth: number;
 	readonly days: readonly DayPageMeasurement[];
@@ -62,6 +64,10 @@ function validateMeasurement(
 ): void {
 	requirePositiveFinite(measurement.contentHeight, "ページ本文高さ");
 	requirePositiveFinite(measurement.contentWidth, "ページ本文幅");
+	const columns = measurement.columns ?? 1;
+	if (columns !== 1 && columns !== 2) {
+		throw new PaginationError("invalid-measurement", "列数が不正です。");
+	}
 	if (measurement.days.length !== model.days.length) {
 		throw new PaginationError(
 			"invalid-measurement",
@@ -109,11 +115,18 @@ function ensureFits(
 	}
 }
 
+/**
+ * Greedy pagination. Units are stacked into the column below the day header;
+ * when a column is full the next column of the same page is filled, and when
+ * every column is full a continuation page starts. The visual order of units
+ * therefore equals the data order, column by column, page by page.
+ */
 export function paginateBooklet(
 	model: BookletModel,
 	measurement: BookletPageMeasurement,
 ): readonly BookletPagePlan[] {
 	validateMeasurement(model, measurement);
+	const columns = measurement.columns ?? 1;
 
 	const pages: BookletPagePlan[] = [
 		{ kind: "cover", pageId: `cover-${model.journeyId}` },
@@ -132,12 +145,12 @@ export function paginateBooklet(
 		let headerHeight = illustration
 			? dayMeasurement.headerHeight
 			: dayMeasurement.headerHeightWithoutIllustration;
-		let usedHeight = headerHeight;
+		let columnIndex = 0;
+		let usedHeight = 0;
 		let unitIndexes: number[] = [];
 		if (headerHeight > measurement.contentHeight && illustration) {
 			illustration = false;
 			headerHeight = dayMeasurement.headerHeightWithoutIllustration;
-			usedHeight = headerHeight;
 		}
 		ensureFits(
 			headerHeight,
@@ -145,6 +158,7 @@ export function paginateBooklet(
 			"day-header-overflow",
 			`Day ${dayIndex + 1}のヘッダー`,
 		);
+		const columnCapacity = () => measurement.contentHeight - headerHeight;
 
 		const appendPage = () => {
 			pages.push({
@@ -175,32 +189,36 @@ export function paginateBooklet(
 			) {
 				illustration = false;
 				headerHeight = dayMeasurement.headerHeightWithoutIllustration;
-				usedHeight = headerHeight;
 			}
 			ensureFits(
-				headerHeight + unitHeight,
-				measurement.contentHeight,
+				unitHeight,
+				columnCapacity(),
 				"unit-overflow",
 				`Day ${dayIndex + 1}のSpot ${unitIndex + 1}`,
 			);
-			if (usedHeight + unitHeight > measurement.contentHeight) {
-				if (unitIndexes.length === 0) {
+			if (usedHeight + unitHeight > columnCapacity()) {
+				if (usedHeight === 0) {
 					throw new PaginationError(
 						"unit-overflow",
 						`Day ${dayIndex + 1}のSpot ${unitIndex + 1}が収まりません。`,
 					);
 				}
-				appendPage();
-				continuation = true;
-				headerHeight = dayMeasurement.continuationHeaderHeight;
-				ensureFits(
-					headerHeight + unitHeight,
-					measurement.contentHeight,
-					"unit-overflow",
-					`Day ${dayIndex + 1}の継続Spot ${unitIndex + 1}`,
-				);
-				usedHeight = headerHeight;
-				unitIndexes = [];
+				if (columnIndex + 1 < columns) {
+					columnIndex += 1;
+				} else {
+					appendPage();
+					continuation = true;
+					headerHeight = dayMeasurement.continuationHeaderHeight;
+					ensureFits(
+						unitHeight,
+						columnCapacity(),
+						"unit-overflow",
+						`Day ${dayIndex + 1}の継続Spot ${unitIndex + 1}`,
+					);
+					columnIndex = 0;
+					unitIndexes = [];
+				}
+				usedHeight = 0;
 			}
 			unitIndexes.push(unitIndex);
 			usedHeight += unitHeight;

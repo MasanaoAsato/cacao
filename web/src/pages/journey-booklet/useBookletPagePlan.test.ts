@@ -85,13 +85,20 @@ describe("表紙ベール位置の計測", () => {
 		).toEqual({ height: 30, width: 40, x: 10, y: 20 });
 	});
 
-	it("異常系: 安全領域外の文字を拒否する", () => {
-		expect(() =>
+	it("異常系: 安全領域外の文字は退避可能な失敗として拒否する", () => {
+		let thrown: unknown;
+		try {
 			measureCoverVeilBounds(
 				measurementRoot(rect(0, 0, 400, 300)),
 				candidate("center"),
-			),
-		).toThrow(BookletLayoutError);
+			);
+		} catch (error) {
+			thrown = error;
+		}
+		expect(thrown).toBeInstanceOf(BookletLayoutError);
+		expect((thrown as BookletLayoutError).code).toBe(
+			"cover-safe-area-overflow",
+		);
 	});
 
 	it("異常系: 装飾を含む外側の文字箱が安全領域外なら拒否する", () => {

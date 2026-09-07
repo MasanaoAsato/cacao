@@ -38,7 +38,7 @@ describe("テーマ相性表", () => {
 			{ coverVisualStyle: "watercolor" },
 			[
 				{
-					exclude: { decors: ["dotted-grid", "hairline-frame"] },
+					exclude: { decors: [...mood.decors] },
 					when: { coverVisualStyle: ["watercolor"] },
 				},
 			],
