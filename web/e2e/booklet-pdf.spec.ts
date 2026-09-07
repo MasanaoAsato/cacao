@@ -173,9 +173,6 @@ test.describe("PDFしおり", () => {
 	test("操作部は720pxで横並び、719pxで縦並びになる", async ({ page }) => {
 		await openBooklet(page, 0);
 		const controls = page.locator(".booklet-controls");
-		const identity = page.locator(".booklet-controls__identity");
-		const actions = page.locator(".booklet-controls__actions");
-		const status = page.locator(".booklet-controls__status");
 
 		for (const width of [720, 719]) {
 			await page.setViewportSize({ height: 1000, width });
