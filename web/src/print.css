@@ -156,7 +156,7 @@ body {
 
 .booklet-controls {
 	display: grid;
-	grid-template-columns: 1fr auto;
+	grid-template-columns: max-content minmax(0, 1fr);
 	align-items: end;
 	gap: 1rem;
 	width: min(148mm, 100%);
@@ -165,6 +165,10 @@ body {
 	color: #fff;
 	background: #362f2a;
 	border-radius: 0.5rem;
+}
+
+.booklet-controls__identity {
+	min-width: 0;
 }
 
 .booklet-controls h1,
@@ -190,7 +194,27 @@ body {
 	color: #d9c4b1;
 }
 
-.booklet-controls button {
+.booklet-controls__identity h1,
+.booklet-controls__eyebrow,
+.booklet-controls__actions button,
+.booklet-controls__actions a {
+	white-space: nowrap;
+}
+
+.booklet-controls__actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: 0.5rem;
+	min-width: 0;
+}
+
+.booklet-controls__actions > * {
+	flex: 0 0 auto;
+}
+
+.booklet-controls button,
+.booklet-controls__actions a {
 	min-height: 2.5rem;
 	padding: 0.45rem 0.75rem;
 	font: inherit;
@@ -200,6 +224,12 @@ body {
 	border: 0;
 	border-radius: 0.25rem;
 	cursor: pointer;
+}
+
+.booklet-controls__actions a {
+	display: inline-flex;
+	align-items: center;
+	text-decoration: none;
 }
 
 .booklet-controls .booklet-controls__download {
@@ -221,6 +251,21 @@ body {
 
 .booklet-controls__status p {
 	margin: 0;
+}
+
+@media (max-width: 719px) {
+	.booklet-controls {
+		grid-template-columns: 1fr;
+		align-items: stretch;
+	}
+
+	.booklet-controls__actions {
+		justify-content: flex-start;
+	}
+
+	.booklet-controls__status {
+		grid-column: auto;
+	}
 }
 
 .booklet-document {
