@@ -170,6 +170,67 @@ function mmToleranceOf(px: number, pageWidthPx: number): number {
 }
 
 test.describe("PDFしおり", () => {
+	test("操作部は720pxで横並び、719pxで縦並びになる", async ({ page }) => {
+		await openBooklet(page, 0);
+		const controls = page.locator(".booklet-controls");
+
+		for (const width of [720, 719]) {
+			await page.setViewportSize({ height: 1000, width });
+			await expect(controls).toBeVisible();
+			const layout = await controls.evaluate((element) => {
+				const identityElement = element.querySelector<HTMLElement>(
+					".booklet-controls__identity",
+				);
+				const actionsElement = element.querySelector<HTMLElement>(
+					".booklet-controls__actions",
+				);
+				const statusElement = element.querySelector<HTMLElement>(
+					".booklet-controls__status",
+				);
+				if (!identityElement || !actionsElement || !statusElement) {
+					throw new Error("操作部の配置を計測できません。");
+				}
+				const identityRect = identityElement.getBoundingClientRect();
+				const actionsRect = actionsElement.getBoundingClientRect();
+				const statusRect = statusElement.getBoundingClientRect();
+				return {
+					actionsTop: actionsRect.top,
+					actionsBottom: actionsRect.bottom,
+					identityTop: identityRect.top,
+					identityBottom: identityRect.bottom,
+					statusTop: statusRect.top,
+					columns: getComputedStyle(element).gridTemplateColumns,
+					labels: Array.from(
+						element.querySelectorAll<HTMLElement>(
+							".booklet-controls__identity h1, .booklet-controls__eyebrow, .booklet-controls__actions a, .booklet-controls__actions button",
+						),
+					).map((label) => ({
+						overflowing: label.scrollWidth > label.clientWidth,
+						whiteSpace: getComputedStyle(label).whiteSpace,
+					})),
+				};
+			});
+
+			if (width === 720) {
+				expect(layout.columns.split(" ")).toHaveLength(2);
+				expect(layout.identityTop).toBeLessThan(layout.actionsBottom);
+				expect(layout.identityBottom).toBeGreaterThan(layout.actionsTop);
+				expect(layout.statusTop).toBeGreaterThan(
+					Math.max(layout.identityBottom, layout.actionsBottom),
+				);
+			} else {
+				expect(layout.columns.split(" ")).toHaveLength(1);
+				expect(layout.identityBottom).toBeLessThanOrEqual(layout.actionsTop);
+				expect(layout.actionsBottom).toBeLessThanOrEqual(layout.statusTop);
+			}
+			expect(layout.labels).toHaveLength(6);
+			expect(layout.labels.every((label) => !label.overflowing)).toBe(true);
+			expect(
+				layout.labels.every((label) => label.whiteSpace === "nowrap"),
+			).toBe(true);
+		}
+	});
+
 	test.describe("仕組み検査", () => {
 		test("two-column は1列目が埋まってから2列目、両列が埋まってから継続ページへ送る", async ({
 			page,

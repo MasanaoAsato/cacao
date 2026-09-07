@@ -349,6 +349,14 @@ describe("JourneyBookletPage", () => {
 		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 		await waitFor(() => expect(printButton).toBeEnabled());
 
+		expect(screen.getByRole("status")).toHaveTextContent(
+			/^しおりの印刷準備ができました。$/,
+		);
+		expect(screen.getByRole("status")).not.toHaveTextContent("v2-");
+		expect(screen.getByRole("link", { name: "ホームに戻る" })).toHaveAttribute(
+			"href",
+			"/",
+		);
 		expect(screen.getByRole("heading", { name: "京都" })).toBeInTheDocument();
 		expect(screen.getByRole("heading", { name: "浅草" })).toBeInTheDocument();
 		expect(document.querySelectorAll("[data-booklet-page]")).toHaveLength(2);
@@ -556,6 +564,9 @@ describe("JourneyBookletPage", () => {
 			expect(screen.getByRole("status")).toHaveTextContent(
 				"PDFを作成できませんでした。「PDFを印刷」からも保存できます。",
 			),
+		);
+		expect(screen.getByRole("status")).not.toHaveTextContent(
+			"しおりの印刷準備ができました。",
 		);
 		expect(downloadButton).toBeEnabled();
 		expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled();

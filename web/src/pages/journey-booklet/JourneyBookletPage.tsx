@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useSearchParams } from "react-router";
+import { Link, useParams, useSearchParams } from "react-router";
 import { ApiError } from "../../api/client";
 import { downloadJourneyBookletPdf } from "../../api/journeyBooklet";
 import {
@@ -161,7 +161,6 @@ function BookletStatus({
 	pagePlanError,
 	pagePlanStatus,
 	reresolveError,
-	theme,
 	themeError,
 }: {
 	readonly downloadError: string | null;
@@ -170,7 +169,6 @@ function BookletStatus({
 	readonly pagePlanError: string | null;
 	readonly pagePlanStatus: string;
 	readonly reresolveError: string | null;
-	readonly theme: RequestedBookletTheme | null;
 	readonly themeError: string | null;
 }) {
 	if (isDownloading) {
@@ -207,13 +205,7 @@ function BookletStatus({
 		return <p>{pagePlanError ?? "印刷前の準備に失敗しました。"}</p>;
 	}
 	if (pagePlanStatus === "ready") {
-		return (
-			<p>
-				{theme
-					? `${theme.seedToken}（${theme.recipe.moodId}・${theme.recipe.paletteId}・${theme.recipe.coverLayoutId}）の印刷準備ができました。`
-					: "印刷の準備ができました。"}
-			</p>
-		);
+		return <p>しおりの印刷準備ができました。</p>;
 	}
 	return null;
 }
@@ -403,11 +395,14 @@ export function JourneyBookletPage() {
 			data-booklet-print-state={bookletPrintState.state}
 		>
 			<section className="booklet-controls" aria-label="旅のしおり操作">
-				<div>
+				<div className="booklet-controls__identity">
 					<p className="booklet-controls__eyebrow">BOOKLET / A5</p>
 					<h1>旅のしおり</h1>
 				</div>
 				<div className="booklet-controls__actions">
+					<Link className="booklet-controls__home" to="/">
+						ホームに戻る
+					</Link>
 					<button
 						type="button"
 						disabled={themeRequest.requestedTheme === null || isDownloading}
@@ -443,7 +438,6 @@ export function JourneyBookletPage() {
 						pagePlanError={pagePlanError}
 						pagePlanStatus={status}
 						reresolveError={rerollError}
-						theme={themeRequest.requestedTheme}
 						themeError={themeRequest.error}
 					/>
 				</div>
