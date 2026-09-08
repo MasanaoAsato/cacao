@@ -8,7 +8,7 @@ import {
 } from "../src/theme/bookletTheme.js";
 import { MOODS, V2_REPRESENTATIVE_SEEDS } from "../src/theme/catalog.js";
 import { resolveTheme } from "../src/theme/resolve.js";
-import type { ThemeRecipeDefinition } from "../src/theme/types.js";
+import type { MoodId, ThemeRecipeDefinition } from "../src/theme/types.js";
 import { routeBookletApi } from "./fixtures/booklet.js";
 import {
 	MOOD_SAMPLE_SEEDS,
