@@ -6,6 +6,7 @@ import type {
 	EditorialCover,
 	EditorialDay,
 } from "../../booklet/editorialModel";
+import type { BookletFamilyId } from "../../booklet/family";
 import { formatTransportMode } from "../../booklet/itineraryFormat";
 import type {
 	BookletDay,
@@ -32,6 +33,7 @@ import type {
 
 export type BookletDocumentProps = {
 	readonly coverVeilBounds: CoverVeilBounds;
+	readonly familyId?: BookletFamilyId;
 	readonly model: BookletModel;
 	readonly pagePlan: readonly BookletPagePlan[];
 	readonly rootRef: RefObject<HTMLElement | null>;
@@ -39,6 +41,7 @@ export type BookletDocumentProps = {
 };
 
 export type BookletMeasurementProps = {
+	readonly familyId?: BookletFamilyId;
 	readonly model: BookletModel;
 	readonly rootRef: RefObject<HTMLDivElement | null>;
 	readonly theme: BookletThemeCandidate;
@@ -814,6 +817,7 @@ function PhysicalPage({
 
 export function BookletDocument({
 	coverVeilBounds,
+	familyId,
 	model,
 	pagePlan,
 	rootRef,
@@ -827,6 +831,7 @@ export function BookletDocument({
 			aria-label="旅のしおり印刷プレビュー"
 			className={`booklet-document ${themeClass(theme)}`}
 			data-booklet-design={theme.requestedRecipeId}
+			data-booklet-family={familyId}
 			data-booklet-theme-key={theme.resolvedThemeKey}
 			style={themeStyle(theme)}
 		>
@@ -905,6 +910,7 @@ function MeasurementDay({
 }
 
 export function BookletMeasurement({
+	familyId,
 	model,
 	rootRef,
 	theme,
@@ -917,6 +923,7 @@ export function BookletMeasurement({
 			aria-hidden="true"
 			className={`booklet-measurement ${themeClass(theme)}`}
 			data-booklet-design={theme.requestedRecipeId}
+			data-booklet-family={familyId}
 			data-booklet-theme-key={theme.resolvedThemeKey}
 			style={themeStyle(theme)}
 		>

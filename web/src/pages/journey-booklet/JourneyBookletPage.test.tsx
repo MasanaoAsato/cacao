@@ -360,6 +360,14 @@ describe("JourneyBookletPage", () => {
 		expect(screen.getByRole("heading", { name: "京都" })).toBeInTheDocument();
 		expect(screen.getByRole("heading", { name: "浅草" })).toBeInTheDocument();
 		expect(document.querySelectorAll("[data-booklet-page]")).toHaveLength(2);
+		expect(document.querySelector(".booklet-shell")).toHaveAttribute(
+			"data-booklet-family",
+			"legacy",
+		);
+		expect(document.querySelector(".booklet-document")).toHaveAttribute(
+			"data-booklet-family",
+			"legacy",
+		);
 
 		printButton.click();
 		expect(window.print).toHaveBeenCalledTimes(1);

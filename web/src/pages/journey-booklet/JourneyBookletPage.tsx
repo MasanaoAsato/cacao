@@ -17,7 +17,7 @@ import {
 } from "../../booklet/fromJourney";
 import type { BookletModel } from "../../booklet/model";
 import { createBookletTheme } from "../../theme/bookletTheme";
-import { sameDesign } from "../../theme/resolve";
+import { resolveBookletDesign } from "../../theme/families/resolveBookletDesign";
 import {
 	createDefaultThemeSeed,
 	createRerollSeed,
@@ -25,8 +25,11 @@ import {
 	parseThemeSeed,
 } from "../../theme/seed";
 import type { RequestedBookletTheme } from "../../theme/types";
-import { BookletDocument, BookletMeasurement } from "./BookletDocument";
-import { useBookletPagePlan } from "./useBookletPagePlan";
+import { FamilyBookletRenderer } from "./families/FamilyBookletRenderer";
+import {
+	isCurrentFamilyPagePlan,
+	useFamilyPagePlan,
+} from "./families/useFamilyPagePlan";
 
 type LoadState =
 	| { readonly error: string; readonly status: "error" }
@@ -36,6 +39,7 @@ type LoadState =
 	| { readonly status: "ready" };
 
 type ThemeRequestResult = {
+	readonly design: ReturnType<typeof resolveBookletDesign> | null;
 	readonly error: string | null;
 	readonly invalidQuery: boolean;
 	readonly requestedTheme: RequestedBookletTheme | null;
@@ -130,19 +134,27 @@ function resolveRequestedTheme(
 	coverVisualStyle: BookletModel["cover"]["image"]["visualStyle"],
 ): ThemeRequestResult {
 	if (!journeyId) {
-		return { error: null, invalidQuery: false, requestedTheme: null };
+		return {
+			design: null,
+			error: null,
+			invalidQuery: false,
+			requestedTheme: null,
+		};
 	}
 	const parsed = parseThemeSeed(seedQuery);
 	const seed =
 		parsed.kind === "valid" ? parsed.seed : createDefaultThemeSeed(journeyId);
 	try {
+		const requestedTheme = createBookletTheme(seed, { coverVisualStyle });
 		return {
+			design: resolveBookletDesign(requestedTheme),
 			error: null,
 			invalidQuery: parsed.kind === "invalid",
-			requestedTheme: createBookletTheme(seed, { coverVisualStyle }),
+			requestedTheme,
 		};
 	} catch {
 		return {
+			design: null,
 			error: "しおりのデザイン定義を読み込めませんでした。",
 			invalidQuery: parsed.kind === "invalid",
 			requestedTheme: null,
@@ -224,24 +236,26 @@ export function JourneyBookletPage() {
 		() => resolveRequestedTheme(journeyId, seedQuery, coverVisualStyle),
 		[journeyId, seedQuery, coverVisualStyle],
 	);
+	const familyPagePlan = useFamilyPagePlan(model, themeRequest.design);
 	const {
 		activeTheme,
 		coverVeilBounds,
-		documentRef,
 		error: pagePlanError,
 		fallbackLog,
-		measurementRef,
 		pagePlan,
 		resolvedTheme,
 		status,
-	} = useBookletPagePlan(model, themeRequest.requestedTheme);
+		renderPagePlan,
+	} = familyPagePlan;
 	const canPrint =
 		loadState.status === "ready" &&
 		status === "ready" &&
 		pagePlan !== null &&
+		renderPagePlan !== null &&
 		coverVeilBounds !== null &&
 		resolvedTheme !== null &&
-		activeTheme?.resolvedThemeKey === resolvedTheme.resolvedThemeKey;
+		activeTheme?.resolvedThemeKey === resolvedTheme.resolvedThemeKey &&
+		isCurrentFamilyPagePlan(familyPagePlan, model, themeRequest.design);
 	const bookletPrintState = resolveBookletPrintState(
 		canPrint,
 		loadState,
@@ -361,7 +375,8 @@ export function JourneyBookletPage() {
 
 	const handleReroll = () => {
 		const requestedTheme = themeRequest.requestedTheme;
-		if (!requestedTheme) {
+		const currentDesign = themeRequest.design;
+		if (!requestedTheme || !currentDesign) {
 			return;
 		}
 		setDownloadError(null);
@@ -370,10 +385,9 @@ export function JourneyBookletPage() {
 			const nextSeed = createRerollSeed(
 				requestedTheme.seed,
 				(candidate) =>
-					!sameDesign(
-						createBookletTheme(candidate, { coverVisualStyle }).recipe,
-						requestedTheme.recipe,
-					),
+					resolveBookletDesign(
+						createBookletTheme(candidate, { coverVisualStyle }),
+					).comparisonKey !== currentDesign.comparisonKey,
 			);
 			const next = new URLSearchParams(searchParams);
 			next.set("seed", formatThemeSeed(nextSeed));
@@ -391,6 +405,12 @@ export function JourneyBookletPage() {
 			data-booklet-fallback-log={
 				fallbackLog.length > 0 ? fallbackLog.join("\n") : undefined
 			}
+			data-booklet-family={themeRequest.design?.familyId}
+			data-booklet-comparison-key={themeRequest.design?.comparisonKey}
+			data-booklet-requested-composition={
+				themeRequest.design?.requestedTheme.recipe.compositionId
+			}
+			data-booklet-resolved-composition={activeTheme?.compositionId}
 			data-booklet-print-error={bookletPrintState.error}
 			data-booklet-print-state={bookletPrintState.state}
 		>
@@ -443,21 +463,8 @@ export function JourneyBookletPage() {
 				</div>
 			</section>
 
-			{model && activeTheme ? (
-				<BookletMeasurement
-					model={model}
-					rootRef={measurementRef}
-					theme={activeTheme}
-				/>
-			) : null}
-			{model && pagePlan && activeTheme && coverVeilBounds ? (
-				<BookletDocument
-					coverVeilBounds={coverVeilBounds}
-					model={model}
-					pagePlan={pagePlan}
-					rootRef={documentRef}
-					theme={activeTheme}
-				/>
+			{model ? (
+				<FamilyBookletRenderer model={model} pagePlanResult={familyPagePlan} />
 			) : null}
 		</div>
 	);
