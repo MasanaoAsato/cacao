@@ -8,6 +8,9 @@
 *.so
 *.dylib
 
+# ローカルにビルドされた API バイナリ
+/image
+
 # Test binary, built with `go test -c`
 *.test
 
