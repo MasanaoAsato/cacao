@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { formatBookletDate, formatBookletDateTime } from "./dateFormat";
+import {
+	formatBookletDate,
+	formatBookletDateTime,
+	formatBookletTime,
+} from "./dateFormat";
 
 describe("しおりの日時表示", () => {
 	it.each([
@@ -22,6 +26,7 @@ describe("しおりの日時表示", () => {
 		(_label, value, date, dateTime) => {
 			expect(formatBookletDate(value)).toBe(date);
 			expect(formatBookletDateTime(value)).toBe(dateTime);
+			expect(formatBookletTime(value)).toBe(dateTime.slice(-5));
 		},
 	);
 
@@ -34,6 +39,7 @@ describe("しおりの日時表示", () => {
 	])("異常系: RFC 3339ではない値を拒否する", (value) => {
 		expect(() => formatBookletDate(value)).toThrow("RFC 3339");
 		expect(() => formatBookletDateTime(value)).toThrow("RFC 3339");
+		expect(() => formatBookletTime(value)).toThrow("RFC 3339");
 	});
 
 	it("境界値系: 月末と年末の暦日を維持する", () => {
