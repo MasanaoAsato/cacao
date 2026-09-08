@@ -441,7 +441,7 @@ func TestLogFailureIncludesSafeBookletContext(t *testing.T) {
 		FailureContext{
 			JourneyID: journeyID,
 			Operation: "render_booklet_pdf",
-			ThemeSeed: "V1-ABCDEF12",
+			ThemeSeed: "V2-ABCDEF12",
 		},
 		err,
 	)
@@ -450,7 +450,7 @@ func TestLogFailureIncludesSafeBookletContext(t *testing.T) {
 	for _, fragment := range []string{
 		"\"operation\":\"render_booklet_pdf\"",
 		"\"journey_id\":\"" + journeyID + "\"",
-		"\"theme_seed\":\"v1-abcdef12\"",
+		"\"theme_seed\":\"v2-abcdef12\"",
 		"\"error_kind\":\"booklet_render_failed\"",
 		"\"cause_kind\":\"booklet_render_timeout\"",
 	} {
@@ -460,5 +460,24 @@ func TestLogFailureIncludesSafeBookletContext(t *testing.T) {
 	}
 	if strings.Contains(logText, "private booklet contents") {
 		t.Errorf("logs expose renderer error text: %q", logText)
+	}
+}
+
+func TestLogFailureDoesNotIncludeInvalidThemeSeed(t *testing.T) {
+	var logs bytes.Buffer
+
+	LogFailure(
+		context.Background(),
+		slog.New(slog.NewJSONHandler(&logs, nil)),
+		slog.LevelError,
+		FailureContext{
+			Operation: "render_booklet_pdf",
+			ThemeSeed: "v1-abcdef12",
+		},
+		application.ErrInvalidInput,
+	)
+
+	if logText := logs.String(); strings.Contains(logText, "theme_seed") {
+		t.Errorf("logs contain invalid theme seed: %q", logText)
 	}
 }

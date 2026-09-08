@@ -102,7 +102,7 @@ IMAGE_GENERATION_TIMEOUT=180s
 
 ## 旅のしおりPDFの設定
 
-GET /api/v1/journeys/{id}/booklet.pdf?seed=v1-xxxxxxxx は、表紙画像が ready の旅程を A5 PDF として返します。既定の stub ドライバーは固定PDFを返すため、Gotenbergなしでも API とフロントエンドの連携を確認できます。
+GET /api/v1/journeys/{id}/booklet.pdf?seed=v2-xxxxxxxx は、表紙画像が ready の旅程を A5 PDF として返します。seed は大文字・小文字を区別せず受け付け、小文字へ正規化します。v1 を含む v2 以外の seed は HTTP 400 です。既定の stub ドライバーは固定PDFを返すため、Gotenbergなしでも API とフロントエンドの連携を確認できます。
 
 実際の画面をPDF化する場合は、次のように設定します。
 

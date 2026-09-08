@@ -41,7 +41,7 @@ func TestHandleExportJourneyBookletReturnsPDF(t *testing.T) {
 	router.GET("/api/v1/journeys/:id/booklet.pdf", HandleExportJourneyBooklet(useCase))
 	request := httptest.NewRequest(
 		http.MethodGet,
-		"/api/v1/journeys/journey-1/booklet.pdf?seed=v1-abcdef12",
+		"/api/v1/journeys/journey-1/booklet.pdf?seed=v2-abcdef12",
 		nil,
 	)
 	response := httptest.NewRecorder()
@@ -66,7 +66,7 @@ func TestHandleExportJourneyBookletReturnsPDF(t *testing.T) {
 	if got, want := useCase.input.JourneyID, "journey-1"; got != want {
 		t.Errorf("JourneyID = %q, want %q", got, want)
 	}
-	if got, want := useCase.input.Seed, "v1-abcdef12"; got != want {
+	if got, want := useCase.input.Seed, "v2-abcdef12"; got != want {
 		t.Errorf("Seed = %q, want %q", got, want)
 	}
 }
@@ -121,6 +121,28 @@ func TestHandleExportJourneyBookletMapsErrors(t *testing.T) {
 				t.Errorf("error = %q, want %q", body.Error, testCase.wantError)
 			}
 		})
+	}
+}
+
+func TestHandleExportJourneyBookletRejectsV1ThemeSeed(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	useCase := &bookletExportUseCaseMock{err: fmtError(application.ErrInvalidInput)}
+	router := gin.New()
+	router.GET("/api/v1/journeys/:id/booklet.pdf", HandleExportJourneyBooklet(useCase))
+	request := httptest.NewRequest(
+		http.MethodGet,
+		"/api/v1/journeys/journey-1/booklet.pdf?seed=v1-abcdef12",
+		nil,
+	)
+	response := httptest.NewRecorder()
+
+	router.ServeHTTP(response, request)
+
+	if response.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d", response.Code, http.StatusBadRequest)
+	}
+	if got, want := useCase.input.Seed, "v1-abcdef12"; got != want {
+		t.Errorf("Seed = %q, want %q", got, want)
 	}
 }
 

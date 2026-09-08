@@ -42,7 +42,7 @@ func TestBookletPDFEndpointWithStubRenderer(t *testing.T) {
 	router := NewRouter(Dependencies{ExportJourneyBooklet: useCase})
 	request := httptest.NewRequest(
 		http.MethodGet,
-		"/api/v1/journeys/"+journey.ID().String()+"/booklet.pdf?seed=v1-abcdef12",
+		"/api/v1/journeys/"+journey.ID().String()+"/booklet.pdf?seed=v2-abcdef12",
 		nil,
 	)
 	response := httptest.NewRecorder()
@@ -63,5 +63,18 @@ func TestBookletPDFEndpointWithStubRenderer(t *testing.T) {
 	}
 	if !strings.HasPrefix(response.Body.String(), "%PDF-") {
 		t.Errorf("response body does not begin with PDF header")
+	}
+
+	invalidRequest := httptest.NewRequest(
+		http.MethodGet,
+		"/api/v1/journeys/"+journey.ID().String()+"/booklet.pdf?seed=v1-abcdef12",
+		nil,
+	)
+	invalidResponse := httptest.NewRecorder()
+
+	router.ServeHTTP(invalidResponse, invalidRequest)
+
+	if invalidResponse.Code != http.StatusBadRequest {
+		t.Errorf("invalid seed status = %d, want %d", invalidResponse.Code, http.StatusBadRequest)
 	}
 }

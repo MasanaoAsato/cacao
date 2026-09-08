@@ -7,7 +7,7 @@ import (
 )
 
 func TestNewBookletRenderRequest(t *testing.T) {
-	seed, err := value_object.NewThemeSeed("v1-abcdef12")
+	seed, err := value_object.NewThemeSeed("v2-abcdef12")
 	if err != nil {
 		t.Fatalf("NewThemeSeed() error = %v", err)
 	}
@@ -24,8 +24,8 @@ func TestNewBookletRenderRequest(t *testing.T) {
 	if !ok {
 		t.Fatal("ThemeSeed() ok = false, want true")
 	}
-	if gotSeed.String() != "v1-abcdef12" {
-		t.Errorf("ThemeSeed().String() = %q, want v1-abcdef12", gotSeed.String())
+	if gotSeed.String() != "v2-abcdef12" {
+		t.Errorf("ThemeSeed().String() = %q, want v2-abcdef12", gotSeed.String())
 	}
 }
 
