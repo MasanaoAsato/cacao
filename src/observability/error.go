@@ -508,7 +508,7 @@ func safeUUID(value string) string {
 }
 
 func safeThemeSeed(value string) string {
-	if len(value) != len("v1-00000000") || !strings.EqualFold(value[:3], "v1-") {
+	if len(value) != len("v2-00000000") || !strings.EqualFold(value[:3], "v2-") {
 		return ""
 	}
 	for _, character := range value[3:] {
@@ -518,5 +518,5 @@ func safeThemeSeed(value string) string {
 			return ""
 		}
 	}
-	return "v1-" + strings.ToLower(value[3:])
+	return "v2-" + strings.ToLower(value[3:])
 }

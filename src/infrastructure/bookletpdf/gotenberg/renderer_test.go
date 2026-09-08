@@ -53,7 +53,7 @@ func TestRendererRender(t *testing.T) {
 	}))
 	defer server.Close()
 
-	seed, err := value_object.NewThemeSeed("V1-ABCDEF12")
+	seed, err := value_object.NewThemeSeed("V2-ABCDEF12")
 	if err != nil {
 		t.Fatalf("NewThemeSeed() error = %v", err)
 	}
@@ -79,7 +79,7 @@ func TestRendererRender(t *testing.T) {
 
 	wantURL := "https://example.test/app/journeys/" +
 		request.JourneyID().String() +
-		"/booklet?seed=v1-abcdef12"
+		"/booklet?seed=v2-abcdef12"
 	if receivedFields["url"] != wantURL {
 		t.Errorf("url field = %q, want %q", receivedFields["url"], wantURL)
 	}

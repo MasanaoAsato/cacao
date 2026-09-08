@@ -15,12 +15,12 @@ describe("journey booklet API", () => {
 
 		const result = await downloadJourneyBookletPdf("journey/1", {
 			fetchImpl,
-			seed: "v1-abcdef12",
+			seed: "v2-abcdef12",
 		});
 
 		expect(await result.text()).toBe("%PDF-1.4\n");
 		expect(fetchImpl).toHaveBeenCalledWith(
-			"/api/v1/journeys/journey%2F1/booklet.pdf?seed=v1-abcdef12",
+			"/api/v1/journeys/journey%2F1/booklet.pdf?seed=v2-abcdef12",
 			expect.objectContaining({ method: "GET" }),
 		);
 	});

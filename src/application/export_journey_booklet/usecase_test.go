@@ -49,7 +49,7 @@ func TestUseCaseExecute(t *testing.T) {
 
 	output, err := useCase.Execute(context.Background(), Input{
 		JourneyID: journey.ID().String(),
-		Seed:      "V1-ABCDEF12",
+		Seed:      "V2-ABCDEF12",
 	})
 	if err != nil {
 		t.Fatalf("Execute() error = %v", err)
@@ -73,7 +73,7 @@ func TestUseCaseExecute(t *testing.T) {
 	if !ok {
 		t.Fatal("render request seed is missing")
 	}
-	if got, want := seed.String(), "v1-abcdef12"; got != want {
+	if got, want := seed.String(), "v2-abcdef12"; got != want {
 		t.Errorf("render request seed = %q, want %q", got, want)
 	}
 }
@@ -88,10 +88,17 @@ func TestUseCaseExecuteRejectsInvalidInput(t *testing.T) {
 			input: Input{JourneyID: "not-a-uuid"},
 		},
 		{
+			name: "異常系: 廃止されたv1のテーマシード",
+			input: Input{
+				JourneyID: value_object.NewID().String(),
+				Seed:      "v1-abcdef12",
+			},
+		},
+		{
 			name: "境界値系: 7桁のテーマシード",
 			input: Input{
 				JourneyID: value_object.NewID().String(),
-				Seed:      "v1-abcdef1",
+				Seed:      "v2-abcdef1",
 			},
 		},
 	}

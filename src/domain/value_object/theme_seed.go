@@ -6,10 +6,10 @@ import (
 	"strings"
 )
 
-var themeSeedPattern = regexp.MustCompile("(?i)^v1-([0-9a-f]{8})$")
+var themeSeedPattern = regexp.MustCompile("(?i)^v2-([0-9a-f]{8})$")
 
 // ThemeSeed はしおりのテーマを再現するための不変なシード値である。
-// web/src/theme/seed.ts と同じ v1-xxxxxxxx 形式を受け付ける。
+// web/src/theme/seed.ts と同じ v2-xxxxxxxx 形式を受け付ける。
 type ThemeSeed struct {
 	token string
 }
@@ -21,7 +21,7 @@ func NewThemeSeed(token string) (ThemeSeed, error) {
 		return ThemeSeed{}, fmt.Errorf("invalid theme seed: %q", token)
 	}
 
-	return ThemeSeed{token: "v1-" + strings.ToLower(matches[1])}, nil
+	return ThemeSeed{token: "v2-" + strings.ToLower(matches[1])}, nil
 }
 
 // String はURLクエリへ渡せる正規化済みのテーマシードを返す。
