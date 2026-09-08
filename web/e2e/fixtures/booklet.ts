@@ -58,12 +58,24 @@ const journey = {
 const request = {
 	budget: { amount: 80000, currency: "JPY" },
 	departure: "東京",
+	departure_city: "東京",
+	departure_country: "",
 	destination: "非常に長い目的地名称を含む京都の旅",
+	destination_city: "非常に長い目的地名称を含む京都の旅",
+	destination_country: "",
 	id: "request-1",
 	period: {
 		end_date: "2026-08-29T00:00:00+09:00",
 		start_date: "2026-08-28T00:00:00+09:00",
 	},
+};
+
+const legacyRequest = {
+	budget: request.budget,
+	departure: request.departure,
+	destination: request.destination,
+	id: request.id,
+	period: request.period,
 };
 
 const imageList = {
@@ -150,6 +162,7 @@ const longJourney = {
 const longRequest = {
 	...request,
 	destination: "京都",
+	destination_city: "京都",
 	id: "request-long",
 	period: {
 		end_date: "2026-08-28T00:00:00+09:00",
@@ -182,9 +195,11 @@ const coverSvg = `
   <path d="M0 900 C220 760 430 1080 800 820 V1200 H0Z" fill="#183a42" opacity=".72"/>
 </svg>`;
 
+export type BookletFixtureScenario = "default" | "legacy" | "long";
+
 export async function routeBookletApi(
 	page: Page,
-	scenario: "default" | "long" = "default",
+	scenario: BookletFixtureScenario = "default",
 ): Promise<void> {
 	const fixture =
 		scenario === "long"
@@ -193,7 +208,9 @@ export async function routeBookletApi(
 					journey: longJourney,
 					request: longRequest,
 				}
-			: { imageList, journey, request };
+			: scenario === "legacy"
+				? { imageList, journey, request: legacyRequest }
+				: { imageList, journey, request };
 	await page.route("**/api/v1/**", async (route) => {
 		const url = route.request().url();
 		if (url.endsWith(`/journeys/${fixture.journey.id}`)) {

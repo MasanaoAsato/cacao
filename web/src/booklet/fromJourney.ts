@@ -18,6 +18,7 @@ import type {
 	BookletImage,
 	BookletLeg,
 	BookletModel,
+	BookletPlace,
 	BookletSpot,
 } from "./model";
 
@@ -80,6 +81,17 @@ function requireMoney(
 	}
 	requireNonEmpty(value.currency, `${name}.currency`);
 	return value;
+}
+
+function convertPlace(
+	city: string,
+	country: string,
+	name: string,
+): BookletPlace {
+	return {
+		city: requireNonEmpty(city, `${name}.city`),
+		country,
+	};
 }
 
 function requireEndpoint(
@@ -331,10 +343,26 @@ export function createBookletModel(input: {
 				request.destination,
 				"journey request.destination",
 			),
+			destinationPlace:
+				"destination_city" in request
+					? convertPlace(
+							request.destination_city,
+							request.destination_country,
+							"journey request.destination",
+						)
+					: null,
 			departure: requireNonEmpty(
 				request.departure,
 				"journey request.departure",
 			),
+			departurePlace:
+				"departure_city" in request
+					? convertPlace(
+							request.departure_city,
+							request.departure_country,
+							"journey request.departure",
+						)
+					: null,
 			image,
 			period,
 		},

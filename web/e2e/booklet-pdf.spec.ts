@@ -9,7 +9,10 @@ import {
 import { MOODS, V2_REPRESENTATIVE_SEEDS } from "../src/theme/catalog.js";
 import { resolveTheme } from "../src/theme/resolve.js";
 import type { MoodId, ThemeRecipeDefinition } from "../src/theme/types.js";
-import { routeBookletApi } from "./fixtures/booklet.js";
+import {
+	routeBookletApi,
+	type BookletFixtureScenario,
+} from "./fixtures/booklet.js";
 import {
 	MOOD_SAMPLE_SEEDS,
 	type MoodSample,
@@ -54,7 +57,7 @@ function findSeed(
 async function openBooklet(
 	page: Page,
 	seed: number,
-	scenario: "default" | "long" = "default",
+	scenario: BookletFixtureScenario = "default",
 ): Promise<void> {
 	await routeBookletApi(page, scenario);
 	await page.goto(
@@ -101,6 +104,12 @@ function mmToleranceOf(px: number, pageWidthPx: number): number {
 }
 
 test.describe("PDFしおり", () => {
+	test("地名構成要素がない旧応答でもしおりを読込できる", async ({ page }) => {
+		await openBooklet(page, 0, "legacy");
+		await expect(page.locator(".booklet-document")).toBeVisible();
+		await expectNoHiddenText(page);
+	});
+
 	test("操作部は720pxで横並び、719pxで縦並びになる", async ({ page }) => {
 		await openBooklet(page, 0);
 		const controls = page.locator(".booklet-controls");
