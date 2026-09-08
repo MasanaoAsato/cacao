@@ -106,7 +106,9 @@ function mmToleranceOf(px: number, pageWidthPx: number): number {
 test.describe("PDFしおり", () => {
 	test("地名構成要素がない旧応答でもしおりを読込できる", async ({ page }) => {
 		await openBooklet(page, 0, "legacy");
-		await expect(page.locator(".booklet-document")).toBeVisible();
+		const document = page.locator(".booklet-document");
+		await expect(document).toBeVisible();
+		await expect(document).toHaveAttribute("data-booklet-family", "legacy");
 		await expectNoHiddenText(page);
 	});
 

@@ -19,8 +19,10 @@ import {
 } from "./support/booklet-assertions.js";
 
 type ComparisonRecord = {
+	readonly comparisonKey: string | null;
 	readonly documentHtml: string;
 	readonly fallbackLog: string | null;
+	readonly familyId: string | null;
 	readonly moodId: MoodId;
 	readonly pageCompositions: readonly (string | null)[];
 	readonly pageIds: readonly string[];
@@ -113,11 +115,16 @@ async function captureComparisonRecord(
 			);
 		}
 		return {
+			comparisonKey:
+				element
+					.closest(".booklet-shell")
+					?.getAttribute("data-booklet-comparison-key") ?? null,
 			documentHtml: artifactDocument.outerHTML,
 			fallbackLog:
 				element
 					.closest(".booklet-shell")
 					?.getAttribute("data-booklet-fallback-log") ?? null,
+			familyId: element.getAttribute("data-booklet-family"),
 			pageCompositions: Array.from(
 				element.querySelectorAll("[data-booklet-page]"),
 				(pageElement) => pageElement.getAttribute("data-booklet-composition"),
@@ -132,6 +139,8 @@ async function captureComparisonRecord(
 	}, comparisonSvgDataUrl);
 	expect(metadata.documentHtml).toContain(comparisonSvgDataUrl);
 	expect(metadata.documentHtml).not.toContain("/journey-images/");
+	expect(metadata.familyId).toBe("legacy");
+	expect(metadata.comparisonKey).not.toBeNull();
 	return {
 		...metadata,
 		moodId,
