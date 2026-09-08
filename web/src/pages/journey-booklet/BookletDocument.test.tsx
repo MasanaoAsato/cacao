@@ -16,7 +16,9 @@ const model: BookletModel = {
 	cover: {
 		budget: { amount: 10000, currency: "JPY" },
 		destination: "非常に長い目的地名を含む美しい旅先",
+		destinationPlace: null,
 		departure: "東京",
+		departurePlace: null,
 		image: {
 			contentUrl: "/cover.png",
 			height: 1200,

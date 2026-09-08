@@ -18,6 +18,7 @@ import type {
 	BookletImage,
 	BookletLeg,
 	BookletModel,
+	BookletPlace,
 	BookletSpot,
 } from "./model";
 
@@ -80,6 +81,33 @@ function requireMoney(
 	}
 	requireNonEmpty(value.currency, `${name}.currency`);
 	return value;
+}
+
+function convertPlace(
+	city: string,
+	country: string,
+	name: string,
+): BookletPlace {
+	return {
+		city: requireNonEmpty(city, `${name}.city`),
+		country,
+	};
+}
+
+function hasPlaceFields(
+	request: JourneyRequestApiResponse,
+): request is JourneyRequestApiResponse & {
+	readonly departure_city: string;
+	readonly departure_country: string;
+	readonly destination_city: string;
+	readonly destination_country: string;
+} {
+	return (
+		typeof request.departure_city === "string" &&
+		typeof request.departure_country === "string" &&
+		typeof request.destination_city === "string" &&
+		typeof request.destination_country === "string"
+	);
 }
 
 function requireEndpoint(
@@ -323,6 +351,20 @@ export function createBookletModel(input: {
 				? null
 				: (readyIllustrations[dayIndex % readyIllustrations.length] ?? null),
 	}));
+	const departurePlace = hasPlaceFields(request)
+		? convertPlace(
+				request.departure_city,
+				request.departure_country,
+				"journey request.departure",
+			)
+		: null;
+	const destinationPlace = hasPlaceFields(request)
+		? convertPlace(
+				request.destination_city,
+				request.destination_country,
+				"journey request.destination",
+			)
+		: null;
 
 	return {
 		cover: {
@@ -331,10 +373,12 @@ export function createBookletModel(input: {
 				request.destination,
 				"journey request.destination",
 			),
+			destinationPlace,
 			departure: requireNonEmpty(
 				request.departure,
 				"journey request.departure",
 			),
+			departurePlace,
 			image,
 			period,
 		},

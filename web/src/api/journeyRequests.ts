@@ -1,9 +1,11 @@
 import {
 	type ApiRequestOptions,
+	ApiResponseError,
 	readInteger,
 	readNonEmptyString,
 	readRecord,
 	readRfc3339,
+	readString,
 	requestJson,
 } from "./client";
 import type { MoneyApiResponse } from "./journeys";
@@ -23,7 +25,21 @@ export type CreateJourneyRequestApiResponse = {
 	readonly request_id: string;
 };
 
-export type JourneyRequestApiResponse = {
+type JourneyRequestPlaceFields =
+	| {
+			readonly departure_city: string;
+			readonly departure_country: string;
+			readonly destination_city: string;
+			readonly destination_country: string;
+	  }
+	| {
+			readonly departure_city?: never;
+			readonly departure_country?: never;
+			readonly destination_city?: never;
+			readonly destination_country?: never;
+	  };
+
+export type JourneyRequestApiResponse = JourneyRequestPlaceFields & {
 	readonly id: string;
 	readonly departure: string;
 	readonly destination: string;
@@ -33,6 +49,52 @@ export type JourneyRequestApiResponse = {
 	};
 	readonly budget: MoneyApiResponse;
 };
+
+const placeFieldNames = [
+	"departure_city",
+	"departure_country",
+	"destination_city",
+	"destination_country",
+] as const;
+
+function decodePlaceFields(
+	record: Record<string, unknown>,
+): JourneyRequestPlaceFields {
+	const presentFieldCount = placeFieldNames.filter((fieldName) =>
+		Object.hasOwn(record, fieldName),
+	).length;
+	if (presentFieldCount === 0) {
+		return {};
+	}
+	if (presentFieldCount !== placeFieldNames.length) {
+		throw new ApiResponseError(
+			"journey requestの地名構成要素はすべて必要です。",
+		);
+	}
+
+	return {
+		departure_city: readNonEmptyString(
+			record,
+			"departure_city",
+			"journey request",
+		),
+		departure_country: readString(
+			record,
+			"departure_country",
+			"journey request",
+		),
+		destination_city: readNonEmptyString(
+			record,
+			"destination_city",
+			"journey request",
+		),
+		destination_country: readString(
+			record,
+			"destination_country",
+			"journey request",
+		),
+	};
+}
 
 function decodeMoney(value: unknown, context: string): MoneyApiResponse {
 	const record = readRecord(value, context);
@@ -61,6 +123,7 @@ export function decodeJourneyRequest(
 	const record = readRecord(value, "journey request");
 	const period = readRecord(record.period, "journey request.period");
 	return {
+		...decodePlaceFields(record),
 		budget: decodeMoney(record.budget, "journey request.budget"),
 		departure: readNonEmptyString(record, "departure", "journey request"),
 		destination: readNonEmptyString(record, "destination", "journey request"),

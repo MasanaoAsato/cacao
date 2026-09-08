@@ -234,9 +234,13 @@ func TestHandleListRequests_Success(t *testing.T) {
 		output: listjourneyrequests.Output{
 			Requests: []readmodel.JourneyRequestDTO{
 				{
-					ID:          "request-1",
-					Departure:   "東京, 日本",
-					Destination: "大阪, 日本",
+					ID:                 "request-1",
+					Departure:          "東京, 日本",
+					DepartureCity:      "東京",
+					DepartureCountry:   "日本",
+					Destination:        "大阪",
+					DestinationCity:    "大阪",
+					DestinationCountry: "",
 					Period: readmodel.PeriodDTO{
 						StartDate: time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC),
 						EndDate:   time.Date(2026, 7, 3, 0, 0, 0, 0, time.UTC),
@@ -255,6 +259,20 @@ func TestHandleListRequests_Success(t *testing.T) {
 
 	if w.Code != http.StatusOK {
 		t.Errorf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	var responses []map[string]any
+	if err := json.NewDecoder(w.Body).Decode(&responses); err != nil {
+		t.Fatalf("Decode() error = %v", err)
+	}
+	if len(responses) != 1 {
+		t.Fatalf("response count = %d, want 1", len(responses))
+	}
+	response := responses[0]
+	if response["departure_city"] != "東京" || response["departure_country"] != "日本" {
+		t.Errorf("departure place response = %#v", response)
+	}
+	if response["destination_city"] != "大阪" || response["destination_country"] != "" {
+		t.Errorf("destination place response = %#v", response)
 	}
 }
 

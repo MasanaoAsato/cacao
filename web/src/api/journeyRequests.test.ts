@@ -81,3 +81,81 @@ describe("journey requests API", () => {
 		expect(decodeJourneyRequest(sameDay).period).toEqual(sameDay.period);
 	});
 });
+
+describe("decodeJourneyRequestの地名構成要素", () => {
+	it("正常系: 4項目がそろう応答を構成要素のままデコードする", () => {
+		const decoded = decodeJourneyRequest({
+			budget: { amount: 80000, currency: "JPY" },
+			departure: "Washington, D.C., United States",
+			departure_city: "Washington, D.C.",
+			departure_country: "United States",
+			destination: "東京",
+			destination_city: "東京",
+			destination_country: "",
+			id: "request-1",
+			period: {
+				end_date: "2026-08-30T00:00:00+09:00",
+				start_date: "2026-08-28T00:00:00+09:00",
+			},
+		});
+
+		expect(decoded.departure_city).toBe("Washington, D.C.");
+		expect(decoded.departure_country).toBe("United States");
+		expect(decoded.destination_country).toBe("");
+	});
+
+	it("正常系: 4項目が全欠落した旧応答を受理する", () => {
+		const decoded = decodeJourneyRequest({
+			budget: { amount: 80000, currency: "JPY" },
+			departure: "東京",
+			destination: "京都",
+			id: "request-1",
+			period: {
+				end_date: "2026-08-30T00:00:00+09:00",
+				start_date: "2026-08-28T00:00:00+09:00",
+			},
+		});
+
+		expect("departure_city" in decoded).toBe(false);
+	});
+
+	it("異常系: 一部だけの地名構成要素は拒否する", () => {
+		expect(() =>
+			decodeJourneyRequest({
+				budget: { amount: 80000, currency: "JPY" },
+				departure: "東京",
+				departure_city: "東京",
+				destination: "京都",
+				id: "request-1",
+				period: {
+					end_date: "2026-08-30T00:00:00+09:00",
+					start_date: "2026-08-28T00:00:00+09:00",
+				},
+			}),
+		).toThrow("地名構成要素");
+	});
+
+	it("境界値: 空の都市とnullの国は拒否する", () => {
+		const base = {
+			budget: { amount: 80000, currency: "JPY" },
+			departure: "東京",
+			departure_city: "東京",
+			departure_country: "",
+			destination: "京都",
+			destination_city: "京都",
+			destination_country: "",
+			id: "request-1",
+			period: {
+				end_date: "2026-08-30T00:00:00+09:00",
+				start_date: "2026-08-28T00:00:00+09:00",
+			},
+		};
+
+		expect(() => decodeJourneyRequest({ ...base, departure_city: "" })).toThrow(
+			"departure_city",
+		);
+		expect(() =>
+			decodeJourneyRequest({ ...base, destination_country: null }),
+		).toThrow("destination_country");
+	});
+});
