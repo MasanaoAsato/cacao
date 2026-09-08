@@ -44,16 +44,18 @@ export function resolveBookletDesign(
 		":",
 	);
 	const displayFont = getDisplayFontDefinition(recipe.displayFontId);
+	const fontFamilies = Object.freeze(
+		[...getFontPairFamilies(recipe.fontPairId), displayFont.family].filter(
+			(family): family is string => family !== null,
+		),
+	);
 
 	return Object.freeze({
 		comparisonKey,
 		compositionId,
 		decorAssetIds: Object.freeze([]),
 		familyId: definition.id,
-		fontFamilies: Object.freeze([
-			...getFontPairFamilies(recipe.fontPairId),
-			displayFont.family,
-		]),
+		fontFamilies,
 		paletteId,
 		policyId,
 		renderKey,

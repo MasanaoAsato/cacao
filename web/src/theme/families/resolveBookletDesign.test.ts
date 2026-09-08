@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createBookletTheme } from "../bookletTheme";
+import { createBookletTheme, getFontPairFamilies } from "../bookletTheme";
 import { designKey } from "../resolve";
 import { resolveBookletDesign } from "./resolveBookletDesign";
 
@@ -31,6 +31,18 @@ describe("resolveBookletDesign", () => {
 		expect(design.comparisonKey).toBe(designKey(requested.recipe));
 		expect(design.renderKey).toBe(
 			`legacy:${requested.seedToken}:legacy-full:${design.comparisonKey}`,
+		);
+	});
+
+	it("境界値: 表示書体を持たないテーマではnullを必要書体へ含めない", () => {
+		const requested = createBookletTheme({ value: 0, version: "v2" });
+		const design = resolveBookletDesign({
+			...requested,
+			recipe: { ...requested.recipe, displayFontId: "inherit" },
+		});
+
+		expect(design.fontFamilies).toEqual(
+			getFontPairFamilies(requested.recipe.fontPairId),
 		);
 	});
 });
