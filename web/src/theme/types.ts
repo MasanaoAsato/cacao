@@ -253,7 +253,20 @@ export type MotifId =
 	| "cross"
 	| "notch"
 	| "binder-hole"
-	| "triangle";
+	| "triangle"
+	| "atlas-compass"
+	| "atlas-route-mark"
+	| "atlas-perforation"
+	| "paper-torn-sheet"
+	| "paper-tape"
+	| "paper-leaf"
+	| "paper-postage"
+	| "playful-bag"
+	| "playful-sun"
+	| "playful-squiggle"
+	| "playful-burst";
+
+export type MotifStyleId = "atlas-ink" | "paper-cut" | "playful-doodle";
 
 /** Which palette colour a motif or ground is painted with. `own` keeps the asset's colours. */
 export type MotifColor = "accent" | "border" | "muted" | "own";
@@ -382,6 +395,8 @@ export type MotifDefinition =
 	| {
 			readonly kind: "asset";
 			readonly id: MotifId;
+			/** Visual family of the repository-managed artwork. */
+			readonly styleId: MotifStyleId;
 			readonly aspect: number;
 			readonly coverage: number;
 			readonly recolor: "mask" | "none";

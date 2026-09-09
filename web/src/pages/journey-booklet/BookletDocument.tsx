@@ -27,9 +27,9 @@ import { MOTIFS } from "../../theme/motifs";
 import type {
 	BookletThemeCandidate,
 	CoverVeilBounds,
-	MotifDefinition,
 	ResolvedBookletTheme,
 } from "../../theme/types";
+import { MotifShapes } from "./decor/MotifShapes";
 
 export type BookletDocumentProps = {
 	readonly coverVeilBounds: CoverVeilBounds;
@@ -223,106 +223,6 @@ function CoverVeil({
 
 function svgId(...parts: readonly string[]): string {
 	return parts.join("-").replace(/[^a-z0-9-]/gi, "-");
-}
-
-function paint(
-	value: "color" | "none",
-	color: string | null,
-): string | undefined {
-	if (value === "none") {
-		return "none";
-	}
-	return color ?? undefined;
-}
-
-/** Draws one motif's shapes in its unit box (`aspect` wide, 1 high). */
-function MotifShapes({
-	color,
-	definition,
-	maskId,
-}: {
-	readonly color: string | null;
-	readonly definition: MotifDefinition;
-	readonly maskId: string;
-}) {
-	if (definition.kind === "asset") {
-		if (definition.recolor === "mask" && color) {
-			return (
-				<>
-					<mask id={maskId}>
-						<image
-							height="1"
-							href={definition.src}
-							preserveAspectRatio="none"
-							width={definition.aspect}
-						/>
-					</mask>
-					<rect
-						fill={color}
-						height="1"
-						mask={`url(#${maskId})`}
-						width={definition.aspect}
-					/>
-				</>
-			);
-		}
-		return (
-			<image
-				height="1"
-				href={definition.src}
-				preserveAspectRatio="none"
-				width={definition.aspect}
-			/>
-		);
-	}
-	return (
-		<>
-			{definition.shapes.map((shape, index) => {
-				const key = `${definition.id}-${index}`;
-				const common = {
-					fill: paint(shape.fill, color),
-					stroke: paint(shape.stroke, color),
-					strokeWidth: shape.strokeWidth,
-				};
-				switch (shape.kind) {
-					case "circle":
-						return (
-							<circle
-								key={key}
-								cx={shape.cx}
-								cy={shape.cy}
-								r={shape.r}
-								{...common}
-							/>
-						);
-					case "rect":
-						return (
-							<rect
-								key={key}
-								height={shape.height}
-								width={shape.width}
-								x={shape.x}
-								y={shape.y}
-								{...common}
-							/>
-						);
-					default:
-						return (
-							<path
-								key={key}
-								d={shape.d}
-								strokeDasharray={
-									shape.dashed
-										? `${shape.strokeWidth * 3} ${shape.strokeWidth * 3}`
-										: undefined
-								}
-								{...common}
-							/>
-						);
-				}
-			})}
-		</>
-	);
 }
 
 function formatBounds(bounds: {
