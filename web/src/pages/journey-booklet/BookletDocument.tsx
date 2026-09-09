@@ -24,12 +24,12 @@ import {
 import { motifColorVariable } from "../../theme/decorGeometry";
 import { getDecorLayer } from "../../theme/decorLayer";
 import { MOTIFS } from "../../theme/motifs";
-import { MotifShapes } from "./decor/MotifShapes";
 import type {
 	BookletThemeCandidate,
 	CoverVeilBounds,
 	ResolvedBookletTheme,
 } from "../../theme/types";
+import { MotifShapes } from "./decor/MotifShapes";
 
 export type BookletDocumentProps = {
 	readonly coverVeilBounds: CoverVeilBounds;

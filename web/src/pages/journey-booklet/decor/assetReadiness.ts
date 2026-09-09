@@ -1,7 +1,7 @@
 import {
-	motifAssetsFor,
 	type MotifAsset,
 	type MotifAssetId,
+	motifAssetsFor,
 } from "../../../theme/motifAssets";
 
 function loadAsset(asset: MotifAsset): Promise<void> {

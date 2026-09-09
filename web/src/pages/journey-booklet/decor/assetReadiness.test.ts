@@ -1,7 +1,8 @@
 /** @vitest-environment jsdom */
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { MOTIF_ASSETS } from "../../../theme/motifAssets";
 import { waitForMotifAssets } from "./assetReadiness";
+
+const atlasCompassID = "atlas-compass" as const;
 
 class TestImage extends EventTarget {
 	static created = 0;
@@ -34,22 +35,20 @@ describe("waitForMotifAssets", () => {
 
 	it("正常系: SVG URLをImage.decodeで確認する", async () => {
 		vi.stubGlobal("Image", TestImage);
-		await expect(
-			waitForMotifAssets([MOTIF_ASSETS[0]!.id]),
-		).resolves.toBeUndefined();
+		await expect(waitForMotifAssets([atlasCompassID])).resolves.toBeUndefined();
 	});
 
 	it("異常系: SVGの読込またはdecode失敗を素材ID付きで返す", async () => {
 		vi.stubGlobal("Image", TestImage);
 		TestImage.decodeFailure = true;
-		await expect(waitForMotifAssets([MOTIF_ASSETS[0]!.id])).rejects.toThrow(
+		await expect(waitForMotifAssets([atlasCompassID])).rejects.toThrow(
 			"atlas-compass",
 		);
 	});
 
 	it("境界値系: 重複した素材URLは一度だけ読込む", async () => {
 		vi.stubGlobal("Image", TestImage);
-		await waitForMotifAssets([MOTIF_ASSETS[0]!.id, MOTIF_ASSETS[0]!.id]);
+		await waitForMotifAssets([atlasCompassID, atlasCompassID]);
 		expect(TestImage.created).toBe(1);
 	});
 

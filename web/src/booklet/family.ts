@@ -1,5 +1,5 @@
-import type { RequestedBookletTheme } from "../theme/types";
 import type { MotifAssetId } from "../theme/motifAssets";
+import type { RequestedBookletTheme } from "../theme/types";
 import type { PolicyId } from "./editorialModel";
 import type { BookletPagePlan } from "./model";
 

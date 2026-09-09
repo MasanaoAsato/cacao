@@ -8,11 +8,11 @@ import { MotifShapes } from "./MotifShapes";
 describe("MotifShapes", () => {
 	it("正常系: recolor可能なSVG素材をマスクと色付き矩形で描画する", () => {
 		const definition = MOTIFS.get("atlas-compass");
-		if (!definition || definition.kind !== "asset") {
+		if (definition?.kind !== "asset") {
 			throw new Error("atlas-compass が未登録です。");
 		}
 		const { container } = render(
-			<svg>
+			<svg aria-label="装飾素材の描画領域">
 				<MotifShapes
 					color="var(--accent)"
 					definition={definition}
@@ -32,11 +32,11 @@ describe("MotifShapes", () => {
 
 	it("正常系: 固有色を選ぶ素材は元SVGを直接描画する", () => {
 		const asset = MOTIFS.get("paper-tape");
-		if (!asset || asset.kind !== "asset") {
+		if (asset?.kind !== "asset") {
 			throw new Error("paper-tape が未登録です。");
 		}
 		const { container } = render(
-			<svg>
+			<svg aria-label="装飾素材の描画領域">
 				<MotifShapes color={null} definition={asset} maskId="tape-mask" />
 			</svg>,
 		);
@@ -50,7 +50,7 @@ describe("MotifShapes", () => {
 			throw new Error("dot が未登録です。");
 		}
 		const { container } = render(
-			<svg>
+			<svg aria-label="装飾素材の描画領域">
 				<MotifShapes color="black" definition={definition} maskId="dot-mask" />
 			</svg>,
 		);

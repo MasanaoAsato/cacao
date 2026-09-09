@@ -1,5 +1,5 @@
-import type { MotifDefinition, MotifShape } from "./types";
 import { MOTIF_ASSETS } from "./motifAssets";
+import type { MotifDefinition, MotifShape } from "./types";
 
 /** 1px expressed in mm, used for hairline strokes. */
 const HAIRLINE_MM = 0.26;

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { BookletModel } from "../../booklet/model";
-import { waitForMotifAssets } from "./decor/assetReadiness";
 import {
 	type BookletPageMeasurement,
 	isRecoverableBookletFailure,
@@ -15,13 +14,14 @@ import {
 	getThemeCandidates,
 	resolveBookletTheme,
 } from "../../theme/bookletTheme";
+import type { MotifAssetId } from "../../theme/motifAssets";
 import type {
 	BookletThemeCandidate,
 	CoverVeilBounds,
 	RequestedBookletTheme,
 	ResolvedBookletTheme,
 } from "../../theme/types";
-import type { MotifAssetId } from "../../theme/motifAssets";
+import { waitForMotifAssets } from "./decor/assetReadiness";
 
 export type BookletPagePlanStatus =
 	| "idle"
