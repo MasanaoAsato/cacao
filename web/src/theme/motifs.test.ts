@@ -2,15 +2,22 @@ import { describe, expect, it } from "vitest";
 import { MOTIFS } from "./motifs";
 
 describe("図形素材の語彙", () => {
-	it("正常系: 12種の手続き図形を登録し、キーと定義IDが一致する", () => {
-		expect(MOTIFS.size).toBe(12);
+	it("正常系: 12種の手続き図形と素材を登録し、キーと定義IDが一致する", () => {
+		expect(MOTIFS.size).toBe(23);
 		for (const [id, motif] of MOTIFS) {
 			expect(motif.id).toBe(id);
-			expect(motif.kind).toBe("procedural");
 			expect(motif.aspect).toBeGreaterThan(0);
 			expect(motif.coverage).toBeGreaterThanOrEqual(0);
 			expect(motif.coverage).toBeLessThanOrEqual(1);
 		}
+	});
+
+	it("正常系: 既存の手続き図形は12種のまま維持する", () => {
+		expect(
+			Array.from(MOTIFS.values()).filter(
+				(motif) => motif.kind === "procedural",
+			),
+		).toHaveLength(12);
 	});
 
 	it("正常系: 手続き図形の座標は箱（幅aspect×高さ1）に収まる", () => {
