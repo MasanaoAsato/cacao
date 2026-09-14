@@ -21,6 +21,7 @@ export function useLegacyFamilyPagePlan(
 		model,
 		design?.familyId === "legacy" ? design.requestedTheme : null,
 		design?.familyId === "legacy" ? design.renderKey : null,
+		design?.familyId === "legacy" ? design.decorAssetIds : [],
 	);
 	const renderPagePlan: BookletRenderPagePlan | null =
 		design?.familyId === "legacy" && legacyResult.pagePlan

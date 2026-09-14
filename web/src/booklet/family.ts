@@ -1,3 +1,4 @@
+import type { MotifAssetId } from "../theme/motifAssets";
 import type { RequestedBookletTheme } from "../theme/types";
 import type { PolicyId } from "./editorialModel";
 import type { BookletPagePlan } from "./model";
@@ -15,7 +16,7 @@ export type BookletFamilyId =
 export type ResolvedBookletDesign = {
 	readonly comparisonKey: string;
 	readonly compositionId: string;
-	readonly decorAssetIds: readonly string[];
+	readonly decorAssetIds: readonly MotifAssetId[];
 	readonly familyId: BookletFamilyId;
 	readonly fontFamilies: readonly string[];
 	readonly paletteId: string;

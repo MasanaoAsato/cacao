@@ -14,12 +14,14 @@ import {
 	getThemeCandidates,
 	resolveBookletTheme,
 } from "../../theme/bookletTheme";
+import type { MotifAssetId } from "../../theme/motifAssets";
 import type {
 	BookletThemeCandidate,
 	CoverVeilBounds,
 	RequestedBookletTheme,
 	ResolvedBookletTheme,
 } from "../../theme/types";
+import { waitForMotifAssets } from "./decor/assetReadiness";
 
 export type BookletPagePlanStatus =
 	| "idle"
@@ -63,6 +65,7 @@ type LayoutFailureCode =
 
 const FONT_SAMPLE_TEXT = "東京の旅程・京都散策";
 const LAYOUT_ROUNDING_TOLERANCE_PX = 1;
+const NO_DECOR_ASSET_IDS: readonly MotifAssetId[] = Object.freeze([]);
 
 export class BookletLayoutError extends Error {
 	readonly code: LayoutFailureCode;
@@ -495,6 +498,7 @@ export function useBookletPagePlan(
 	model: BookletModel | null,
 	requestedTheme: RequestedBookletTheme | null,
 	renderKey: string | null,
+	decorAssetIDs: readonly MotifAssetId[] = NO_DECOR_ASSET_IDS,
 ): BookletPagePlanResult {
 	const measurementRef = useRef<HTMLDivElement>(null);
 	const documentRef = useRef<HTMLElement>(null);
@@ -579,6 +583,7 @@ export function useBookletPagePlan(
 				setError(null);
 				setStatus("measuring");
 				await waitForFonts(activeTheme);
+				await waitForMotifAssets(decorAssetIDs);
 				const measurementRoot = measurementRef.current;
 				if (!measurementRoot) {
 					throw new BookletLayoutError(
@@ -656,6 +661,7 @@ export function useBookletPagePlan(
 		activeTheme,
 		candidateIndex,
 		candidateResult,
+		decorAssetIDs,
 		model,
 		renderKey,
 		requestedTheme,
