@@ -29,7 +29,7 @@ import type {
 	CoverVeilBounds,
 	ResolvedBookletTheme,
 } from "../../theme/types";
-import { MotifShapes } from "./decor/MotifShapes";
+import { MotifShapes, svgId } from "./decor/MotifShapes";
 
 export type BookletDocumentProps = {
 	readonly coverVeilBounds: CoverVeilBounds;
@@ -219,10 +219,6 @@ function CoverVeil({
 			/>
 		</svg>
 	);
-}
-
-function svgId(...parts: readonly string[]): string {
-	return parts.join("-").replace(/[^a-z0-9-]/gi, "-");
 }
 
 function formatBounds(bounds: {
