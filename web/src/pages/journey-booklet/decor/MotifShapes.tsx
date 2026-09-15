@@ -13,6 +13,11 @@ function paint(
 	return value === "none" ? "none" : (color ?? undefined);
 }
 
+/** Builds an SVG element id, dropping the characters ids may not contain. */
+export function svgId(...parts: readonly string[]): string {
+	return parts.join("-").replace(/[^a-z0-9-]/gi, "-");
+}
+
 /** Draws one motif in its unit box, including external SVG artwork as a mask. */
 export function MotifShapes({ color, definition, maskId }: MotifShapesProps) {
 	if (definition.kind === "asset") {

@@ -96,7 +96,11 @@ function luminance(color: readonly [number, number, number]): number {
 	);
 }
 
-function contrastRatio(foreground: string, background: string): number | null {
+/** WCAG contrast ratio of two `#rrggbb` colours; `null` when either is unparsable. */
+export function contrastRatio(
+	foreground: string,
+	background: string,
+): number | null {
 	const foregroundRgb = parseHexColor(foreground);
 	const backgroundRgb = parseHexColor(background);
 	if (!foregroundRgb || !backgroundRgb) {

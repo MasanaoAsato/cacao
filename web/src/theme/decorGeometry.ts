@@ -48,7 +48,8 @@ export type ResolvedMotif = {
 	readonly yMm: number;
 };
 
-function rotatedBounds(
+/** Axis-aligned bounds of a box rotated around its own centre. */
+export function rotatedBounds(
 	xMm: number,
 	yMm: number,
 	widthMm: number,
