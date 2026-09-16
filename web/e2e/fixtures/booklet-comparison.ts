@@ -6,6 +6,10 @@ export const COMPARISON_EXPECTED_UNITS = Array.from(
 		const ordinal = index + 1;
 		const hour = ["09", "11", "14", "16"][index % 4] ?? "09";
 		return {
+			description:
+				ordinal === 4
+					? ""
+					: "比較用に固定した説明文です。京都の街並みと文化をゆっくり楽しみます。",
 			id: `comparison-leg-${ordinal}:comparison-spot-${ordinal}`,
 			name:
 				ordinal === 7
@@ -26,10 +30,7 @@ const comparisonJourney = {
 				throw new Error("比較用の掲載単位を作成できません。");
 			}
 			return {
-				description:
-					ordinal === 4
-						? ""
-						: "比較用に固定した説明文です。京都の街並みと文化をゆっくり楽しみます。",
+				description: expected.description,
 				estimated_cost: { amount: 800 + ordinal * 100, currency: "JPY" },
 				id: `comparison-spot-${ordinal}`,
 				name: expected.name,

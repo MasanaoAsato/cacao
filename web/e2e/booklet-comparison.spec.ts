@@ -65,6 +65,10 @@ async function expectComparisonUnits(
 				const time = element.querySelector("time");
 				const name = element.querySelector("h3");
 				return {
+					descriptions: Array.from(
+						element.querySelectorAll(".booklet-unit__description"),
+						(description) => description.textContent ?? "",
+					),
 					id: element.getAttribute("data-unit-id"),
 					name: name?.textContent?.trim() ?? "",
 					startAt: time?.getAttribute("dateTime"),
@@ -81,11 +85,18 @@ async function expectComparisonUnits(
 	expect(units.map((unit) => unit.startAt)).toEqual(
 		COMPARISON_EXPECTED_UNITS.map((unit) => unit.startAt),
 	);
-	await expect(
-		page.locator(
-			'.booklet-document [data-unit-id="comparison-leg-4:comparison-spot-4"] .booklet-unit__description',
+	expect(units.map((unit) => unit.descriptions.length)).toEqual(
+		COMPARISON_EXPECTED_UNITS.map((unit) =>
+			unit.description.trim().length === 0 ? 0 : 1,
 		),
-	).toHaveText("");
+	);
+	expect(
+		units.flatMap((unit) =>
+			unit.descriptions.some((description) => description.trim().length === 0)
+				? [unit.id]
+				: [],
+		),
+	).toEqual([]);
 	return units.map((unit) => unit.id ?? "");
 }
 
