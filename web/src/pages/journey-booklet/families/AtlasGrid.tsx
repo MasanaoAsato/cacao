@@ -262,7 +262,6 @@ function anchor(
 	reserveMm = 0,
 ): DecorAnchor {
 	return {
-		heightMm,
 		id,
 		kind,
 		rect: { heightMm, widthMm, xMm, yMm },
@@ -329,7 +328,7 @@ export function atlasDecorDefinition(
 		decorations.push({
 			anchorId: "cover-perforation",
 			assetId: "atlas-perforation",
-			color: "secondary",
+			color: "muted",
 			kind: "asset",
 			layer: "over-image",
 			offsetMm: [1.5, 0],

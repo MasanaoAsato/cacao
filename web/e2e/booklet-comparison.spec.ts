@@ -91,7 +91,7 @@ async function expectComparisonUnits(
 		page.locator(
 			'.booklet-document [data-unit-id="comparison-leg-4:comparison-spot-4"] .booklet-unit__description',
 		),
-	).toEqual([]);
+	).toHaveCount(0);
 	return units.map((unit) => unit.id ?? "");
 }
 

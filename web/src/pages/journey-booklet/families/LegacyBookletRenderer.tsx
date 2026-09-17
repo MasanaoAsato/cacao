@@ -58,7 +58,9 @@ export function LegacyBookletRenderer({
 					theme={activeTheme}
 				/>
 			) : null}
-			{renderPagePlan && activeTheme && coverVeilBounds ? (
+			{renderPagePlan?.familyId === "legacy" &&
+			activeTheme &&
+			coverVeilBounds ? (
 				<BookletDocument
 					coverVeilBounds={coverVeilBounds}
 					familyId={design.familyId}
