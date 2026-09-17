@@ -1,6 +1,7 @@
 import type { MotifAssetId } from "../theme/motifAssets";
 import type { RequestedBookletTheme } from "../theme/types";
 import type { PolicyId } from "./editorialModel";
+import type { AtlasGridPagePlan } from "./families/atlasGrid";
 import type { BookletPagePlan } from "./model";
 
 export type BookletFamilyId =
@@ -26,11 +27,16 @@ export type ResolvedBookletDesign = {
 	readonly seedToken: string;
 };
 
-/** The legacy pagination contract is deliberately kept separate from family plans. */
-export type BookletRenderPagePlan = {
-	readonly familyId: "legacy";
-	readonly pagePlan: readonly BookletPagePlan[];
-};
+export type BookletRenderPagePlan =
+	| {
+			readonly familyId: "legacy";
+			readonly pagePlan: readonly BookletPagePlan[];
+	  }
+	| {
+			readonly coverTitleSizePt: number;
+			readonly familyId: "atlas-grid";
+			readonly pagePlan: readonly AtlasGridPagePlan[];
+	  };
 
 export type FamilyMeasurement = {
 	readonly caseId: string;

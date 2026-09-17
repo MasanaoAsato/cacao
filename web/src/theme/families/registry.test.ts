@@ -1,5 +1,26 @@
 import { describe, expect, it } from "vitest";
-import { createFamilyRegistry } from "./registry";
+import { createFamilyRegistry, familyDefinitionFor } from "./registry";
+
+describe("BOOKLET_FAMILY_REGISTRY", () => {
+	it.each(["wayfinder", "night-train"] as const)(
+		"正常系: %sをatlas-gridへ割り当てる",
+		(moodId) => {
+			expect(familyDefinitionFor(moodId)).toMatchObject({
+				compositionIds: ["wide-image", "side-index"],
+				decorAssetIds: [
+					"atlas-compass",
+					"atlas-route-mark",
+					"atlas-perforation",
+				],
+				fontFamilies: ["Zen Kaku Gothic New", "Noto Sans JP"],
+				id: "atlas-grid",
+				moodIds: ["wayfinder", "night-train"],
+				paletteIds: ["blueprint", "forest-atlas"],
+				policyId: "timetable",
+			});
+		},
+	);
+});
 
 describe("createFamilyRegistry", () => {
 	it("正常系: legacyが全moodを担当できる", () => {
@@ -38,6 +59,8 @@ describe("createFamilyRegistry", () => {
 				},
 				{
 					compositionIds: ["table"],
+					decorAssetIds: ["atlas-compass"],
+					fontFamilies: ["Noto Sans JP"],
 					id: "atlas-grid",
 					moodIds: ["wayfinder"],
 					paletteIds: ["atlas-blue"],
@@ -63,12 +86,14 @@ describe("createFamilyRegistry", () => {
 				},
 				{
 					compositionIds: ["table"],
+					decorAssetIds: ["atlas-compass"],
+					fontFamilies: ["Noto Sans JP"],
 					id: "atlas-grid",
 					moodIds: ["wayfinder"],
 					paletteIds: [],
 					policyId: "timetable",
 				},
 			]),
-		).toThrow("配色または構図候補がありません");
+		).toThrow("配色・構図・素材・書体が不足しています");
 	});
 });

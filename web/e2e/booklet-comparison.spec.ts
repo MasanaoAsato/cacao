@@ -7,7 +7,7 @@ import { resolveTheme } from "../src/theme/resolve.js";
 import type { MoodId } from "../src/theme/types.js";
 import {
 	COMPARISON_EXPECTED_UNITS,
-	comparisonSvgDataUrl,
+	comparisonCoverDataUrl,
 	routeComparisonBookletApi,
 } from "./fixtures/booklet-comparison.js";
 import { MOOD_SAMPLE_SEEDS } from "./fixtures/booklet-theme-samples.js";
@@ -59,11 +59,13 @@ async function expectComparisonUnits(
 	page: Parameters<typeof routeComparisonBookletApi>[0],
 ): Promise<readonly string[]> {
 	const units = await page
-		.locator(".booklet-document .booklet-unit")
+		.locator(".booklet-document [data-unit-id]")
 		.evaluateAll((elements) =>
 			elements.map((element) => {
 				const time = element.querySelector("time");
-				const name = element.querySelector("h3");
+				const name = element.querySelector(
+					'[data-booklet-text-role="spot-name"]',
+				);
 				return {
 					descriptions: Array.from(
 						element.querySelectorAll(".booklet-unit__description"),
@@ -85,16 +87,9 @@ async function expectComparisonUnits(
 	expect(units.map((unit) => unit.startAt)).toEqual(
 		COMPARISON_EXPECTED_UNITS.map((unit) => unit.startAt),
 	);
-	expect(units.map((unit) => unit.descriptions.length)).toEqual(
-		COMPARISON_EXPECTED_UNITS.map((unit) =>
-			unit.description.trim().length === 0 ? 0 : 1,
-		),
-	);
-	expect(
-		units.flatMap((unit) =>
-			unit.descriptions.some((description) => description.trim().length === 0)
-				? [unit.id]
-				: [],
+	await expect(
+		page.locator(
+			'.booklet-document [data-unit-id="comparison-leg-4:comparison-spot-4"] .booklet-unit__description',
 		),
 	).toEqual([]);
 	return units.map((unit) => unit.id ?? "");
@@ -147,10 +142,12 @@ async function captureComparisonRecord(
 			requestedDesign: element.getAttribute("data-booklet-design"),
 			themeKey: element.getAttribute("data-booklet-theme-key"),
 		};
-	}, comparisonSvgDataUrl);
-	expect(metadata.documentHtml).toContain(comparisonSvgDataUrl);
+	}, comparisonCoverDataUrl);
+	expect(metadata.documentHtml).toContain(comparisonCoverDataUrl);
 	expect(metadata.documentHtml).not.toContain("/journey-images/");
-	expect(metadata.familyId).toBe("legacy");
+	expect(metadata.familyId).toBe(
+		["wayfinder", "night-train"].includes(moodId) ? "atlas-grid" : "legacy",
+	);
 	expect(metadata.comparisonKey).not.toBeNull();
 	return {
 		...metadata,

@@ -45,15 +45,19 @@ export function resolveBookletDesign(
 	);
 	const displayFont = getDisplayFontDefinition(recipe.displayFontId);
 	const fontFamilies = Object.freeze(
-		[...getFontPairFamilies(recipe.fontPairId), displayFont.family].filter(
-			(family): family is string => family !== null,
-		),
+		definition.id === "legacy"
+			? [...getFontPairFamilies(recipe.fontPairId), displayFont.family].filter(
+					(family): family is string => family !== null,
+				)
+			: [...definition.fontFamilies],
 	);
 
 	return Object.freeze({
 		comparisonKey,
 		compositionId,
-		decorAssetIds: Object.freeze([]),
+		decorAssetIds: Object.freeze(
+			definition.id === "legacy" ? [] : [...definition.decorAssetIds],
+		),
 		familyId: definition.id,
 		fontFamilies,
 		paletteId,

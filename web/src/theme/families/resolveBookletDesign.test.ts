@@ -26,23 +26,47 @@ describe("resolveBookletDesign", () => {
 
 	it("境界値: legacyの比較キーは既存designKeyを維持する", () => {
 		const requested = createBookletTheme({ value: 0, version: "v2" });
-		const design = resolveBookletDesign(requested);
+		const legacyRequested = {
+			...requested,
+			recipe: { ...requested.recipe, moodId: "field-notes" as const },
+		};
+		const design = resolveBookletDesign(legacyRequested);
 
-		expect(design.comparisonKey).toBe(designKey(requested.recipe));
+		expect(design.comparisonKey).toBe(designKey(legacyRequested.recipe));
 		expect(design.renderKey).toBe(
-			`legacy:${requested.seedToken}:legacy-full:${design.comparisonKey}`,
+			`legacy:${legacyRequested.seedToken}:legacy-full:${design.comparisonKey}`,
 		);
 	});
 
 	it("境界値: 表示書体を持たないテーマではnullを必要書体へ含めない", () => {
 		const requested = createBookletTheme({ value: 0, version: "v2" });
-		const design = resolveBookletDesign({
+		const legacyRequested = {
 			...requested,
-			recipe: { ...requested.recipe, displayFontId: "inherit" },
-		});
+			recipe: {
+				...requested.recipe,
+				displayFontId: "inherit" as const,
+				moodId: "field-notes" as const,
+			},
+		};
+		const design = resolveBookletDesign(legacyRequested);
 
 		expect(design.fontFamilies).toEqual(
-			getFontPairFamilies(requested.recipe.fontPairId),
+			getFontPairFamilies(legacyRequested.recipe.fontPairId),
 		);
+	});
+
+	it("正常系: atlas-gridの素材・書体・掲載方針を解決する", () => {
+		const requested = createBookletTheme({ value: 7, version: "v2" });
+		const design = resolveBookletDesign({
+			...requested,
+			recipe: { ...requested.recipe, moodId: "wayfinder" },
+		});
+
+		expect(design).toMatchObject({
+			decorAssetIds: ["atlas-compass", "atlas-route-mark", "atlas-perforation"],
+			familyId: "atlas-grid",
+			fontFamilies: ["Zen Kaku Gothic New", "Noto Sans JP"],
+			policyId: "timetable",
+		});
 	});
 });

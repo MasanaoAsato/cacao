@@ -21,30 +21,35 @@ export async function expectSelectedCandidate(page: Page): Promise<void> {
 }
 
 export async function expectNoHiddenText(page: Page): Promise<void> {
-	const problems = await page.locator("[data-booklet-text-role]").evaluateAll(
-		(elements, tolerance) =>
-			elements.flatMap((element) => {
-				const htmlElement = element as HTMLElement;
-				const style = getComputedStyle(htmlElement);
-				const hidden =
-					["hidden", "clip", "scroll", "auto"].includes(style.overflow) ||
-					style.whiteSpace === "nowrap" ||
-					(style.textOverflow !== "" && style.textOverflow !== "clip") ||
-					style.transform.includes("scale");
-				return htmlElement.scrollWidth > htmlElement.clientWidth + tolerance ||
-					htmlElement.scrollHeight > htmlElement.clientHeight + tolerance ||
-					hidden
-					? [htmlElement.dataset.bookletTextRole]
-					: [];
-			}),
-		LAYOUT_ROUNDING_TOLERANCE_PX,
-	);
+	const problems = await page
+		.locator(".booklet-document [data-booklet-text-role]")
+		.evaluateAll(
+			(elements, tolerance) =>
+				elements.flatMap((element) => {
+					const htmlElement = element as HTMLElement;
+					const style = getComputedStyle(htmlElement);
+					const hidden =
+						["hidden", "clip", "scroll", "auto"].includes(style.overflow) ||
+						style.whiteSpace === "nowrap" ||
+						(style.textOverflow !== "" && style.textOverflow !== "clip") ||
+						style.transform.includes("scale");
+					return htmlElement.scrollWidth >
+						htmlElement.clientWidth + tolerance ||
+						htmlElement.scrollHeight > htmlElement.clientHeight + tolerance ||
+						hidden
+						? [htmlElement.dataset.bookletTextRole]
+						: [];
+				}),
+			LAYOUT_ROUNDING_TOLERANCE_PX,
+		);
 	expect(problems).toEqual([]);
 }
 
 export async function expectContentInsidePages(page: Page): Promise<void> {
 	const outside = await page
-		.locator(".booklet-document .booklet-page--day")
+		.locator(
+			".booklet-document .booklet-page--day, .booklet-document .atlas-grid-page--table",
+		)
 		.evaluateAll(
 			(pages, tolerance) =>
 				pages.flatMap((pageElement) => {

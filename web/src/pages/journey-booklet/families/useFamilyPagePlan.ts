@@ -1,3 +1,4 @@
+import type { AtlasGridPagePlan } from "../../../booklet/families/atlasGrid";
 import type {
 	BookletRenderPagePlan,
 	ResolvedBookletDesign,
@@ -20,10 +21,14 @@ import {
 	BookletLayoutError,
 	type BookletPagePlanResult,
 } from "../useBookletPagePlan";
-import { familyAdapterFor } from "./registry";
+import { useAtlasGridPagePlan } from "./AtlasGrid";
+import { useLegacyFamilyPagePlan } from "./LegacyBookletRenderer";
 
-export type FamilyPagePlanResult = BookletPagePlanResult & {
+export type FamilyPagePlanResult = Omit<BookletPagePlanResult, "pagePlan"> & {
 	readonly design: ResolvedBookletDesign | null;
+	readonly pagePlan:
+		| BookletPagePlanResult["pagePlan"]
+		| readonly AtlasGridPagePlan[];
 	readonly renderPagePlan: BookletRenderPagePlan | null;
 };
 
@@ -211,15 +216,14 @@ export function isCurrentFamilyPagePlan(
 }
 
 /**
- * Delegates planning to the selected family, including its measurement and
- * document-fit validation. The current registry contains only legacy.
+ * Runs each registered family hook in a stable order, then selects the result.
+ * React hooks cannot be selected dynamically when a request changes family.
  */
 export function useFamilyPagePlan(
 	model: BookletModel | null,
 	design: ResolvedBookletDesign | null,
 ): FamilyPagePlanResult {
-	return familyAdapterFor(design?.familyId ?? "legacy").usePagePlan(
-		model,
-		design,
-	);
+	const legacyResult = useLegacyFamilyPagePlan(model, design);
+	const atlasGridResult = useAtlasGridPagePlan(model, design);
+	return design?.familyId === "atlas-grid" ? atlasGridResult : legacyResult;
 }
