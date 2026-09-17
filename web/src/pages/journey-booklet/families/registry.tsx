@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import type { BookletFamilyId } from "../../../booklet/family";
 import { REGISTERED_BOOKLET_FAMILY_IDS } from "../../../theme/families/registry";
+import { AtlasGridRenderer, useAtlasGridPagePlan } from "./AtlasGrid";
 import {
 	LegacyBookletRenderer,
 	useLegacyFamilyPagePlan,
@@ -44,6 +45,11 @@ const FAMILY_ADAPTERS = createFamilyAdapterRegistry([
 		familyId: "legacy",
 		renderer: LegacyBookletRenderer,
 		usePagePlan: useLegacyFamilyPagePlan,
+	},
+	{
+		familyId: "atlas-grid",
+		renderer: AtlasGridRenderer,
+		usePagePlan: useAtlasGridPagePlan,
 	},
 ]);
 

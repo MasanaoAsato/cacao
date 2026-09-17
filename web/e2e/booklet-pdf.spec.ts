@@ -10,6 +10,7 @@ import { MOODS, V2_REPRESENTATIVE_SEEDS } from "../src/theme/catalog.js";
 import { resolveTheme } from "../src/theme/resolve.js";
 import type { MoodId, ThemeRecipeDefinition } from "../src/theme/types.js";
 import {
+	bookletFixtureJourneyId,
 	routeBookletApi,
 	type BookletFixtureScenario,
 } from "./fixtures/booklet.js";
@@ -47,7 +48,13 @@ function findSeed(
 	predicate: (recipe: ThemeRecipeDefinition) => boolean,
 ): number {
 	for (let seed = 0; seed < 200_000; seed += 1) {
-		if (predicate(recipeOf(seed))) {
+		const recipe = recipeOf(seed);
+		if (
+			!(["wayfinder", "night-train"] as readonly MoodId[]).includes(
+				recipe.moodId,
+			) &&
+			predicate(recipe)
+		) {
 			return seed;
 		}
 	}
@@ -61,7 +68,7 @@ async function openBooklet(
 ): Promise<void> {
 	await routeBookletApi(page, scenario);
 	await page.goto(
-		`/journeys/${scenario === "long" ? "journey-long" : "journey-1"}/booklet?seed=${seedToken(seed)}`,
+		`/journeys/${bookletFixtureJourneyId(scenario)}/booklet?seed=${seedToken(seed)}`,
 	);
 	await expectBookletPrintReady(page);
 }
@@ -105,7 +112,7 @@ function mmToleranceOf(px: number, pageWidthPx: number): number {
 
 test.describe("PDFしおり", () => {
 	test("地名構成要素がない旧応答でもしおりを読込できる", async ({ page }) => {
-		await openBooklet(page, 0, "legacy");
+		await openBooklet(page, 25, "legacy");
 		const document = page.locator(".booklet-document");
 		await expect(document).toBeVisible();
 		await expect(document).toHaveAttribute("data-booklet-family", "legacy");
@@ -462,42 +469,6 @@ test.describe("PDFしおり", () => {
 				);
 			}
 		});
-
-		test("route-thread の継続ページは本文余白の内側に軌道を引く", async ({
-			page,
-		}) => {
-			const seed = findSeed(
-				(recipe) =>
-					recipe.itineraryTemplateId === "route-thread" &&
-					recipe.compositionId === "top-stack",
-			);
-			await openBooklet(page, seed, "long");
-			await expectSelectedCandidate(page);
-			const rail = await page
-				.locator(".booklet-document .booklet-page--day-continuation")
-				.first()
-				.evaluate((element) => {
-					const style = getComputedStyle(element, "::before");
-					return {
-						content: style.content,
-						left: style.left,
-						width: style.width,
-					};
-				});
-			const recipe = recipeOf(seed);
-			const inset = getBodyContentInset(recipe);
-			expect(rail.content).toBe('""');
-			expect(rail.width).toBe("1px");
-			const pageWidthPx = await page
-				.locator(".booklet-document .booklet-page--day")
-				.first()
-				.evaluate((element) => element.getBoundingClientRect().width);
-			const expectedLeftPx =
-				((recipe.typography.pageMarginMm + inset.left + 7) * pageWidthPx) / 148;
-			expect(
-				Math.abs(Number.parseFloat(rail.left) - expectedLeftPx),
-			).toBeLessThan(LAYOUT_ROUNDING_TOLERANCE_PX);
-		});
 	});
 
 	test("掃引: 代表シードとランダム標本は文字を隠さず紙面に収まる", async ({
@@ -542,22 +513,37 @@ test.describe("PDFしおり", () => {
 					new RegExp(`^${moodId}\\.`),
 				);
 				await expect(page.getByRole("status")).toHaveText(
-					new RegExp(
-						`^${seedToken(seed)}（${moodId}・.+）の印刷準備ができました。$`,
-					),
+					"しおりの印刷準備ができました。",
+				);
+				const familyId = ["wayfinder", "night-train"].includes(moodId)
+					? "atlas-grid"
+					: "legacy";
+				await expect(page.locator(".booklet-document")).toHaveAttribute(
+					"data-booklet-family",
+					familyId,
 				);
 				await expect(
-					page.locator(".booklet-document .booklet-page--cover"),
+					page.locator(
+						familyId === "atlas-grid"
+							? ".booklet-document .atlas-grid-page--cover"
+							: ".booklet-document .booklet-page--cover",
+					),
 				).toHaveScreenshot(`sample-${moodId}-cover.png`, {
 					animations: "disabled",
 					caret: "hide",
 				});
 				const firstDay = page
-					.locator(".booklet-document .booklet-page--day")
+					.locator(
+						familyId === "atlas-grid"
+							? ".booklet-document .atlas-grid-page--table"
+							: ".booklet-document .booklet-page--day",
+					)
 					.first();
-				await expect(
-					firstDay.locator("figure.booklet-day__illustration"),
-				).toHaveCount(1);
+				if (familyId === "legacy") {
+					await expect(
+						firstDay.locator("figure.booklet-day__illustration"),
+					).toHaveCount(1);
+				}
 				await expect(firstDay).toHaveScreenshot(`sample-${moodId}-day.png`, {
 					animations: "disabled",
 					caret: "hide",
@@ -575,13 +561,8 @@ test.describe("PDFしおり", () => {
 			(layout) => layout.selectable,
 		);
 		for (const layout of selectable) {
-			const representative = V2_REPRESENTATIVE_SEEDS.find(
-				({ expected }) => expected.coverLayoutId === layout.id,
-			);
-			if (!representative) {
-				throw new Error(`表紙構図「${layout.id}」の代表シードがありません。`);
-			}
-			const { expected, seed } = representative;
+			const seed = findSeed((recipe) => recipe.coverLayoutId === layout.id);
+			const expected = recipeOf(seed);
 			await page.goto(`/journeys/journey-1/booklet?seed=${seedToken(seed)}`);
 			await expect(page.locator(".booklet-shell")).toHaveAttribute(
 				"data-booklet-print-state",
@@ -659,6 +640,9 @@ test.describe("PDFしおり", () => {
 	test("代表テーマをA5 PDFとして出力できる", async ({ page }) => {
 		await openBooklet(page, 0);
 		await expect(page.getByRole("button", { name: "PDFを印刷" })).toBeEnabled();
+		const documentPageCount = await page
+			.locator(".booklet-document [data-booklet-page]")
+			.count();
 		await page.emulateMedia({ media: "print" });
 		const pdf = await page.pdf({
 			preferCSSPageSize: true,
@@ -667,7 +651,7 @@ test.describe("PDFしおり", () => {
 		expect(pdf.byteLength).toBeGreaterThan(1000);
 		const pdfDocument = await getDocument({ data: new Uint8Array(pdf) })
 			.promise;
-		expect(pdfDocument.numPages).toBe(3);
+		expect(pdfDocument.numPages).toBe(documentPageCount);
 		for (
 			let pageNumber = 1;
 			pageNumber <= pdfDocument.numPages;

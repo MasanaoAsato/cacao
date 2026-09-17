@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import type { Page } from "@playwright/test";
 
 export const COMPARISON_EXPECTED_UNITS = Array.from(
@@ -81,7 +82,7 @@ const comparisonImageList = {
 			failure_code: null,
 			height: 1200,
 			id: "comparison-cover",
-			media_type: "image/svg+xml",
+			media_type: "image/png",
 			slot: { ordinal: 1, purpose: "cover" },
 			status: "ready",
 			visual_style: "editorial-photograph",
@@ -93,7 +94,7 @@ const comparisonImageList = {
 			failure_code: null,
 			height: 900,
 			id: "comparison-illustration",
-			media_type: "image/svg+xml",
+			media_type: "image/png",
 			slot: { ordinal: 1, purpose: "illustration" },
 			status: "ready",
 			visual_style: null,
@@ -103,15 +104,14 @@ const comparisonImageList = {
 	journey_request_id: "request-comparison",
 };
 
-const comparisonSvg = `
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1200" viewBox="0 0 800 1200">
-  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#1f4968"/><stop offset="1" stop-color="#d58a5b"/></linearGradient></defs>
-  <rect width="800" height="1200" fill="url(#g)"/>
-  <circle cx="580" cy="250" r="170" fill="#f9d88d" opacity=".82"/>
-  <path d="M0 900 C220 760 430 1080 800 820 V1200 H0Z" fill="#183a42" opacity=".72"/>
-</svg>`;
+const comparisonCoverPng = readFileSync(
+	new URL("./images/cover-scene.png", import.meta.url),
+);
+const comparisonIllustrationPng = readFileSync(
+	new URL("./images/illustration-scene.png", import.meta.url),
+);
 
-export const comparisonSvgDataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(comparisonSvg)}`;
+export const comparisonCoverDataUrl = `data:image/png;base64,${comparisonCoverPng.toString("base64")}`;
 
 export async function routeComparisonBookletApi(page: Page): Promise<void> {
 	await page.route("**/api/v1/**", async (route) => {
@@ -130,8 +130,10 @@ export async function routeComparisonBookletApi(page: Page): Promise<void> {
 		}
 		if (url.includes("/journey-images/") && url.endsWith("/content")) {
 			await route.fulfill({
-				body: comparisonSvg,
-				contentType: "image/svg+xml",
+				body: url.includes("illustration")
+					? comparisonIllustrationPng
+					: comparisonCoverPng,
+				contentType: "image/png",
 			});
 			return;
 		}

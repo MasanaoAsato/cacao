@@ -1,6 +1,8 @@
 import type { PolicyId } from "../../booklet/editorialModel";
 import type { BookletFamilyId } from "../../booklet/family";
+import type { MotifAssetId } from "../motifAssets";
 import type { MoodId } from "../types";
+import { ATLAS_GRID_FAMILY } from "./atlasGrid";
 
 type LegacyFamilyDefinition = {
 	readonly id: "legacy";
@@ -10,6 +12,8 @@ type LegacyFamilyDefinition = {
 
 export type VisualFamilyDefinition = {
 	readonly compositionIds: readonly string[];
+	readonly decorAssetIds: readonly MotifAssetId[];
+	readonly fontFamilies: readonly string[];
 	readonly id: Exclude<BookletFamilyId, "legacy">;
 	readonly moodIds: readonly MoodId[];
 	readonly paletteIds: readonly string[];
@@ -40,10 +44,12 @@ export function createFamilyRegistry(
 		if (
 			definition.id !== "legacy" &&
 			(definition.paletteIds.length === 0 ||
-				definition.compositionIds.length === 0)
+				definition.compositionIds.length === 0 ||
+				definition.decorAssetIds.length === 0 ||
+				definition.fontFamilies.length === 0)
 		) {
 			throw new Error(
-				`系統「${definition.id}」の配色または構図候補がありません。`,
+				`系統「${definition.id}」の配色・構図・素材・書体が不足しています。`,
 			);
 		}
 		for (const moodId of definition.moodIds) {
@@ -63,11 +69,17 @@ export function createFamilyRegistry(
 
 const LEGACY_FAMILY: LegacyFamilyDefinition = {
 	id: "legacy",
-	moodIds: ALL_MOODS,
+	moodIds: ALL_MOODS.filter(
+		(moodId) =>
+			!ATLAS_GRID_FAMILY.moodIds.some((atlasMoodId) => atlasMoodId === moodId),
+	),
 	policyId: "legacy-full",
 };
 
-export const BOOKLET_FAMILY_REGISTRY = createFamilyRegistry([LEGACY_FAMILY]);
+export const BOOKLET_FAMILY_REGISTRY = createFamilyRegistry([
+	LEGACY_FAMILY,
+	ATLAS_GRID_FAMILY,
+]);
 
 export const REGISTERED_BOOKLET_FAMILY_IDS = Object.freeze([
 	...new Set(

@@ -410,7 +410,7 @@ export function JourneyBookletPage() {
 			data-booklet-requested-composition={
 				themeRequest.design?.requestedTheme.recipe.compositionId
 			}
-			data-booklet-resolved-composition={activeTheme?.compositionId}
+			data-booklet-resolved-composition={themeRequest.design?.compositionId}
 			data-booklet-print-error={bookletPrintState.error}
 			data-booklet-print-state={bookletPrintState.state}
 		>
