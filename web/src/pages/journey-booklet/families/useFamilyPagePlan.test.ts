@@ -200,6 +200,16 @@ describe("実ページからの装飾計測", () => {
 		expect(pages[0]?.decor.rotationFallbacks).toEqual([]);
 	});
 
+	it("境界値: CSSピクセル変換による0.05mm以内の丸め差を許容する", () => {
+		const pages = prepareFamilyDecor(
+			buildPage({ drawnBounds: "10.04,9.96,10.03,9.97" }),
+			familyDesign,
+			new Map([["page-1", [COMPASS]]]),
+		);
+
+		expect(pages).toHaveLength(1);
+	});
+
 	it("異常系: 描画された境界が配置と違えば準備完了にしない", () => {
 		expect(() =>
 			prepareFamilyDecor(

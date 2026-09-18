@@ -68,7 +68,9 @@ async function expectComparisonUnits(
 				);
 				return {
 					descriptions: Array.from(
-						element.querySelectorAll(".booklet-unit__description"),
+						element.querySelectorAll(
+							'.booklet-unit__description, [data-booklet-text-role="unit-description"]',
+						),
 						(description) => description.textContent ?? "",
 					),
 					id: element.getAttribute("data-unit-id"),
@@ -89,7 +91,7 @@ async function expectComparisonUnits(
 	);
 	await expect(
 		page.locator(
-			'.booklet-document [data-unit-id="comparison-leg-4:comparison-spot-4"] .booklet-unit__description',
+			'.booklet-document [data-unit-id="comparison-leg-4:comparison-spot-4"] .booklet-unit__description, .booklet-document [data-unit-id="comparison-leg-4:comparison-spot-4"] [data-booklet-text-role="unit-description"]',
 		),
 	).toHaveCount(0);
 	return units.map((unit) => unit.id ?? "");
@@ -145,9 +147,12 @@ async function captureComparisonRecord(
 	}, comparisonCoverDataUrl);
 	expect(metadata.documentHtml).toContain(comparisonCoverDataUrl);
 	expect(metadata.documentHtml).not.toContain("/journey-images/");
-	expect(metadata.familyId).toBe(
-		["wayfinder", "night-train"].includes(moodId) ? "atlas-grid" : "legacy",
-	);
+	const expectedFamily = ["wayfinder", "night-train"].includes(moodId)
+		? "atlas-grid"
+		: ["field-notes", "quiet-gallery"].includes(moodId)
+			? "paper-collage"
+			: "legacy";
+	expect(metadata.familyId).toBe(expectedFamily);
 	expect(metadata.comparisonKey).not.toBeNull();
 	return {
 		...metadata,

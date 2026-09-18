@@ -1,4 +1,5 @@
 import type { AtlasGridPagePlan } from "../../../booklet/families/atlasGrid";
+import type { PaperCollagePagePlan } from "../../../booklet/families/paperCollage";
 import type {
 	BookletRenderPagePlan,
 	ResolvedBookletDesign,
@@ -23,12 +24,14 @@ import {
 } from "../useBookletPagePlan";
 import { useAtlasGridPagePlan } from "./AtlasGrid";
 import { useLegacyFamilyPagePlan } from "./LegacyBookletRenderer";
+import { usePaperCollagePagePlan } from "./PaperCollage";
 
 export type FamilyPagePlanResult = Omit<BookletPagePlanResult, "pagePlan"> & {
 	readonly design: ResolvedBookletDesign | null;
 	readonly pagePlan:
 		| BookletPagePlanResult["pagePlan"]
-		| readonly AtlasGridPagePlan[];
+		| readonly AtlasGridPagePlan[]
+		| readonly PaperCollagePagePlan[];
 	readonly renderPagePlan: BookletRenderPagePlan | null;
 };
 
@@ -112,6 +115,27 @@ export type FamilyDecorPage = {
 	readonly pageId: string;
 };
 
+const DECOR_BOUNDS_TOLERANCE_MM = 0.05;
+
+function decorBoundsMatch(actual: string | null, expected: string): boolean {
+	if (actual === null) {
+		return false;
+	}
+	const actualValues = actual.split(",").map(Number);
+	const expectedValues = expected.split(",").map(Number);
+	return (
+		actualValues.length === expectedValues.length &&
+		actualValues.every((value, index) => {
+			const expectedValue = expectedValues[index];
+			return (
+				expectedValue !== undefined &&
+				Number.isFinite(value) &&
+				Math.abs(value - expectedValue) <= DECOR_BOUNDS_TOLERANCE_MM
+			);
+		})
+	);
+}
+
 /**
  * Reads every page's anchors and text rects, resolves the family's decor
  * against them, and confirms the drawn layers match. Placement failures are
@@ -190,7 +214,8 @@ function ensureDecorDrawn(
 		);
 		const index = drawn.findIndex(
 			(candidate) =>
-				candidate.bounds === bounds && candidate.layer === item.layer,
+				decorBoundsMatch(candidate.bounds, bounds) &&
+				candidate.layer === item.layer,
 		);
 		if (index === -1) {
 			throw new BookletLayoutError(
@@ -225,5 +250,11 @@ export function useFamilyPagePlan(
 ): FamilyPagePlanResult {
 	const legacyResult = useLegacyFamilyPagePlan(model, design);
 	const atlasGridResult = useAtlasGridPagePlan(model, design);
-	return design?.familyId === "atlas-grid" ? atlasGridResult : legacyResult;
+	const paperCollageResult = usePaperCollagePagePlan(model, design);
+	if (design?.familyId === "atlas-grid") {
+		return atlasGridResult;
+	}
+	return design?.familyId === "paper-collage"
+		? paperCollageResult
+		: legacyResult;
 }

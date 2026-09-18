@@ -6,6 +6,7 @@ import {
 	LegacyBookletRenderer,
 	useLegacyFamilyPagePlan,
 } from "./LegacyBookletRenderer";
+import { PaperCollageRenderer, usePaperCollagePagePlan } from "./PaperCollage";
 
 export type BookletFamilyAdapter = {
 	readonly familyId: BookletFamilyId;
@@ -50,6 +51,11 @@ const FAMILY_ADAPTERS = createFamilyAdapterRegistry([
 		familyId: "atlas-grid",
 		renderer: AtlasGridRenderer,
 		usePagePlan: useAtlasGridPagePlan,
+	},
+	{
+		familyId: "paper-collage",
+		renderer: PaperCollageRenderer,
+		usePagePlan: usePaperCollagePagePlan,
 	},
 ]);
 

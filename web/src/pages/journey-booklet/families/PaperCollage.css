@@ -1,0 +1,348 @@
+.paper-collage {
+	--booklet-background: var(--paper-collage-paper);
+	--booklet-body-family: "Noto Serif JP", serif;
+	--booklet-body-line-height: 1.65;
+	--booklet-body-size: 10pt;
+	--booklet-text: var(--paper-collage-ink);
+	color: var(--paper-collage-ink);
+	font-family: "Noto Serif JP", serif;
+	font-size: 10pt;
+	line-height: 1.65;
+}
+
+.paper-collage .paper-collage-page {
+	overflow: visible;
+	padding: 10mm;
+	background-color: var(--paper-collage-paper);
+	background-image:
+		linear-gradient(rgb(255 255 255 / 18%), rgb(255 255 255 / 18%)),
+		repeating-linear-gradient(
+			90deg,
+			transparent 0,
+			transparent 8mm,
+			rgb(38 54 45 / 2%) 8mm,
+			rgb(38 54 45 / 2%) 8.2mm
+		);
+}
+
+.paper-collage .paper-collage-page--cover {
+	padding: 0;
+}
+
+.paper-collage-cover {
+	position: relative;
+	width: 148mm;
+	height: 210mm;
+}
+
+.paper-collage-cover__title,
+.paper-collage-cover__image,
+.paper-collage-cover__period,
+.paper-collage-anchor {
+	position: absolute;
+	box-sizing: border-box;
+}
+
+.paper-collage-cover__title {
+	top: 10mm;
+	left: 10mm;
+	z-index: 1;
+	width: 128mm;
+	height: 42mm;
+	margin: 0;
+	font-family: "Kaisei Decol", serif;
+	font-weight: 400;
+	letter-spacing: 0;
+	line-height: 1.2;
+	line-break: strict;
+	overflow-wrap: anywhere;
+}
+
+.paper-collage-cover__title--measurement {
+	visibility: hidden;
+}
+
+.paper-collage-cover__image,
+.paper-collage-day-header__image {
+	z-index: 1;
+	margin: 0;
+	padding: 2mm;
+	background: #fff;
+	box-shadow: 0 1.5mm 3mm rgb(38 54 45 / 15%);
+}
+
+.paper-collage-cover__image img,
+.paper-collage-day-header__image img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: center;
+}
+
+.paper-collage--photo-left .paper-collage-cover__image {
+	top: 64mm;
+	left: 10mm;
+	width: 112mm;
+	height: 84mm;
+}
+
+.paper-collage--photo-right .paper-collage-cover__image {
+	top: 64mm;
+	left: 26mm;
+	width: 112mm;
+	height: 84mm;
+}
+
+.paper-collage-cover__period {
+	top: 180mm;
+	left: 10mm;
+	z-index: 1;
+	width: 100mm;
+	height: 20mm;
+	margin: 0;
+	font-family: "Noto Sans JP", sans-serif;
+	font-size: 8.5pt;
+	font-weight: 400;
+	line-height: 1.55;
+	overflow-wrap: anywhere;
+}
+
+.paper-collage-anchor {
+	z-index: 0;
+	display: block;
+	pointer-events: none;
+}
+
+.paper-collage-anchor--paper-cover-image {
+	top: 64mm;
+	width: 112mm;
+	height: 84mm;
+}
+
+.paper-collage--photo-left .paper-collage-anchor--paper-cover-image {
+	left: 10mm;
+}
+
+.paper-collage--photo-right .paper-collage-anchor--paper-cover-image {
+	left: 26mm;
+}
+
+.paper-collage-anchor--paper-cover-leaf {
+	top: 166mm;
+	left: 118mm;
+	width: 12mm;
+	height: 24mm;
+}
+
+.paper-collage-day-header {
+	position: relative;
+	display: flex;
+	flex: 0 0 auto;
+	box-sizing: border-box;
+	width: 128mm;
+}
+
+.paper-collage-day-header--photo {
+	height: 44mm;
+}
+
+.paper-collage-day-header--compact {
+	height: 18mm;
+	border-bottom: 0.4mm solid var(--paper-collage-soft);
+}
+
+.paper-collage-day-header__image,
+.paper-collage-day-header__heading,
+.paper-collage-anchor--paper-day-image {
+	position: absolute;
+	top: 0;
+	box-sizing: border-box;
+}
+
+.paper-collage-day-header__image,
+.paper-collage-anchor--paper-day-image {
+	width: 42mm;
+	height: 36mm;
+}
+
+.paper-collage--photo-left .paper-collage-day-header__image,
+.paper-collage--photo-left .paper-collage-anchor--paper-day-image {
+	left: 0;
+}
+
+.paper-collage--photo-right .paper-collage-day-header__image,
+.paper-collage--photo-right .paper-collage-anchor--paper-day-image {
+	left: 86mm;
+}
+
+.paper-collage-day-header__heading {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	width: 80mm;
+	height: 36mm;
+}
+
+.paper-collage--photo-left .paper-collage-day-header__heading {
+	left: 48mm;
+}
+
+.paper-collage--photo-right .paper-collage-day-header__heading {
+	left: 0;
+}
+
+.paper-collage-day-header--compact .paper-collage-day-header__heading {
+	left: 0;
+	width: 128mm;
+	height: 18mm;
+}
+
+.paper-collage-day-header__heading p,
+.paper-collage-day-header__heading h2 {
+	margin: 0;
+	letter-spacing: 0;
+}
+
+.paper-collage-day-header__heading p {
+	font-family: "Noto Sans JP", sans-serif;
+	font-size: 8.5pt;
+	line-height: 1.3;
+}
+
+.paper-collage-day-header__heading h2 {
+	font-family: "Kaisei Decol", serif;
+	font-size: 22pt;
+	font-weight: 400;
+	line-height: 1.3;
+}
+
+.paper-collage-day-header--compact .paper-collage-day-header__heading {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	align-items: center;
+	gap: 4mm;
+}
+
+.paper-collage-day-header--compact .paper-collage-day-header__heading h2 {
+	font-size: 14pt;
+}
+
+.paper-collage-columns {
+	display: grid;
+	flex: 0 0 auto;
+	box-sizing: border-box;
+	width: 128mm;
+}
+
+.paper-collage-columns--selected,
+.paper-collage-columns--compact-header {
+	grid-template-columns: 61mm 61mm;
+	column-gap: 6mm;
+}
+
+.paper-collage-columns--selected {
+	height: 146mm;
+}
+
+.paper-collage-columns--compact-header,
+.paper-collage-columns--wide-cards,
+.paper-collage-columns--continuation {
+	height: 172mm;
+}
+
+.paper-collage-columns--wide-cards {
+	grid-template-columns: 128mm;
+}
+
+.paper-collage-column {
+	display: flex;
+	flex-direction: column;
+	gap: 5mm;
+	min-width: 0;
+}
+
+.paper-collage-card {
+	box-sizing: border-box;
+	min-height: 24mm;
+	padding: 4mm;
+	color: var(--paper-collage-ink);
+	background: #fff;
+	clip-path: polygon(
+		0.8mm 0,
+		32% 0.5mm,
+		68% 0,
+		calc(100% - 0.6mm) 0.8mm,
+		100% 35%,
+		calc(100% - 0.8mm) 72%,
+		100% calc(100% - 0.6mm),
+		65% 100%,
+		31% calc(100% - 0.5mm),
+		0.5mm 100%,
+		0 68%,
+		0.8mm 34%
+	);
+	filter: drop-shadow(0 1mm 1mm rgb(38 54 45 / 12%));
+	break-inside: avoid;
+}
+
+.paper-collage-card time {
+	display: block;
+	font-family: "Noto Sans JP", sans-serif;
+	font-size: 8.5pt;
+	line-height: 1.35;
+}
+
+.paper-collage-card h3 {
+	margin: 1mm 0 0;
+	font-family: "Noto Serif JP", serif;
+	font-size: 14pt;
+	font-weight: 400;
+	letter-spacing: 0;
+	line-height: 1.4;
+	line-break: strict;
+	overflow-wrap: anywhere;
+}
+
+.paper-collage-card p {
+	margin: 2mm 0 0;
+	font-size: 10pt;
+	line-height: 1.65;
+	line-break: strict;
+	overflow-wrap: anywhere;
+}
+
+.paper-collage-empty {
+	grid-column: 1 / -1;
+	box-sizing: border-box;
+	min-height: 24mm;
+	margin: 0;
+	padding: 4mm;
+	background: #fff;
+}
+
+.paper-collage-measurement-body {
+	width: 128mm;
+}
+
+.paper-collage-measurement-body--first {
+	height: 146mm;
+}
+
+.paper-collage-measurement-body--continuation {
+	height: 172mm;
+}
+
+.paper-collage-measurement-cards {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+}
+
+.paper-collage-measurement-cards--narrow .paper-collage-card {
+	width: 61mm;
+}
+
+.paper-collage-measurement-cards--wide .paper-collage-card {
+	width: 128mm;
+}

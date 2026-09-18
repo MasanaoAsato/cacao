@@ -48,7 +48,7 @@ export async function expectNoHiddenText(page: Page): Promise<void> {
 export async function expectContentInsidePages(page: Page): Promise<void> {
 	const outside = await page
 		.locator(
-			".booklet-document .booklet-page--day, .booklet-document .atlas-grid-page--table",
+			".booklet-document .booklet-page--day, .booklet-document .atlas-grid-page--table, .booklet-document .paper-collage-page--day",
 		)
 		.evaluateAll(
 			(pages, tolerance) =>
