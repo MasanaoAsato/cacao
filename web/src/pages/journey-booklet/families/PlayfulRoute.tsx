@@ -34,8 +34,12 @@ import {
 	resolveFamilyDecor,
 } from "../../../theme/families/decorPlacement";
 import {
+	PLAYFUL_ROUTE_COVER_SUN_ASSET_ID,
 	PLAYFUL_ROUTE_FONT_FAMILIES,
+	type PlayfulRouteDecorSlotId,
+	type PlayfulRouteDecorVariant,
 	playfulRouteCompositionFor,
+	playfulRouteDecorVariantFor,
 	playfulRoutePaletteFor,
 } from "../../../theme/families/playfulRoute";
 import { motifAssetsFor } from "../../../theme/motifAssets";
@@ -429,15 +433,35 @@ function unitAnchorId(unit: EditorialArrivalUnit): string {
 	return `route-unit-${unit.id}`;
 }
 
+/** Fills one reserved decor region with the artwork the variant chose (20.11). */
+function slotDecoration(
+	slotId: PlayfulRouteDecorSlotId,
+	variant: PlayfulRouteDecorVariant,
+): FamilyDecoration {
+	const slot = variant.slots[slotId];
+	return {
+		anchorId: slotId,
+		assetId: slot.assetId,
+		color: slot.color,
+		kind: "asset",
+		layer: "under-content",
+		offsetMm: slot.offsetMm,
+		rotateDeg: [0, 0],
+		sizeMm: slot.sizeMm,
+	};
+}
+
 export function playfulRouteDecorDefinition(
 	page: PlayfulRoutePagePlan,
 	compositionId: string,
+	decorVariantId: string | null,
 	booklet: EditorialBooklet,
 ): {
 	readonly anchors: readonly DecorAnchor[];
 	readonly decorations: readonly FamilyDecoration[];
 } {
 	const composition = playfulRouteCompositionFor(compositionId);
+	const variant = playfulRouteDecorVariantFor(decorVariantId);
 	if (page.kind === "cover") {
 		const positions =
 			compositionId === "zigzag"
@@ -482,7 +506,7 @@ export function playfulRouteDecorDefinition(
 			decorations: [
 				{
 					anchorId: "playful-cover-sun",
-					assetId: "playful-sun",
+					assetId: PLAYFUL_ROUTE_COVER_SUN_ASSET_ID,
 					color: "muted",
 					kind: "asset",
 					layer: "under-content",
@@ -490,26 +514,8 @@ export function playfulRouteDecorDefinition(
 					rotateDeg: [0, 0],
 					sizeMm: positions.sun[3],
 				},
-				{
-					anchorId: "playful-cover-bag",
-					assetId: "playful-bag",
-					color: "accent",
-					kind: "asset",
-					layer: "under-content",
-					offsetMm: [0, 0],
-					rotateDeg: [0, 0],
-					sizeMm: positions.bag[3],
-				},
-				{
-					anchorId: "playful-cover-burst",
-					assetId: "playful-burst",
-					color: "border",
-					kind: "asset",
-					layer: "under-content",
-					offsetMm: [0, 0],
-					rotateDeg: [0, 0],
-					sizeMm: positions.burst[3],
-				},
+				slotDecoration("playful-cover-bag", variant),
+				slotDecoration("playful-cover-burst", variant),
 			],
 		};
 	}
@@ -565,16 +571,7 @@ export function playfulRouteDecorDefinition(
 		],
 		decorations: [
 			...connectorDecorations,
-			{
-				anchorId: "playful-day-squiggle",
-				assetId: "playful-squiggle",
-				color: "accent",
-				kind: "asset",
-				layer: "under-content",
-				offsetMm: [0, 0],
-				rotateDeg: [0, 0],
-				sizeMm: 8,
-			},
+			slotDecoration("playful-day-squiggle", variant),
 		],
 	};
 }
@@ -587,6 +584,7 @@ function playfulRouteDecorFor(
 	const definition = playfulRouteDecorDefinition(
 		page,
 		design.compositionId,
+		design.decorVariantId,
 		booklet,
 	);
 	return resolveFamilyDecor({
@@ -603,12 +601,14 @@ function playfulRouteDecorFor(
 function decorationsByPage(
 	pagePlan: readonly PlayfulRoutePagePlan[],
 	compositionId: string,
+	decorVariantId: string | null,
 	booklet: EditorialBooklet,
 ): ReadonlyMap<string, readonly FamilyDecoration[]> {
 	return new Map(
 		pagePlan.map((page) => [
 			page.pageId,
-			playfulRouteDecorDefinition(page, compositionId, booklet).decorations,
+			playfulRouteDecorDefinition(page, compositionId, decorVariantId, booklet)
+				.decorations,
 		]),
 	);
 }
@@ -897,6 +897,7 @@ export function PlayfulRouteDocument({
 		<main
 			aria-label="旅のしおり印刷プレビュー"
 			className={`booklet-document booklet-theme playful-route playful-route--${design.compositionId}`}
+			data-booklet-decor-variant={design.decorVariantId ?? undefined}
 			data-booklet-design={design.requestedTheme.recipe.id}
 			data-booklet-family="playful-route"
 			data-booklet-theme-key={design.renderKey}
@@ -958,6 +959,7 @@ function PlayfulRouteMeasurement({
 		<div
 			aria-hidden="true"
 			className={`booklet-measurement booklet-theme playful-route playful-route--${design.compositionId}`}
+			data-booklet-decor-variant={design.decorVariantId ?? undefined}
 			data-booklet-family="playful-route"
 			data-booklet-theme-key={design.renderKey}
 			ref={rootRef}
@@ -1053,7 +1055,14 @@ export function usePlayfulRoutePagePlan(
 			try {
 				setStatus("measuring");
 				await waitForPlayfulRouteFonts();
-				await waitForMotifAssets(activeDesign.decorAssetIds);
+				// A cover-only document never draws the day decor, so waiting for
+				// the whole variant's artwork would block on an unused asset.
+				await waitForMotifAssets(
+					editorial.days.length === 0
+						? playfulRouteDecorVariantFor(activeDesign.decorVariantId)
+								.coverAssetIds
+						: activeDesign.decorAssetIds,
+				);
 				const measurementRoot = measurementRef.current;
 				if (!measurementRoot) {
 					throw new BookletLayoutError(
@@ -1102,6 +1111,7 @@ export function usePlayfulRoutePagePlan(
 					decorationsByPage(
 						nextPagePlan,
 						activeDesign.compositionId,
+						activeDesign.decorVariantId,
 						editorial,
 					),
 				);

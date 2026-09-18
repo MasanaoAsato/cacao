@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { MOTIFS } from "./motifs";
 
 describe("図形素材の語彙", () => {
-	it("正常系: 12種の手続き図形と素材を登録し、キーと定義IDが一致する", () => {
-		expect(MOTIFS.size).toBe(23);
+	it("正常系: 12種の手続き図形と13点の素材を登録し、キーと定義IDが一致する", () => {
+		expect(MOTIFS.size).toBe(25);
 		for (const [id, motif] of MOTIFS) {
 			expect(motif.id).toBe(id);
 			expect(motif.aspect).toBeGreaterThan(0);

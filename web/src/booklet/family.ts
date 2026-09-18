@@ -20,6 +20,11 @@ export type ResolvedBookletDesign = {
 	readonly comparisonKey: string;
 	readonly compositionId: string;
 	readonly decorAssetIds: readonly MotifAssetId[];
+	/**
+	 * The decor variant the seed selected, for families that publish more than
+	 * one. `null` for every family that does not (20.11).
+	 */
+	readonly decorVariantId: string | null;
 	readonly familyId: BookletFamilyId;
 	readonly fontFamilies: readonly string[];
 	readonly paletteId: string;

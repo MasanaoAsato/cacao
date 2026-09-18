@@ -264,7 +264,9 @@ export type MotifId =
 	| "playful-bag"
 	| "playful-sun"
 	| "playful-squiggle"
-	| "playful-burst";
+	| "playful-burst"
+	| "playful-footprints"
+	| "playful-curved-arrow";
 
 export type MotifStyleId = "atlas-ink" | "paper-cut" | "playful-doodle";
 

@@ -4,6 +4,7 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { type MotifAssetId, motifAssetsFor } from "../../theme/motifAssets";
 import { JourneyBookletPage } from "./JourneyBookletPage";
 
 const journeyPayload = {
@@ -79,7 +80,7 @@ const imagePayload = {
 };
 
 const playfulRouteSeed2RenderKey =
-	"playful-route:v2-00000002:route:playful-route.berry-sun.ribbon";
+	"playful-route:v2-00000002:route:playful-route.berry-sun.ribbon.sunny";
 
 const originalDecode = HTMLImageElement.prototype.decode;
 const originalFonts = Object.getOwnPropertyDescriptor(document, "fonts");
@@ -364,6 +365,23 @@ function restoreBrowserMocks() {
 		configurable: true,
 		value: originalGetBoundingClientRect,
 	});
+}
+
+/**
+ * Fails decode for the named decor artwork only. Vite inlines the SVGs, so the
+ * registered `src` is the only reliable way to recognise one asset.
+ */
+function installMotifDecodeFailure(assetIds: readonly MotifAssetId[]): void {
+	const failing = new Set(
+		motifAssetsFor(assetIds).map((asset) => asset.src as string),
+	);
+	vi.mocked(HTMLImageElement.prototype.decode)
+		.mockReset()
+		.mockImplementation(function decodeMotifAsset(this: HTMLImageElement) {
+			return failing.has(this.getAttribute("src") ?? "")
+				? Promise.reject(new Error("motif decode failed"))
+				: Promise.resolve();
+		});
 }
 
 function installFetchMock(
@@ -726,6 +744,100 @@ describe("JourneyBookletPage", () => {
 				.bookletThemeKey,
 		).toBe(playfulRouteSeed2RenderKey);
 		expect(window.print).not.toHaveBeenCalled();
+	});
+
+	it("異常系: 選んだパターンの装飾素材のdecodeに失敗したら印刷しない", async () => {
+		installMotifDecodeFailure(["playful-bag"]);
+		installFetchMock();
+		renderPage("/journeys/journey-1/booklet?seed=v2-00000002");
+
+		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
+		await waitFor(() =>
+			expect(screen.getByRole("status")).toHaveTextContent(
+				"装飾素材「playful-bag」の読み込みに失敗しました",
+			),
+		);
+		expect(printButton).toBeDisabled();
+		expect(window.print).not.toHaveBeenCalled();
+	});
+
+	it("境界値: sunnyは選んでいない20.11の2素材のdecode失敗に影響されない", async () => {
+		installMotifDecodeFailure(["playful-footprints", "playful-curved-arrow"]);
+		installFetchMock();
+		renderPage("/journeys/journey-1/booklet?seed=v2-00000002");
+
+		await waitFor(() =>
+			expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled(),
+		);
+		expect(document.querySelector(".booklet-document")).toHaveAttribute(
+			"data-booklet-decor-variant",
+			"sunny",
+		);
+		expect(document.querySelector(".booklet-shell")).toHaveAttribute(
+			"data-booklet-comparison-key",
+			"playful-route.berry-sun.ribbon.sunny",
+		);
+	});
+
+	it("境界値: シード切替後に旧パターンの素材読込が完了しても新しいreadyを維持する", async () => {
+		const sunnyBagSrc = motifAssetsFor(["playful-bag"])[0]?.src;
+		if (!sunnyBagSrc) {
+			throw new Error("sunnyのかばん素材が登録されていません。");
+		}
+		let resolveSunnyBag: (() => void) | undefined;
+		const sunnyBagDecode = new Promise<void>((resolve) => {
+			resolveSunnyBag = resolve;
+		});
+		let sunnyBagStarted = false;
+		vi.mocked(HTMLImageElement.prototype.decode).mockImplementation(
+			function decode(this: HTMLImageElement) {
+				if (this.getAttribute("src") === sunnyBagSrc) {
+					sunnyBagStarted = true;
+					return sunnyBagDecode;
+				}
+				return Promise.resolve();
+			},
+		);
+		vi.spyOn(crypto, "getRandomValues").mockImplementation((values) => {
+			if (values instanceof Uint32Array) {
+				values[0] = 15;
+			}
+			return values;
+		});
+		installFetchMock();
+		renderPage("/journeys/journey-1/booklet?seed=v2-00000002");
+
+		await waitFor(() => expect(sunnyBagStarted).toBe(true));
+		screen.getByRole("button", { name: "別のデザインを試す" }).click();
+		await waitFor(() =>
+			expect(screen.getByTestId("location-search")).toHaveTextContent(
+				"seed=v2-0000000f",
+			),
+		);
+		await waitFor(() =>
+			expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled(),
+		);
+		expect(document.querySelector(".booklet-document")).toHaveAttribute(
+			"data-booklet-decor-variant",
+			"walking",
+		);
+
+		if (!resolveSunnyBag) {
+			throw new Error("sunnyのかばん素材のdecodeが開始されていません。");
+		}
+		resolveSunnyBag();
+		await Promise.resolve();
+
+		await waitFor(() =>
+			expect(document.querySelector(".booklet-shell")).toHaveAttribute(
+				"data-booklet-print-state",
+				"ready",
+			),
+		);
+		expect(document.querySelector(".booklet-document")).toHaveAttribute(
+			"data-booklet-decor-variant",
+			"walking",
+		);
 	});
 
 	it("異常系: 出力側の日別画像のdecodeに失敗したら印刷しない", async () => {

@@ -20,6 +20,7 @@ import {
 
 type ComparisonRecord = {
 	readonly comparisonKey: string | null;
+	readonly decorVariantId: string | null;
 	readonly documentHtml: string;
 	readonly fallbackLog: string | null;
 	readonly familyId: string | null;
@@ -127,6 +128,7 @@ async function captureComparisonRecord(
 				element
 					.closest(".booklet-shell")
 					?.getAttribute("data-booklet-comparison-key") ?? null,
+			decorVariantId: element.getAttribute("data-booklet-decor-variant"),
 			documentHtml: artifactDocument.outerHTML,
 			fallbackLog:
 				element
@@ -154,6 +156,16 @@ async function captureComparisonRecord(
 			: "playful-route";
 	expect(metadata.familyId).toBe(expectedFamily);
 	expect(metadata.comparisonKey).not.toBeNull();
+	// Only playful-route publishes decor variants, and its key names the one
+	// the seed selected (20.11).
+	if (expectedFamily === "playful-route") {
+		expect(metadata.decorVariantId).not.toBeNull();
+		expect(metadata.comparisonKey).toMatch(
+			new RegExp(`\\.${metadata.decorVariantId}$`),
+		);
+	} else {
+		expect(metadata.decorVariantId).toBeNull();
+	}
 	return {
 		...metadata,
 		moodId,

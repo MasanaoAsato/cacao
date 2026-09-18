@@ -51,6 +51,8 @@ describe("BOOKLET_FAMILY_REGISTRY", () => {
 					"playful-sun",
 					"playful-squiggle",
 					"playful-burst",
+					"playful-footprints",
+					"playful-curved-arrow",
 				],
 				fontFamilies: ["Dela Gothic One", "M PLUS Rounded 1c", "Noto Sans JP"],
 				id: "playful-route",
