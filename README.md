@@ -4,24 +4,40 @@ Go で DDD + オニオンアーキテクチャを学ぶための最小構成で�
 
 ## 起動
 
-1. PostgreSQLを起動します。
+1. ローカル設定を作成します。
+
+```bash
+cp .env.example .env
+openssl rand -hex 24
+```
+
+生成された値を `.env` の `POSTGRES_PASSWORD` に設定し、現在のシェルへ読み込みます。`.env` はGitの管理対象外です。
+
+```bash
+set -a
+. ./.env
+set +a
+```
+
+2. PostgreSQLを起動します。DBポートはホストの `127.0.0.1` だけに公開されます。
 
 ```bash
 docker compose up -d db
 ```
 
-2. スキーマを作成します。
+3. スキーマを作成します。上記の16進数パスワードはURL内でもそのまま利用できます。
 
 ```bash
-migrate --path src/migrations --database 'postgresql://admin:Wt9wCKTIqjgv17ED@localhost:5432/cacao?sslmode=disable' -verbose up
+migrate --path src/migrations --database "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=${POSTGRES_SSLMODE}" -verbose up
 ```
 
-3. 必要に応じて設定を作成し、アプリケーションを起動します。
+4. アプリケーションを起動します。
 
 ```bash
-cp .env.example .env
 go run ./src
 ```
+
+既存の `db-data` ボリュームでは、`.env` を変更してもPostgreSQL内のパスワードは自動更新されません。既存データを残す場合は `docker compose exec db psql -U admin` で接続し、`\password admin` を実行して同じ値へ更新してください。
 
 `IMAGE_GENERATOR_DRIVER` の既定値は `stub` です。GPUやComfyUIがない環境でも、固定PNGを使って画像生成フローを確認できます。
 
@@ -29,7 +45,7 @@ go run ./src
 
 ## 画像生成の設定
 
-実行時の環境変数は [.env.example](/home/ubuntu/workspace/cacao/.env.example) にまとめています。設定は起動時に検証され、不正なdriver・期間・worker値ではHTTPリクエストを受け付ける前に終了します。
+ローカルDBの環境変数は [.env.example](./.env.example) をひな形にします。設定は起動時に検証され、不正なdriver・期間・worker値ではHTTPリクエストを受け付ける前に終了します。
 
 ### プロバイダーの切り替え
 
@@ -132,16 +148,16 @@ mise run test:gotenberg
 ~~~
 
 ## DB設定
-`POSTGRESQL_URL` を設定した場合は接続URIを優先します。空の場合は、以下の `POSTGRES_*` 個別設定（未設定なら `compose.yml` 相当の既定値）を使います。
+`POSTGRESQL_URL` を設定した場合は接続URIを優先します。空の場合は、以下の `POSTGRES_*` 個別設定を使います。
 
-未設定時は `compose.yml` のローカル開発値が既定値として使われます。
+`POSTGRES_PASSWORD` はコードに既定値を持たず、`.env` などの実行環境から必ず設定します。
 
 | 環境変数 | 既定値 | 用途 |
 | --- | --- | --- |
 | `POSTGRES_HOST` | `localhost` | DBホスト |
 | `POSTGRES_PORT` | `5432` | DBポート |
 | `POSTGRES_USER` | `admin` | DBユーザー |
-| `POSTGRES_PASSWORD` | `Wt9wCKTIqjgv17ED` | DBパスワード |
+| `POSTGRES_PASSWORD` | なし（必須） | DBパスワード（`POSTGRESQL_URL` 使用時を除く） |
 | `POSTGRES_DB` | `cacao` | DB名 |
 | `POSTGRES_SSLMODE` | `disable` | SSLモード |
 | `POSTGRES_MAX_OPEN_CONNS` | `25` | 接続プール上限 |
