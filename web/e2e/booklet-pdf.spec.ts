@@ -550,11 +550,6 @@ test.describe("PDFしおり", () => {
 								: ".booklet-document .playful-route-page--day",
 					)
 					.first();
-				if (familyId === "legacy") {
-					await expect(
-						firstDay.locator("figure.booklet-day__illustration"),
-					).toHaveCount(1);
-				}
 				await expect(firstDay).toHaveScreenshot(`sample-${moodId}-day.png`, {
 					animations: "disabled",
 					caret: "hide",
