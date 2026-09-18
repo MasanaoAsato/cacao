@@ -2,6 +2,7 @@ import type { MotifAssetId } from "../theme/motifAssets";
 import type { RequestedBookletTheme } from "../theme/types";
 import type { PolicyId } from "./editorialModel";
 import type { AtlasGridPagePlan } from "./families/atlasGrid";
+import type { PaperCollagePagePlan } from "./families/paperCollage";
 import type { BookletPagePlan } from "./model";
 
 export type BookletFamilyId =
@@ -36,6 +37,11 @@ export type BookletRenderPagePlan =
 			readonly coverTitleSizePt: number;
 			readonly familyId: "atlas-grid";
 			readonly pagePlan: readonly AtlasGridPagePlan[];
+	  }
+	| {
+			readonly coverTitleSizePt: number;
+			readonly familyId: "paper-collage";
+			readonly pagePlan: readonly PaperCollagePagePlan[];
 	  };
 
 export type FamilyMeasurement = {

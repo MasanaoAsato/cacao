@@ -2,6 +2,26 @@ import { describe, expect, it } from "vitest";
 import { createFamilyRegistry, familyDefinitionFor } from "./registry";
 
 describe("BOOKLET_FAMILY_REGISTRY", () => {
+	it.each(["field-notes", "quiet-gallery"] as const)(
+		"正常系: %sをpaper-collageへ割り当てる",
+		(moodId) => {
+			expect(familyDefinitionFor(moodId)).toMatchObject({
+				compositionIds: ["photo-left", "photo-right"],
+				decorAssetIds: [
+					"paper-torn-sheet",
+					"paper-tape",
+					"paper-leaf",
+					"paper-postage",
+				],
+				fontFamilies: ["Kaisei Decol", "Noto Serif JP", "Noto Sans JP"],
+				id: "paper-collage",
+				moodIds: ["field-notes", "quiet-gallery"],
+				paletteIds: ["sage-paper", "lilac-paper"],
+				policyId: "captions",
+			});
+		},
+	);
+
 	it.each(["wayfinder", "night-train"] as const)(
 		"正常系: %sをatlas-gridへ割り当てる",
 		(moodId) => {

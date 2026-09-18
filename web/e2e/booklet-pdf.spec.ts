@@ -50,9 +50,14 @@ function findSeed(
 	for (let seed = 0; seed < 200_000; seed += 1) {
 		const recipe = recipeOf(seed);
 		if (
-			!(["wayfinder", "night-train"] as readonly MoodId[]).includes(
-				recipe.moodId,
-			) &&
+			!(
+				[
+					"field-notes",
+					"wayfinder",
+					"night-train",
+					"quiet-gallery",
+				] as readonly MoodId[]
+			).includes(recipe.moodId) &&
 			predicate(recipe)
 		) {
 			return seed;
@@ -517,7 +522,9 @@ test.describe("PDFしおり", () => {
 				);
 				const familyId = ["wayfinder", "night-train"].includes(moodId)
 					? "atlas-grid"
-					: "legacy";
+					: ["field-notes", "quiet-gallery"].includes(moodId)
+						? "paper-collage"
+						: "legacy";
 				await expect(page.locator(".booklet-document")).toHaveAttribute(
 					"data-booklet-family",
 					familyId,
@@ -526,7 +533,9 @@ test.describe("PDFしおり", () => {
 					page.locator(
 						familyId === "atlas-grid"
 							? ".booklet-document .atlas-grid-page--cover"
-							: ".booklet-document .booklet-page--cover",
+							: familyId === "paper-collage"
+								? ".booklet-document .paper-collage-page--cover"
+								: ".booklet-document .booklet-page--cover",
 					),
 				).toHaveScreenshot(`sample-${moodId}-cover.png`, {
 					animations: "disabled",
@@ -536,7 +545,9 @@ test.describe("PDFしおり", () => {
 					.locator(
 						familyId === "atlas-grid"
 							? ".booklet-document .atlas-grid-page--table"
-							: ".booklet-document .booklet-page--day",
+							: familyId === "paper-collage"
+								? ".booklet-document .paper-collage-page--day"
+								: ".booklet-document .booklet-page--day",
 					)
 					.first();
 				if (familyId === "legacy") {

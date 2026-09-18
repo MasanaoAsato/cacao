@@ -1,6 +1,7 @@
 import "@fontsource/m-plus-rounded-1c/400.css";
 import "@fontsource/m-plus-rounded-1c/700.css";
 import "@fontsource/dela-gothic-one/400.css";
+import "@fontsource/kaisei-decol/400.css";
 import "@fontsource/kaisei-decol/700.css";
 import "@fontsource/noto-sans-jp/400.css";
 import "@fontsource/noto-sans-jp/700.css";

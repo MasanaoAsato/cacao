@@ -28,7 +28,7 @@ describe("resolveBookletDesign", () => {
 		const requested = createBookletTheme({ value: 0, version: "v2" });
 		const legacyRequested = {
 			...requested,
-			recipe: { ...requested.recipe, moodId: "field-notes" as const },
+			recipe: { ...requested.recipe, moodId: "postcard" as const },
 		};
 		const design = resolveBookletDesign(legacyRequested);
 
@@ -45,7 +45,7 @@ describe("resolveBookletDesign", () => {
 			recipe: {
 				...requested.recipe,
 				displayFontId: "inherit" as const,
-				moodId: "field-notes" as const,
+				moodId: "postcard" as const,
 			},
 		};
 		const design = resolveBookletDesign(legacyRequested);
@@ -67,6 +67,26 @@ describe("resolveBookletDesign", () => {
 			familyId: "atlas-grid",
 			fontFamilies: ["Zen Kaku Gothic New", "Noto Sans JP"],
 			policyId: "timetable",
+		});
+	});
+
+	it("正常系: paper-collageの素材・書体・掲載方針を解決する", () => {
+		const requested = createBookletTheme({ value: 7, version: "v2" });
+		const design = resolveBookletDesign({
+			...requested,
+			recipe: { ...requested.recipe, moodId: "field-notes" },
+		});
+
+		expect(design).toMatchObject({
+			decorAssetIds: [
+				"paper-torn-sheet",
+				"paper-tape",
+				"paper-leaf",
+				"paper-postage",
+			],
+			familyId: "paper-collage",
+			fontFamilies: ["Kaisei Decol", "Noto Serif JP", "Noto Sans JP"],
+			policyId: "captions",
 		});
 	});
 });

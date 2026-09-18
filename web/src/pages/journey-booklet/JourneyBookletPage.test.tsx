@@ -643,7 +643,7 @@ describe("JourneyBookletPage", () => {
 			new Error("decode failed"),
 		);
 		installFetchMock();
-		renderPage("/journeys/journey-1/booklet?seed=v2-00000013");
+		renderPage("/journeys/journey-1/booklet?seed=v2-00000002");
 
 		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 		await waitFor(() =>
@@ -656,14 +656,14 @@ describe("JourneyBookletPage", () => {
 		expect(
 			document.querySelector<HTMLElement>(".booklet-measurement")?.dataset
 				.bookletThemeKey,
-		).toBe("v2-00000013:selected");
+		).toBe("v2-00000002:selected");
 		expect(window.print).not.toHaveBeenCalled();
 	});
 
 	it("異常系: 選択フォントを確認できなければ候補を進めず印刷しない", async () => {
 		vi.mocked(document.fonts.check).mockReturnValue(false);
 		installFetchMock();
-		renderPage("/journeys/journey-1/booklet?seed=v2-00000013");
+		renderPage("/journeys/journey-1/booklet?seed=v2-00000002");
 
 		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 		await waitFor(() =>
@@ -675,7 +675,7 @@ describe("JourneyBookletPage", () => {
 		expect(
 			document.querySelector<HTMLElement>(".booklet-measurement")?.dataset
 				.bookletThemeKey,
-		).toBe("v2-00000013:selected");
+		).toBe("v2-00000002:selected");
 		expect(window.print).not.toHaveBeenCalled();
 	});
 
@@ -700,7 +700,7 @@ describe("JourneyBookletPage", () => {
 				}) as DOMRect,
 		});
 		installFetchMock();
-		renderPage("/journeys/journey-1/booklet?seed=v2-00000013");
+		renderPage("/journeys/journey-1/booklet?seed=v2-00000002");
 
 		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 		await waitFor(() =>
@@ -712,7 +712,7 @@ describe("JourneyBookletPage", () => {
 		expect(
 			document.querySelector<HTMLElement>(".booklet-measurement")?.dataset
 				.bookletThemeKey,
-		).toBe("v2-00000013:selected");
+		).toBe("v2-00000002:selected");
 		expect(window.print).not.toHaveBeenCalled();
 	});
 
@@ -724,16 +724,16 @@ describe("JourneyBookletPage", () => {
 					return domRect(0, 0, 560, 794);
 				}
 				if (this.classList.contains("booklet-cover__text")) {
-					return domRect(0, 0, 200, 80);
+					return domRect(520, 754, 200, 80);
 				}
 				if (this.hasAttribute("data-booklet-cover-copy")) {
-					return domRect(0, 0, 200, 80);
+					return domRect(520, 754, 200, 80);
 				}
 				return domRect(0, 0, 200, 20);
 			},
 		});
 		installFetchMock();
-		renderPage("/journeys/journey-1/booklet?seed=v2-00000013");
+		renderPage("/journeys/journey-1/booklet?seed=v2-00000002");
 
 		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 		await waitFor(() =>
@@ -752,7 +752,7 @@ describe("JourneyBookletPage", () => {
 		document.head.append(style);
 		try {
 			installFetchMock();
-			renderPage("/journeys/journey-1/booklet?seed=v2-00000013");
+			renderPage("/journeys/journey-1/booklet?seed=v2-00000002");
 
 			const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 			await waitFor(() =>
@@ -764,7 +764,7 @@ describe("JourneyBookletPage", () => {
 			expect(
 				document.querySelector<HTMLElement>(".booklet-measurement")?.dataset
 					.bookletThemeKey,
-			).toBe("v2-00000013:selected");
+			).toBe("v2-00000002:selected");
 			expect(window.print).not.toHaveBeenCalled();
 		} finally {
 			style.remove();
@@ -801,7 +801,7 @@ describe("JourneyBookletPage", () => {
 		});
 		try {
 			installFetchMock();
-			renderPage("/journeys/journey-1/booklet?seed=v2-00000013");
+			renderPage("/journeys/journey-1/booklet?seed=v2-00000002");
 
 			const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 			await waitFor(() =>
@@ -813,7 +813,7 @@ describe("JourneyBookletPage", () => {
 			expect(
 				document.querySelector<HTMLElement>(".booklet-measurement")?.dataset
 					.bookletThemeKey,
-			).toBe("v2-00000013:selected");
+			).toBe("v2-00000002:selected");
 			expect(window.print).not.toHaveBeenCalled();
 		} finally {
 			Object.defineProperty(
@@ -897,26 +897,26 @@ describe("JourneyBookletPage", () => {
 			attributeFilter: ["data-booklet-theme-key"],
 			attributeOldValue: true,
 		});
-		renderPage("/journeys/journey-1/booklet?seed=v2-00000013");
+		renderPage("/journeys/journey-1/booklet?seed=v2-00000002");
 
 		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 		await waitFor(() => expect(printButton).toBeDisabled());
 		expect(
 			document.querySelector<HTMLElement>(".booklet-measurement")?.dataset
 				.bookletThemeKey,
-		).toBe("v2-00000013:selected");
+		).toBe("v2-00000002:selected");
 		releaseFirstDecode();
 		await waitFor(() => expect(printButton).toBeEnabled());
 		observer.disconnect();
-		expect(themeKeys[0]).toBe("v2-00000013:selected");
-		expect(themeKeys).toContain("v2-00000013:safe-geometry");
+		expect(themeKeys[0]).toBe("v2-00000002:selected");
+		expect(themeKeys).toContain("v2-00000002:safe-geometry");
 		expect(
 			new Set(
 				Array.from(
 					document.querySelectorAll<HTMLElement>("[data-booklet-page]"),
 				).map((page) => page.dataset.bookletThemeKey),
 			),
-		).toEqual(new Set(["v2-00000013:safe-geometry"]));
+		).toEqual(new Set(["v2-00000002:safe-geometry"]));
 	});
 
 	it("異常系: 不正なseedクエリは既定テーマへ戻しURLから除去する", async () => {
