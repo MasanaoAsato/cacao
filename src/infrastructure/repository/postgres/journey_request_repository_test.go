@@ -50,7 +50,7 @@ func skipIfNoDB(t *testing.T) *gorm.DB {
 
 	cfg, err := config.DatabaseFromEnv()
 	if err != nil {
-		t.Fatalf("failed to load database config: %v", err)
+		t.Skipf("postgres configuration is not available: %v", err)
 	}
 
 	db, err := database.CreateGORMClient(context.Background(), cfg)

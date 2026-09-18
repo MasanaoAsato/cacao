@@ -1,16 +1,19 @@
 import type { CSSProperties, ReactNode, RefObject } from "react";
-import {
-	formatBookletDate,
-	formatBookletDateTime,
-} from "../../booklet/dateFormat";
+import { formatBookletDate } from "../../booklet/dateFormat";
+import type {
+	EditorialArrivalUnit,
+	EditorialBooklet,
+	EditorialCover,
+	EditorialDay,
+} from "../../booklet/editorialModel";
+import type { BookletFamilyId } from "../../booklet/family";
 import { formatTransportMode } from "../../booklet/itineraryFormat";
 import type {
-	ArrivalUnit,
-	BookletCover,
 	BookletDay,
 	BookletModel,
 	BookletPagePlan,
 } from "../../booklet/model";
+import { projectBooklet } from "../../booklet/projectBooklet";
 import {
 	getBookletPageSurface,
 	getBookletThemeCssVariables,
@@ -24,12 +27,13 @@ import { MOTIFS } from "../../theme/motifs";
 import type {
 	BookletThemeCandidate,
 	CoverVeilBounds,
-	MotifDefinition,
 	ResolvedBookletTheme,
 } from "../../theme/types";
+import { MotifShapes, svgId } from "./decor/MotifShapes";
 
 export type BookletDocumentProps = {
 	readonly coverVeilBounds: CoverVeilBounds;
+	readonly familyId?: BookletFamilyId;
 	readonly model: BookletModel;
 	readonly pagePlan: readonly BookletPagePlan[];
 	readonly rootRef: RefObject<HTMLElement | null>;
@@ -37,6 +41,7 @@ export type BookletDocumentProps = {
 };
 
 export type BookletMeasurementProps = {
+	readonly familyId?: BookletFamilyId;
 	readonly model: BookletModel;
 	readonly rootRef: RefObject<HTMLDivElement | null>;
 	readonly theme: BookletThemeCandidate;
@@ -213,110 +218,6 @@ function CoverVeil({
 				width={COVER_WIDTH}
 			/>
 		</svg>
-	);
-}
-
-function svgId(...parts: readonly string[]): string {
-	return parts.join("-").replace(/[^a-z0-9-]/gi, "-");
-}
-
-function paint(
-	value: "color" | "none",
-	color: string | null,
-): string | undefined {
-	if (value === "none") {
-		return "none";
-	}
-	return color ?? undefined;
-}
-
-/** Draws one motif's shapes in its unit box (`aspect` wide, 1 high). */
-function MotifShapes({
-	color,
-	definition,
-	maskId,
-}: {
-	readonly color: string | null;
-	readonly definition: MotifDefinition;
-	readonly maskId: string;
-}) {
-	if (definition.kind === "asset") {
-		if (definition.recolor === "mask" && color) {
-			return (
-				<>
-					<mask id={maskId}>
-						<image
-							height="1"
-							href={definition.src}
-							preserveAspectRatio="none"
-							width={definition.aspect}
-						/>
-					</mask>
-					<rect
-						fill={color}
-						height="1"
-						mask={`url(#${maskId})`}
-						width={definition.aspect}
-					/>
-				</>
-			);
-		}
-		return (
-			<image
-				height="1"
-				href={definition.src}
-				preserveAspectRatio="none"
-				width={definition.aspect}
-			/>
-		);
-	}
-	return (
-		<>
-			{definition.shapes.map((shape, index) => {
-				const key = `${definition.id}-${index}`;
-				const common = {
-					fill: paint(shape.fill, color),
-					stroke: paint(shape.stroke, color),
-					strokeWidth: shape.strokeWidth,
-				};
-				switch (shape.kind) {
-					case "circle":
-						return (
-							<circle
-								key={key}
-								cx={shape.cx}
-								cy={shape.cy}
-								r={shape.r}
-								{...common}
-							/>
-						);
-					case "rect":
-						return (
-							<rect
-								key={key}
-								height={shape.height}
-								width={shape.width}
-								x={shape.x}
-								y={shape.y}
-								{...common}
-							/>
-						);
-					default:
-						return (
-							<path
-								key={key}
-								d={shape.d}
-								strokeDasharray={
-									shape.dashed
-										? `${shape.strokeWidth * 3} ${shape.strokeWidth * 3}`
-										: undefined
-								}
-								{...common}
-							/>
-						);
-				}
-			})}
-		</>
 	);
 }
 
@@ -522,7 +423,7 @@ function CoverContent({
 	veilBounds,
 	theme,
 }: {
-	readonly cover: BookletCover;
+	readonly cover: EditorialCover;
 	readonly veilBounds: CoverVeilBounds | null;
 	readonly theme: BookletThemeCandidate;
 }) {
@@ -535,7 +436,7 @@ function CoverContent({
 					height={cover.image.height}
 					loading="eager"
 					src={cover.image.contentUrl}
-					alt={`${cover.destination}の表紙画像`}
+					alt={`${cover.title}の表紙画像`}
 					width={cover.image.width}
 				/>
 			</div>
@@ -547,18 +448,20 @@ function CoverContent({
 						TRAVEL JOURNAL
 					</p>
 					<h1
-						className={`booklet-cover__title ${titleLengthClass(cover.destination)}`}
+						className={`booklet-cover__title ${titleLengthClass(cover.title)}`}
 						data-booklet-text-role="cover-destination"
 					>
-						{cover.destination}
+						{cover.title}
 					</h1>
-					<p
-						className="booklet-cover__route"
-						data-booklet-text-role="cover-route"
-					>
-						{cover.departure} <span aria-hidden="true">→</span>{" "}
-						{cover.destination}
-					</p>
+					{cover.route ? (
+						<p
+							className="booklet-cover__route"
+							data-booklet-text-role="cover-route"
+						>
+							{cover.route.from} <span aria-hidden="true">→</span>{" "}
+							{cover.route.to}
+						</p>
+					) : null}
 					<p
 						className="booklet-cover__period"
 						data-booklet-text-role="cover-period"
@@ -571,12 +474,14 @@ function CoverContent({
 							{formatBookletDate(cover.period.end_date)}
 						</time>
 					</p>
-					<p
-						className="booklet-cover__budget"
-						data-booklet-text-role="cover-budget"
-					>
-						予算 {formatMoney(cover.budget)}
-					</p>
+					{cover.budget ? (
+						<p
+							className="booklet-cover__budget"
+							data-booklet-text-role="cover-budget"
+						>
+							予算 {formatMoney(cover.budget)}
+						</p>
+					) : null}
 				</div>
 			</div>
 		</div>
@@ -590,7 +495,7 @@ function DayHeader({
 	showIllustration,
 }: {
 	readonly continuation: boolean;
-	readonly day: BookletDay;
+	readonly day: EditorialDay;
 	readonly destination: string;
 	readonly showIllustration: boolean;
 }) {
@@ -624,7 +529,7 @@ function ArrivalUnitView({
 	unit,
 }: {
 	readonly measurementKey?: string;
-	readonly unit: ArrivalUnit;
+	readonly unit: EditorialArrivalUnit;
 }) {
 	return (
 		<li
@@ -640,56 +545,75 @@ function ArrivalUnitView({
 					訪問先
 				</p>
 				<p className="booklet-unit__time" data-booklet-text-role="unit-time">
-					<time dateTime={unit.spot.start_at}>
-						{formatBookletDateTime(unit.spot.start_at)}
-					</time>
+					<time dateTime={unit.startAt}>{unit.timeLabel}</time>
 				</p>
-				<h3 data-booklet-text-role="spot-name">{unit.spot.name}</h3>
-				<div className="booklet-unit__leg">
+				<h3 data-booklet-text-role="spot-name">{unit.spotName}</h3>
+				{unit.route ||
+				unit.transportMode !== null ||
+				unit.durationMinutes !== null ||
+				unit.transportCost !== null ? (
+					<div className="booklet-unit__leg">
+						<p
+							className="booklet-unit__label"
+							data-booklet-text-role="utility-label"
+						>
+							移動
+						</p>
+						{unit.route ? (
+							<p
+								className="booklet-unit__route"
+								data-booklet-text-role="unit-route"
+							>
+								<span>{unit.route.from}</span>
+								<span aria-hidden="true"> → </span>
+								<span>{unit.route.to}</span>
+							</p>
+						) : null}
+						{unit.transportMode !== null ||
+						unit.durationMinutes !== null ||
+						unit.transportCost !== null ? (
+							<dl className="booklet-unit__details">
+								{unit.transportMode !== null ? (
+									<div>
+										<dt data-booklet-text-role="detail-term">交通</dt>
+										<dd data-booklet-text-role="detail-value">
+											{formatTransportMode(unit.transportMode)}
+										</dd>
+									</div>
+								) : null}
+								{unit.durationMinutes !== null ? (
+									<div>
+										<dt data-booklet-text-role="detail-term">所要時間</dt>
+										<dd data-booklet-text-role="detail-value">
+											{unit.durationMinutes}分
+										</dd>
+									</div>
+								) : null}
+								{unit.transportCost !== null ? (
+									<div>
+										<dt data-booklet-text-role="detail-term">移動費</dt>
+										<dd data-booklet-text-role="detail-value">
+											{formatMoney(unit.transportCost)}
+										</dd>
+									</div>
+								) : null}
+							</dl>
+						) : null}
+					</div>
+				) : null}
+				{unit.description !== null ? (
 					<p
-						className="booklet-unit__label"
-						data-booklet-text-role="utility-label"
+						className="booklet-unit__description"
+						data-booklet-text-role="spot-description"
 					>
-						移動
+						{unit.description}
 					</p>
-					<p
-						className="booklet-unit__route"
-						data-booklet-text-role="unit-route"
-					>
-						<span>{unit.leg.from.label}</span>
-						<span aria-hidden="true"> → </span>
-						<span>{unit.leg.to.label}</span>
+				) : null}
+				{unit.stayCost !== null ? (
+					<p className="booklet-unit__cost" data-booklet-text-role="unit-cost">
+						滞在費 {formatMoney(unit.stayCost)}
 					</p>
-					<dl className="booklet-unit__details">
-						<div>
-							<dt data-booklet-text-role="detail-term">交通</dt>
-							<dd data-booklet-text-role="detail-value">
-								{formatTransportMode(unit.leg.mode)}
-							</dd>
-						</div>
-						<div>
-							<dt data-booklet-text-role="detail-term">所要時間</dt>
-							<dd data-booklet-text-role="detail-value">
-								{unit.leg.duration_minutes}分
-							</dd>
-						</div>
-						<div>
-							<dt data-booklet-text-role="detail-term">移動費</dt>
-							<dd data-booklet-text-role="detail-value">
-								{formatMoney(unit.leg.estimated_cost)}
-							</dd>
-						</div>
-					</dl>
-				</div>
-				<p
-					className="booklet-unit__description"
-					data-booklet-text-role="spot-description"
-				>
-					{unit.spot.description}
-				</p>
-				<p className="booklet-unit__cost" data-booklet-text-role="unit-cost">
-					滞在費 {formatMoney(unit.spot.estimated_cost)}
-				</p>
+				) : null}
 			</div>
 		</li>
 	);
@@ -700,7 +624,7 @@ function DayPage({
 	destination,
 	page,
 }: {
-	readonly day: BookletDay;
+	readonly day: EditorialDay;
 	readonly destination: string;
 	readonly page: Extract<BookletPagePlan, { readonly kind: "day" }>;
 }) {
@@ -724,11 +648,13 @@ function DayPage({
 
 function PhysicalPage({
 	coverVeilBounds,
+	editorial,
 	model,
 	page,
 	theme,
 }: {
 	readonly coverVeilBounds: CoverVeilBounds;
+	readonly editorial: EditorialBooklet;
 	readonly model: BookletModel;
 	readonly page: BookletPagePlan;
 	readonly theme: ResolvedBookletTheme;
@@ -736,14 +662,14 @@ function PhysicalPage({
 	const pageContent =
 		page.kind === "cover" ? (
 			<CoverContent
-				cover={model.cover}
+				cover={editorial.cover}
 				theme={theme}
 				veilBounds={coverVeilBounds}
 			/>
-		) : model.days[page.dayIndex] ? (
+		) : editorial.days[page.dayIndex] ? (
 			<DayPage
-				day={model.days[page.dayIndex]}
-				destination={model.cover.destination}
+				day={editorial.days[page.dayIndex]}
+				destination={editorial.cover.title}
 				page={page}
 			/>
 		) : null;
@@ -787,17 +713,21 @@ function PhysicalPage({
 
 export function BookletDocument({
 	coverVeilBounds,
+	familyId,
 	model,
 	pagePlan,
 	rootRef,
 	theme,
 }: BookletDocumentProps) {
+	const editorial = projectBooklet(model, "legacy-full");
+
 	return (
 		<main
 			ref={rootRef}
 			aria-label="旅のしおり印刷プレビュー"
 			className={`booklet-document ${themeClass(theme)}`}
 			data-booklet-design={theme.requestedRecipeId}
+			data-booklet-family={familyId}
 			data-booklet-theme-key={theme.resolvedThemeKey}
 			style={themeStyle(theme)}
 		>
@@ -805,6 +735,7 @@ export function BookletDocument({
 				<PhysicalPage
 					key={page.pageId}
 					coverVeilBounds={coverVeilBounds}
+					editorial={editorial}
 					model={model}
 					page={page}
 					theme={theme}
@@ -816,12 +747,14 @@ export function BookletDocument({
 
 function MeasurementDay({
 	day,
+	editorialDay,
 	dayIndex,
 	destination,
 	model,
 	theme,
 }: {
 	readonly day: BookletDay;
+	readonly editorialDay: EditorialDay;
 	readonly dayIndex: number;
 	readonly destination: string;
 	readonly model: BookletModel;
@@ -841,25 +774,25 @@ function MeasurementDay({
 				<div className="booklet-measurement__sample">
 					<DayHeader
 						continuation={false}
-						day={day}
+						day={editorialDay}
 						destination={destination}
 						showIllustration={day.illustration !== null}
 					/>
 					<DayHeader
 						continuation={false}
-						day={day}
+						day={editorialDay}
 						destination={destination}
 						showIllustration={false}
 					/>
 					<DayHeader
 						continuation
-						day={day}
+						day={editorialDay}
 						destination={destination}
 						showIllustration={false}
 					/>
 				</div>
 				<ol className="booklet-day__units booklet-itinerary" aria-label="旅程">
-					{day.units.map((unit, unitIndex) => (
+					{editorialDay.units.map((unit, unitIndex) => (
 						<ArrivalUnitView
 							key={unit.id}
 							measurementKey={`${dayIndex}-${unitIndex}`}
@@ -873,16 +806,20 @@ function MeasurementDay({
 }
 
 export function BookletMeasurement({
+	familyId,
 	model,
 	rootRef,
 	theme,
 }: BookletMeasurementProps) {
+	const editorial = projectBooklet(model, "legacy-full");
+
 	return (
 		<div
 			ref={rootRef}
 			aria-hidden="true"
 			className={`booklet-measurement ${themeClass(theme)}`}
 			data-booklet-design={theme.requestedRecipeId}
+			data-booklet-family={familyId}
 			data-booklet-theme-key={theme.resolvedThemeKey}
 			style={themeStyle(theme)}
 		>
@@ -891,19 +828,27 @@ export function BookletMeasurement({
 					className="booklet-page__content"
 					data-booklet-measurement-content="true"
 				>
-					<CoverContent cover={model.cover} theme={theme} veilBounds={null} />
+					<CoverContent
+						cover={editorial.cover}
+						theme={theme}
+						veilBounds={null}
+					/>
 				</div>
 			</article>
-			{model.days.map((day, dayIndex) => (
-				<MeasurementDay
-					key={day.id}
-					day={day}
-					dayIndex={dayIndex}
-					destination={model.cover.destination}
-					model={model}
-					theme={theme}
-				/>
-			))}
+			{model.days.map((day, dayIndex) => {
+				const editorialDay = editorial.days[dayIndex];
+				return editorialDay ? (
+					<MeasurementDay
+						key={day.id}
+						day={day}
+						editorialDay={editorialDay}
+						dayIndex={dayIndex}
+						destination={editorial.cover.title}
+						model={model}
+						theme={theme}
+					/>
+				) : null;
+			})}
 		</div>
 	);
 }

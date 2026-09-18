@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import type { Page } from "@playwright/test";
 
 const journey = {
@@ -58,12 +59,24 @@ const journey = {
 const request = {
 	budget: { amount: 80000, currency: "JPY" },
 	departure: "東京",
+	departure_city: "東京",
+	departure_country: "",
 	destination: "非常に長い目的地名称を含む京都の旅",
+	destination_city: "非常に長い目的地名称を含む京都の旅",
+	destination_country: "",
 	id: "request-1",
 	period: {
 		end_date: "2026-08-29T00:00:00+09:00",
 		start_date: "2026-08-28T00:00:00+09:00",
 	},
+};
+
+const legacyRequest = {
+	budget: request.budget,
+	departure: request.departure,
+	destination: request.destination,
+	id: request.id,
+	period: request.period,
 };
 
 const imageList = {
@@ -150,6 +163,7 @@ const longJourney = {
 const longRequest = {
 	...request,
 	destination: "京都",
+	destination_city: "京都",
 	id: "request-long",
 	period: {
 		end_date: "2026-08-28T00:00:00+09:00",
@@ -174,6 +188,64 @@ const longImageList = {
 	journey_request_id: "request-long",
 };
 
+const denseSpots = Array.from({ length: 16 }, (_, index) => {
+	const ordinal = index + 1;
+	const source = longSpots[index % longSpots.length];
+	if (!source) {
+		throw new Error("dense fixtureの元データがありません。");
+	}
+	const totalMinutes = 8 * 60 + index * 30;
+	const hour = String(Math.floor(totalMinutes / 60)).padStart(2, "0");
+	const minute = String(totalMinutes % 60).padStart(2, "0");
+	return {
+		...source,
+		id: `dense-spot-${ordinal}`,
+		name: `${source.name} ${ordinal}`,
+		start_at: `2026-08-28T${hour}:${minute}:00+09:00`,
+	};
+});
+
+const denseJourney = {
+	days: [
+		{
+			date: "2026-08-28T00:00:00+09:00",
+			id: "dense-day-1",
+			legs: denseSpots.map((spot, index) => ({
+				duration_minutes: 20 + (index % 4) * 5,
+				estimated_cost: { amount: 300 + index * 40, currency: "JPY" },
+				from: {
+					label:
+						index === 0
+							? "東京駅"
+							: (denseSpots[index - 1]?.name ?? "前の訪問先"),
+				},
+				id: `dense-leg-${index + 1}`,
+				mode: index % 2 === 0 ? "train" : "walk",
+				to: { label: spot.name, spot_id: spot.id },
+			})),
+			spots: denseSpots,
+		},
+	],
+	day_count: 1,
+	id: "journey-dense",
+	request_id: "request-dense",
+};
+
+const denseRequest = {
+	...longRequest,
+	id: "request-dense",
+};
+
+const denseImageList = {
+	...longImageList,
+	images: longImageList.images.map((image) => ({
+		...image,
+		content_url: image.content_url?.replace("long", "dense") ?? null,
+		id: image.id.replace("long", "dense"),
+	})),
+	journey_request_id: "request-dense",
+};
+
 const coverSvg = `
 <svg xmlns="http://www.w3.org/2000/svg" width="800" height="1200" viewBox="0 0 800 1200">
   <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#1f4968"/><stop offset="1" stop-color="#d58a5b"/></linearGradient></defs>
@@ -182,9 +254,32 @@ const coverSvg = `
   <path d="M0 900 C220 760 430 1080 800 820 V1200 H0Z" fill="#183a42" opacity=".72"/>
 </svg>`;
 
+export type BookletFixtureScenario = "default" | "dense" | "legacy" | "long";
+export type BookletFixtureImageMode = "artwork" | "geometry";
+
+export function bookletFixtureJourneyId(
+	scenario: BookletFixtureScenario,
+): string {
+	if (scenario === "long") {
+		return "journey-long";
+	}
+	if (scenario === "dense") {
+		return "journey-dense";
+	}
+	return "journey-1";
+}
+
+const coverScenePng = readFile(
+	new URL("./images/cover-scene.png", import.meta.url),
+);
+const illustrationScenePng = readFile(
+	new URL("./images/illustration-scene.png", import.meta.url),
+);
+
 export async function routeBookletApi(
 	page: Page,
-	scenario: "default" | "long" = "default",
+	scenario: BookletFixtureScenario = "default",
+	imageMode: BookletFixtureImageMode = "geometry",
 ): Promise<void> {
 	const fixture =
 		scenario === "long"
@@ -193,7 +288,26 @@ export async function routeBookletApi(
 					journey: longJourney,
 					request: longRequest,
 				}
-			: { imageList, journey, request };
+			: scenario === "dense"
+				? {
+						imageList: denseImageList,
+						journey: denseJourney,
+						request: denseRequest,
+					}
+				: scenario === "legacy"
+					? { imageList, journey, request: legacyRequest }
+					: { imageList, journey, request };
+	const responseImageList =
+		imageMode === "artwork"
+			? {
+					...fixture.imageList,
+					images: fixture.imageList.images.map((image) => ({
+						...image,
+						media_type:
+							image.content_url === null ? image.media_type : "image/png",
+					})),
+				}
+			: fixture.imageList;
 	await page.route("**/api/v1/**", async (route) => {
 		const url = route.request().url();
 		if (url.endsWith(`/journeys/${fixture.journey.id}`)) {
@@ -202,10 +316,10 @@ export async function routeBookletApi(
 		}
 		if (
 			url.endsWith(
-				`/journey-requests/${fixture.imageList.journey_request_id}/images`,
+				`/journey-requests/${responseImageList.journey_request_id}/images`,
 			)
 		) {
-			await route.fulfill({ json: fixture.imageList });
+			await route.fulfill({ json: responseImageList });
 			return;
 		}
 		if (url.endsWith(`/journey-requests/${fixture.request.id}`)) {
@@ -213,6 +327,14 @@ export async function routeBookletApi(
 			return;
 		}
 		if (url.includes("/journey-images/") && url.endsWith("/content")) {
+			if (imageMode === "artwork") {
+				const illustration = url.includes("illustration");
+				await route.fulfill({
+					body: await (illustration ? illustrationScenePng : coverScenePng),
+					contentType: "image/png",
+				});
+				return;
+			}
 			await route.fulfill({ body: coverSvg, contentType: "image/svg+xml" });
 			return;
 		}

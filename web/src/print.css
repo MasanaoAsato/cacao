@@ -278,6 +278,7 @@ body {
 .booklet-page {
 	box-sizing: border-box;
 	display: flex;
+	position: relative;
 	width: 148mm;
 	height: 210mm;
 	padding: 12mm;
@@ -295,6 +296,33 @@ body {
 	min-height: 0;
 	width: 100%;
 	height: 100%;
+}
+
+/*
+ * Decor layers of a family page (20.6). Both are inline SVG so the PDF keeps
+ * vectors, and both sit outside the flow so drawing decor never moves body
+ * text. The draw order is background, under-content decor, the opaque body
+ * surface and its text, then over-image decor.
+ */
+.booklet-page:has(> .booklet-family-decor) > .booklet-page__content {
+	position: relative;
+	z-index: 1;
+}
+
+.booklet-family-decor {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+}
+
+.booklet-family-decor--under-content {
+	z-index: 0;
+}
+
+.booklet-family-decor--over-image {
+	z-index: 2;
 }
 
 .booklet-eyebrow {

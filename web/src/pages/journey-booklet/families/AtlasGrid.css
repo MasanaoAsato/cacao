@@ -1,0 +1,342 @@
+.atlas-grid {
+	--booklet-background: var(--atlas-paper);
+	--booklet-body-family: "Zen Kaku Gothic New", sans-serif;
+	--booklet-body-line-height: 1.55;
+	--booklet-body-size: 10pt;
+	--booklet-text: var(--atlas-ink);
+	color: var(--atlas-ink);
+	font-family: "Zen Kaku Gothic New", sans-serif;
+	font-size: 10pt;
+	line-height: 1.55;
+}
+
+.atlas-grid .atlas-grid-page {
+	overflow: visible;
+	padding: 10mm;
+	background: var(--atlas-paper);
+	color: var(--atlas-ink);
+}
+
+.atlas-grid .atlas-grid-page--cover {
+	padding: 0;
+}
+
+.atlas-grid-cover {
+	position: relative;
+	width: 148mm;
+	height: 210mm;
+}
+
+.atlas-grid-cover__title,
+.atlas-grid-cover__image,
+.atlas-grid-cover__period,
+.atlas-grid-anchor {
+	position: absolute;
+	box-sizing: border-box;
+}
+
+.atlas-grid-cover__title {
+	top: 10mm;
+	left: 10mm;
+	z-index: 1;
+	margin: 0;
+	color: var(--atlas-ink);
+	font-family: "Zen Kaku Gothic New", sans-serif;
+	font-weight: 700;
+	letter-spacing: 0;
+	line-height: 1.18;
+	line-break: strict;
+	overflow-wrap: anywhere;
+}
+
+.atlas-grid-cover__title--measurement {
+	visibility: hidden;
+}
+
+.atlas-grid-cover__image {
+	margin: 0;
+	overflow: hidden;
+	background: var(--atlas-soft);
+}
+
+.atlas-grid-cover__image img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: center;
+}
+
+.atlas-grid-cover__period {
+	z-index: 1;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	font-family: "Noto Sans JP", sans-serif;
+	font-size: 8.5pt;
+	font-weight: 700;
+	line-height: 1.55;
+	letter-spacing: 0;
+	overflow-wrap: anywhere;
+}
+
+.atlas-grid-cover__period p {
+	margin: 0;
+}
+
+.atlas-grid-cover__days {
+	font-size: 20pt;
+	line-height: 1.35;
+}
+
+.atlas-grid--wide-image .atlas-grid-cover__title {
+	width: 100mm;
+	height: 50mm;
+}
+
+.atlas-grid--wide-image .atlas-grid-cover__image {
+	top: 80mm;
+	left: 10mm;
+	width: 128mm;
+	height: 75mm;
+}
+
+.atlas-grid--wide-image .atlas-grid-cover__period {
+	top: 166mm;
+	left: 10mm;
+	width: 128mm;
+	height: 24mm;
+}
+
+.atlas-grid--side-index .atlas-grid-cover__title {
+	width: 128mm;
+	height: 44mm;
+}
+
+.atlas-grid--side-index .atlas-grid-cover__image {
+	top: 70mm;
+	left: 10mm;
+	width: 88mm;
+	height: 98mm;
+}
+
+.atlas-grid--side-index .atlas-grid-cover__period {
+	top: 70mm;
+	left: 104mm;
+	justify-content: space-between;
+	width: 34mm;
+	height: 98mm;
+}
+
+.atlas-grid--side-index .atlas-grid-cover__period > p:first-child {
+	display: grid;
+	justify-items: start;
+}
+
+.atlas-grid-anchor {
+	z-index: 0;
+	display: block;
+	pointer-events: none;
+}
+
+.atlas-grid-anchor--cover-route {
+	left: 10mm;
+	width: 12mm;
+	height: 6mm;
+}
+
+.atlas-grid--wide-image .atlas-grid-anchor--cover-route {
+	top: 157mm;
+}
+
+.atlas-grid--side-index .atlas-grid-anchor--cover-route {
+	top: 170mm;
+}
+
+.atlas-grid-anchor--cover-compass {
+	top: 10mm;
+	left: 116mm;
+	width: 20mm;
+	height: 20mm;
+}
+
+.atlas-grid-anchor--table-compass {
+	top: 0;
+	left: 106mm;
+	width: 20mm;
+	height: 20mm;
+}
+
+.atlas-grid-anchor--cover-perforation {
+	top: 76mm;
+	left: 98mm;
+	width: 6mm;
+	height: 12mm;
+}
+
+.atlas-grid-table__header {
+	box-sizing: border-box;
+	width: 100mm;
+	height: 28mm;
+	padding-top: 1mm;
+}
+
+.atlas-grid-table__header p,
+.atlas-grid-table__header h2 {
+	margin: 0;
+	letter-spacing: 0;
+}
+
+.atlas-grid-table__header p {
+	font-family: "Noto Sans JP", sans-serif;
+	font-size: 8.5pt;
+	font-weight: 700;
+}
+
+.atlas-grid-table__header h2 {
+	font-size: 20pt;
+	font-weight: 700;
+	line-height: 1.25;
+}
+
+.atlas-grid-table {
+	display: block;
+	width: 128mm;
+	margin: 0;
+	border-spacing: 0;
+}
+
+.atlas-grid-columns {
+	display: block;
+	width: 128mm;
+}
+
+.atlas-grid-columns tr,
+.atlas-grid-row {
+	display: grid;
+	grid-template-columns: var(--atlas-column-time) var(--atlas-column-place) var(
+			--atlas-column-transport
+		);
+	width: 128mm;
+}
+
+.atlas-grid-columns {
+	box-sizing: border-box;
+	height: 6mm;
+	font-family: "Noto Sans JP", sans-serif;
+	font-size: 8.5pt;
+	font-weight: 700;
+	line-height: 1;
+}
+
+.atlas-grid-columns th {
+	display: flex;
+	align-items: center;
+	box-sizing: border-box;
+	padding: 0 2mm;
+	border-right: 0.25mm solid var(--atlas-secondary);
+	text-align: left;
+}
+
+.atlas-grid-columns th:last-child {
+	border-right: 0;
+}
+
+.atlas-grid-table__body {
+	display: block;
+	box-sizing: border-box;
+	width: 128mm;
+	height: 156mm;
+	border-top: 0.25mm solid var(--atlas-accent);
+	border-bottom: 0.25mm solid var(--atlas-accent);
+}
+
+.atlas-grid-day-band {
+	display: block;
+	width: 128mm;
+	height: 8mm;
+}
+
+.atlas-grid-day-band th {
+	display: flex;
+	align-items: center;
+	box-sizing: border-box;
+	gap: 3mm;
+	width: 128mm;
+	height: 8mm;
+	padding: 0 2mm;
+	background: var(--atlas-soft);
+	font-family: "Noto Sans JP", sans-serif;
+	font-size: 8.5pt;
+	font-weight: 700;
+	line-height: 1;
+	text-align: left;
+}
+
+.atlas-grid--side-index .atlas-grid-day-band th {
+	padding-left: 2mm;
+	border-left: 2mm solid var(--atlas-accent);
+	background: var(--atlas-paper);
+}
+
+.atlas-grid-row {
+	min-height: 10mm;
+	border-bottom: 0.25mm solid var(--atlas-secondary);
+	break-inside: avoid;
+}
+
+.atlas-grid-cell {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	box-sizing: border-box;
+	min-width: 0;
+	padding: 2mm;
+	border-right: 0.25mm solid var(--atlas-secondary);
+	line-height: 1.55;
+	text-align: left;
+	overflow-wrap: anywhere;
+}
+
+.atlas-grid-cell:last-child {
+	border-right: 0;
+}
+
+.atlas-grid-cell--time {
+	font-size: var(--atlas-time-size);
+	font-weight: 700;
+}
+
+.atlas-grid-cell--place strong {
+	font-size: 10pt;
+	font-weight: 700;
+}
+
+.atlas-grid-cell--transport,
+.atlas-grid-cell small {
+	font-family: "Noto Sans JP", sans-serif;
+	font-size: 8.5pt;
+}
+
+.atlas-grid-cell small {
+	display: block;
+	margin-top: 0.6mm;
+}
+
+.atlas-grid-empty-row {
+	display: block;
+	width: 128mm;
+	min-height: 10mm;
+}
+
+.atlas-grid-empty-row td {
+	display: flex;
+	align-items: center;
+	box-sizing: border-box;
+	width: 128mm;
+	min-height: 10mm;
+	padding: 2mm;
+	border-bottom: 0.25mm solid var(--atlas-secondary);
+	font-size: 10pt;
+	text-align: left;
+}

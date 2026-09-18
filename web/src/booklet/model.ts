@@ -49,13 +49,20 @@ export type BookletImage = {
 	readonly width: number;
 };
 
+export type BookletPlace = {
+	readonly city: string;
+	readonly country: string;
+};
+
 /** @deprecated Use BookletImage. */
 export type CoverImage = BookletImage;
 
 export type BookletCover = {
 	readonly budget: BookletMoney;
 	readonly destination: string;
+	readonly destinationPlace: BookletPlace | null;
 	readonly departure: string;
+	readonly departurePlace: BookletPlace | null;
 	readonly image: BookletImage;
 	readonly period: JourneyRequestApiResponse["period"];
 };

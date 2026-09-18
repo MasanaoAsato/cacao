@@ -8,11 +8,15 @@ import (
 
 // JourneyRequestDTO は JourneyRequest エンティティの読み取り専用表現。
 type JourneyRequestDTO struct {
-	ID          string
-	Departure   string
-	Destination string
-	Period      PeriodDTO
-	Budget      MoneyDTO
+	ID                 string
+	Departure          string
+	DepartureCity      string
+	DepartureCountry   string
+	Destination        string
+	DestinationCity    string
+	DestinationCountry string
+	Period             PeriodDTO
+	Budget             MoneyDTO
 }
 
 // PeriodDTO は Period 値オブジェクトの読み取り専用表現。
@@ -24,9 +28,13 @@ type PeriodDTO struct {
 // NewJourneyRequestDTO は JourneyRequest を DTO に変換する。
 func NewJourneyRequestDTO(request entity.JourneyRequest) JourneyRequestDTO {
 	return JourneyRequestDTO{
-		ID:          request.ID().String(),
-		Departure:   request.Departure().String(),
-		Destination: request.Destination().String(),
+		ID:                 request.ID().String(),
+		Departure:          request.Departure().String(),
+		DepartureCity:      request.Departure().City(),
+		DepartureCountry:   request.Departure().Country(),
+		Destination:        request.Destination().String(),
+		DestinationCity:    request.Destination().City(),
+		DestinationCountry: request.Destination().Country(),
 		Period: PeriodDTO{
 			StartDate: request.Period().StartDate(),
 			EndDate:   request.Period().EndDate(),

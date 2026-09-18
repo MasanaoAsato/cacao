@@ -14,12 +14,14 @@ import {
 	getThemeCandidates,
 	resolveBookletTheme,
 } from "../../theme/bookletTheme";
+import type { MotifAssetId } from "../../theme/motifAssets";
 import type {
 	BookletThemeCandidate,
 	CoverVeilBounds,
 	RequestedBookletTheme,
 	ResolvedBookletTheme,
 } from "../../theme/types";
+import { waitForMotifAssets } from "./decor/assetReadiness";
 
 export type BookletPagePlanStatus =
 	| "idle"
@@ -37,6 +39,9 @@ export type BookletPagePlanResult = {
 	readonly fallbackLog: readonly string[];
 	readonly measurementRef: React.RefObject<HTMLDivElement | null>;
 	readonly pagePlan: ReturnType<typeof paginateBooklet> | null;
+	/** Input that completed all measurement and document-fit checks. */
+	readonly preparedModel: BookletModel | null;
+	readonly preparedRenderKey: string | null;
 	readonly resolvedTheme: ResolvedBookletTheme | null;
 	readonly status: BookletPagePlanStatus;
 };
@@ -60,6 +65,7 @@ type LayoutFailureCode =
 
 const FONT_SAMPLE_TEXT = "東京の旅程・京都散策";
 const LAYOUT_ROUNDING_TOLERANCE_PX = 1;
+const NO_DECOR_ASSET_IDS: readonly MotifAssetId[] = Object.freeze([]);
 
 export class BookletLayoutError extends Error {
 	readonly code: LayoutFailureCode;
@@ -491,6 +497,8 @@ async function waitForDocumentRoot(
 export function useBookletPagePlan(
 	model: BookletModel | null,
 	requestedTheme: RequestedBookletTheme | null,
+	renderKey: string | null,
+	decorAssetIDs: readonly MotifAssetId[] = NO_DECOR_ASSET_IDS,
 ): BookletPagePlanResult {
 	const measurementRef = useRef<HTMLDivElement>(null);
 	const documentRef = useRef<HTMLElement>(null);
@@ -501,6 +509,10 @@ export function useBookletPagePlan(
 	const [pagePlan, setPagePlan] = useState<ReturnType<
 		typeof paginateBooklet
 	> | null>(null);
+	const [preparedModel, setPreparedModel] = useState<BookletModel | null>(null);
+	const [preparedRenderKey, setPreparedRenderKey] = useState<string | null>(
+		null,
+	);
 	const [resolvedTheme, setResolvedTheme] =
 		useState<ResolvedBookletTheme | null>(null);
 	const [error, setError] = useState<string | null>(null);
@@ -541,17 +553,19 @@ export function useBookletPagePlan(
 		setCandidateIndex(0);
 		setCoverVeilBounds(null);
 		setPagePlan(null);
+		setPreparedModel(null);
+		setPreparedRenderKey(null);
 		setResolvedTheme(null);
 		setFallbackLog([]);
 		setError(candidateResult.error);
 		setStatus(
-			model && requestedTheme && !candidateResult.error
+			model && requestedTheme && renderKey !== null && !candidateResult.error
 				? "measuring"
 				: candidateResult.error
 					? "error"
 					: "idle",
 		);
-	}, [candidateResult.error, model, requestedTheme]);
+	}, [candidateResult.error, model, renderKey, requestedTheme]);
 
 	useEffect(() => {
 		if (!model || !requestedTheme || !activeTheme || candidateResult.error) {
@@ -562,11 +576,14 @@ export function useBookletPagePlan(
 		const run = async () => {
 			try {
 				setPagePlan(null);
+				setPreparedModel(null);
+				setPreparedRenderKey(null);
 				setCoverVeilBounds(null);
 				setResolvedTheme(null);
 				setError(null);
 				setStatus("measuring");
 				await waitForFonts(activeTheme);
+				await waitForMotifAssets(decorAssetIDs);
 				const measurementRoot = measurementRef.current;
 				if (!measurementRoot) {
 					throw new BookletLayoutError(
@@ -611,6 +628,8 @@ export function useBookletPagePlan(
 					collected.coverVeilBounds,
 				);
 				setResolvedTheme(activeTheme);
+				setPreparedModel(model);
+				setPreparedRenderKey(renderKey);
 				setStatus("ready");
 			} catch (runError) {
 				if (cancelled || runId !== runIdRef.current) {
@@ -638,7 +657,15 @@ export function useBookletPagePlan(
 		return () => {
 			cancelled = true;
 		};
-	}, [activeTheme, candidateIndex, candidateResult, model, requestedTheme]);
+	}, [
+		activeTheme,
+		candidateIndex,
+		candidateResult,
+		decorAssetIDs,
+		model,
+		renderKey,
+		requestedTheme,
+	]);
 
 	return {
 		activeTheme,
@@ -648,6 +675,8 @@ export function useBookletPagePlan(
 		fallbackLog,
 		measurementRef,
 		pagePlan,
+		preparedModel,
+		preparedRenderKey,
 		resolvedTheme,
 		status,
 	};

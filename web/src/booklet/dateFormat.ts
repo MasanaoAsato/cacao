@@ -63,3 +63,8 @@ export function formatBookletDateTime(value: string): string {
 	const { day, hour, minute, month, year } = parseRfc3339(value);
 	return `${year}/${month}/${day} ${hour}:${minute}`;
 }
+
+export function formatBookletTime(value: string): string {
+	const { hour, minute } = parseRfc3339(value);
+	return `${hour}:${minute}`;
+}

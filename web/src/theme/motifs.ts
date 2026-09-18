@@ -1,3 +1,4 @@
+import { MOTIF_ASSETS } from "./motifAssets";
 import type { MotifDefinition, MotifShape } from "./types";
 
 /** 1px expressed in mm, used for hairline strokes. */
@@ -38,7 +39,7 @@ function procedural(
  * `"color"` with the palette colour of the placement. No asset files are
  * needed for any of these, so the decor layer can exist before any artwork.
  */
-export const MOTIFS = new Map<MotifDefinition["id"], MotifDefinition>([
+const PROCEDURAL_MOTIFS = new Map<MotifDefinition["id"], MotifDefinition>([
 	[
 		"dot",
 		procedural("dot", 1, Math.PI / 4, [
@@ -218,4 +219,10 @@ export const MOTIFS = new Map<MotifDefinition["id"], MotifDefinition>([
 			},
 		]),
 	],
+]);
+
+/** All procedural and repository-managed motif definitions addressable by decor. */
+export const MOTIFS = new Map<MotifDefinition["id"], MotifDefinition>([
+	...PROCEDURAL_MOTIFS,
+	...MOTIF_ASSETS.map((motif) => [motif.id, motif] as const),
 ]);

@@ -88,7 +88,9 @@ unit テストは実装します。
 
 ### 前提と確認範囲
 
-- **ホストにブラウザーを追加せず、既存の Docker イメージを使う。** 2026-09-05 に `local/playwright:1.62.0` で A5 PDF 出力テストの成功を確認した。コンテナ内 Node は `v24.18.0`、マウントした依存関係の `@playwright/test` は `1.62.1` だった。タグだけでパッケージのバージョンを判断しない。
+- **ホストにブラウザーを追加せず、固定した公開 Docker イメージを使う。** イメージは `mcr.microsoft.com/playwright:v1.62.1-noble`。タグのバージョンは `web/node_modules` の `@playwright/test` の解決版（`node -p 'require("@playwright/test/package.json").version'`）と一致させ、ライブラリだけを上げてブラウザーとずらさない。以前は `local/playwright:1.62.0` を使っていたが、これはローカルで作られたタグで Dockerfile がリポジトリにないため、作成した機械以外では再現できない。新しいタグを使う場合は、まず実在を確認する（例: `curl -s -o /dev/null -w "%{http_code}" https://mcr.microsoft.com/v2/playwright/manifests/<タグ>`）。存在しないときはバージョンを変えず、同じバージョンの別ディストリ（`-jammy` 等）を確認する。
+- **期待画像の正本環境は linux/x64 に固定する。** `web/e2e/booklet-pdf.spec.ts-snapshots/` の `*-linux.png` はファイル名に CPU アーキテクチャを含まない（`web/playwright.config.ts` に `snapshotPathTemplate` と `snapshotSuffix` の指定がないため、既定の `{platform}` だけが付く）。同じ Linux でも arm64 と x64 でラスタライズが変わり得るため、**linux/x64 以外の環境から期待画像を生成・更新しない**。そのような環境では画像比較の差分を実装の退行と判断せず、未検証として報告する。Apple Silicon の macOS がこれに該当する（コンテナは linux/arm64 になる）。
+- **画像比較を伴わない検証は開発機でもよい。** 単体テスト・型検査・lint と、期待画像を使わない spec（例: `decor-placement.spec.ts`、`decor-assets.spec.ts`）は開発機で実行して差し支えない。ただしホストに Playwright のブラウザーが既にある場合に限り、なければ追加せず Docker を使う。その結果を期待画像の判断に使わない。
 - 設定の正本は `web/playwright.config.ts`、テストは `web/e2e/`、API モックは `web/e2e/fixtures/booklet.ts`。`package.json` の `test:e2e` と `mise run web:test:e2e` は単に Playwright を実行するため、ホストで実行しても Docker には切り替わらない。
 - 現在の `booklet-pdf.spec.ts` は API・画像をモックするブラウザーテスト。Go API・DB・LLM・Gotenberg の起動やデータ投入は不要。PDF は Chromium の `page.pdf()` で検証しており、実 API や Gotenberg の結合テストとは別物。
 - `compose.yml` に Playwright サービスはない。`docker compose up playwright` は使わない。
@@ -98,15 +100,15 @@ unit テストは実装します。
 
 以下はリポジトリルートから実行する。シェルコマンドは環境の lean-ctx / RTK 指示に従って実行し、正確なログが必要なときは `lean-ctx raw` を使う。
 
-1. `docker image inspect local/playwright:1.62.0` で既存イメージを確認する。Docker ソケットへのアクセスが拒否されたら、同じ操作に必要な権限を申請する。権限エラーをイメージ・ブラウザー不足と解釈しない。
+1. `docker image inspect mcr.microsoft.com/playwright:v1.62.1-noble` で確認し、なければそのタグだけを `docker pull` する。Docker ソケットへのアクセスが拒否されたら、同じ操作に必要な権限を申請する。権限エラーをイメージ・ブラウザー不足と解釈しない。デーモンが停止している場合は起動を依頼し、別環境での代替実行を無断で始めない。
 2. `web/node_modules` があることを確認する。依存関係が未導入、または lockfile と不整合の場合のみ `mise run web:install` を使う。毎回インストールし直さない。
 3. まず対象テストだけを一時コンテナで実行する。初回の動作確認には次の PDF テストを使える。
 
 ```bash
-docker run --rm --pull=never --ipc=host \
+docker run --rm --ipc=host \
   --mount "type=bind,source=$PWD/web,target=/work" \
   --workdir /work \
-  local/playwright:1.62.0 \
+  mcr.microsoft.com/playwright:v1.62.1-noble \
   /bin/bash -lc 'corepack pnpm exec playwright test e2e/booklet-pdf.spec.ts --grep "代表テーマをA5" --reporter=line --retries=0 --update-snapshots=none --output=/tmp/cacao-e2e-results'
 ```
 
@@ -118,10 +120,10 @@ docker run --rm --pull=never --ipc=host \
 
 ### 失敗時の切り分けと停止条件
 
-- **イメージがない**：ローカルのイメージ一覧を一度確認し、利用可能なタグを特定する。見つからなければ不足を報告する。勝手に pull・Dockerfile 作成・別ブラウザーへの移行を始めない。
+- **イメージがない**：固定タグを一度だけ `docker pull` する。取得できなければ不足を報告する。別バージョンのタグへの切り替え、Dockerfile の新規作成、別ブラウザーへの移行を始めない。
 - **ブラウザー実行ファイルがない／バージョン不整合**：同じコンテナで `node -p 'require("@playwright/test/package.json").version'` とエラーに示されたブラウザーパスを確認する。`npx playwright install`、`apt install`、ホストへのライブラリ展開、`LD_LIBRARY_PATH` の試行を連鎖させない。既存イメージで解決できなければ不足している組み合わせを報告する。
-- **Vite 起動失敗**：最初の `webServer` エラー、`/work` へのマウント、依存関係、`corepack pnpm` の実行可否を確認する。別ポートのサーバーを増やして回避しない。
-- **assertion／画像比較の失敗**：Docker 環境の失敗と区別し、対象テストの期待値・実際の描画・指定設計を調べる。通すためだけの `--update-snapshots`、期待値の緩和、テストの無効化は禁止。期待画像の更新が作業範囲に含まれる場合のみ、差分を確認して対象を限定して更新する。
+- **Vite 起動失敗**：最初の `webServer` エラー、`/work` へのマウント、依存関係、`corepack pnpm` の実行可否を確認する。ネイティブバイナリが見つからないエラーなら、上の macOS の項目に該当するかを先に確認する。別ポートのサーバーを増やして回避しない。
+- **assertion／画像比較の失敗**：Docker 環境の失敗と区別し、対象テストの期待値・実際の描画・指定設計を調べる。画像比較なら、実行環境が linux/x64 かを先に確認する。異なるなら差分を退行と判断せず、未検証として報告する。通すためだけの `--update-snapshots`、期待値の緩和、テストの無効化は禁止。期待画像の更新が作業範囲に含まれる場合のみ、linux/x64 で差分を確認して対象を限定して更新する。
 - 同じ原因の失敗を無変更で繰り返さない。原因を示すログを一度取得し、根拠のある修正後に対象だけ再実行する。ログ全文・全件テスト・環境探索を繰り返さず、解消できない環境不足はその内容と未検証範囲を報告する。
 - 通常は `--rm` で一時コンテナを片付ける。起動済みコンテナの無差別な停止・削除、`docker system prune` は行わない。
 

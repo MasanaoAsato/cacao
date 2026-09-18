@@ -182,3 +182,35 @@ describe("createBookletModel", () => {
 		expect(model.days[0]?.illustration).toBeNull();
 	});
 });
+
+describe("createBookletModelの地名構成要素", () => {
+	it("正常系: 都市名を分割せず表示用データとして保持する", () => {
+		const model = createBookletModel({
+			coverImage,
+			journey,
+			request: {
+				...request,
+				departure_city: "Washington, D.C.",
+				departure_country: "United States",
+				destination_city: "東京",
+				destination_country: "",
+			},
+		});
+
+		expect(model.cover.departurePlace).toEqual({
+			city: "Washington, D.C.",
+			country: "United States",
+		});
+		expect(model.cover.destinationPlace).toEqual({
+			city: "東京",
+			country: "",
+		});
+	});
+
+	it("正常系: 旧応答では表示用の地名をnullにする", () => {
+		const model = createBookletModel({ coverImage, journey, request });
+
+		expect(model.cover.departurePlace).toBeNull();
+		expect(model.cover.destinationPlace).toBeNull();
+	});
+});

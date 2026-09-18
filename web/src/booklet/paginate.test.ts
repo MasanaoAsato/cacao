@@ -7,7 +7,9 @@ function makeModel(unitCount = 2): BookletModel {
 		cover: {
 			budget: { amount: 10000, currency: "JPY" },
 			destination: "京都",
+			destinationPlace: null,
 			departure: "東京",
+			departurePlace: null,
 			image: {
 				contentUrl: "/api/v1/journey-images/image-1/content",
 				height: 1200,
