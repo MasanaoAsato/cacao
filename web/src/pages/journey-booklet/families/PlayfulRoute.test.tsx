@@ -11,6 +11,11 @@ import type {
 import type { PlayfulRoutePagePlan } from "../../../booklet/families/playfulRoute";
 import type { ResolvedBookletDesign } from "../../../booklet/family";
 import { createBookletTheme } from "../../../theme/bookletTheme";
+import type {
+	PlayfulRouteCompositionId,
+	PlayfulRouteDecorVariantId,
+} from "../../../theme/families/playfulRoute";
+import { playfulRouteDecorVariantFor } from "../../../theme/families/playfulRoute";
 import {
 	ensurePlayfulRouteContent,
 	PlayfulRouteDocument,
@@ -65,23 +70,27 @@ const booklet: EditorialBooklet = {
 	policyId: "route",
 };
 
-const design: ResolvedBookletDesign = {
-	comparisonKey: "playful-route.berry-sun.zigzag",
-	compositionId: "zigzag",
-	decorAssetIds: [
-		"playful-bag",
-		"playful-sun",
-		"playful-squiggle",
-		"playful-burst",
-	],
-	familyId: "playful-route",
-	fontFamilies: ["Dela Gothic One", "M PLUS Rounded 1c", "Noto Sans JP"],
-	paletteId: "berry-sun",
-	policyId: "route",
-	renderKey: "playful-route:v2-0000001c:route:playful-route.berry-sun.zigzag",
-	requestedTheme: createBookletTheme({ value: 28, version: "v2" }),
-	seedToken: "v2-0000001c",
-};
+function designFor(
+	decorVariantId: PlayfulRouteDecorVariantId,
+	compositionId: PlayfulRouteCompositionId = "zigzag",
+): ResolvedBookletDesign {
+	const comparisonKey = `playful-route.berry-sun.${compositionId}.${decorVariantId}`;
+	return {
+		comparisonKey,
+		compositionId,
+		decorAssetIds: playfulRouteDecorVariantFor(decorVariantId).decorAssetIds,
+		decorVariantId,
+		familyId: "playful-route",
+		fontFamilies: ["Dela Gothic One", "M PLUS Rounded 1c", "Noto Sans JP"],
+		paletteId: "berry-sun",
+		policyId: "route",
+		renderKey: `playful-route:v2-0000001c:route:${comparisonKey}`,
+		requestedTheme: createBookletTheme({ value: 28, version: "v2" }),
+		seedToken: "v2-0000001c",
+	};
+}
+
+const design = designFor("sunny");
 
 const PX_PER_MM = 4;
 
@@ -125,6 +134,7 @@ function prepareRenderedDecor(
 		const definition = playfulRouteDecorDefinition(
 			page,
 			resolvedDesign.compositionId,
+			resolvedDesign.decorVariantId,
 			booklet,
 		);
 		for (const anchor of definition.anchors) {
@@ -149,8 +159,12 @@ function prepareRenderedDecor(
 		new Map(
 			pagePlan.map((page) => [
 				page.pageId,
-				playfulRouteDecorDefinition(page, resolvedDesign.compositionId, booklet)
-					.decorations,
+				playfulRouteDecorDefinition(
+					page,
+					resolvedDesign.compositionId,
+					resolvedDesign.decorVariantId,
+					booklet,
+				).decorations,
 			]),
 		),
 	);
@@ -233,10 +247,15 @@ describe("PlayfulRouteDocument", () => {
 		).toThrow("掲載モデルにありません");
 	});
 
-	it.each(["zigzag", "ribbon"] as const)(
-		"境界値: %sの実測anchor・折れ線・描画済み装飾が一致する",
-		(compositionId) => {
-			const resolvedDesign = { ...design, compositionId };
+	it.each([
+		["zigzag", "sunny"],
+		["zigzag", "walking"],
+		["ribbon", "sunny"],
+		["ribbon", "walking"],
+	] as const)(
+		"境界値: %s・%sの実測anchor・折れ線・描画済み装飾が一致する",
+		(compositionId, decorVariantId) => {
+			const resolvedDesign = designFor(decorVariantId, compositionId);
 			const pagePlan: readonly PlayfulRoutePagePlan[] = [
 				{ kind: "cover", pageId: `cover-${compositionId}` },
 				{
@@ -275,4 +294,180 @@ describe("PlayfulRouteDocument", () => {
 			).toHaveAttribute("data-booklet-composition", "compact-header");
 		},
 	);
+});
+
+describe("playful-routeの装飾パターン描画", () => {
+	const dayPage: Extract<PlayfulRoutePagePlan, { readonly kind: "day" }> = {
+		blockHeightsMm: [32, 32],
+		continuation: false,
+		dayIndex: 0,
+		kind: "day",
+		layoutVariant: "selected",
+		pageId: "day-1",
+		unitIndexes: [0, 1],
+	};
+
+	it("正常系: walkingは同じ予約領域に足跡と曲がった矢印を置く", () => {
+		const cover = playfulRouteDecorDefinition(
+			{ kind: "cover", pageId: "cover" },
+			"zigzag",
+			"walking",
+			booklet,
+		);
+
+		expect(cover.decorations).toEqual([
+			expect.objectContaining({
+				anchorId: "playful-cover-sun",
+				assetId: "playful-sun",
+				color: "muted",
+				sizeMm: 20,
+			}),
+			expect.objectContaining({
+				anchorId: "playful-cover-bag",
+				assetId: "playful-footprints",
+				color: "accent",
+				offsetMm: [0, 0],
+				rotateDeg: [0, 0],
+				sizeMm: 24,
+			}),
+			expect.objectContaining({
+				anchorId: "playful-cover-burst",
+				assetId: "playful-curved-arrow",
+				color: "border",
+				offsetMm: [0, 2],
+				rotateDeg: [0, 0],
+				sizeMm: 8,
+			}),
+		]);
+		// The reserved regions keep 20.9's rects; only the artwork changes.
+		expect(cover.anchors).toEqual(
+			playfulRouteDecorDefinition(
+				{ kind: "cover", pageId: "cover" },
+				"zigzag",
+				"sunny",
+				booklet,
+			).anchors,
+		);
+	});
+
+	it.each(["sunny", "walking"] as const)(
+		"正常系: %sは本文下部の装飾領域を自分の素材で埋める",
+		(decorVariantId) => {
+			const day = playfulRouteDecorDefinition(
+				dayPage,
+				"zigzag",
+				decorVariantId,
+				booklet,
+			);
+
+			expect(day.anchors.at(-1)).toMatchObject({
+				id: "playful-day-squiggle",
+				rect: { heightMm: 8, widthMm: 24, xMm: 62, yMm: 194 },
+			});
+			expect(day.decorations.at(-1)).toEqual(
+				expect.objectContaining({
+					anchorId: "playful-day-squiggle",
+					assetId:
+						decorVariantId === "sunny"
+							? "playful-squiggle"
+							: "playful-curved-arrow",
+					color: "accent",
+					offsetMm: [0, 0],
+					sizeMm: 8,
+				}),
+			);
+		},
+	);
+
+	it.each(["sunny", "walking"] as const)(
+		"正常系: %sを観測属性へ出し、表紙と本文の両方で描く",
+		(decorVariantId) => {
+			const resolvedDesign = designFor(decorVariantId);
+			const pagePlan: readonly PlayfulRoutePagePlan[] = [
+				{ kind: "cover", pageId: "cover" },
+				dayPage,
+			];
+			const { container } = render(
+				<PlayfulRouteDocument
+					booklet={booklet}
+					design={resolvedDesign}
+					pagePlan={pagePlan}
+					rootRef={createRef<HTMLElement>()}
+					titleSizePt={40}
+				/>,
+			);
+
+			expect(container.querySelector(".booklet-document")).toHaveAttribute(
+				"data-booklet-decor-variant",
+				decorVariantId,
+			);
+			prepareRenderedDecor(container, pagePlan, resolvedDesign);
+			const drawn = Array.from(
+				container.querySelectorAll("[data-booklet-decor-asset]"),
+				(element) => element.getAttribute("data-booklet-decor-asset"),
+			);
+			expect(drawn).toEqual(
+				decorVariantId === "sunny"
+					? ["playful-sun", "playful-bag", "playful-burst", "playful-squiggle"]
+					: [
+							"playful-sun",
+							"playful-footprints",
+							"playful-curved-arrow",
+							"playful-curved-arrow",
+						],
+			);
+			expect(
+				container.querySelector(
+					'[data-page-id="cover"] [data-booklet-decor-anchor="playful-cover-burst"]',
+				),
+			).toHaveAttribute(
+				"data-booklet-decor-bounds",
+				decorVariantId === "sunny"
+					? "10.00,68.00,24.00,12.00"
+					: "10.00,70.00,24.00,8.00",
+			);
+		},
+	);
+
+	it("正常系: wide-ribbonへ退避しても選んだパターンを引き継ぐ", () => {
+		const resolvedDesign = designFor("walking");
+		const pagePlan: readonly PlayfulRoutePagePlan[] = [
+			{ kind: "cover", pageId: "cover" },
+			{ ...dayPage, layoutVariant: "wide-ribbon" },
+		];
+		const { container } = render(
+			<PlayfulRouteDocument
+				booklet={booklet}
+				design={resolvedDesign}
+				pagePlan={pagePlan}
+				rootRef={createRef<HTMLElement>()}
+				titleSizePt={40}
+			/>,
+		);
+
+		expect(() =>
+			prepareRenderedDecor(container, pagePlan, resolvedDesign),
+		).not.toThrow();
+		expect(
+			container.querySelectorAll(
+				'[data-page-id="day-1"] [data-booklet-decor-asset="playful-curved-arrow"]',
+			),
+		).toHaveLength(1);
+	});
+
+	it("異常系: null・未登録のパターンでは装飾を決められない", () => {
+		for (const decorVariantId of [null, "rainy"]) {
+			expect(() =>
+				playfulRouteDecorDefinition(
+					{ kind: "cover", pageId: "cover" },
+					"zigzag",
+					decorVariantId,
+					booklet,
+				),
+			).toThrow("装飾パターン");
+			expect(() =>
+				playfulRouteDecorDefinition(dayPage, "zigzag", decorVariantId, booklet),
+			).toThrow("装飾パターン");
+		}
+	});
 });

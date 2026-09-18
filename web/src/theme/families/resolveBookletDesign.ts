@@ -3,6 +3,10 @@ import { getDisplayFontDefinition, getFontPairFamilies } from "../bookletTheme";
 import { designKey } from "../resolve";
 import { axisRandom } from "../seed";
 import type { RequestedBookletTheme } from "../types";
+import {
+	PLAYFUL_ROUTE_DECOR_VARIANT_IDS,
+	playfulRouteDecorVariantFor,
+} from "./playfulRoute";
 import { type BookletFamilyDefinition, familyDefinitionFor } from "./registry";
 
 function pick<T>(seedToken: string, axis: string, values: readonly T[]): T {
@@ -35,10 +39,25 @@ export function resolveBookletDesignForFamily(
 					`family:${definition.id}:composition`,
 					definition.compositionIds,
 				);
+	// Only playful-route publishes decor variants, so only its comparison key
+	// gains a segment; every other family's key text stays as it was (20.11).
+	const decorVariantId =
+		definition.id === "playful-route"
+			? pick(
+					seedToken,
+					`family:${definition.id}:decor-variant`,
+					PLAYFUL_ROUTE_DECOR_VARIANT_IDS,
+				)
+			: null;
 	const comparisonKey =
 		definition.id === "legacy"
 			? designKey(recipe)
-			: [definition.id, paletteId, compositionId].join(".");
+			: [
+					definition.id,
+					paletteId,
+					compositionId,
+					...(decorVariantId === null ? [] : [decorVariantId]),
+				].join(".");
 	const policyId = definition.policyId;
 	const renderKey = [definition.id, seedToken, policyId, comparisonKey].join(
 		":",
@@ -55,9 +74,16 @@ export function resolveBookletDesignForFamily(
 	return Object.freeze({
 		comparisonKey,
 		compositionId,
+		// The selected variant owns the assets this design actually draws; the
+		// family's own list is the wider registration set.
 		decorAssetIds: Object.freeze(
-			definition.id === "legacy" ? [] : [...definition.decorAssetIds],
+			definition.id === "legacy"
+				? []
+				: decorVariantId === null
+					? [...definition.decorAssetIds]
+					: [...playfulRouteDecorVariantFor(decorVariantId).decorAssetIds],
 		),
+		decorVariantId,
 		familyId: definition.id,
 		fontFamilies,
 		paletteId,

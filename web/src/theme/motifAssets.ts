@@ -36,6 +36,14 @@ const playfulBurstUrl = new URL(
 	"../assets/motifs/playful-doodle/playful-burst.svg",
 	import.meta.url,
 ).href;
+const playfulCurvedArrowUrl = new URL(
+	"../assets/motifs/playful-doodle/playful-curved-arrow.svg",
+	import.meta.url,
+).href;
+const playfulFootprintsUrl = new URL(
+	"../assets/motifs/playful-doodle/playful-footprints.svg",
+	import.meta.url,
+).href;
 const playfulSquiggleUrl = new URL(
 	"../assets/motifs/playful-doodle/playful-squiggle.svg",
 	import.meta.url,
@@ -56,7 +64,9 @@ export type MotifAssetId =
 	| "playful-bag"
 	| "playful-sun"
 	| "playful-squiggle"
-	| "playful-burst";
+	| "playful-burst"
+	| "playful-footprints"
+	| "playful-curved-arrow";
 
 export type MotifAsset = Extract<
 	MotifDefinition,
@@ -91,6 +101,8 @@ export const MOTIF_ASSETS: readonly MotifAsset[] = [
 	asset("playful-sun", "playful-doodle", 1, playfulSunUrl),
 	asset("playful-squiggle", "playful-doodle", 3, playfulSquiggleUrl),
 	asset("playful-burst", "playful-doodle", 2, playfulBurstUrl),
+	asset("playful-footprints", "playful-doodle", 3 / 4, playfulFootprintsUrl),
+	asset("playful-curved-arrow", "playful-doodle", 3, playfulCurvedArrowUrl),
 ];
 
 const MOTIF_ASSET_BY_ID = new Map(

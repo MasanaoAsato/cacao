@@ -31,36 +31,72 @@ function colorFor(asset: (typeof MOTIF_ASSETS)[number]): string | null {
 	return asset.styleId === "atlas-ink" ? "#19324d" : "#cf5b36";
 }
 
-function DecorAssetsFixture() {
+/**
+ * At most this many assets per specimen sheet. Each is drawn twice, so the
+ * repeats stay inside one A5 page instead of being squeezed into a grid that
+ * runs off the sheet (20.11).
+ */
+const ASSETS_PER_SHEET = 7;
+
+const ASSET_SHEETS = Array.from(
+	{ length: Math.ceil(MOTIF_ASSETS.length / ASSETS_PER_SHEET) },
+	(_value, sheet) =>
+		MOTIF_ASSETS.slice(
+			sheet * ASSETS_PER_SHEET,
+			(sheet + 1) * ASSETS_PER_SHEET,
+		),
+);
+
+function DecorAssetsSheet({
+	assets,
+	sheet,
+}: {
+	readonly assets: readonly (typeof MOTIF_ASSETS)[number][];
+	readonly sheet: number;
+}) {
 	return (
 		<svg
-			aria-label="装飾素材のA5見本"
-			data-decor-assets
+			aria-label={`装飾素材のA5見本 ${sheet + 1}`}
+			data-decor-assets={sheet}
 			height="210mm"
 			viewBox="0 0 148 210"
 			width="148mm"
 		>
 			<rect fill="#fffdf8" height="210" width="148" />
-			{MOTIF_ASSETS.flatMap((asset) =>
-				[0, 1].map((repeat) => ({ asset, repeat })),
-			).map(({ asset, repeat }, index) => {
-				const column = index % 4;
-				const row = Math.floor(index / 4);
-				return (
-					<g
-						data-decor-asset={asset.id}
-						key={`${asset.id}-${repeat}`}
-						transform={`translate(${8 + column * 34} ${10 + row * 33}) scale(10)`}
-					>
-						<MotifShapes
-							color={colorFor(asset)}
-							definition={asset}
-							maskId={`decor-assets-${asset.id}-${repeat}`}
-						/>
-					</g>
-				);
-			})}
+			{assets
+				.flatMap((asset) => [0, 1].map((repeat) => ({ asset, repeat })))
+				.map(({ asset, repeat }, index) => {
+					const column = index % 4;
+					const row = Math.floor(index / 4);
+					return (
+						<g
+							data-decor-asset={asset.id}
+							key={`${asset.id}-${repeat}`}
+							transform={`translate(${8 + column * 34} ${10 + row * 33}) scale(10)`}
+						>
+							<MotifShapes
+								color={colorFor(asset)}
+								definition={asset}
+								maskId={`decor-assets-${asset.id}-${repeat}`}
+							/>
+						</g>
+					);
+				})}
 		</svg>
+	);
+}
+
+function DecorAssetsFixture() {
+	return (
+		<>
+			{ASSET_SHEETS.map((assets, sheet) => (
+				<DecorAssetsSheet
+					assets={assets}
+					key={assets[0]?.id ?? String(sheet)}
+					sheet={sheet}
+				/>
+			))}
+		</>
 	);
 }
 
@@ -236,6 +272,7 @@ function designFor(example: PlacementExample): ResolvedBookletDesign {
 		comparisonKey: `paper-collage.paper-cut.${example.id}`,
 		compositionId: example.id,
 		decorAssetIds: example.assetIds,
+		decorVariantId: null,
 		familyId: "paper-collage",
 		fontFamilies: [],
 		policyId: "legacy-full",

@@ -73,6 +73,7 @@ const design: ResolvedBookletDesign = {
 	comparisonKey: "atlas-grid.blueprint.side-index",
 	compositionId: "side-index",
 	decorAssetIds: ["atlas-compass", "atlas-route-mark", "atlas-perforation"],
+	decorVariantId: null,
 	familyId: "atlas-grid",
 	fontFamilies: ["Zen Kaku Gothic New", "Noto Sans JP"],
 	paletteId: "blueprint",

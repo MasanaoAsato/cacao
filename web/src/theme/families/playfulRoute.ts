@@ -1,3 +1,5 @@
+import type { MotifAssetId } from "../motifAssets";
+import type { MotifColor } from "../types";
 import { validateFamilyTextSafety } from "./decorPlacement";
 import type { VisualFamilyDefinition } from "./registry";
 
@@ -39,12 +41,152 @@ export const PLAYFUL_ROUTE_COMPOSITIONS = {
 
 export type PlayfulRouteCompositionId = keyof typeof PLAYFUL_ROUTE_COMPOSITIONS;
 
-export const PLAYFUL_ROUTE_DECOR_ASSET_IDS = [
-	"playful-bag",
-	"playful-sun",
-	"playful-squiggle",
-	"playful-burst",
-] as const;
+/**
+ * The cover sun is shared by every decor variant: its size, position and muted
+ * colour follow the composition (20.9), not the variant.
+ */
+export const PLAYFUL_ROUTE_COVER_SUN_ASSET_ID: MotifAssetId = "playful-sun";
+
+/**
+ * Reserved decor regions a variant may fill with its own artwork. The IDs are
+ * the anchors 20.9 already publishes, so a variant never adds DOM or space.
+ */
+export type PlayfulRouteDecorSlotId =
+	| "playful-cover-bag"
+	| "playful-cover-burst"
+	| "playful-day-squiggle";
+
+export type PlayfulRouteDecorSlot = {
+	readonly assetId: MotifAssetId;
+	readonly color: Exclude<MotifColor, "own">;
+	/** Offset in mm from the anchor's top-left corner. */
+	readonly offsetMm: readonly [number, number];
+	/** Height of the asset box in mm; the width follows the asset's aspect. */
+	readonly sizeMm: number;
+};
+
+export type PlayfulRouteDecorVariantId = "sunny" | "walking";
+
+export type PlayfulRouteDecorVariant = {
+	/** Subset drawn on the cover, for a document with no day pages. */
+	readonly coverAssetIds: readonly MotifAssetId[];
+	readonly decorAssetIds: readonly MotifAssetId[];
+	readonly id: PlayfulRouteDecorVariantId;
+	readonly slots: Readonly<
+		Record<PlayfulRouteDecorSlotId, PlayfulRouteDecorSlot>
+	>;
+};
+
+/**
+ * Builds one variant and keeps its declared asset set exactly equal to the set
+ * its slots and the shared sun actually draw. An asset reused across pages is
+ * registered once.
+ */
+function decorVariant(
+	id: PlayfulRouteDecorVariantId,
+	decorAssetIds: readonly MotifAssetId[],
+	slots: Readonly<Record<PlayfulRouteDecorSlotId, PlayfulRouteDecorSlot>>,
+): PlayfulRouteDecorVariant {
+	const drawn = new Set<MotifAssetId>([
+		PLAYFUL_ROUTE_COVER_SUN_ASSET_ID,
+		...Object.values(slots).map((slot) => slot.assetId),
+	]);
+	const declared = new Set(decorAssetIds);
+	if (
+		declared.size !== decorAssetIds.length ||
+		declared.size !== drawn.size ||
+		Array.from(drawn).some((assetId) => !declared.has(assetId))
+	) {
+		throw new Error(
+			`playful-routeの装飾パターン「${id}」の素材集合が配置と一致しません。`,
+		);
+	}
+	const coverAssetIds = new Set<MotifAssetId>([
+		PLAYFUL_ROUTE_COVER_SUN_ASSET_ID,
+		slots["playful-cover-bag"].assetId,
+		slots["playful-cover-burst"].assetId,
+	]);
+	return Object.freeze({
+		coverAssetIds: Object.freeze(
+			decorAssetIds.filter((assetId) => coverAssetIds.has(assetId)),
+		),
+		decorAssetIds: Object.freeze([...decorAssetIds]),
+		id,
+		slots,
+	});
+}
+
+/**
+ * Candidate order of the decor variants. `sunny` keeps 20.9's initial
+ * placement; `walking` swaps the bag and the burst for the footprints and the
+ * curved arrow in the same reserved regions (20.11).
+ */
+export const PLAYFUL_ROUTE_DECOR_VARIANTS: readonly PlayfulRouteDecorVariant[] =
+	Object.freeze([
+		decorVariant(
+			"sunny",
+			["playful-bag", "playful-sun", "playful-squiggle", "playful-burst"],
+			{
+				"playful-cover-bag": {
+					assetId: "playful-bag",
+					color: "accent",
+					offsetMm: [0, 0],
+					sizeMm: 24,
+				},
+				"playful-cover-burst": {
+					assetId: "playful-burst",
+					color: "border",
+					offsetMm: [0, 0],
+					sizeMm: 12,
+				},
+				"playful-day-squiggle": {
+					assetId: "playful-squiggle",
+					color: "accent",
+					offsetMm: [0, 0],
+					sizeMm: 8,
+				},
+			},
+		),
+		decorVariant(
+			"walking",
+			["playful-sun", "playful-footprints", "playful-curved-arrow"],
+			{
+				"playful-cover-bag": {
+					assetId: "playful-footprints",
+					color: "accent",
+					offsetMm: [0, 0],
+					sizeMm: 24,
+				},
+				// The burst region is 24 × 12mm; an 8mm arrow sits in its middle.
+				"playful-cover-burst": {
+					assetId: "playful-curved-arrow",
+					color: "border",
+					offsetMm: [0, 2],
+					sizeMm: 8,
+				},
+				"playful-day-squiggle": {
+					assetId: "playful-curved-arrow",
+					color: "accent",
+					offsetMm: [0, 0],
+					sizeMm: 8,
+				},
+			},
+		),
+	]);
+
+export const PLAYFUL_ROUTE_DECOR_VARIANT_IDS: readonly PlayfulRouteDecorVariantId[] =
+	Object.freeze(PLAYFUL_ROUTE_DECOR_VARIANTS.map((variant) => variant.id));
+
+/**
+ * Every asset the family registers, which is the union over all variants. This
+ * is the registration set; a resolved design carries only its own variant's.
+ */
+export const PLAYFUL_ROUTE_DECOR_ASSET_IDS: readonly MotifAssetId[] =
+	Object.freeze([
+		...new Set(
+			PLAYFUL_ROUTE_DECOR_VARIANTS.flatMap((variant) => variant.decorAssetIds),
+		),
+	]);
 
 export const PLAYFUL_ROUTE_FONT_FAMILIES = [
 	"Dela Gothic One",
@@ -58,6 +200,24 @@ export function playfulRoutePaletteFor(paletteId: string) {
 		throw new Error(`playful-routeの配色「${paletteId}」がありません。`);
 	}
 	return palette;
+}
+
+/**
+ * The decor variant a resolved design selected. A missing or unknown ID is a
+ * definition error; it is never completed to `sunny`.
+ */
+export function playfulRouteDecorVariantFor(
+	decorVariantId: string | null,
+): PlayfulRouteDecorVariant {
+	const variant = PLAYFUL_ROUTE_DECOR_VARIANTS.find(
+		(candidate) => candidate.id === decorVariantId,
+	);
+	if (!variant) {
+		throw new Error(
+			`playful-routeの装飾パターン「${decorVariantId ?? "(未選択)"}」がありません。`,
+		);
+	}
+	return variant;
 }
 
 export function playfulRouteCompositionFor(compositionId: string) {

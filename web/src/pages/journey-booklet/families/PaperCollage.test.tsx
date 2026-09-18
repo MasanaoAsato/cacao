@@ -79,6 +79,7 @@ const design: ResolvedBookletDesign = {
 		"paper-leaf",
 		"paper-postage",
 	],
+	decorVariantId: null,
 	familyId: "paper-collage",
 	fontFamilies: ["Kaisei Decol", "Noto Serif JP", "Noto Sans JP"],
 	paletteId: "sage-paper",

@@ -88,6 +88,7 @@ const familyDesign: ResolvedBookletDesign = {
 	comparisonKey: "atlas-grid.atlas-ink.atlas-headline",
 	compositionId: "atlas-headline",
 	decorAssetIds: ["atlas-compass"],
+	decorVariantId: null,
 	familyId: "atlas-grid",
 	fontFamilies: [],
 	paletteId: "atlas-ink",
