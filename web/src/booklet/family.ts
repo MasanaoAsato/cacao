@@ -3,6 +3,7 @@ import type { RequestedBookletTheme } from "../theme/types";
 import type { PolicyId } from "./editorialModel";
 import type { AtlasGridPagePlan } from "./families/atlasGrid";
 import type { PaperCollagePagePlan } from "./families/paperCollage";
+import type { PlayfulRoutePagePlan } from "./families/playfulRoute";
 import type { BookletPagePlan } from "./model";
 
 export type BookletFamilyId =
@@ -42,6 +43,11 @@ export type BookletRenderPagePlan =
 			readonly coverTitleSizePt: number;
 			readonly familyId: "paper-collage";
 			readonly pagePlan: readonly PaperCollagePagePlan[];
+	  }
+	| {
+			readonly coverTitleSizePt: number;
+			readonly familyId: "playful-route";
+			readonly pagePlan: readonly PlayfulRoutePagePlan[];
 	  };
 
 export type FamilyMeasurement = {

@@ -4,6 +4,7 @@ import type { MotifAssetId } from "../motifAssets";
 import type { MoodId } from "../types";
 import { ATLAS_GRID_FAMILY } from "./atlasGrid";
 import { PAPER_COLLAGE_FAMILY } from "./paperCollage";
+import { PLAYFUL_ROUTE_FAMILY } from "./playfulRoute";
 
 type LegacyFamilyDefinition = {
 	readonly id: "legacy";
@@ -72,17 +73,19 @@ const LEGACY_FAMILY: LegacyFamilyDefinition = {
 	id: "legacy",
 	moodIds: ALL_MOODS.filter(
 		(moodId) =>
-			![ATLAS_GRID_FAMILY, PAPER_COLLAGE_FAMILY].some((family) =>
-				family.moodIds.some((familyMoodId) => familyMoodId === moodId),
+			![ATLAS_GRID_FAMILY, PAPER_COLLAGE_FAMILY, PLAYFUL_ROUTE_FAMILY].some(
+				(family) =>
+					family.moodIds.some((familyMoodId) => familyMoodId === moodId),
 			),
 	),
 	policyId: "legacy-full",
 };
 
 export const BOOKLET_FAMILY_REGISTRY = createFamilyRegistry([
-	LEGACY_FAMILY,
+	...(LEGACY_FAMILY.moodIds.length === 0 ? [] : [LEGACY_FAMILY]),
 	ATLAS_GRID_FAMILY,
 	PAPER_COLLAGE_FAMILY,
+	PLAYFUL_ROUTE_FAMILY,
 ]);
 
 export const REGISTERED_BOOKLET_FAMILY_IDS = Object.freeze([

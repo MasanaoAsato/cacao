@@ -211,16 +211,15 @@ function DecorFrame({ item }: { readonly item: ResolvedDecorFrame }) {
 
 function DecorConnector({ item }: { readonly item: ResolvedDecorConnector }) {
 	return (
-		<line
+		<polyline
 			data-booklet-decor-bounds={formatDecorBounds(item.boundsMm)}
 			data-booklet-decor-connector={`${item.fromUnitId}>${item.toUnitId}`}
+			fill="none"
+			points={item.pointsMm.map((point) => point.join(",")).join(" ")}
 			stroke={motifColorVariable(item.color) ?? undefined}
 			strokeLinecap="round"
+			strokeLinejoin="round"
 			strokeWidth={item.widthMm}
-			x1={item.fromMm[0]}
-			x2={item.toMm[0]}
-			y1={item.fromMm[1]}
-			y2={item.toMm[1]}
 		/>
 	);
 }

@@ -141,6 +141,7 @@ export type ResolvedDecorConnector = {
 	readonly fromMm: readonly [number, number];
 	readonly fromUnitId: string;
 	readonly layer: DecorLayerId;
+	readonly pointsMm: readonly (readonly [number, number])[];
 	readonly toMm: readonly [number, number];
 	readonly toUnitId: string;
 	readonly widthMm: number;
@@ -232,6 +233,26 @@ function segmentBounds(
 		widthMm: Math.abs(to[0] - from[0]) + widthMm,
 		xMm: Math.min(from[0], to[0]) - half,
 		yMm: Math.min(from[1], to[1]) - half,
+	};
+}
+
+function unionBounds(rects: readonly RectMm[]): RectMm {
+	const first = rects[0];
+	if (!first) {
+		throw new DecorPlacementError(
+			"decor-definition-invalid",
+			"接続線の経路がありません。",
+		);
+	}
+	const left = Math.min(...rects.map((rect) => rect.xMm));
+	const top = Math.min(...rects.map((rect) => rect.yMm));
+	const right = Math.max(...rects.map((rect) => rect.xMm + rect.widthMm));
+	const bottom = Math.max(...rects.map((rect) => rect.yMm + rect.heightMm));
+	return {
+		heightMm: bottom - top,
+		widthMm: right - left,
+		xMm: left,
+		yMm: top,
 	};
 }
 
@@ -654,10 +675,27 @@ function resolveConnector(
 		connector.fromUnitId,
 		connector.toUnitId,
 	);
-	const fit: ShapeFit = {
-		bounds: segmentBounds(fromMm, toMm, connector.widthMm),
-	};
-	if (!fitsPage(fit) || firstTextCollision(fit, textRects) !== null) {
+	const verticalRoute = Math.abs(toMm[1] - fromMm[1]) >= GEOMETRY_EPSILON_MM;
+	const midpoint = verticalRoute
+		? (fromMm[1] + toMm[1]) / 2
+		: (fromMm[0] + toMm[0]) / 2;
+	const pointsMm: readonly (readonly [number, number])[] = verticalRoute
+		? [fromMm, [fromMm[0], midpoint], [toMm[0], midpoint], toMm]
+		: [fromMm, [midpoint, fromMm[1]], [midpoint, toMm[1]], toMm];
+	const segmentRects = pointsMm
+		.slice(1)
+		.map((point, index) =>
+			segmentBounds(
+				pointsMm[index] as readonly [number, number],
+				point,
+				connector.widthMm,
+			),
+		);
+	const fits = segmentRects.every((bounds) => {
+		const fit: ShapeFit = { bounds };
+		return fitsPage(fit) && firstTextCollision(fit, textRects) === null;
+	});
+	if (!fits) {
 		throw new DecorPlacementError(
 			"decor-collision",
 			`接続線「${connector.fromUnitId}→${connector.toUnitId}」を配置できませんでした。`,
@@ -665,12 +703,13 @@ function resolveConnector(
 	}
 
 	return {
-		boundsMm: fit.bounds,
+		boundsMm: unionBounds(segmentRects),
 		color: connector.color,
 		fromMm,
 		fromUnitId: connector.fromUnitId,
 		kind: "connector",
 		layer: "under-content",
+		pointsMm,
 		toMm,
 		toUnitId: connector.toUnitId,
 		widthMm: connector.widthMm,
