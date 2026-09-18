@@ -10,9 +10,9 @@ import { MOODS, V2_REPRESENTATIVE_SEEDS } from "../src/theme/catalog.js";
 import { resolveTheme } from "../src/theme/resolve.js";
 import type { MoodId, ThemeRecipeDefinition } from "../src/theme/types.js";
 import {
+	type BookletFixtureScenario,
 	bookletFixtureJourneyId,
 	routeBookletApi,
-	type BookletFixtureScenario,
 } from "./fixtures/booklet.js";
 import {
 	MOOD_SAMPLE_SEEDS,
@@ -524,7 +524,7 @@ test.describe("PDFしおり", () => {
 					? "atlas-grid"
 					: ["field-notes", "quiet-gallery"].includes(moodId)
 						? "paper-collage"
-						: "legacy";
+						: "playful-route";
 				await expect(page.locator(".booklet-document")).toHaveAttribute(
 					"data-booklet-family",
 					familyId,
@@ -535,7 +535,7 @@ test.describe("PDFしおり", () => {
 							? ".booklet-document .atlas-grid-page--cover"
 							: familyId === "paper-collage"
 								? ".booklet-document .paper-collage-page--cover"
-								: ".booklet-document .booklet-page--cover",
+								: ".booklet-document .playful-route-page--cover",
 					),
 				).toHaveScreenshot(`sample-${moodId}-cover.png`, {
 					animations: "disabled",
@@ -547,14 +547,9 @@ test.describe("PDFしおり", () => {
 							? ".booklet-document .atlas-grid-page--table"
 							: familyId === "paper-collage"
 								? ".booklet-document .paper-collage-page--day"
-								: ".booklet-document .booklet-page--day",
+								: ".booklet-document .playful-route-page--day",
 					)
 					.first();
-				if (familyId === "legacy") {
-					await expect(
-						firstDay.locator("figure.booklet-day__illustration"),
-					).toHaveCount(1);
-				}
 				await expect(firstDay).toHaveScreenshot(`sample-${moodId}-day.png`, {
 					animations: "disabled",
 					caret: "hide",

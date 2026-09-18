@@ -7,6 +7,7 @@ import {
 	useLegacyFamilyPagePlan,
 } from "./LegacyBookletRenderer";
 import { PaperCollageRenderer, usePaperCollagePagePlan } from "./PaperCollage";
+import { PlayfulRouteRenderer, usePlayfulRoutePagePlan } from "./PlayfulRoute";
 
 export type BookletFamilyAdapter = {
 	readonly familyId: BookletFamilyId;
@@ -56,6 +57,11 @@ const FAMILY_ADAPTERS = createFamilyAdapterRegistry([
 		familyId: "paper-collage",
 		renderer: PaperCollageRenderer,
 		usePagePlan: usePaperCollagePagePlan,
+	},
+	{
+		familyId: "playful-route",
+		renderer: PlayfulRouteRenderer,
+		usePagePlan: usePlayfulRoutePagePlan,
 	},
 ]);
 

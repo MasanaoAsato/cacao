@@ -3,7 +3,7 @@ import { getDisplayFontDefinition, getFontPairFamilies } from "../bookletTheme";
 import { designKey } from "../resolve";
 import { axisRandom } from "../seed";
 import type { RequestedBookletTheme } from "../types";
-import { familyDefinitionFor } from "./registry";
+import { type BookletFamilyDefinition, familyDefinitionFor } from "./registry";
 
 function pick<T>(seedToken: string, axis: string, values: readonly T[]): T {
 	const selected =
@@ -14,10 +14,10 @@ function pick<T>(seedToken: string, axis: string, values: readonly T[]): T {
 	return selected;
 }
 
-export function resolveBookletDesign(
+export function resolveBookletDesignForFamily(
 	requestedTheme: RequestedBookletTheme,
+	definition: BookletFamilyDefinition,
 ): ResolvedBookletDesign {
-	const definition = familyDefinitionFor(requestedTheme.recipe.moodId);
 	const { recipe, seedToken } = requestedTheme;
 	const paletteId =
 		definition.id === "legacy"
@@ -66,4 +66,13 @@ export function resolveBookletDesign(
 		requestedTheme,
 		seedToken,
 	});
+}
+
+export function resolveBookletDesign(
+	requestedTheme: RequestedBookletTheme,
+): ResolvedBookletDesign {
+	return resolveBookletDesignForFamily(
+		requestedTheme,
+		familyDefinitionFor(requestedTheme.recipe.moodId),
+	);
 }

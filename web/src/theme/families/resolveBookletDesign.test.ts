@@ -1,10 +1,19 @@
 import { describe, expect, it } from "vitest";
 import { createBookletTheme, getFontPairFamilies } from "../bookletTheme";
 import { designKey } from "../resolve";
-import { resolveBookletDesign } from "./resolveBookletDesign";
+import {
+	resolveBookletDesign,
+	resolveBookletDesignForFamily,
+} from "./resolveBookletDesign";
+
+const LEGACY_FAMILY = {
+	id: "legacy",
+	moodIds: ["postcard"],
+	policyId: "legacy-full",
+} as const;
 
 describe("resolveBookletDesign", () => {
-	it("正常系: 同じv2シードから同じlegacy設計を解決する", () => {
+	it("正常系: 同じv2シードから同じ設計を解決する", () => {
 		const requested = createBookletTheme({ value: 7, version: "v2" });
 
 		expect(resolveBookletDesign(requested)).toEqual(
@@ -30,7 +39,10 @@ describe("resolveBookletDesign", () => {
 			...requested,
 			recipe: { ...requested.recipe, moodId: "postcard" as const },
 		};
-		const design = resolveBookletDesign(legacyRequested);
+		const design = resolveBookletDesignForFamily(
+			legacyRequested,
+			LEGACY_FAMILY,
+		);
 
 		expect(design.comparisonKey).toBe(designKey(legacyRequested.recipe));
 		expect(design.renderKey).toBe(
@@ -48,7 +60,10 @@ describe("resolveBookletDesign", () => {
 				moodId: "postcard" as const,
 			},
 		};
-		const design = resolveBookletDesign(legacyRequested);
+		const design = resolveBookletDesignForFamily(
+			legacyRequested,
+			LEGACY_FAMILY,
+		);
 
 		expect(design.fontFamilies).toEqual(
 			getFontPairFamilies(legacyRequested.recipe.fontPairId),
@@ -87,6 +102,26 @@ describe("resolveBookletDesign", () => {
 			familyId: "paper-collage",
 			fontFamilies: ["Kaisei Decol", "Noto Serif JP", "Noto Sans JP"],
 			policyId: "captions",
+		});
+	});
+
+	it("正常系: playful-routeの素材・書体・掲載方針を解決する", () => {
+		const requested = createBookletTheme({ value: 7, version: "v2" });
+		const design = resolveBookletDesign({
+			...requested,
+			recipe: { ...requested.recipe, moodId: "postcard" },
+		});
+
+		expect(design).toMatchObject({
+			decorAssetIds: [
+				"playful-bag",
+				"playful-sun",
+				"playful-squiggle",
+				"playful-burst",
+			],
+			familyId: "playful-route",
+			fontFamilies: ["Dela Gothic One", "M PLUS Rounded 1c", "Noto Sans JP"],
+			policyId: "route",
 		});
 	});
 });

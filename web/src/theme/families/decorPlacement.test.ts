@@ -506,6 +506,12 @@ describe("掲載単位をつなぐ線", () => {
 		}
 		expect(line.fromMm).toEqual([60, 70]);
 		expect(line.toMm).toEqual([60, 76]);
+		expect(line.pointsMm).toEqual([
+			[60, 70],
+			[60, 73],
+			[60, 73],
+			[60, 76],
+		]);
 		expect(line.layer).toBe("under-content");
 		expect(line.boundsMm).toEqual(rect(59.5, 69.5, 1, 7));
 	});

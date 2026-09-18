@@ -1,8 +1,8 @@
 import { writeFile } from "node:fs/promises";
-import { expect, test, type TestInfo } from "@playwright/test";
+import { expect, type TestInfo, test } from "@playwright/test";
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
-import { MOODS } from "../src/theme/catalog.js";
 import { THEME_CATALOG_REFERENCES } from "../src/theme/bookletTheme.js";
+import { MOODS } from "../src/theme/catalog.js";
 import { resolveTheme } from "../src/theme/resolve.js";
 import type { MoodId } from "../src/theme/types.js";
 import {
@@ -151,7 +151,7 @@ async function captureComparisonRecord(
 		? "atlas-grid"
 		: ["field-notes", "quiet-gallery"].includes(moodId)
 			? "paper-collage"
-			: "legacy";
+			: "playful-route";
 	expect(metadata.familyId).toBe(expectedFamily);
 	expect(metadata.comparisonKey).not.toBeNull();
 	return {

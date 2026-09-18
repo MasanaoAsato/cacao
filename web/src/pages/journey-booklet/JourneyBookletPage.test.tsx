@@ -78,6 +78,9 @@ const imagePayload = {
 	journey_request_id: "request-1",
 };
 
+const playfulRouteSeed2RenderKey =
+	"playful-route:v2-00000002:route:playful-route.berry-sun.ribbon";
+
 const originalDecode = HTMLImageElement.prototype.decode;
 const originalFonts = Object.getOwnPropertyDescriptor(document, "fonts");
 const originalPrint = Object.getOwnPropertyDescriptor(window, "print");
@@ -180,6 +183,67 @@ function coverSafeAreaFor(element: HTMLElement) {
 	return { height: 76, width: 104, x: 22, y: 67 };
 }
 
+function playfulRouteRect(element: HTMLElement): DOMRect | null {
+	const page = element.closest<HTMLElement>("[data-booklet-page]");
+	if (!page) {
+		return null;
+	}
+	const scale = 560 / 148;
+	const rectMm = (x: number, y: number, width: number, height: number) =>
+		domRect(x * scale, y * scale, width * scale, height * scale);
+	if (element === page) {
+		return rectMm(0, 0, 148, 210);
+	}
+	const composition = page.dataset.bookletComposition;
+	const anchorId = element.dataset.bookletAnchor;
+	if (anchorId === "playful-cover-sun") {
+		return composition === "zigzag"
+			? rectMm(116, 10, 20, 20)
+			: rectMm(18, 150, 24, 24);
+	}
+	if (anchorId === "playful-cover-bag") {
+		return composition === "zigzag"
+			? rectMm(10, 148, 18, 24)
+			: rectMm(50, 154, 18, 24);
+	}
+	if (anchorId === "playful-cover-burst") {
+		return composition === "zigzag"
+			? rectMm(10, 68, 24, 12)
+			: rectMm(10, 70, 24, 12);
+	}
+	if (anchorId === "playful-day-squiggle") {
+		return rectMm(62, 194, 24, 8);
+	}
+	if (element.classList.contains("playful-route-block")) {
+		const heightMm = Number.parseFloat(element.style.height) || 26.5;
+		const wide =
+			composition === "ribbon" ||
+			element.closest(".playful-route-blocks--wide-ribbon") !== null;
+		const right =
+			!wide && element.classList.contains("playful-route-block--right");
+		const compact = element.closest(".playful-route-blocks--selected") === null;
+		return rectMm(
+			right ? 34 : 10,
+			compact ? 34 : 52,
+			wide ? 128 : 104,
+			heightMm,
+		);
+	}
+	const role = element.dataset.bookletTextRole;
+	if (!role) {
+		return null;
+	}
+	if (page.classList.contains("playful-route-page--cover")) {
+		return role === "cover-period"
+			? rectMm(10, 180, 100, 12)
+			: rectMm(15, 15, 85, 35);
+	}
+	if (role === "day-label" || role === "day-date") {
+		return rectMm(10, 10, 88, 30);
+	}
+	return rectMm(32, 56, 70, 18);
+}
+
 function installBrowserMocks() {
 	Object.defineProperty(HTMLImageElement.prototype, "decode", {
 		configurable: true,
@@ -222,6 +286,10 @@ function installBrowserMocks() {
 	Object.defineProperty(HTMLElement.prototype, "getBoundingClientRect", {
 		configurable: true,
 		value: function getBoundingClientRectMock(this: HTMLElement) {
+			const playfulRect = playfulRouteRect(this);
+			if (playfulRect) {
+				return playfulRect;
+			}
 			if (this.classList.contains("booklet-cover-content")) {
 				return domRect(0, 0, 560, 794);
 			}
@@ -362,11 +430,11 @@ describe("JourneyBookletPage", () => {
 		expect(document.querySelectorAll("[data-booklet-page]")).toHaveLength(2);
 		expect(document.querySelector(".booklet-shell")).toHaveAttribute(
 			"data-booklet-family",
-			"legacy",
+			"playful-route",
 		);
 		expect(document.querySelector(".booklet-document")).toHaveAttribute(
 			"data-booklet-family",
-			"legacy",
+			"playful-route",
 		);
 
 		printButton.click();
@@ -656,8 +724,64 @@ describe("JourneyBookletPage", () => {
 		expect(
 			document.querySelector<HTMLElement>(".booklet-measurement")?.dataset
 				.bookletThemeKey,
-		).toBe("v2-00000002:selected");
+		).toBe(playfulRouteSeed2RenderKey);
 		expect(window.print).not.toHaveBeenCalled();
+	});
+
+	it("異常系: 出力側の日別画像のdecodeに失敗したら印刷しない", async () => {
+		vi.mocked(HTMLImageElement.prototype.decode)
+			.mockReset()
+			.mockImplementation(function decodeOutputImage(this: HTMLImageElement) {
+				return this.closest(
+					".booklet-document .playful-route-day-header__image",
+				)
+					? Promise.reject(new Error("day image decode failed"))
+					: Promise.resolve();
+			});
+		installFetchMock();
+		renderPage("/journeys/journey-1/booklet?seed=v2-00000002");
+
+		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
+		await waitFor(() =>
+			expect(screen.getByRole("status")).toHaveTextContent(
+				"画像「京都の旅のイメージ」の読み込みに失敗しました",
+			),
+		);
+		expect(printButton).toBeDisabled();
+		expect(window.print).not.toHaveBeenCalled();
+	});
+
+	it("境界値: 単体が先頭本文だけを超える場合はcompact-headerの退避理由を記録する", async () => {
+		Object.defineProperty(HTMLElement.prototype, "scrollHeight", {
+			configurable: true,
+			get() {
+				const element = this as HTMLElement;
+				if (element.hasAttribute("data-playful-route-first-body")) {
+					return 530;
+				}
+				if (element.hasAttribute("data-playful-route-continuation-body")) {
+					return 598;
+				}
+				if (element.dataset.playfulRouteBlock?.startsWith("selected-")) {
+					return 534;
+				}
+				return 100;
+			},
+		});
+		installFetchMock();
+		renderPage("/journeys/journey-1/booklet?seed=v2-00000002");
+
+		await waitFor(() =>
+			expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled(),
+		);
+		const shell = document.querySelector(".booklet-shell");
+		expect(shell).toHaveAttribute(
+			"data-booklet-resolved-composition",
+			"compact-header",
+		);
+		expect(shell?.getAttribute("data-booklet-fallback-log")).toContain(
+			"selected:unit-overflow",
+		);
 	});
 
 	it("異常系: 選択フォントを確認できなければ候補を進めず印刷しない", async () => {
@@ -675,7 +799,7 @@ describe("JourneyBookletPage", () => {
 		expect(
 			document.querySelector<HTMLElement>(".booklet-measurement")?.dataset
 				.bookletThemeKey,
-		).toBe("v2-00000002:selected");
+		).toBe(playfulRouteSeed2RenderKey);
 		expect(window.print).not.toHaveBeenCalled();
 	});
 
@@ -705,30 +829,26 @@ describe("JourneyBookletPage", () => {
 		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 		await waitFor(() =>
 			expect(screen.getByRole("status")).toHaveTextContent(
-				"表紙文字の位置を計測できませんでした",
+				"計測用紙面の幅を計測できません",
 			),
 		);
 		expect(printButton).toBeDisabled();
 		expect(
 			document.querySelector<HTMLElement>(".booklet-measurement")?.dataset
 				.bookletThemeKey,
-		).toBe("v2-00000002:selected");
+		).toBe(playfulRouteSeed2RenderKey);
 		expect(window.print).not.toHaveBeenCalled();
 	});
 
-	it("異常系: 表紙文字が安全領域外なら印刷しない", async () => {
+	it("異常系: 装飾anchorが紙面外なら印刷しない", async () => {
 		Object.defineProperty(HTMLElement.prototype, "getBoundingClientRect", {
 			configurable: true,
-			value: function outsideCoverSafeArea(this: HTMLElement) {
-				if (this.classList.contains("booklet-cover-content")) {
-					return domRect(0, 0, 560, 794);
+			value: function outsidePage(this: HTMLElement) {
+				if (this.dataset.bookletAnchor === "playful-cover-sun") {
+					return domRect(600, 0, 80, 80);
 				}
-				if (this.classList.contains("booklet-cover__text")) {
-					return domRect(520, 754, 200, 80);
-				}
-				if (this.hasAttribute("data-booklet-cover-copy")) {
-					return domRect(520, 754, 200, 80);
-				}
+				const playfulRect = playfulRouteRect(this);
+				if (playfulRect) return playfulRect;
 				return domRect(0, 0, 200, 20);
 			},
 		});
@@ -738,7 +858,7 @@ describe("JourneyBookletPage", () => {
 		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 		await waitFor(() =>
 			expect(screen.getByRole("status")).toHaveTextContent(
-				"表紙文字が安全領域をはみ出しました",
+				"装飾「playful-sun」を基準「playful-cover-sun」に配置できませんでした",
 			),
 		);
 		expect(printButton).toBeDisabled();
@@ -764,7 +884,7 @@ describe("JourneyBookletPage", () => {
 			expect(
 				document.querySelector<HTMLElement>(".booklet-measurement")?.dataset
 					.bookletThemeKey,
-			).toBe("v2-00000002:selected");
+			).toBe(playfulRouteSeed2RenderKey);
 			expect(window.print).not.toHaveBeenCalled();
 		} finally {
 			style.remove();
@@ -806,14 +926,14 @@ describe("JourneyBookletPage", () => {
 			const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 			await waitFor(() =>
 				expect(screen.getByRole("status")).toHaveTextContent(
-					"印刷ページ数がページ計画と一致しません",
+					"playful-routeのページ数がページ計画と一致しません",
 				),
 			);
 			expect(printButton).toBeDisabled();
 			expect(
 				document.querySelector<HTMLElement>(".booklet-measurement")?.dataset
 					.bookletThemeKey,
-			).toBe("v2-00000002:selected");
+			).toBe(playfulRouteSeed2RenderKey);
 			expect(window.print).not.toHaveBeenCalled();
 		} finally {
 			Object.defineProperty(
@@ -824,7 +944,7 @@ describe("JourneyBookletPage", () => {
 		}
 	});
 
-	it("異常系: すべての安全候補で表紙が収まらなければ印刷しない", async () => {
+	it("異常系: 22ptでも表紙都市名が収まらなければ印刷しない", async () => {
 		installFetchMock();
 		Object.defineProperty(HTMLElement.prototype, "scrollHeight", {
 			configurable: true,
@@ -835,88 +955,12 @@ describe("JourneyBookletPage", () => {
 		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 		await waitFor(() =>
 			expect(screen.getByRole("status")).toHaveTextContent(
-				"表紙の縦方向の文字が収まりません",
+				"表紙の都市名が22ptでも予約領域に収まりません",
 			),
 		);
 		expect(printButton).toBeDisabled();
 		printButton.click();
 		expect(window.print).not.toHaveBeenCalled();
-	});
-
-	it("正常系: 表紙の収まり失敗は安全候補を順に試す", async () => {
-		installFetchMock();
-		let releaseFirstDecode!: () => void;
-		const firstDecode = new Promise<void>((resolve) => {
-			releaseFirstDecode = resolve;
-		});
-		vi.mocked(HTMLImageElement.prototype.decode).mockImplementationOnce(
-			() => firstDecode,
-		);
-		Object.defineProperty(HTMLElement.prototype, "scrollHeight", {
-			configurable: true,
-			get() {
-				const element = this as HTMLElement;
-				if (!element.matches("[data-booklet-cover-copy]")) {
-					return 100;
-				}
-				const key = element.closest<HTMLElement>(".booklet-measurement")
-					?.dataset.bookletThemeKey;
-				return key?.endsWith(":safe-geometry") ? 100 : 300;
-			},
-		});
-		const themeKeys: string[] = [];
-		const observer = new MutationObserver((records) => {
-			const previousKeys: string[] = [];
-			for (const record of records) {
-				const target = record.target;
-				if (
-					target instanceof HTMLElement &&
-					target.classList.contains("booklet-measurement")
-				) {
-					if (record.oldValue) {
-						previousKeys.push(record.oldValue);
-					}
-				}
-			}
-			for (const key of previousKeys) {
-				if (key.startsWith("v2-") && themeKeys.at(-1) !== key) {
-					themeKeys.push(key);
-				}
-			}
-			const target = document.querySelector<HTMLElement>(
-				".booklet-measurement",
-			);
-			const key = target?.dataset.bookletThemeKey;
-			if (key && themeKeys.at(-1) !== key) {
-				themeKeys.push(key);
-			}
-		});
-		observer.observe(document.body, {
-			attributes: true,
-			subtree: true,
-			attributeFilter: ["data-booklet-theme-key"],
-			attributeOldValue: true,
-		});
-		renderPage("/journeys/journey-1/booklet?seed=v2-00000002");
-
-		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
-		await waitFor(() => expect(printButton).toBeDisabled());
-		expect(
-			document.querySelector<HTMLElement>(".booklet-measurement")?.dataset
-				.bookletThemeKey,
-		).toBe("v2-00000002:selected");
-		releaseFirstDecode();
-		await waitFor(() => expect(printButton).toBeEnabled());
-		observer.disconnect();
-		expect(themeKeys[0]).toBe("v2-00000002:selected");
-		expect(themeKeys).toContain("v2-00000002:safe-geometry");
-		expect(
-			new Set(
-				Array.from(
-					document.querySelectorAll<HTMLElement>("[data-booklet-page]"),
-				).map((page) => page.dataset.bookletThemeKey),
-			),
-		).toEqual(new Set(["v2-00000002:safe-geometry"]));
 	});
 
 	it("異常系: 不正なseedクエリは既定テーマへ戻しURLから除去する", async () => {

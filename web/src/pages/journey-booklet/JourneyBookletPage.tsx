@@ -247,6 +247,15 @@ export function JourneyBookletPage() {
 		status,
 		renderPagePlan,
 	} = familyPagePlan;
+	const playfulRouteLayout =
+		renderPagePlan?.familyId === "playful-route"
+			? renderPagePlan.pagePlan.find((page) => page.kind === "day")
+					?.layoutVariant
+			: null;
+	const resolvedCompositionId =
+		playfulRouteLayout && playfulRouteLayout !== "selected"
+			? playfulRouteLayout
+			: themeRequest.design?.compositionId;
 	const canPrint =
 		loadState.status === "ready" &&
 		status === "ready" &&
@@ -410,7 +419,7 @@ export function JourneyBookletPage() {
 			data-booklet-requested-composition={
 				themeRequest.design?.requestedTheme.recipe.compositionId
 			}
-			data-booklet-resolved-composition={themeRequest.design?.compositionId}
+			data-booklet-resolved-composition={resolvedCompositionId}
 			data-booklet-print-error={bookletPrintState.error}
 			data-booklet-print-state={bookletPrintState.state}
 		>

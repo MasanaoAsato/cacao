@@ -37,7 +37,9 @@ export async function expectNoHiddenText(page: Page): Promise<void> {
 						htmlElement.clientWidth + tolerance ||
 						htmlElement.scrollHeight > htmlElement.clientHeight + tolerance ||
 						hidden
-						? [htmlElement.dataset.bookletTextRole]
+						? [
+								`${htmlElement.dataset.bookletTextRole}: scroll=${htmlElement.scrollWidth}x${htmlElement.scrollHeight} client=${htmlElement.clientWidth}x${htmlElement.clientHeight} overflow=${style.overflow}/${style.overflowX}/${style.overflowY} white-space=${style.whiteSpace} text-overflow=${style.textOverflow} transform=${style.transform}`,
+							]
 						: [];
 				}),
 			LAYOUT_ROUNDING_TOLERANCE_PX,
@@ -48,7 +50,7 @@ export async function expectNoHiddenText(page: Page): Promise<void> {
 export async function expectContentInsidePages(page: Page): Promise<void> {
 	const outside = await page
 		.locator(
-			".booklet-document .booklet-page--day, .booklet-document .atlas-grid-page--table, .booklet-document .paper-collage-page--day",
+			".booklet-document .booklet-page--day, .booklet-document .atlas-grid-page--table, .booklet-document .paper-collage-page--day, .booklet-document .playful-route-page--day",
 		)
 		.evaluateAll(
 			(pages, tolerance) =>

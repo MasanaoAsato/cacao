@@ -40,6 +40,26 @@ describe("BOOKLET_FAMILY_REGISTRY", () => {
 			});
 		},
 	);
+
+	it.each(["postcard", "festival-ticket"] as const)(
+		"正常系: %sをplayful-routeへ割り当てる",
+		(moodId) => {
+			expect(familyDefinitionFor(moodId)).toMatchObject({
+				compositionIds: ["zigzag", "ribbon"],
+				decorAssetIds: [
+					"playful-bag",
+					"playful-sun",
+					"playful-squiggle",
+					"playful-burst",
+				],
+				fontFamilies: ["Dela Gothic One", "M PLUS Rounded 1c", "Noto Sans JP"],
+				id: "playful-route",
+				moodIds: ["postcard", "festival-ticket"],
+				paletteIds: ["berry-sun", "harbor-play"],
+				policyId: "route",
+			});
+		},
+	);
 });
 
 describe("createFamilyRegistry", () => {
