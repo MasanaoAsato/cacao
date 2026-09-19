@@ -475,7 +475,11 @@ function AtlasDayBand({
 	readonly day: EditorialDay;
 }) {
 	return (
-		<tr className="atlas-grid-day-band" data-atlas-grid-day-band="true">
+		<tr
+			className="atlas-grid-day-band"
+			data-atlas-grid-day-band="true"
+			data-day-id={day.id}
+		>
 			<th colSpan={3} scope="rowgroup">
 				<span data-booklet-text-role="day-label">
 					{day.dayNumber}日目{continuation ? "（続き）" : ""}
@@ -825,12 +829,25 @@ export function useAtlasGridPagePlan(
 					);
 				}
 				await waitForImages(measurementRoot);
-				const measured = collectMeasurement(measurementRoot, editorial);
-				const nextPagePlan = paginateAtlasGrid(editorial, measured.measurement);
+				const measured =
+					editorial.days.length === 0
+						? null
+						: collectMeasurement(measurementRoot, editorial);
+				const nextPagePlan =
+					measured === null
+						? [
+								{
+									kind: "cover" as const,
+									pageId: `atlas-cover-${editorial.journeyId}`,
+								},
+							]
+						: paginateAtlasGrid(editorial, measured.measurement);
 				if (cancelled || runId !== runIdRef.current) {
 					return;
 				}
-				setCoverTitleSizePt(measured.coverTitleSizePt);
+				setCoverTitleSizePt(
+					measured?.coverTitleSizePt ?? measureCoverTitle(measurementRoot),
+				);
 				setPagePlan(nextPagePlan);
 				setStatus("checking");
 				const output = await waitForOutput(

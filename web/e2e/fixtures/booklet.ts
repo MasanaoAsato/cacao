@@ -205,6 +205,16 @@ const denseSpots = Array.from({ length: 16 }, (_, index) => {
 	};
 });
 
+/**
+ * Input-owned expectations for the dense comparison scenario.  Consumers must
+ * use these values rather than derive an expected order from rendered DOM.
+ */
+export const DENSE_BOOKLET_EXPECTED_UNITS = denseSpots.map((spot, index) => ({
+	id: `dense-leg-${index + 1}:${spot.id}`,
+	name: spot.name,
+	startAt: spot.start_at,
+}));
+
 const denseJourney = {
 	days: [
 		{

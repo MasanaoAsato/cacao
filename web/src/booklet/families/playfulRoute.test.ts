@@ -199,4 +199,17 @@ describe("paginatePlayfulRoute", () => {
 			unitIndexes: [],
 		});
 	});
+
+	it("境界値: 日がなければ計測値に依存せず表紙だけを作る", () => {
+		expect(
+			paginatePlayfulRoute(booklet([]), {
+				blockGap: 0,
+				continuationBodyHeight: 0,
+				days: [],
+				firstBodyHeight: 0,
+				selectedBlockWidth: 0,
+				wideBlockWidth: 0,
+			}),
+		).toEqual([{ kind: "cover", pageId: "playful-route-cover-journey-1" }]);
+	});
 });

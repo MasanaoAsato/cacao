@@ -552,6 +552,7 @@ function PaperDayHeader({
 	return (
 		<header
 			className={`paper-collage-day-header${showImage ? " paper-collage-day-header--photo" : " paper-collage-day-header--compact"}`}
+			data-day-id={day.id}
 		>
 			{showImage ? (
 				<>
@@ -808,15 +809,25 @@ export function usePaperCollagePagePlan(
 					);
 				}
 				await waitForImages(measurementRoot);
-				const measured = collectMeasurement(measurementRoot, editorial);
-				const nextPagePlan = paginatePaperCollage(
-					editorial,
-					measured.measurement,
-				);
+				const measured =
+					editorial.days.length === 0
+						? null
+						: collectMeasurement(measurementRoot, editorial);
+				const nextPagePlan =
+					measured === null
+						? [
+								{
+									kind: "cover" as const,
+									pageId: `paper-collage-cover-${editorial.journeyId}`,
+								},
+							]
+						: paginatePaperCollage(editorial, measured.measurement);
 				if (cancelled || runId !== runIdRef.current) {
 					return;
 				}
-				setCoverTitleSizePt(measured.coverTitleSizePt);
+				setCoverTitleSizePt(
+					measured?.coverTitleSizePt ?? measureCoverTitle(measurementRoot),
+				);
 				setPagePlan(nextPagePlan);
 				setStatus("checking");
 				const output = await waitForOutput(

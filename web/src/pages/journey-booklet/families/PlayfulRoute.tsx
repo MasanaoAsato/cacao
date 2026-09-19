@@ -794,6 +794,7 @@ function RouteDayHeader({
 	return (
 		<header
 			className={`playful-route-day-header${showImage ? " playful-route-day-header--image" : " playful-route-day-header--compact"}`}
+			data-day-id={day.id}
 		>
 			<div className="playful-route-day-header__heading">
 				<p data-booklet-text-role="day-label">
@@ -1071,19 +1072,29 @@ export function usePlayfulRoutePagePlan(
 					);
 				}
 				await waitForImages(measurementRoot);
-				const measured = collectMeasurement(
-					measurementRoot,
-					editorial,
-					activeDesign.compositionId,
-				);
-				const nextPagePlan = paginatePlayfulRoute(
-					editorial,
-					measured.measurement,
-				);
+				const measured =
+					editorial.days.length === 0
+						? null
+						: collectMeasurement(
+								measurementRoot,
+								editorial,
+								activeDesign.compositionId,
+							);
+				const nextPagePlan =
+					measured === null
+						? [
+								{
+									kind: "cover" as const,
+									pageId: `playful-route-cover-${editorial.journeyId}`,
+								},
+							]
+						: paginatePlayfulRoute(editorial, measured.measurement);
 				if (cancelled || runId !== runIdRef.current) {
 					return;
 				}
-				setCoverTitleSizePt(measured.coverTitleSizePt);
+				setCoverTitleSizePt(
+					measured?.coverTitleSizePt ?? measureCoverTitle(measurementRoot),
+				);
 				setPagePlan(nextPagePlan);
 				setStatus("checking");
 				const output = await waitForOutput(

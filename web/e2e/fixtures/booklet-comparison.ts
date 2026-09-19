@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import type { Page } from "@playwright/test";
+import { bookletFixtureJourneyId, routeBookletApi } from "./booklet.js";
 
 export const COMPARISON_EXPECTED_UNITS = Array.from(
 	{ length: 12 },
@@ -74,6 +75,30 @@ const comparisonRequest = {
 	},
 };
 
+const comparisonEmptyDayJourney = {
+	...comparisonJourney,
+	days: [
+		{
+			...comparisonJourney.days[0],
+			id: "comparison-empty-day",
+			legs: [],
+			spots: [],
+		},
+		...comparisonJourney.days,
+	],
+	day_count: 4,
+	id: "journey-comparison-empty-day",
+	request_id: "request-comparison-empty-day",
+};
+
+const comparisonNoDaysJourney = {
+	...comparisonJourney,
+	days: [],
+	day_count: 0,
+	id: "journey-comparison-no-days",
+	request_id: "request-comparison-no-days",
+};
+
 const comparisonImageList = {
 	images: [
 		{
@@ -104,6 +129,38 @@ const comparisonImageList = {
 	journey_request_id: "request-comparison",
 };
 
+type ComparisonApiFixture = {
+	readonly imageList: typeof comparisonImageList;
+	readonly journey: typeof comparisonJourney;
+	readonly request: typeof comparisonRequest;
+};
+
+const comparisonFixtures = {
+	"empty-day": {
+		imageList: {
+			...comparisonImageList,
+			journey_request_id: "request-comparison-empty-day",
+		},
+		journey: comparisonEmptyDayJourney,
+		request: { ...comparisonRequest, id: "request-comparison-empty-day" },
+	},
+	"no-days": {
+		imageList: {
+			...comparisonImageList,
+			journey_request_id: "request-comparison-no-days",
+		},
+		journey: comparisonNoDaysJourney,
+		request: { ...comparisonRequest, id: "request-comparison-no-days" },
+	},
+	standard: {
+		imageList: comparisonImageList,
+		journey: comparisonJourney,
+		request: comparisonRequest,
+	},
+} as const satisfies Readonly<
+	Record<"empty-day" | "no-days" | "standard", ComparisonApiFixture>
+>;
+
 const comparisonCoverPng = readFileSync(
 	new URL("./images/cover-scene.png", import.meta.url),
 );
@@ -112,20 +169,48 @@ const comparisonIllustrationPng = readFileSync(
 );
 
 export const comparisonCoverDataUrl = `data:image/png;base64,${comparisonCoverPng.toString("base64")}`;
+export const comparisonIllustrationDataUrl = `data:image/png;base64,${comparisonIllustrationPng.toString("base64")}`;
 
-export async function routeComparisonBookletApi(page: Page): Promise<void> {
+export type ComparisonFixtureScenario =
+	| "dense"
+	| "empty-day"
+	| "no-days"
+	| "standard";
+
+export function comparisonJourneyId(
+	scenario: ComparisonFixtureScenario,
+): string {
+	if (scenario === "dense") {
+		return bookletFixtureJourneyId("dense");
+	}
+	return comparisonFixtures[scenario].journey.id;
+}
+
+export async function routeComparisonBookletApi(
+	page: Page,
+	scenario: ComparisonFixtureScenario = "standard",
+): Promise<void> {
+	if (scenario === "dense") {
+		await routeBookletApi(page, "dense", "artwork");
+		return;
+	}
+	const fixture = comparisonFixtures[scenario];
 	await page.route("**/api/v1/**", async (route) => {
 		const url = route.request().url();
-		if (url.endsWith("/journeys/journey-comparison")) {
-			await route.fulfill({ json: comparisonJourney });
+		if (url.endsWith(`/journeys/${fixture.journey.id}`)) {
+			await route.fulfill({ json: fixture.journey });
 			return;
 		}
-		if (url.endsWith("/journey-requests/request-comparison/images")) {
-			await route.fulfill({ json: comparisonImageList });
+		if (
+			url.endsWith(
+				`/journey-requests/${fixture.imageList.journey_request_id}/images`,
+			)
+		) {
+			await route.fulfill({ json: fixture.imageList });
 			return;
 		}
-		if (url.endsWith("/journey-requests/request-comparison")) {
-			await route.fulfill({ json: comparisonRequest });
+		if (url.endsWith(`/journey-requests/${fixture.request.id}`)) {
+			await route.fulfill({ json: fixture.request });
 			return;
 		}
 		if (url.includes("/journey-images/") && url.endsWith("/content")) {

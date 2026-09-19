@@ -144,4 +144,10 @@ describe("paginateAtlasGrid", () => {
 			sections: [{ continuation: false, dayIndex: 0, unitIndexes: [] }],
 		});
 	});
+
+	it("境界値: 日がなければ計測値に依存せず表紙だけを作る", () => {
+		expect(paginateAtlasGrid(booklet([]), { bodyHeight: 0, days: [] })).toEqual(
+			[{ kind: "cover", pageId: "atlas-cover-journey-1" }],
+		);
+	});
 });

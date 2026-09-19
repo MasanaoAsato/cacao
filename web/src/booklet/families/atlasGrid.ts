@@ -95,6 +95,11 @@ export function paginateAtlasGrid(
 	booklet: EditorialBooklet,
 	measurement: AtlasGridMeasurement,
 ): readonly AtlasGridPagePlan[] {
+	if (booklet.days.length === 0) {
+		return Object.freeze([
+			{ kind: "cover", pageId: `atlas-cover-${booklet.journeyId}` },
+		]);
+	}
 	validateMeasurement(booklet, measurement);
 	const tablePages: MutablePage[] = [];
 	let currentPage: MutablePage | null = null;
