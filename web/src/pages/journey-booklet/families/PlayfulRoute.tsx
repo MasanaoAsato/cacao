@@ -35,13 +35,13 @@ import {
 } from "../../../theme/families/decorPlacement";
 import {
 	PLAYFUL_ROUTE_COVER_SUN_ASSET_ID,
-	PLAYFUL_ROUTE_FONT_FAMILIES,
 	type PlayfulRouteDecorSlotId,
 	type PlayfulRouteDecorVariant,
 	playfulRouteCompositionFor,
 	playfulRouteDecorVariantFor,
 	playfulRoutePaletteFor,
 } from "../../../theme/families/playfulRoute";
+import { fontStack } from "../../../theme/families/styleProfiles";
 import { motifAssetsFor } from "../../../theme/motifAssets";
 import type { CoverVeilBounds } from "../../../theme/types";
 import { waitForMotifAssets } from "../decor/assetReadiness";
@@ -81,18 +81,23 @@ function readHeight(element: HTMLElement, name: string): number {
 	return height;
 }
 
-async function waitForPlayfulRouteFonts(): Promise<void> {
+async function waitForPlayfulRouteFonts(
+	design: ResolvedBookletDesign,
+): Promise<void> {
 	if (!document.fonts) {
 		return;
 	}
 	await document.fonts.ready;
-	const weights = new Map([
-		["Dela Gothic One", 400],
-		["M PLUS Rounded 1c", 700],
-		["Noto Sans JP", 400],
+	const profile = design.styleProfile;
+	if (!profile) {
+		throw new Error("playful-routeの作風プロファイルがありません。");
+	}
+	const requiredFonts = new Map([
+		[profile.fontFamilies.display, profile.fontWeights.display],
+		[profile.fontFamilies.body, profile.fontWeights.body],
+		[profile.fontFamilies.utility, profile.fontWeights.utility],
 	]);
-	for (const family of PLAYFUL_ROUTE_FONT_FAMILIES) {
-		const weight = weights.get(family) ?? 400;
+	for (const [family, weight] of requiredFonts) {
 		const descriptor = `${weight} 10pt "${family}"`;
 		await document.fonts.load(descriptor, "東京の旅程・京都散策");
 		if (!document.fonts.check(descriptor, "東京の旅程・京都散策")) {
@@ -113,8 +118,21 @@ async function waitForImages(root: ParentNode): Promise<void> {
 	);
 }
 
-function measureCoverTitle(root: HTMLElement): number {
-	for (const sizePt of COVER_TITLE_SIZES_PT) {
+function titleSizeCandidates(design: ResolvedBookletDesign): readonly number[] {
+	const titleSizePt = design.styleProfile?.fontSizesPt.title;
+	return titleSizePt === undefined
+		? COVER_TITLE_SIZES_PT
+		: [
+				titleSizePt,
+				...COVER_TITLE_SIZES_PT.filter((size) => size < titleSizePt),
+			];
+}
+
+function measureCoverTitle(
+	root: HTMLElement,
+	titleSizesPt: readonly number[],
+): number {
+	for (const sizePt of titleSizesPt) {
 		const title = requiredElement(
 			root,
 			`[data-playful-route-cover-title-size="${sizePt}"]`,
@@ -129,7 +147,7 @@ function measureCoverTitle(root: HTMLElement): number {
 	}
 	throw new BookletLayoutError(
 		"cover-block-overflow",
-		"表紙の都市名が22ptでも予約領域に収まりません。",
+		`表紙の都市名が${titleSizesPt.at(-1)}ptでも予約領域に収まりません。`,
 	);
 }
 
@@ -137,6 +155,7 @@ function collectMeasurement(
 	root: HTMLElement,
 	booklet: EditorialBooklet,
 	compositionId: string,
+	titleSizesPt: readonly number[],
 ) {
 	const page = requiredElement(root, ".booklet-page", "計測用紙面");
 	const pageWidth = page.getBoundingClientRect().width || page.clientWidth;
@@ -185,7 +204,7 @@ function collectMeasurement(
 	);
 	const composition = playfulRouteCompositionFor(compositionId);
 	return {
-		coverTitleSizePt: measureCoverTitle(root),
+		coverTitleSizePt: measureCoverTitle(root, titleSizesPt),
 		measurement: {
 			blockGap: 8,
 			continuationBodyHeight:
@@ -613,19 +632,39 @@ function decorationsByPage(
 	);
 }
 
-function playfulRouteStyle(design: ResolvedBookletDesign): CSSProperties {
+export function playfulRouteStyle(
+	design: ResolvedBookletDesign,
+): CSSProperties {
 	const palette = playfulRoutePaletteFor(design.paletteId);
 	const composition = playfulRouteCompositionFor(design.compositionId);
+	const profile = design.styleProfile;
+	if (!profile) {
+		throw new Error("playful-routeの作風プロファイルがありません。");
+	}
 	return {
 		"--booklet-itinerary-accent": palette.accent,
 		"--booklet-itinerary-border": palette.secondary,
 		"--booklet-itinerary-muted": palette.soft,
+		"--playful-route-body-family": fontStack(profile.fontFamilies.body),
+		"--playful-route-body-size": `${profile.fontSizesPt.body}pt`,
+		"--playful-route-body-weight": profile.fontWeights.body,
 		"--playful-route-accent": palette.accent,
 		"--playful-route-ink": palette.ink,
 		"--playful-route-paper": palette.paper,
 		"--playful-route-secondary": palette.secondary,
 		"--playful-route-selected-width": `${composition.blockWidthMm}mm`,
 		"--playful-route-soft": palette.soft,
+		"--booklet-body-family": fontStack(profile.fontFamilies.body),
+		"--booklet-body-size": `${profile.fontSizesPt.body}pt`,
+		"--playful-route-display-family": fontStack(profile.fontFamilies.display),
+		"--playful-route-display-weight": profile.fontWeights.display,
+		"--playful-route-photo-radius":
+			profile.photoTreatment === "diary-photo" ? "4mm" : "8mm",
+		"--playful-route-rule-width":
+			profile.ruleTreatment === "hand-drawn-route" ? "0.8pt" : "0.6mm",
+		"--playful-route-utility-family": fontStack(profile.fontFamilies.utility),
+		"--playful-route-utility-size": `${profile.fontSizesPt.utility}pt`,
+		"--playful-route-utility-weight": profile.fontWeights.utility,
 	} as CSSProperties;
 }
 
@@ -676,12 +715,14 @@ function PlayfulRouteCover({
 	booklet,
 	measurement,
 	titleSizePt,
+	titleSizesPt,
 }: {
 	readonly booklet: EditorialBooklet;
 	readonly measurement: boolean;
 	readonly titleSizePt: number;
+	readonly titleSizesPt: readonly number[];
 }) {
-	const titleSizes = measurement ? COVER_TITLE_SIZES_PT : [titleSizePt];
+	const titleSizes = measurement ? titleSizesPt : [titleSizePt];
 	return (
 		<div className="playful-route-cover">
 			{titleSizes.map((sizePt) => (
@@ -901,6 +942,8 @@ export function PlayfulRouteDocument({
 			data-booklet-decor-variant={design.decorVariantId ?? undefined}
 			data-booklet-design={design.requestedTheme.recipe.id}
 			data-booklet-family="playful-route"
+			data-booklet-photo-treatment={design.styleProfile?.photoTreatment}
+			data-booklet-style-profile={design.styleProfileId ?? undefined}
 			data-booklet-theme-key={design.renderKey}
 			ref={rootRef}
 			style={playfulRouteStyle(design)}
@@ -936,6 +979,7 @@ export function PlayfulRouteDocument({
 								booklet={booklet}
 								measurement={false}
 								titleSizePt={titleSizePt}
+								titleSizesPt={titleSizeCandidates(design)}
 							/>
 						) : (
 							<RouteDayPage booklet={booklet} page={page} />
@@ -962,6 +1006,8 @@ function PlayfulRouteMeasurement({
 			className={`booklet-measurement booklet-theme playful-route playful-route--${design.compositionId}`}
 			data-booklet-decor-variant={design.decorVariantId ?? undefined}
 			data-booklet-family="playful-route"
+			data-booklet-photo-treatment={design.styleProfile?.photoTreatment}
+			data-booklet-style-profile={design.styleProfileId ?? undefined}
 			data-booklet-theme-key={design.renderKey}
 			ref={rootRef}
 			style={playfulRouteStyle(design)}
@@ -971,7 +1017,8 @@ function PlayfulRouteMeasurement({
 					<PlayfulRouteCover
 						booklet={booklet}
 						measurement
-						titleSizePt={COVER_TITLE_SIZES_PT[0]}
+						titleSizePt={titleSizeCandidates(design)[0] ?? 22}
+						titleSizesPt={titleSizeCandidates(design)}
 					/>
 				</div>
 			</article>
@@ -1055,7 +1102,7 @@ export function usePlayfulRoutePagePlan(
 		const run = async () => {
 			try {
 				setStatus("measuring");
-				await waitForPlayfulRouteFonts();
+				await waitForPlayfulRouteFonts(activeDesign);
 				// A cover-only document never draws the day decor, so waiting for
 				// the whole variant's artwork would block on an unused asset.
 				await waitForMotifAssets(
@@ -1079,6 +1126,7 @@ export function usePlayfulRoutePagePlan(
 								measurementRoot,
 								editorial,
 								activeDesign.compositionId,
+								titleSizeCandidates(activeDesign),
 							);
 				const nextPagePlan =
 					measured === null
@@ -1093,7 +1141,11 @@ export function usePlayfulRoutePagePlan(
 					return;
 				}
 				setCoverTitleSizePt(
-					measured?.coverTitleSizePt ?? measureCoverTitle(measurementRoot),
+					measured?.coverTitleSizePt ??
+						measureCoverTitle(
+							measurementRoot,
+							titleSizeCandidates(activeDesign),
+						),
 				);
 				setPagePlan(nextPagePlan);
 				setStatus("checking");
@@ -1154,6 +1206,13 @@ export function usePlayfulRoutePagePlan(
 	const renderPagePlan: BookletRenderPagePlan | null =
 		pagePlan && coverTitleSizePt !== null
 			? {
+					actualCompositionId:
+						pagePlan.find(
+							(page) =>
+								page.kind === "day" && page.layoutVariant !== "selected",
+						)?.layoutVariant ??
+						activeDesign?.compositionId ??
+						"",
 					coverTitleSizePt,
 					familyId: "playful-route",
 					pagePlan,

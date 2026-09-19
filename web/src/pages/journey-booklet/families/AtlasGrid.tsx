@@ -29,7 +29,6 @@ import {
 	resolveBookletTheme,
 } from "../../../theme/bookletTheme";
 import {
-	ATLAS_GRID_FONT_FAMILIES,
 	atlasGridCompositionFor,
 	atlasGridPaletteFor,
 } from "../../../theme/families/atlasGrid";
@@ -38,6 +37,7 @@ import {
 	type FamilyDecoration,
 	resolveFamilyDecor,
 } from "../../../theme/families/decorPlacement";
+import { fontStack } from "../../../theme/families/styleProfiles";
 import { motifAssetsFor } from "../../../theme/motifAssets";
 import type { CoverVeilBounds } from "../../../theme/types";
 import { waitForMotifAssets } from "../decor/assetReadiness";
@@ -85,20 +85,25 @@ function requiredElement(
 	return element;
 }
 
-async function waitForAtlasFonts(): Promise<void> {
+async function waitForAtlasFonts(design: ResolvedBookletDesign): Promise<void> {
 	if (!document.fonts) {
 		return;
 	}
 	await document.fonts.ready;
-	for (const family of ATLAS_GRID_FONT_FAMILIES) {
-		for (const weight of [400, 700] as const) {
-			const descriptor = `${weight} 10pt "${family}"`;
-			await document.fonts.load(descriptor, "東京の旅程・京都散策");
-			if (!document.fonts.check(descriptor, "東京の旅程・京都散策")) {
-				throw new Error(
-					`${family} ${weight} の読み込みを確認できませんでした。`,
-				);
-			}
+	const profile = design.styleProfile;
+	if (!profile) {
+		throw new Error("atlas-gridの作風プロファイルがありません。");
+	}
+	const requiredFonts = new Map([
+		[profile.fontFamilies.display, profile.fontWeights.display],
+		[profile.fontFamilies.body, profile.fontWeights.body],
+		[profile.fontFamilies.utility, profile.fontWeights.utility],
+	]);
+	for (const [family, weight] of requiredFonts) {
+		const descriptor = `${weight} 10pt "${family}"`;
+		await document.fonts.load(descriptor, "東京の旅程・京都散策");
+		if (!document.fonts.check(descriptor, "東京の旅程・京都散策")) {
+			throw new Error(`${family} ${weight} の読み込みを確認できませんでした。`);
 		}
 	}
 }
@@ -115,8 +120,21 @@ async function waitForImages(root: ParentNode): Promise<void> {
 	);
 }
 
-function measureCoverTitle(root: HTMLElement): number {
-	for (const sizePt of COVER_TITLE_SIZES_PT) {
+function titleSizeCandidates(design: ResolvedBookletDesign): readonly number[] {
+	const titleSizePt = design.styleProfile?.fontSizesPt.title;
+	return titleSizePt === undefined
+		? COVER_TITLE_SIZES_PT
+		: [
+				titleSizePt,
+				...COVER_TITLE_SIZES_PT.filter((size) => size < titleSizePt),
+			];
+}
+
+function measureCoverTitle(
+	root: HTMLElement,
+	titleSizesPt: readonly number[],
+): number {
+	for (const sizePt of titleSizesPt) {
 		const title = requiredElement(
 			root,
 			`[data-atlas-cover-title-size="${sizePt}"]`,
@@ -131,11 +149,15 @@ function measureCoverTitle(root: HTMLElement): number {
 	}
 	throw new BookletLayoutError(
 		"cover-block-overflow",
-		"表紙の都市名が22ptでも予約領域に収まりません。",
+		`表紙の都市名が${titleSizesPt.at(-1)}ptでも予約領域に収まりません。`,
 	);
 }
 
-function collectMeasurement(root: HTMLElement, editorial: EditorialBooklet) {
+function collectMeasurement(
+	root: HTMLElement,
+	editorial: EditorialBooklet,
+	titleSizesPt: readonly number[],
+) {
 	const body = requiredElement(root, "[data-atlas-grid-table-body]", "表本体");
 	const days: AtlasGridDayMeasurement[] = editorial.days.map(
 		(day, dayIndex) => {
@@ -167,7 +189,7 @@ function collectMeasurement(root: HTMLElement, editorial: EditorialBooklet) {
 		},
 	);
 	return {
-		coverTitleSizePt: measureCoverTitle(root),
+		coverTitleSizePt: measureCoverTitle(root, titleSizesPt),
 		measurement: { bodyHeight: body.clientHeight, days },
 	};
 }
@@ -364,11 +386,18 @@ function decorationsByPage(
 	);
 }
 
-function atlasStyle(design: ResolvedBookletDesign): CSSProperties {
+export function atlasStyle(design: ResolvedBookletDesign): CSSProperties {
 	const palette = atlasGridPaletteFor(design.paletteId);
 	const composition = atlasGridCompositionFor(design.compositionId);
+	const profile = design.styleProfile;
+	if (!profile) {
+		throw new Error("atlas-gridの作風プロファイルがありません。");
+	}
 	return {
 		"--atlas-accent": palette.accent,
+		"--atlas-body-family": fontStack(profile.fontFamilies.body),
+		"--atlas-body-size": `${profile.fontSizesPt.body}pt`,
+		"--atlas-body-weight": profile.fontWeights.body,
 		"--atlas-column-transport": `${composition.columnWidthsMm[2]}mm`,
 		"--atlas-column-place": `${composition.columnWidthsMm[1]}mm`,
 		"--atlas-column-time": `${composition.columnWidthsMm[0]}mm`,
@@ -377,6 +406,21 @@ function atlasStyle(design: ResolvedBookletDesign): CSSProperties {
 		"--atlas-secondary": palette.secondary,
 		"--atlas-soft": palette.soft,
 		"--atlas-time-size": `${composition.timeFontSizePt}pt`,
+		"--booklet-body-family": fontStack(profile.fontFamilies.body),
+		"--booklet-body-size": `${profile.fontSizesPt.body}pt`,
+		"--atlas-display-family": fontStack(profile.fontFamilies.display),
+		"--atlas-display-weight": profile.fontWeights.display,
+		"--atlas-photo-border":
+			profile.photoTreatment === "record-field"
+				? "0.7pt solid var(--atlas-accent)"
+				: "none",
+		"--atlas-photo-padding":
+			profile.photoTreatment === "record-field" ? "1.5mm" : "0",
+		"--atlas-rule-width":
+			profile.ruleTreatment === "forest-rule" ? "0.7pt" : "0.35pt",
+		"--atlas-utility-family": fontStack(profile.fontFamilies.utility),
+		"--atlas-utility-size": `${profile.fontSizesPt.utility}pt`,
+		"--atlas-utility-weight": profile.fontWeights.utility,
 	} as CSSProperties;
 }
 
@@ -405,13 +449,15 @@ function AtlasCover({
 	compositionId,
 	measurement,
 	titleSizePt,
+	titleSizesPt,
 }: {
 	readonly booklet: EditorialBooklet;
 	readonly compositionId: string;
 	readonly measurement: boolean;
 	readonly titleSizePt: number;
+	readonly titleSizesPt: readonly number[];
 }) {
-	const titleSizes = measurement ? COVER_TITLE_SIZES_PT : [titleSizePt];
+	const titleSizes = measurement ? titleSizesPt : [titleSizePt];
 	return (
 		<div className="atlas-grid-cover">
 			{titleSizes.map((sizePt) => (
@@ -671,6 +717,8 @@ export function AtlasGridDocument({
 			className={`booklet-document booklet-theme atlas-grid atlas-grid--${design.compositionId}`}
 			data-booklet-design={design.requestedTheme.recipe.id}
 			data-booklet-family="atlas-grid"
+			data-booklet-photo-treatment={design.styleProfile?.photoTreatment}
+			data-booklet-style-profile={design.styleProfileId ?? undefined}
 			data-booklet-theme-key={design.renderKey}
 			ref={rootRef}
 			style={atlasStyle(design)}
@@ -692,6 +740,7 @@ export function AtlasGridDocument({
 								compositionId={design.compositionId}
 								measurement={false}
 								titleSizePt={titleSizePt}
+								titleSizesPt={titleSizeCandidates(design)}
 							/>
 						) : (
 							<AtlasTablePage booklet={booklet} page={page} />
@@ -721,6 +770,8 @@ function AtlasGridMeasurement({
 			aria-hidden="true"
 			className={`booklet-measurement booklet-theme atlas-grid atlas-grid--${design.compositionId}`}
 			data-booklet-family="atlas-grid"
+			data-booklet-photo-treatment={design.styleProfile?.photoTreatment}
+			data-booklet-style-profile={design.styleProfileId ?? undefined}
 			data-booklet-theme-key={design.renderKey}
 			ref={rootRef}
 			style={atlasStyle(design)}
@@ -732,7 +783,8 @@ function AtlasGridMeasurement({
 						booklet={booklet}
 						compositionId={design.compositionId}
 						measurement
-						titleSizePt={COVER_TITLE_SIZES_PT[0]}
+						titleSizePt={titleSizeCandidates(design)[0] ?? 22}
+						titleSizesPt={titleSizeCandidates(design)}
 					/>
 				</div>
 			</article>
@@ -819,7 +871,7 @@ export function useAtlasGridPagePlan(
 		const run = async () => {
 			try {
 				setStatus("measuring");
-				await waitForAtlasFonts();
+				await waitForAtlasFonts(activeDesign);
 				await waitForMotifAssets(activeDesign.decorAssetIds);
 				const measurementRoot = measurementRef.current;
 				if (!measurementRoot) {
@@ -832,7 +884,11 @@ export function useAtlasGridPagePlan(
 				const measured =
 					editorial.days.length === 0
 						? null
-						: collectMeasurement(measurementRoot, editorial);
+						: collectMeasurement(
+								measurementRoot,
+								editorial,
+								titleSizeCandidates(activeDesign),
+							);
 				const nextPagePlan =
 					measured === null
 						? [
@@ -846,7 +902,11 @@ export function useAtlasGridPagePlan(
 					return;
 				}
 				setCoverTitleSizePt(
-					measured?.coverTitleSizePt ?? measureCoverTitle(measurementRoot),
+					measured?.coverTitleSizePt ??
+						measureCoverTitle(
+							measurementRoot,
+							titleSizeCandidates(activeDesign),
+						),
 				);
 				setPagePlan(nextPagePlan);
 				setStatus("checking");
@@ -897,6 +957,7 @@ export function useAtlasGridPagePlan(
 	const renderPagePlan: BookletRenderPagePlan | null =
 		pagePlan && coverTitleSizePt !== null
 			? {
+					actualCompositionId: activeDesign?.compositionId ?? "",
 					coverTitleSizePt,
 					familyId: "atlas-grid",
 					pagePlan,

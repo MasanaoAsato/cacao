@@ -247,15 +247,7 @@ export function JourneyBookletPage() {
 		status,
 		renderPagePlan,
 	} = familyPagePlan;
-	const playfulRouteLayout =
-		renderPagePlan?.familyId === "playful-route"
-			? renderPagePlan.pagePlan.find((page) => page.kind === "day")
-					?.layoutVariant
-			: null;
-	const resolvedCompositionId =
-		playfulRouteLayout && playfulRouteLayout !== "selected"
-			? playfulRouteLayout
-			: themeRequest.design?.compositionId;
+	const resolvedCompositionId = renderPagePlan?.actualCompositionId;
 	const canPrint =
 		loadState.status === "ready" &&
 		status === "ready" &&

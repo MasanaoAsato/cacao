@@ -9,6 +9,7 @@ import {
 	playfulRouteDecorVariantFor,
 	playfulRoutePaletteFor,
 } from "./playfulRoute";
+import { styleProfilesForFamily } from "./styleProfiles";
 
 describe("playful-routeのテーマ定義", () => {
 	it("正常系: 2配色・2構図・全パターンの6素材とroute方針を登録する", () => {
@@ -114,6 +115,15 @@ describe("playful-routeの装飾パターン", () => {
 		expect(playfulRouteDecorVariantFor("walking").decorAssetIds).toHaveLength(
 			3,
 		);
+	});
+
+	it("正常系: profileの装飾パターンと実使用素材を同じ集合として登録する", () => {
+		for (const profile of styleProfilesForFamily("playful-route")) {
+			expect(profile.decorVariantId).not.toBeNull();
+			expect(profile.decorAssetIds).toEqual(
+				playfulRouteDecorVariantFor(profile.decorVariantId).decorAssetIds,
+			);
+		}
 	});
 
 	it("正常系: 表紙だけの読み込み対象は本文専用素材を含めない", () => {

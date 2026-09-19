@@ -5,6 +5,7 @@ import type { MoodId } from "../types";
 import { ATLAS_GRID_FAMILY } from "./atlasGrid";
 import { PAPER_COLLAGE_FAMILY } from "./paperCollage";
 import { PLAYFUL_ROUTE_FAMILY } from "./playfulRoute";
+import type { BookletStyleProfile } from "./styleProfiles";
 
 type LegacyFamilyDefinition = {
 	readonly id: "legacy";
@@ -20,6 +21,7 @@ export type VisualFamilyDefinition = {
 	readonly moodIds: readonly MoodId[];
 	readonly paletteIds: readonly string[];
 	readonly policyId: PolicyId;
+	readonly styleProfiles: readonly BookletStyleProfile[];
 };
 
 export type BookletFamilyDefinition =
@@ -47,12 +49,33 @@ export function createFamilyRegistry(
 			definition.id !== "legacy" &&
 			(definition.paletteIds.length === 0 ||
 				definition.compositionIds.length === 0 ||
-				definition.decorAssetIds.length === 0 ||
-				definition.fontFamilies.length === 0)
+				definition.fontFamilies.length === 0 ||
+				definition.styleProfiles.length === 0)
 		) {
 			throw new Error(
 				`系統「${definition.id}」の配色・構図・素材・書体が不足しています。`,
 			);
+		}
+		if (definition.id !== "legacy") {
+			const profileIds = new Set<string>();
+			for (const profile of definition.styleProfiles) {
+				if (profile.familyId !== definition.id || profileIds.has(profile.id)) {
+					throw new Error(
+						`系統「${definition.id}」の作風プロファイル定義が不正です。`,
+					);
+				}
+				if (
+					profile.compositionIds.length === 0 ||
+					(profile.decorMode === "motif" &&
+						profile.decorAssetIds.length === 0) ||
+					(profile.decorMode === "css" && profile.decorAssetIds.length !== 0)
+				) {
+					throw new Error(
+						`系統「${definition.id}」の作風プロファイルの構図または装飾が不正です。`,
+					);
+				}
+				profileIds.add(profile.id);
+			}
 		}
 		for (const moodId of definition.moodIds) {
 			if (byMood.has(moodId)) {

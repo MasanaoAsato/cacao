@@ -96,6 +96,8 @@ const familyDesign: ResolvedBookletDesign = {
 	renderKey: "atlas-grid:v2-0000002a:legacy-full:atlas-grid.atlas-ink",
 	requestedTheme: {} as RequestedBookletTheme,
 	seedToken: "v2-0000002a",
+	styleProfile: null,
+	styleProfileId: null,
 };
 
 const COMPASS: FamilyDecoration = {

@@ -2,6 +2,10 @@ import type { MotifAssetId } from "../motifAssets";
 import type { MotifColor } from "../types";
 import { validateFamilyTextSafety } from "./decorPlacement";
 import type { VisualFamilyDefinition } from "./registry";
+import {
+	derivedStyleProfileFields,
+	styleProfilesForFamily,
+} from "./styleProfiles";
 
 export const PLAYFUL_ROUTE_PALETTES = {
 	"berry-sun": {
@@ -181,18 +185,33 @@ export const PLAYFUL_ROUTE_DECOR_VARIANT_IDS: readonly PlayfulRouteDecorVariantI
  * Every asset the family registers, which is the union over all variants. This
  * is the registration set; a resolved design carries only its own variant's.
  */
-export const PLAYFUL_ROUTE_DECOR_ASSET_IDS: readonly MotifAssetId[] =
-	Object.freeze([
-		...new Set(
-			PLAYFUL_ROUTE_DECOR_VARIANTS.flatMap((variant) => variant.decorAssetIds),
-		),
-	]);
+const PLAYFUL_ROUTE_STYLE_PROFILES = styleProfilesForFamily("playful-route");
+const PLAYFUL_ROUTE_PROFILE_FIELDS = derivedStyleProfileFields(
+	PLAYFUL_ROUTE_STYLE_PROFILES,
+);
 
-export const PLAYFUL_ROUTE_FONT_FAMILIES = [
-	"Dela Gothic One",
-	"M PLUS Rounded 1c",
-	"Noto Sans JP",
-] as const;
+for (const profile of PLAYFUL_ROUTE_STYLE_PROFILES) {
+	const variant = PLAYFUL_ROUTE_DECOR_VARIANTS.find(
+		(candidate) => candidate.id === profile.decorVariantId,
+	);
+	if (
+		!variant ||
+		variant.decorAssetIds.length !== profile.decorAssetIds.length ||
+		variant.decorAssetIds.some(
+			(assetId, index) => profile.decorAssetIds[index] !== assetId,
+		)
+	) {
+		throw new Error(
+			`playful-routeの作風「${profile.id}」と装飾パターンの素材集合が一致しません。`,
+		);
+	}
+}
+
+export const PLAYFUL_ROUTE_DECOR_ASSET_IDS =
+	PLAYFUL_ROUTE_PROFILE_FIELDS.decorAssetIds;
+
+export const PLAYFUL_ROUTE_FONT_FAMILIES =
+	PLAYFUL_ROUTE_PROFILE_FIELDS.fontFamilies;
 
 export function playfulRoutePaletteFor(paletteId: string) {
 	const palette = PLAYFUL_ROUTE_PALETTES[paletteId as PlayfulRoutePaletteId];
@@ -240,11 +259,9 @@ for (const palette of Object.values(PLAYFUL_ROUTE_PALETTES)) {
 }
 
 export const PLAYFUL_ROUTE_FAMILY = {
-	compositionIds: ["zigzag", "ribbon"],
-	decorAssetIds: PLAYFUL_ROUTE_DECOR_ASSET_IDS,
-	fontFamilies: PLAYFUL_ROUTE_FONT_FAMILIES,
+	...PLAYFUL_ROUTE_PROFILE_FIELDS,
 	id: "playful-route",
 	moodIds: ["postcard", "festival-ticket"],
-	paletteIds: ["berry-sun", "harbor-play"],
 	policyId: "route",
+	styleProfiles: PLAYFUL_ROUTE_STYLE_PROFILES,
 } as const satisfies VisualFamilyDefinition;

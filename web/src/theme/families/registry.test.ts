@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createFamilyRegistry, familyDefinitionFor } from "./registry";
+import { styleProfilesForFamily } from "./styleProfiles";
 
 describe("BOOKLET_FAMILY_REGISTRY", () => {
 	it.each(["field-notes", "quiet-gallery"] as const)(
@@ -26,7 +27,7 @@ describe("BOOKLET_FAMILY_REGISTRY", () => {
 		"正常系: %sをatlas-gridへ割り当てる",
 		(moodId) => {
 			expect(familyDefinitionFor(moodId)).toMatchObject({
-				compositionIds: ["wide-image", "side-index"],
+				compositionIds: ["side-index", "wide-image"],
 				decorAssetIds: [
 					"atlas-compass",
 					"atlas-route-mark",
@@ -107,6 +108,7 @@ describe("createFamilyRegistry", () => {
 					moodIds: ["wayfinder"],
 					paletteIds: ["atlas-blue"],
 					policyId: "timetable",
+					styleProfiles: styleProfilesForFamily("atlas-grid"),
 				},
 			]),
 		).toThrow("複数の系統");
@@ -134,6 +136,7 @@ describe("createFamilyRegistry", () => {
 					moodIds: ["wayfinder"],
 					paletteIds: [],
 					policyId: "timetable",
+					styleProfiles: styleProfilesForFamily("atlas-grid"),
 				},
 			]),
 		).toThrow("配色・構図・素材・書体が不足しています");

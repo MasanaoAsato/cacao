@@ -1,3 +1,4 @@
+import type { BookletStyleProfile } from "../theme/families/styleProfiles";
 import type { MotifAssetId } from "../theme/motifAssets";
 import type { RequestedBookletTheme } from "../theme/types";
 import type { PolicyId } from "./editorialModel";
@@ -32,24 +33,31 @@ export type ResolvedBookletDesign = {
 	readonly renderKey: string;
 	readonly requestedTheme: RequestedBookletTheme;
 	readonly seedToken: string;
+	/** `null` only for the internal legacy renderer. */
+	readonly styleProfile: BookletStyleProfile | null;
+	readonly styleProfileId: string | null;
 };
 
 export type BookletRenderPagePlan =
 	| {
+			readonly actualCompositionId: string;
 			readonly familyId: "legacy";
 			readonly pagePlan: readonly BookletPagePlan[];
 	  }
 	| {
+			readonly actualCompositionId: string;
 			readonly coverTitleSizePt: number;
 			readonly familyId: "atlas-grid";
 			readonly pagePlan: readonly AtlasGridPagePlan[];
 	  }
 	| {
+			readonly actualCompositionId: string;
 			readonly coverTitleSizePt: number;
 			readonly familyId: "paper-collage";
 			readonly pagePlan: readonly PaperCollagePagePlan[];
 	  }
 	| {
+			readonly actualCompositionId: string;
 			readonly coverTitleSizePt: number;
 			readonly familyId: "playful-route";
 			readonly pagePlan: readonly PlayfulRoutePagePlan[];

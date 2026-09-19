@@ -1,12 +1,16 @@
 .atlas-grid {
 	--booklet-background: var(--atlas-paper);
-	--booklet-body-family: "Zen Kaku Gothic New", sans-serif;
+	--booklet-body-family: var(
+		--atlas-body-family,
+		"Zen Kaku Gothic New",
+		sans-serif
+	);
 	--booklet-body-line-height: 1.55;
-	--booklet-body-size: 10pt;
+	--booklet-body-size: var(--atlas-body-size, 10pt);
 	--booklet-text: var(--atlas-ink);
 	color: var(--atlas-ink);
-	font-family: "Zen Kaku Gothic New", sans-serif;
-	font-size: 10pt;
+	font-family: var(--booklet-body-family);
+	font-size: var(--booklet-body-size);
 	line-height: 1.55;
 }
 
@@ -41,8 +45,8 @@
 	z-index: 1;
 	margin: 0;
 	color: var(--atlas-ink);
-	font-family: "Zen Kaku Gothic New", sans-serif;
-	font-weight: 700;
+	font-family: var(--atlas-display-family, "Zen Kaku Gothic New", sans-serif);
+	font-weight: var(--atlas-display-weight, 700);
 	letter-spacing: 0;
 	line-height: 1.18;
 	line-break: strict;
@@ -56,6 +60,8 @@
 .atlas-grid-cover__image {
 	margin: 0;
 	overflow: hidden;
+	border: var(--atlas-photo-border, none);
+	padding: var(--atlas-photo-padding, 0);
 	background: var(--atlas-soft);
 }
 
@@ -72,9 +78,9 @@
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
-	font-family: "Noto Sans JP", sans-serif;
-	font-size: 8.5pt;
-	font-weight: 700;
+	font-family: var(--atlas-utility-family, "Noto Sans JP", sans-serif);
+	font-size: var(--atlas-utility-size, 8.5pt);
+	font-weight: var(--atlas-utility-weight, 700);
 	line-height: 1.55;
 	letter-spacing: 0;
 	overflow-wrap: anywhere;
@@ -188,14 +194,15 @@
 }
 
 .atlas-grid-table__header p {
-	font-family: "Noto Sans JP", sans-serif;
+	font-family: var(--atlas-utility-family, "Noto Sans JP", sans-serif);
 	font-size: 8.5pt;
-	font-weight: 700;
+	font-weight: var(--atlas-utility-weight, 700);
 }
 
 .atlas-grid-table__header h2 {
+	font-family: var(--atlas-display-family, "Zen Kaku Gothic New", sans-serif);
 	font-size: 20pt;
-	font-weight: 700;
+	font-weight: var(--atlas-display-weight, 700);
 	line-height: 1.25;
 }
 
@@ -223,9 +230,9 @@
 .atlas-grid-columns {
 	box-sizing: border-box;
 	height: 6mm;
-	font-family: "Noto Sans JP", sans-serif;
+	font-family: var(--atlas-utility-family, "Noto Sans JP", sans-serif);
 	font-size: 8.5pt;
-	font-weight: 700;
+	font-weight: var(--atlas-utility-weight, 700);
 	line-height: 1;
 }
 
@@ -247,8 +254,8 @@
 	box-sizing: border-box;
 	width: 128mm;
 	height: 156mm;
-	border-top: 0.25mm solid var(--atlas-accent);
-	border-bottom: 0.25mm solid var(--atlas-accent);
+	border-top: var(--atlas-rule-width, 0.25mm) solid var(--atlas-accent);
+	border-bottom: var(--atlas-rule-width, 0.25mm) solid var(--atlas-accent);
 }
 
 .atlas-grid-day-band {
@@ -266,9 +273,9 @@
 	height: 8mm;
 	padding: 0 2mm;
 	background: var(--atlas-soft);
-	font-family: "Noto Sans JP", sans-serif;
+	font-family: var(--atlas-utility-family, "Noto Sans JP", sans-serif);
 	font-size: 8.5pt;
-	font-weight: 700;
+	font-weight: var(--atlas-utility-weight, 700);
 	line-height: 1;
 	text-align: left;
 }
@@ -304,17 +311,18 @@
 
 .atlas-grid-cell--time {
 	font-size: var(--atlas-time-size);
-	font-weight: 700;
+	font-weight: var(--atlas-utility-weight, 700);
 }
 
 .atlas-grid-cell--place strong {
+	font-family: var(--atlas-display-family, "Zen Kaku Gothic New", sans-serif);
 	font-size: 10pt;
-	font-weight: 700;
+	font-weight: var(--atlas-display-weight, 700);
 }
 
 .atlas-grid-cell--transport,
 .atlas-grid-cell small {
-	font-family: "Noto Sans JP", sans-serif;
+	font-family: var(--atlas-utility-family, "Noto Sans JP", sans-serif);
 	font-size: 8.5pt;
 }
 
