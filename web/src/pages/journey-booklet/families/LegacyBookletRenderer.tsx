@@ -25,7 +25,12 @@ export function useLegacyFamilyPagePlan(
 	);
 	const renderPagePlan: BookletRenderPagePlan | null =
 		design?.familyId === "legacy" && legacyResult.pagePlan
-			? { familyId: "legacy", pagePlan: legacyResult.pagePlan }
+			? {
+					actualCompositionId:
+						legacyResult.resolvedTheme?.compositionId ?? design.compositionId,
+					familyId: "legacy",
+					pagePlan: legacyResult.pagePlan,
+				}
 			: null;
 
 	return { ...legacyResult, design, renderPagePlan };

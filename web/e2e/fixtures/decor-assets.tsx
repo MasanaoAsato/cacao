@@ -280,6 +280,8 @@ function designFor(example: PlacementExample): ResolvedBookletDesign {
 		renderKey: `paper-collage:${SEED_TOKEN}:legacy-full:${example.id}`,
 		requestedTheme: {} as RequestedBookletTheme,
 		seedToken: SEED_TOKEN,
+		styleProfile: null,
+		styleProfileId: null,
 	};
 }
 

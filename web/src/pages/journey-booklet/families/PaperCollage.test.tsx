@@ -10,6 +10,7 @@ import type {
 import type { PaperCollagePagePlan } from "../../../booklet/families/paperCollage";
 import type { ResolvedBookletDesign } from "../../../booklet/family";
 import { createBookletTheme } from "../../../theme/bookletTheme";
+import { styleProfileFor } from "../../../theme/families/styleProfiles";
 import {
 	PaperCollageDocument,
 	paperCollageDecorDefinition,
@@ -88,6 +89,8 @@ const design: ResolvedBookletDesign = {
 		"paper-collage:v2-00000013:captions:paper-collage.sage-paper.photo-left",
 	requestedTheme: createBookletTheme({ value: 19, version: "v2" }),
 	seedToken: "v2-00000013",
+	styleProfile: styleProfileFor("paper-collage.paper-cut"),
+	styleProfileId: "paper-collage.paper-cut",
 };
 
 const PX_PER_MM = 4;

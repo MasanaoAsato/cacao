@@ -10,6 +10,7 @@ import type {
 import type { AtlasGridPagePlan } from "../../../booklet/families/atlasGrid";
 import type { ResolvedBookletDesign } from "../../../booklet/family";
 import { createBookletTheme } from "../../../theme/bookletTheme";
+import { styleProfileFor } from "../../../theme/families/styleProfiles";
 import { AtlasGridDocument, atlasDecorDefinition } from "./AtlasGrid";
 import { prepareFamilyDecor } from "./useFamilyPagePlan";
 
@@ -81,6 +82,8 @@ const design: ResolvedBookletDesign = {
 	renderKey: "atlas-grid:v2-0000002a:timetable:atlas-grid.blueprint.side-index",
 	requestedTheme,
 	seedToken: "v2-0000002a",
+	styleProfile: styleProfileFor("atlas-grid.atlas-wayfinder"),
+	styleProfileId: "atlas-grid.atlas-wayfinder",
 };
 
 const PX_PER_MM = 4;

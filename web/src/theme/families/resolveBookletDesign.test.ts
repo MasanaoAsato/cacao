@@ -9,7 +9,7 @@ import {
 
 /** Forces one value on the decor-variant axis so its boundaries are testable. */
 const axisStub = vi.hoisted(() => ({
-	axis: "family:playful-route:decor-variant",
+	axis: "family-style:playful-route",
 	value: null as number | null,
 }));
 
@@ -100,12 +100,13 @@ describe("resolveBookletDesign", () => {
 		const design = designForMood(7, "wayfinder");
 
 		expect(design).toMatchObject({
-			comparisonKey: `atlas-grid.${design.paletteId}.${design.compositionId}`,
+			comparisonKey: `atlas-grid.${design.styleProfileId}.${design.paletteId}.${design.compositionId}`,
 			decorAssetIds: ["atlas-compass", "atlas-route-mark", "atlas-perforation"],
 			decorVariantId: null,
 			familyId: "atlas-grid",
 			fontFamilies: ["Zen Kaku Gothic New", "Noto Sans JP"],
 			policyId: "timetable",
+			styleProfileId: "atlas-grid.atlas-wayfinder",
 		});
 	});
 
@@ -113,7 +114,7 @@ describe("resolveBookletDesign", () => {
 		const design = designForMood(7, "field-notes");
 
 		expect(design).toMatchObject({
-			comparisonKey: `paper-collage.${design.paletteId}.${design.compositionId}`,
+			comparisonKey: `paper-collage.${design.styleProfileId}.${design.paletteId}.${design.compositionId}`,
 			decorAssetIds: [
 				"paper-torn-sheet",
 				"paper-tape",
@@ -124,6 +125,7 @@ describe("resolveBookletDesign", () => {
 			familyId: "paper-collage",
 			fontFamilies: ["Kaisei Decol", "Noto Serif JP", "Noto Sans JP"],
 			policyId: "captions",
+			styleProfileId: "paper-collage.paper-cut",
 		});
 	});
 
@@ -131,7 +133,8 @@ describe("resolveBookletDesign", () => {
 		const design = designForMood(7, "postcard");
 
 		expect(design).toMatchObject({
-			comparisonKey: "playful-route.harbor-play.ribbon.walking",
+			comparisonKey:
+				"playful-route.playful-route.playful-travel-diary.harbor-play.ribbon.walking",
 			decorAssetIds: [
 				"playful-sun",
 				"playful-footprints",
@@ -139,8 +142,9 @@ describe("resolveBookletDesign", () => {
 			],
 			decorVariantId: "walking",
 			familyId: "playful-route",
-			fontFamilies: ["Dela Gothic One", "M PLUS Rounded 1c", "Noto Sans JP"],
+			fontFamilies: ["Dela Gothic One", "Noto Sans JP"],
 			policyId: "route",
+			styleProfileId: "playful-route.playful-travel-diary",
 		});
 		expect(design.renderKey).toBe(
 			`playful-route:${design.seedToken}:route:${design.comparisonKey}`,
@@ -148,13 +152,15 @@ describe("resolveBookletDesign", () => {
 		expect(design).toEqual(designForMood(7, "postcard"));
 	});
 
-	it("正常系: sunnyのシードは20.9の4素材を解決する", () => {
-		const design = resolveBookletDesign(
-			createBookletTheme({ value: 58, version: "v2" }),
-		);
+	it("正常系: sunnyのprofileは20.9の4素材を解決する", () => {
+		const requested = createBookletTheme({ value: 58, version: "v2" });
+		axisStub.value = 0;
+		const design = resolveBookletDesign(requested);
+		axisStub.value = null;
 
 		expect(design).toMatchObject({
-			comparisonKey: "playful-route.berry-sun.zigzag.sunny",
+			comparisonKey:
+				"playful-route.playful-route.playful-pop.berry-sun.ribbon.sunny",
 			decorAssetIds: [
 				"playful-bag",
 				"playful-sun",
@@ -162,38 +168,38 @@ describe("resolveBookletDesign", () => {
 				"playful-burst",
 			],
 			decorVariantId: "sunny",
+			styleProfileId: "playful-route.playful-pop",
 		});
 	});
 
-	it("正常系: 配色・構図が同じでもパターンの違いを比較キーが区別する", () => {
-		const sunny = resolveBookletDesign(
-			createBookletTheme({ value: 58, version: "v2" }),
-		);
-		const walking = resolveBookletDesign(
-			createBookletTheme({ value: 15, version: "v2" }),
-		);
+	it("正常系: profileの違いを比較キーと実使用素材が区別する", () => {
+		const requested = createBookletTheme({ value: 58, version: "v2" });
+		axisStub.value = 0;
+		const sunny = resolveBookletDesign(requested);
+		axisStub.value = 0.5;
+		const walking = resolveBookletDesign(requested);
+		axisStub.value = null;
 
-		expect([walking.paletteId, walking.compositionId]).toEqual([
-			sunny.paletteId,
-			sunny.compositionId,
-		]);
+		expect(walking.styleProfileId).not.toBe(sunny.styleProfileId);
 		expect(walking.comparisonKey).not.toBe(sunny.comparisonKey);
-		expect(walking.renderKey).not.toBe(sunny.renderKey);
+		expect(walking.decorAssetIds).not.toEqual(sunny.decorAssetIds);
 	});
 
-	it("境界値: 抽選値0・0.5未満はsunny、0.5・1未満はwalkingを選ぶ", () => {
+	it("境界値: 抽選値0・0.5未満はpop、0.5・1未満はtravel diaryを選ぶ", () => {
 		const requested = createBookletTheme({ value: 28, version: "v2" });
 		const expected: readonly [number, string][] = [
-			[0, "sunny"],
-			[0.5 - Number.EPSILON, "sunny"],
-			[0.5, "walking"],
-			[1 - Number.EPSILON, "walking"],
+			[0, "playful-route.playful-pop"],
+			[0.5 - Number.EPSILON, "playful-route.playful-pop"],
+			[0.5, "playful-route.playful-travel-diary"],
+			[1 - Number.EPSILON, "playful-route.playful-travel-diary"],
 		];
 
 		try {
-			for (const [axisValue, variantId] of expected) {
+			for (const [axisValue, styleProfileId] of expected) {
 				axisStub.value = axisValue;
-				expect(resolveBookletDesign(requested).decorVariantId).toBe(variantId);
+				expect(resolveBookletDesign(requested).styleProfileId).toBe(
+					styleProfileId,
+				);
 			}
 		} finally {
 			axisStub.value = null;

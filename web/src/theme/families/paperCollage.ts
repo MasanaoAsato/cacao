@@ -1,5 +1,9 @@
 import { validateFamilyTextSafety } from "./decorPlacement";
 import type { VisualFamilyDefinition } from "./registry";
+import {
+	derivedStyleProfileFields,
+	styleProfilesForFamily,
+} from "./styleProfiles";
 
 export const PAPER_COLLAGE_PALETTES = {
 	"lilac-paper": {
@@ -39,18 +43,16 @@ export const PAPER_COLLAGE_COMPOSITIONS = {
 
 export type PaperCollageCompositionId = keyof typeof PAPER_COLLAGE_COMPOSITIONS;
 
-export const PAPER_COLLAGE_DECOR_ASSET_IDS = [
-	"paper-torn-sheet",
-	"paper-tape",
-	"paper-leaf",
-	"paper-postage",
-] as const;
+const PAPER_COLLAGE_STYLE_PROFILES = styleProfilesForFamily("paper-collage");
+const PAPER_COLLAGE_PROFILE_FIELDS = derivedStyleProfileFields(
+	PAPER_COLLAGE_STYLE_PROFILES,
+);
 
-export const PAPER_COLLAGE_FONT_FAMILIES = [
-	"Kaisei Decol",
-	"Noto Serif JP",
-	"Noto Sans JP",
-] as const;
+export const PAPER_COLLAGE_DECOR_ASSET_IDS =
+	PAPER_COLLAGE_PROFILE_FIELDS.decorAssetIds;
+
+export const PAPER_COLLAGE_FONT_FAMILIES =
+	PAPER_COLLAGE_PROFILE_FIELDS.fontFamilies;
 
 export function paperCollagePaletteFor(paletteId: string) {
 	const palette = PAPER_COLLAGE_PALETTES[paletteId as PaperCollagePaletteId];
@@ -83,11 +85,9 @@ for (const palette of Object.values(PAPER_COLLAGE_PALETTES)) {
 }
 
 export const PAPER_COLLAGE_FAMILY = {
-	compositionIds: ["photo-left", "photo-right"],
-	decorAssetIds: PAPER_COLLAGE_DECOR_ASSET_IDS,
-	fontFamilies: PAPER_COLLAGE_FONT_FAMILIES,
+	...PAPER_COLLAGE_PROFILE_FIELDS,
 	id: "paper-collage",
 	moodIds: ["field-notes", "quiet-gallery"],
-	paletteIds: ["sage-paper", "lilac-paper"],
 	policyId: "captions",
+	styleProfiles: PAPER_COLLAGE_STYLE_PROFILES,
 } as const satisfies VisualFamilyDefinition;

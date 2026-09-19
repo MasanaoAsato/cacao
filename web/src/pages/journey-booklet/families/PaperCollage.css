@@ -1,12 +1,16 @@
 .paper-collage {
 	--booklet-background: var(--paper-collage-paper);
-	--booklet-body-family: "Noto Serif JP", serif;
+	--booklet-body-family: var(
+		--paper-collage-body-family,
+		"Noto Serif JP",
+		serif
+	);
 	--booklet-body-line-height: 1.65;
-	--booklet-body-size: 10pt;
+	--booklet-body-size: var(--paper-collage-body-size, 10pt);
 	--booklet-text: var(--paper-collage-ink);
 	color: var(--paper-collage-ink);
-	font-family: "Noto Serif JP", serif;
-	font-size: 10pt;
+	font-family: var(--booklet-body-family);
+	font-size: var(--booklet-body-size);
 	line-height: 1.65;
 }
 
@@ -50,8 +54,8 @@
 	width: 128mm;
 	height: 42mm;
 	margin: 0;
-	font-family: "Kaisei Decol", serif;
-	font-weight: 400;
+	font-family: var(--paper-collage-display-family, "Kaisei Decol", serif);
+	font-weight: var(--paper-collage-display-weight, 400);
 	letter-spacing: 0;
 	line-height: 1.2;
 	line-break: strict;
@@ -69,6 +73,7 @@
 	padding: 2mm;
 	background: #fff;
 	box-shadow: 0 1.5mm 3mm rgb(38 54 45 / 15%);
+	transform: rotate(var(--paper-collage-photo-rotation, 0deg));
 }
 
 .paper-collage-cover__image img,
@@ -101,9 +106,9 @@
 	width: 100mm;
 	height: 20mm;
 	margin: 0;
-	font-family: "Noto Sans JP", sans-serif;
-	font-size: 8.5pt;
-	font-weight: 400;
+	font-family: var(--paper-collage-utility-family, "Noto Sans JP", sans-serif);
+	font-size: var(--paper-collage-utility-size, 8.5pt);
+	font-weight: var(--paper-collage-utility-weight, 400);
 	line-height: 1.55;
 	overflow-wrap: anywhere;
 }
@@ -149,7 +154,8 @@
 
 .paper-collage-day-header--compact {
 	height: 18mm;
-	border-bottom: 0.4mm solid var(--paper-collage-soft);
+	border-bottom: var(--paper-collage-rule-width, 0.4mm) solid
+		var(--paper-collage-soft);
 }
 
 .paper-collage-day-header__image,
@@ -205,15 +211,16 @@
 }
 
 .paper-collage-day-header__heading p {
-	font-family: "Noto Sans JP", sans-serif;
+	font-family: var(--paper-collage-utility-family, "Noto Sans JP", sans-serif);
 	font-size: 8.5pt;
+	font-weight: var(--paper-collage-utility-weight, 400);
 	line-height: 1.3;
 }
 
 .paper-collage-day-header__heading h2 {
-	font-family: "Kaisei Decol", serif;
+	font-family: var(--paper-collage-display-family, "Kaisei Decol", serif);
 	font-size: 22pt;
-	font-weight: 400;
+	font-weight: var(--paper-collage-display-weight, 400);
 	line-height: 1.3;
 }
 
@@ -288,16 +295,17 @@
 
 .paper-collage-card time {
 	display: block;
-	font-family: "Noto Sans JP", sans-serif;
+	font-family: var(--paper-collage-utility-family, "Noto Sans JP", sans-serif);
 	font-size: 8.5pt;
+	font-weight: var(--paper-collage-utility-weight, 400);
 	line-height: 1.35;
 }
 
 .paper-collage-card h3 {
 	margin: 1mm 0 0;
-	font-family: "Noto Serif JP", serif;
+	font-family: var(--paper-collage-body-family, "Noto Serif JP", serif);
 	font-size: 14pt;
-	font-weight: 400;
+	font-weight: var(--paper-collage-body-weight, 400);
 	letter-spacing: 0;
 	line-height: 1.4;
 	line-break: strict;

@@ -16,6 +16,7 @@ import type {
 	PlayfulRouteDecorVariantId,
 } from "../../../theme/families/playfulRoute";
 import { playfulRouteDecorVariantFor } from "../../../theme/families/playfulRoute";
+import { styleProfileFor } from "../../../theme/families/styleProfiles";
 import {
 	ensurePlayfulRouteContent,
 	PlayfulRouteDocument,
@@ -87,6 +88,15 @@ function designFor(
 		renderKey: `playful-route:v2-0000001c:route:${comparisonKey}`,
 		requestedTheme: createBookletTheme({ value: 28, version: "v2" }),
 		seedToken: "v2-0000001c",
+		styleProfile: styleProfileFor(
+			decorVariantId === "sunny"
+				? "playful-route.playful-pop"
+				: "playful-route.playful-travel-diary",
+		),
+		styleProfileId:
+			decorVariantId === "sunny"
+				? "playful-route.playful-pop"
+				: "playful-route.playful-travel-diary",
 	};
 }
 
@@ -209,6 +219,15 @@ describe("PlayfulRouteDocument", () => {
 		const documentRoot =
 			container.querySelector<HTMLElement>(".booklet-document");
 		expect(documentRoot).not.toBeNull();
+		expect(
+			documentRoot?.style.getPropertyValue("--playful-route-utility-family"),
+		).toBe('"Noto Sans JP", sans-serif');
+		expect(
+			documentRoot?.style.getPropertyValue("--playful-route-utility-weight"),
+		).toBe("400");
+		expect(
+			container.querySelector(".playful-route-cover__period"),
+		).not.toBeNull();
 		expect(() =>
 			ensurePlayfulRouteContent(documentRoot as HTMLElement, booklet, pagePlan),
 		).not.toThrow();

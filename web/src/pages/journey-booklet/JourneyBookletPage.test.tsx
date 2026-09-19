@@ -4,6 +4,8 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createBookletTheme } from "../../theme/bookletTheme";
+import { resolveBookletDesign } from "../../theme/families/resolveBookletDesign";
 import { type MotifAssetId, motifAssetsFor } from "../../theme/motifAssets";
 import { JourneyBookletPage } from "./JourneyBookletPage";
 
@@ -79,8 +81,27 @@ const imagePayload = {
 	journey_request_id: "request-1",
 };
 
-const playfulRouteSeed2RenderKey =
-	"playful-route:v2-00000002:route:playful-route.berry-sun.ribbon.sunny";
+function resolvedDesignForSeed(value: number) {
+	return resolveBookletDesign(createBookletTheme({ value, version: "v2" }));
+}
+
+function seedQuery(value: number): string {
+	return `v2-${value.toString(16).padStart(8, "0")}`;
+}
+
+function seedFor(
+	predicate: (design: ReturnType<typeof resolvedDesignForSeed>) => boolean,
+): number {
+	for (let value = 0; value <= 0xffff; value += 1) {
+		if (predicate(resolvedDesignForSeed(value))) {
+			return value;
+		}
+	}
+	throw new Error("テスト条件を満たすテーマシードが見つかりません。");
+}
+
+const playfulRouteSeed2Design = resolvedDesignForSeed(2);
+const playfulRouteSeed2RenderKey = playfulRouteSeed2Design.renderKey;
 
 const originalDecode = HTMLImageElement.prototype.decode;
 const originalFonts = Object.getOwnPropertyDescriptor(document, "fonts");
@@ -747,22 +768,42 @@ describe("JourneyBookletPage", () => {
 	});
 
 	it("異常系: 選んだパターンの装飾素材のdecodeに失敗したら印刷しない", async () => {
-		installMotifDecodeFailure(["playful-bag"]);
+		const selectedAssetId = playfulRouteSeed2Design.decorAssetIds[0];
+		if (!selectedAssetId) {
+			throw new Error("選択済みデザインに装飾素材がありません。");
+		}
+		installMotifDecodeFailure([selectedAssetId]);
 		installFetchMock();
 		renderPage("/journeys/journey-1/booklet?seed=v2-00000002");
 
 		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 		await waitFor(() =>
 			expect(screen.getByRole("status")).toHaveTextContent(
-				"装飾素材「playful-bag」の読み込みに失敗しました",
+				`装飾素材「${selectedAssetId}」の読み込みに失敗しました`,
 			),
 		);
 		expect(printButton).toBeDisabled();
 		expect(window.print).not.toHaveBeenCalled();
 	});
 
-	it("境界値: sunnyは選んでいない20.11の2素材のdecode失敗に影響されない", async () => {
-		installMotifDecodeFailure(["playful-footprints", "playful-curved-arrow"]);
+	it("境界値: 選んでいない装飾素材のdecode失敗に影響されない", async () => {
+		const unselectedAssetIds = [
+			"playful-bag",
+			"playful-burst",
+			"playful-curved-arrow",
+			"playful-footprints",
+			"playful-squiggle",
+			"playful-sun",
+		].filter(
+			(assetId): assetId is MotifAssetId =>
+				!playfulRouteSeed2Design.decorAssetIds.includes(
+					assetId as MotifAssetId,
+				),
+		);
+		if (unselectedAssetIds.length === 0) {
+			throw new Error("選んでいない装飾素材がありません。");
+		}
+		installMotifDecodeFailure(unselectedAssetIds);
 		installFetchMock();
 		renderPage("/journeys/journey-1/booklet?seed=v2-00000002");
 
@@ -771,47 +812,67 @@ describe("JourneyBookletPage", () => {
 		);
 		expect(document.querySelector(".booklet-document")).toHaveAttribute(
 			"data-booklet-decor-variant",
-			"sunny",
+			playfulRouteSeed2Design.decorVariantId,
 		);
 		expect(document.querySelector(".booklet-shell")).toHaveAttribute(
 			"data-booklet-comparison-key",
-			"playful-route.berry-sun.ribbon.sunny",
+			playfulRouteSeed2Design.comparisonKey,
 		);
 	});
 
 	it("境界値: シード切替後に旧パターンの素材読込が完了しても新しいreadyを維持する", async () => {
-		const sunnyBagSrc = motifAssetsFor(["playful-bag"])[0]?.src;
-		if (!sunnyBagSrc) {
-			throw new Error("sunnyのかばん素材が登録されていません。");
+		const initialSeed = seedFor(
+			(design) =>
+				design.familyId === "playful-route" && design.decorAssetIds.length > 0,
+		);
+		const initialDesign = resolvedDesignForSeed(initialSeed);
+		const initialAssetId = initialDesign.decorAssetIds[0];
+		if (!initialAssetId) {
+			throw new Error("初期デザインに装飾素材がありません。");
 		}
-		let resolveSunnyBag: (() => void) | undefined;
-		const sunnyBagDecode = new Promise<void>((resolve) => {
-			resolveSunnyBag = resolve;
+		const nextSeed = seedFor(
+			(design) =>
+				design.familyId === "playful-route" &&
+				design.comparisonKey !== initialDesign.comparisonKey,
+		);
+		const nextDesign = resolvedDesignForSeed(nextSeed);
+		const initialAssetSrc = motifAssetsFor([initialAssetId])[0]?.src;
+		if (!initialAssetSrc) {
+			throw new Error("初期デザインの装飾素材が登録されていません。");
+		}
+		let resolveInitialAsset: (() => void) | undefined;
+		const initialAssetDecode = new Promise<void>((resolve) => {
+			resolveInitialAsset = resolve;
 		});
-		let sunnyBagStarted = false;
+		let initialAssetStarted = false;
+		let shouldDelayInitialAsset = true;
 		vi.mocked(HTMLImageElement.prototype.decode).mockImplementation(
 			function decode(this: HTMLImageElement) {
-				if (this.getAttribute("src") === sunnyBagSrc) {
-					sunnyBagStarted = true;
-					return sunnyBagDecode;
+				if (
+					shouldDelayInitialAsset &&
+					this.getAttribute("src") === initialAssetSrc
+				) {
+					shouldDelayInitialAsset = false;
+					initialAssetStarted = true;
+					return initialAssetDecode;
 				}
 				return Promise.resolve();
 			},
 		);
 		vi.spyOn(crypto, "getRandomValues").mockImplementation((values) => {
 			if (values instanceof Uint32Array) {
-				values[0] = 15;
+				values[0] = nextSeed;
 			}
 			return values;
 		});
 		installFetchMock();
-		renderPage("/journeys/journey-1/booklet?seed=v2-00000002");
+		renderPage(`/journeys/journey-1/booklet?seed=${seedQuery(initialSeed)}`);
 
-		await waitFor(() => expect(sunnyBagStarted).toBe(true));
+		await waitFor(() => expect(initialAssetStarted).toBe(true));
 		screen.getByRole("button", { name: "別のデザインを試す" }).click();
 		await waitFor(() =>
 			expect(screen.getByTestId("location-search")).toHaveTextContent(
-				"seed=v2-0000000f",
+				`seed=${seedQuery(nextSeed)}`,
 			),
 		);
 		await waitFor(() =>
@@ -819,13 +880,13 @@ describe("JourneyBookletPage", () => {
 		);
 		expect(document.querySelector(".booklet-document")).toHaveAttribute(
 			"data-booklet-decor-variant",
-			"walking",
+			nextDesign.decorVariantId,
 		);
 
-		if (!resolveSunnyBag) {
-			throw new Error("sunnyのかばん素材のdecodeが開始されていません。");
+		if (!resolveInitialAsset) {
+			throw new Error("初期デザインの装飾素材のdecodeが開始されていません。");
 		}
-		resolveSunnyBag();
+		resolveInitialAsset();
 		await Promise.resolve();
 
 		await waitFor(() =>
@@ -836,7 +897,7 @@ describe("JourneyBookletPage", () => {
 		);
 		expect(document.querySelector(".booklet-document")).toHaveAttribute(
 			"data-booklet-decor-variant",
-			"walking",
+			nextDesign.decorVariantId,
 		);
 	});
 

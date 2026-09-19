@@ -33,10 +33,10 @@ import {
 	resolveFamilyDecor,
 } from "../../../theme/families/decorPlacement";
 import {
-	PAPER_COLLAGE_FONT_FAMILIES,
 	paperCollageCompositionFor,
 	paperCollagePaletteFor,
 } from "../../../theme/families/paperCollage";
+import { fontStack } from "../../../theme/families/styleProfiles";
 import { motifAssetsFor } from "../../../theme/motifAssets";
 import type { CoverVeilBounds } from "../../../theme/types";
 import { waitForMotifAssets } from "../decor/assetReadiness";
@@ -77,16 +77,27 @@ function readHeight(element: HTMLElement, name: string): number {
 	return height;
 }
 
-async function waitForPaperCollageFonts(): Promise<void> {
+async function waitForPaperCollageFonts(
+	design: ResolvedBookletDesign,
+): Promise<void> {
 	if (!document.fonts) {
 		return;
 	}
 	await document.fonts.ready;
-	for (const family of PAPER_COLLAGE_FONT_FAMILIES) {
-		const descriptor = `400 10pt "${family}"`;
+	const profile = design.styleProfile;
+	if (!profile) {
+		throw new Error("paper-collageの作風プロファイルがありません。");
+	}
+	const requiredFonts = new Map([
+		[profile.fontFamilies.display, profile.fontWeights.display],
+		[profile.fontFamilies.body, profile.fontWeights.body],
+		[profile.fontFamilies.utility, profile.fontWeights.utility],
+	]);
+	for (const [family, weight] of requiredFonts) {
+		const descriptor = `${weight} 10pt "${family}"`;
 		await document.fonts.load(descriptor, "東京の旅程・京都散策");
 		if (!document.fonts.check(descriptor, "東京の旅程・京都散策")) {
-			throw new Error(`${family} 400 の読み込みを確認できませんでした。`);
+			throw new Error(`${family} ${weight} の読み込みを確認できませんでした。`);
 		}
 	}
 }
@@ -103,8 +114,21 @@ async function waitForImages(root: ParentNode): Promise<void> {
 	);
 }
 
-function measureCoverTitle(root: HTMLElement): number {
-	for (const sizePt of COVER_TITLE_SIZES_PT) {
+function titleSizeCandidates(design: ResolvedBookletDesign): readonly number[] {
+	const titleSizePt = design.styleProfile?.fontSizesPt.title;
+	return titleSizePt === undefined
+		? COVER_TITLE_SIZES_PT
+		: [
+				titleSizePt,
+				...COVER_TITLE_SIZES_PT.filter((size) => size < titleSizePt),
+			];
+}
+
+function measureCoverTitle(
+	root: HTMLElement,
+	titleSizesPt: readonly number[],
+): number {
+	for (const sizePt of titleSizesPt) {
 		const title = requiredElement(
 			root,
 			`[data-paper-collage-cover-title-size="${sizePt}"]`,
@@ -119,11 +143,15 @@ function measureCoverTitle(root: HTMLElement): number {
 	}
 	throw new BookletLayoutError(
 		"cover-block-overflow",
-		"表紙の都市名が22ptでも予約領域に収まりません。",
+		`表紙の都市名が${titleSizesPt.at(-1)}ptでも予約領域に収まりません。`,
 	);
 }
 
-function collectMeasurement(root: HTMLElement, booklet: EditorialBooklet) {
+function collectMeasurement(
+	root: HTMLElement,
+	booklet: EditorialBooklet,
+	titleSizesPt: readonly number[],
+) {
 	const firstBody = requiredElement(
 		root,
 		"[data-paper-collage-first-body]",
@@ -161,7 +189,7 @@ function collectMeasurement(root: HTMLElement, booklet: EditorialBooklet) {
 		}),
 	);
 	return {
-		coverTitleSizePt: measureCoverTitle(root),
+		coverTitleSizePt: measureCoverTitle(root, titleSizesPt),
 		measurement: {
 			cardGap,
 			continuationBodyHeight: continuationBody.clientHeight,
@@ -390,14 +418,34 @@ function decorationsByPage(
 	);
 }
 
-function paperCollageStyle(design: ResolvedBookletDesign): CSSProperties {
+export function paperCollageStyle(
+	design: ResolvedBookletDesign,
+): CSSProperties {
 	const palette = paperCollagePaletteFor(design.paletteId);
+	const profile = design.styleProfile;
+	if (!profile) {
+		throw new Error("paper-collageの作風プロファイルがありません。");
+	}
 	return {
 		"--paper-collage-accent": palette.accent,
+		"--paper-collage-body-family": fontStack(profile.fontFamilies.body),
+		"--paper-collage-body-size": `${profile.fontSizesPt.body}pt`,
+		"--paper-collage-body-weight": profile.fontWeights.body,
 		"--paper-collage-ink": palette.ink,
 		"--paper-collage-paper": palette.paper,
 		"--paper-collage-secondary": palette.secondary,
 		"--paper-collage-soft": palette.soft,
+		"--booklet-body-family": fontStack(profile.fontFamilies.body),
+		"--booklet-body-size": `${profile.fontSizesPt.body}pt`,
+		"--paper-collage-display-family": fontStack(profile.fontFamilies.display),
+		"--paper-collage-display-weight": profile.fontWeights.display,
+		"--paper-collage-photo-rotation":
+			profile.photoTreatment === "rotated-paper" ? "-1.5deg" : "0deg",
+		"--paper-collage-rule-width":
+			profile.ruleTreatment === "hand-pasted" ? "1pt" : "0.5pt",
+		"--paper-collage-utility-family": fontStack(profile.fontFamilies.utility),
+		"--paper-collage-utility-size": `${profile.fontSizesPt.utility}pt`,
+		"--paper-collage-utility-weight": profile.fontWeights.utility,
 	} as CSSProperties;
 }
 
@@ -451,12 +499,14 @@ function PaperCollageCover({
 	booklet,
 	measurement,
 	titleSizePt,
+	titleSizesPt,
 }: {
 	readonly booklet: EditorialBooklet;
 	readonly measurement: boolean;
 	readonly titleSizePt: number;
+	readonly titleSizesPt: readonly number[];
 }) {
-	const titleSizes = measurement ? COVER_TITLE_SIZES_PT : [titleSizePt];
+	const titleSizes = measurement ? titleSizesPt : [titleSizePt];
 	return (
 		<div className="paper-collage-cover">
 			{titleSizes.map((sizePt) => (
@@ -662,6 +712,8 @@ export function PaperCollageDocument({
 			className={`booklet-document booklet-theme paper-collage paper-collage--${design.compositionId}`}
 			data-booklet-design={design.requestedTheme.recipe.id}
 			data-booklet-family="paper-collage"
+			data-booklet-photo-treatment={design.styleProfile?.photoTreatment}
+			data-booklet-style-profile={design.styleProfileId ?? undefined}
 			data-booklet-theme-key={design.renderKey}
 			ref={rootRef}
 			style={paperCollageStyle(design)}
@@ -669,7 +721,11 @@ export function PaperCollageDocument({
 			{pagePlan.map((page) => (
 				<article
 					className={`booklet-page paper-collage-page paper-collage-page--${page.kind}`}
-					data-booklet-composition={design.compositionId}
+					data-booklet-composition={
+						page.kind === "day" && page.layoutVariant !== "selected"
+							? page.layoutVariant
+							: design.compositionId
+					}
 					data-booklet-page="true"
 					data-booklet-theme-key={design.renderKey}
 					data-page-id={page.pageId}
@@ -682,6 +738,7 @@ export function PaperCollageDocument({
 								booklet={booklet}
 								measurement={false}
 								titleSizePt={titleSizePt}
+								titleSizesPt={titleSizeCandidates(design)}
 							/>
 						) : (
 							<PaperDayPage booklet={booklet} page={page} />
@@ -707,6 +764,8 @@ function PaperCollageMeasurement({
 			aria-hidden="true"
 			className={`booklet-measurement booklet-theme paper-collage paper-collage--${design.compositionId}`}
 			data-booklet-family="paper-collage"
+			data-booklet-photo-treatment={design.styleProfile?.photoTreatment}
+			data-booklet-style-profile={design.styleProfileId ?? undefined}
 			data-booklet-theme-key={design.renderKey}
 			ref={rootRef}
 			style={paperCollageStyle(design)}
@@ -716,7 +775,8 @@ function PaperCollageMeasurement({
 					<PaperCollageCover
 						booklet={booklet}
 						measurement
-						titleSizePt={COVER_TITLE_SIZES_PT[0]}
+						titleSizePt={titleSizeCandidates(design)[0] ?? 22}
+						titleSizesPt={titleSizeCandidates(design)}
 					/>
 				</div>
 			</article>
@@ -799,7 +859,7 @@ export function usePaperCollagePagePlan(
 		const run = async () => {
 			try {
 				setStatus("measuring");
-				await waitForPaperCollageFonts();
+				await waitForPaperCollageFonts(activeDesign);
 				await waitForMotifAssets(activeDesign.decorAssetIds);
 				const measurementRoot = measurementRef.current;
 				if (!measurementRoot) {
@@ -812,7 +872,11 @@ export function usePaperCollagePagePlan(
 				const measured =
 					editorial.days.length === 0
 						? null
-						: collectMeasurement(measurementRoot, editorial);
+						: collectMeasurement(
+								measurementRoot,
+								editorial,
+								titleSizeCandidates(activeDesign),
+							);
 				const nextPagePlan =
 					measured === null
 						? [
@@ -826,7 +890,11 @@ export function usePaperCollagePagePlan(
 					return;
 				}
 				setCoverTitleSizePt(
-					measured?.coverTitleSizePt ?? measureCoverTitle(measurementRoot),
+					measured?.coverTitleSizePt ??
+						measureCoverTitle(
+							measurementRoot,
+							titleSizeCandidates(activeDesign),
+						),
 				);
 				setPagePlan(nextPagePlan);
 				setStatus("checking");
@@ -877,6 +945,13 @@ export function usePaperCollagePagePlan(
 	const renderPagePlan: BookletRenderPagePlan | null =
 		pagePlan && coverTitleSizePt !== null
 			? {
+					actualCompositionId:
+						pagePlan.find(
+							(page): page is Extract<typeof page, { readonly kind: "day" }> =>
+								page.kind === "day" && page.layoutVariant !== "selected",
+						)?.layoutVariant ??
+						activeDesign?.compositionId ??
+						"",
 					coverTitleSizePt,
 					familyId: "paper-collage",
 					pagePlan,
