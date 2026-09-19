@@ -1,0 +1,282 @@
+@import "@fontsource/noto-sans-jp/400.css";
+@import "@fontsource/noto-sans-jp/700.css";
+@import "@fontsource/noto-serif-jp/400.css";
+@import "@fontsource/noto-serif-jp/700.css";
+@import "@fontsource/shippori-mincho/400.css";
+@import "@fontsource/shippori-mincho/700.css";
+@import "@fontsource/zen-kaku-gothic-new/400.css";
+@import "@fontsource/zen-kaku-gothic-new/700.css";
+
+.editorial-magazine {
+	--editorial-body-family: "Noto Serif JP", serif;
+	--editorial-display-family: "Shippori Mincho", serif;
+	--editorial-utility-family: "Noto Sans JP", sans-serif;
+	--editorial-paper: #f7f5ef;
+	--editorial-ink: #272522;
+	--editorial-accent: #71827d;
+	display: grid;
+	gap: 1.5rem;
+	width: fit-content;
+	margin: 0 auto;
+	color: var(--editorial-ink);
+	font-family: var(--editorial-body-family);
+	font-size: 10pt;
+	line-height: 1.45;
+}
+
+.editorial-magazine--bold-culture {
+	--editorial-body-family: "Noto Sans JP", sans-serif;
+	--editorial-display-family: "Zen Kaku Gothic New", sans-serif;
+	--editorial-paper: #f1efe8;
+	--editorial-ink: #151515;
+	--editorial-accent: #c84b36;
+}
+
+.editorial-magazine-page {
+	position: relative;
+	box-sizing: border-box;
+	width: 148mm;
+	height: 210mm;
+	overflow: hidden;
+	break-inside: avoid;
+	background: var(--editorial-paper);
+	box-shadow: 0 0.75rem 2rem rgb(39 34 31 / 16%);
+}
+
+.editorial-magazine-page__content {
+	position: absolute;
+	box-sizing: border-box;
+	left: var(--editorial-cover-left);
+	top: 10mm;
+	width: 128mm;
+	height: 190mm;
+}
+
+.editorial-magazine-page--cover .editorial-magazine-page__content {
+	position: relative;
+	left: 0;
+	top: 0;
+	width: 148mm;
+	height: 210mm;
+}
+
+.editorial-magazine-cover__title {
+	position: absolute;
+	left: 10mm;
+	top: 10mm;
+	box-sizing: border-box;
+	width: 128mm;
+	height: 24mm;
+	margin: 0;
+	color: var(--editorial-ink);
+	font-family: var(--editorial-display-family);
+	font-size: var(--editorial-title-size, 30pt);
+	font-weight: 700;
+	line-height: 1.1;
+	letter-spacing: 0.01em;
+	overflow-wrap: anywhere;
+}
+
+.editorial-magazine-cover__image {
+	position: absolute;
+	box-sizing: border-box;
+	left: var(--editorial-cover-left);
+	top: 40mm;
+	width: var(--editorial-cover-width);
+	height: var(--editorial-cover-height);
+	object-fit: cover;
+	border: 0 solid transparent;
+}
+
+.editorial-magazine-cover__period {
+	position: absolute;
+	left: 10mm;
+	top: 148mm;
+	box-sizing: border-box;
+	width: 128mm;
+	height: 10mm;
+	margin: 0;
+	color: var(--editorial-ink);
+	font-family: var(--editorial-utility-family);
+	font-size: 8.5pt;
+	font-weight: 700;
+	line-height: 1.4;
+}
+
+.editorial-magazine--bold-culture .editorial-magazine-cover__image {
+	border-width: 1pt;
+	border-color: var(--editorial-ink);
+}
+
+.editorial-magazine-page__rule {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 100%;
+	border-top: 0.35pt solid var(--editorial-accent);
+}
+
+.editorial-magazine--bold-culture .editorial-magazine-page__rule {
+	border-top-width: 1.2pt;
+	border-color: var(--editorial-ink);
+}
+
+.editorial-magazine-day-header {
+	position: relative;
+	box-sizing: border-box;
+	height: 70mm;
+	padding-top: 4mm;
+	border-bottom: 0.35pt solid var(--editorial-accent);
+}
+
+.editorial-magazine--bold-culture .editorial-magazine-day-header {
+	border-bottom-width: 1.2pt;
+	border-color: var(--editorial-ink);
+}
+
+.editorial-magazine-day-header__copy {
+	position: relative;
+	z-index: 1;
+	width: 76mm;
+}
+
+.editorial-magazine-day-header__label,
+.editorial-magazine-day-header__date {
+	display: block;
+	margin: 0;
+	font-family: var(--editorial-utility-family);
+	font-size: 8.5pt;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+}
+
+.editorial-magazine-day-header__label {
+	margin-bottom: 2mm;
+	font-size: 12pt;
+	letter-spacing: 0;
+}
+
+.editorial-magazine-day-header__image {
+	position: absolute;
+	left: 0;
+	top: 22mm;
+	width: 52mm;
+	height: 42mm;
+	object-fit: cover;
+}
+
+.editorial-magazine--bold-culture .editorial-magazine-day-header__image {
+	left: 80mm;
+	width: 48mm;
+	border: 1pt solid var(--editorial-ink);
+}
+
+.editorial-magazine-day-header__short-rule {
+	width: 18mm;
+	margin-top: 6mm;
+	border-top: 0.35pt solid var(--editorial-accent);
+}
+
+.editorial-magazine--bold-culture .editorial-magazine-day-header__short-rule {
+	width: 28mm;
+	border-top-width: 1.2pt;
+	border-color: var(--editorial-accent);
+}
+
+.editorial-magazine-page--continuation .editorial-magazine-day-header,
+.editorial-magazine-day-header--continuation {
+	height: 20mm;
+	padding-top: 0;
+	border-bottom: 0.35pt solid var(--editorial-accent);
+}
+
+.editorial-magazine-page--continuation .editorial-magazine-day-header__label,
+.editorial-magazine-day-header--continuation
+	.editorial-magazine-day-header__label {
+	font-size: 10pt;
+}
+
+.editorial-magazine-page--continuation
+	.editorial-magazine-day-header__short-rule,
+.editorial-magazine-day-header--continuation
+	.editorial-magazine-day-header__short-rule {
+	display: none;
+}
+
+.editorial-magazine-article-cards {
+	display: grid;
+	gap: 3mm;
+	padding-top: 0;
+}
+
+.editorial-magazine-card {
+	box-sizing: border-box;
+	min-width: 0;
+	padding: 3mm 0;
+	border-top: 0.35pt solid var(--editorial-accent);
+	break-inside: avoid;
+}
+
+.editorial-magazine--bold-culture .editorial-magazine-card {
+	border-top-width: 1.2pt;
+	border-color: var(--editorial-ink);
+}
+
+.editorial-magazine-card__time {
+	display: block;
+	margin: 0 0 1mm;
+	color: var(--editorial-accent);
+	font-family: var(--editorial-utility-family);
+	font-size: 8.5pt;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+}
+
+.editorial-magazine-card__name {
+	display: block;
+	margin: 0;
+	font-family: var(--editorial-display-family);
+	font-size: 12pt;
+	font-weight: 700;
+	line-height: 1.35;
+	overflow-wrap: anywhere;
+}
+
+.editorial-magazine-card__caption {
+	margin: 1.5mm 0 0;
+	font-family: var(--editorial-body-family);
+	font-size: 10pt;
+	line-height: 1.45;
+	overflow-wrap: anywhere;
+}
+
+.editorial-magazine-empty-day {
+	box-sizing: border-box;
+	height: 10mm;
+	margin: 0;
+	padding-top: 4mm;
+	font-family: var(--editorial-body-family);
+	font-size: 10pt;
+}
+
+.editorial-magazine-measurement {
+	position: fixed;
+	left: -100000px;
+	top: 0;
+	visibility: hidden;
+	pointer-events: none;
+}
+
+.editorial-magazine-measurement .editorial-magazine-page {
+	box-shadow: none;
+}
+
+@media print {
+	.editorial-magazine-page {
+		box-shadow: none;
+	}
+
+	.editorial-magazine-measurement {
+		display: none;
+	}
+}

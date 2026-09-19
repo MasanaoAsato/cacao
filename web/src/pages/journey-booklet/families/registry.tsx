@@ -3,6 +3,10 @@ import type { BookletFamilyId } from "../../../booklet/family";
 import { REGISTERED_BOOKLET_FAMILY_IDS } from "../../../theme/families/registry";
 import { AtlasGridRenderer, useAtlasGridPagePlan } from "./AtlasGrid";
 import {
+	EditorialMagazineRenderer,
+	useEditorialMagazinePagePlan,
+} from "./EditorialMagazine";
+import {
 	LegacyBookletRenderer,
 	useLegacyFamilyPagePlan,
 } from "./LegacyBookletRenderer";
@@ -62,6 +66,11 @@ const FAMILY_ADAPTERS = createFamilyAdapterRegistry([
 		familyId: "playful-route",
 		renderer: PlayfulRouteRenderer,
 		usePagePlan: usePlayfulRoutePagePlan,
+	},
+	{
+		familyId: "editorial-magazine",
+		renderer: EditorialMagazineRenderer,
+		usePagePlan: useEditorialMagazinePagePlan,
 	},
 ]);
 

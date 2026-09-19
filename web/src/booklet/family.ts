@@ -3,6 +3,7 @@ import type { MotifAssetId } from "../theme/motifAssets";
 import type { RequestedBookletTheme } from "../theme/types";
 import type { PolicyId } from "./editorialModel";
 import type { AtlasGridPagePlan } from "./families/atlasGrid";
+import type { EditorialMagazinePagePlan } from "./families/editorialMagazine";
 import type { PaperCollagePagePlan } from "./families/paperCollage";
 import type { PlayfulRoutePagePlan } from "./families/playfulRoute";
 import type { BookletPagePlan } from "./model";
@@ -11,7 +12,8 @@ export type BookletFamilyId =
 	| "legacy"
 	| "atlas-grid"
 	| "paper-collage"
-	| "playful-route";
+	| "playful-route"
+	| "editorial-magazine";
 
 /**
  * The design selected from a v2 theme seed. This remains independent of React
@@ -61,6 +63,11 @@ export type BookletRenderPagePlan =
 			readonly coverTitleSizePt: number;
 			readonly familyId: "playful-route";
 			readonly pagePlan: readonly PlayfulRoutePagePlan[];
+	  }
+	| {
+			readonly actualCompositionId: "magazine-feature";
+			readonly familyId: "editorial-magazine";
+			readonly pagePlan: readonly EditorialMagazinePagePlan[];
 	  };
 
 export type FamilyMeasurement = {

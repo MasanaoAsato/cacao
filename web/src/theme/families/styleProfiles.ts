@@ -181,12 +181,59 @@ export const BOOKLET_STYLE_PROFILES: readonly BookletStyleProfile[] =
 		},
 	] as const satisfies readonly BookletStyleProfile[]);
 
+/** Editorial magazine profiles are CSS-only and intentionally share no motif assets. */
+export const EDITORIAL_MAGAZINE_STYLE_PROFILES: readonly BookletStyleProfile[] =
+	Object.freeze([
+		{
+			compositionIds: ["magazine-feature"],
+			decorAssetIds: [],
+			decorMode: "css",
+			decorVariantId: null,
+			familyId: "editorial-magazine",
+			fontFamilies: {
+				body: "Noto Serif JP",
+				display: "Shippori Mincho",
+				utility: "Noto Sans JP",
+			},
+			fontSizesPt: { body: 10, title: 30, utility: 8.5 },
+			fontWeights: { body: 400, display: 700, utility: 700 },
+			id: "editorial-magazine.quiet-photo",
+			paletteId: "quiet-photo",
+			photoTreatment: "rectangular-crop",
+			ruleTreatment: "accent-hairline",
+		},
+		{
+			compositionIds: ["magazine-feature"],
+			decorAssetIds: [],
+			decorMode: "css",
+			decorVariantId: null,
+			familyId: "editorial-magazine",
+			fontFamilies: {
+				body: "Noto Sans JP",
+				display: "Zen Kaku Gothic New",
+				utility: "Noto Sans JP",
+			},
+			fontSizesPt: { body: 10, title: 32, utility: 8.5 },
+			fontWeights: { body: 400, display: 700, utility: 700 },
+			id: "editorial-magazine.bold-culture",
+			paletteId: "bold-culture",
+			photoTreatment: "right-aligned-crop",
+			ruleTreatment: "ink-and-accent-short-rule",
+		},
+	] as const satisfies readonly BookletStyleProfile[]);
+
+export const ALL_BOOKLET_STYLE_PROFILES: readonly BookletStyleProfile[] =
+	Object.freeze([
+		...BOOKLET_STYLE_PROFILES,
+		...EDITORIAL_MAGAZINE_STYLE_PROFILES,
+	]);
+
 export function styleProfilesForFamily<
 	FamilyId extends Exclude<BookletFamilyId, "legacy">,
 >(
 	familyId: FamilyId,
 ): readonly Extract<BookletStyleProfile, { familyId: FamilyId }>[] {
-	return BOOKLET_STYLE_PROFILES.filter(
+	return ALL_BOOKLET_STYLE_PROFILES.filter(
 		(
 			profile,
 		): profile is Extract<BookletStyleProfile, { familyId: FamilyId }> =>
@@ -195,7 +242,7 @@ export function styleProfilesForFamily<
 }
 
 export function styleProfileFor(styleProfileId: string): BookletStyleProfile {
-	const profile = BOOKLET_STYLE_PROFILES.find(
+	const profile = ALL_BOOKLET_STYLE_PROFILES.find(
 		(candidate) => candidate.id === styleProfileId,
 	);
 	if (!profile) {
@@ -206,7 +253,9 @@ export function styleProfileFor(styleProfileId: string): BookletStyleProfile {
 
 export function fontStack(family: string): string {
 	const generic =
-		family === "Kaisei Decol" || family === "Noto Serif JP"
+		family === "Kaisei Decol" ||
+		family === "Noto Serif JP" ||
+		family === "Shippori Mincho"
 			? "serif"
 			: "sans-serif";
 	return `"${family}", ${generic}`;

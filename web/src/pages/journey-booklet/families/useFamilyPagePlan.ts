@@ -1,4 +1,5 @@
 import type { AtlasGridPagePlan } from "../../../booklet/families/atlasGrid";
+import type { EditorialMagazinePagePlan } from "../../../booklet/families/editorialMagazine";
 import type { PaperCollagePagePlan } from "../../../booklet/families/paperCollage";
 import type { PlayfulRoutePagePlan } from "../../../booklet/families/playfulRoute";
 import type {
@@ -24,6 +25,7 @@ import {
 	type BookletPagePlanResult,
 } from "../useBookletPagePlan";
 import { useAtlasGridPagePlan } from "./AtlasGrid";
+import { useEditorialMagazinePagePlan } from "./EditorialMagazine";
 import { useLegacyFamilyPagePlan } from "./LegacyBookletRenderer";
 import { usePaperCollagePagePlan } from "./PaperCollage";
 import { usePlayfulRoutePagePlan } from "./PlayfulRoute";
@@ -34,7 +36,8 @@ export type FamilyPagePlanResult = Omit<BookletPagePlanResult, "pagePlan"> & {
 		| BookletPagePlanResult["pagePlan"]
 		| readonly AtlasGridPagePlan[]
 		| readonly PaperCollagePagePlan[]
-		| readonly PlayfulRoutePagePlan[];
+		| readonly PlayfulRoutePagePlan[]
+		| readonly EditorialMagazinePagePlan[];
 	readonly renderPagePlan: BookletRenderPagePlan | null;
 };
 
@@ -255,13 +258,17 @@ export function useFamilyPagePlan(
 	const atlasGridResult = useAtlasGridPagePlan(model, design);
 	const paperCollageResult = usePaperCollagePagePlan(model, design);
 	const playfulRouteResult = usePlayfulRoutePagePlan(model, design);
+	const editorialMagazineResult = useEditorialMagazinePagePlan(model, design);
 	if (design?.familyId === "atlas-grid") {
 		return atlasGridResult;
 	}
 	if (design?.familyId === "paper-collage") {
 		return paperCollageResult;
 	}
-	return design?.familyId === "playful-route"
-		? playfulRouteResult
+	if (design?.familyId === "playful-route") {
+		return playfulRouteResult;
+	}
+	return design?.familyId === "editorial-magazine"
+		? editorialMagazineResult
 		: legacyResult;
 }
