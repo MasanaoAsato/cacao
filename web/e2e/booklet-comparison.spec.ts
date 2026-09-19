@@ -1,22 +1,34 @@
 import { writeFile } from "node:fs/promises";
 import { expect, type TestInfo, test } from "@playwright/test";
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
-import { THEME_CATALOG_REFERENCES } from "../src/theme/bookletTheme.js";
+import {
+	createBookletTheme,
+	THEME_CATALOG_REFERENCES,
+} from "../src/theme/bookletTheme.js";
 import { MOODS } from "../src/theme/catalog.js";
+import {
+	familyDefinitionById,
+	REGISTERED_BOOKLET_FAMILY_IDS,
+} from "../src/theme/families/registry.js";
+import {
+	resolveBookletDesign,
+	resolveBookletDesignForFamily,
+} from "../src/theme/families/resolveBookletDesign.js";
 import { resolveTheme } from "../src/theme/resolve.js";
-import { resolveBookletDesign } from "../src/theme/families/resolveBookletDesign.js";
-import { REGISTERED_BOOKLET_FAMILY_IDS } from "../src/theme/families/registry.js";
 import type { MoodId } from "../src/theme/types.js";
+import { DENSE_BOOKLET_EXPECTED_UNITS } from "./fixtures/booklet.js";
 import {
 	COMPARISON_EXPECTED_UNITS,
+	type ComparisonFixtureScenario,
 	comparisonCoverDataUrl,
 	comparisonIllustrationDataUrl,
 	comparisonJourneyId,
-	type ComparisonFixtureScenario,
 	routeComparisonBookletApi,
 } from "./fixtures/booklet-comparison.js";
-import { DENSE_BOOKLET_EXPECTED_UNITS } from "./fixtures/booklet.js";
-import { MOOD_SAMPLE_SEEDS } from "./fixtures/booklet-theme-samples.js";
+import {
+	FAMILY_COMPARISON_SAMPLES,
+	MOOD_SAMPLE_SEEDS,
+} from "./fixtures/booklet-theme-samples.js";
 import {
 	expectBookletPrintReady,
 	expectContentInsidePages,
@@ -65,9 +77,11 @@ function expectedDesignFor(moodId: MoodId, seed: number) {
 }
 
 function expectRegisteredFamiliesCovered(): void {
-	expect(
-		new Set(Object.values(MOOD_SAMPLE_SEEDS).map((sample) => sample.familyId)),
-	).toEqual(new Set(REGISTERED_BOOKLET_FAMILY_IDS));
+	const coveredFamilyIds = new Set([
+		...Object.values(MOOD_SAMPLE_SEEDS).map((sample) => sample.familyId),
+		...FAMILY_COMPARISON_SAMPLES.map((sample) => sample.familyId),
+	]);
+	expect(coveredFamilyIds).toEqual(new Set(REGISTERED_BOOKLET_FAMILY_IDS));
 }
 
 async function openBooklet(
@@ -220,6 +234,24 @@ async function attachArtifacts(
 }
 
 test.describe("しおり比較基盤", () => {
+	test("mood aliasのないfamilyも比較用profile・policy・構造を固定する", () => {
+		for (const sample of FAMILY_COMPARISON_SAMPLES) {
+			const requestedTheme = createBookletTheme({
+				value: sample.seed,
+				version: "v2",
+			});
+			const design = resolveBookletDesignForFamily(
+				requestedTheme,
+				familyDefinitionById(sample.familyId),
+			);
+			expect(design.familyId).toBe(sample.familyId);
+			expect(design.policyId).toBe(sample.expectedPolicyId);
+			expect(design.compositionId).toBe(sample.expectedCompositionId);
+			expect(sample.styleProfileIds).toContain(design.styleProfileId);
+			expect(design.decorAssetIds).toEqual([]);
+		}
+	});
+
 	test("全雰囲気を同じ12件・画像条件で比較記録に保存する", async ({
 		page,
 	}, testInfo) => {

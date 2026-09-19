@@ -6,6 +6,7 @@ import type { AtlasGridPagePlan } from "./families/atlasGrid";
 import type { EditorialMagazinePagePlan } from "./families/editorialMagazine";
 import type { PaperCollagePagePlan } from "./families/paperCollage";
 import type { PlayfulRoutePagePlan } from "./families/playfulRoute";
+import type { TravelNewspaperPagePlan } from "./families/travelNewspaper";
 import type { BookletPagePlan } from "./model";
 
 export type BookletFamilyId =
@@ -13,7 +14,8 @@ export type BookletFamilyId =
 	| "atlas-grid"
 	| "paper-collage"
 	| "playful-route"
-	| "editorial-magazine";
+	| "editorial-magazine"
+	| "travel-newspaper";
 
 /**
  * The design selected from a v2 theme seed. This remains independent of React
@@ -68,6 +70,11 @@ export type BookletRenderPagePlan =
 			readonly actualCompositionId: "magazine-feature";
 			readonly familyId: "editorial-magazine";
 			readonly pagePlan: readonly EditorialMagazinePagePlan[];
+	  }
+	| {
+			readonly actualCompositionId: "newspaper-columns";
+			readonly familyId: "travel-newspaper";
+			readonly pagePlan: readonly TravelNewspaperPagePlan[];
 	  };
 
 export type FamilyMeasurement = {

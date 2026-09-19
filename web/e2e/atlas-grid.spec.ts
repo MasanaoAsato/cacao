@@ -1,11 +1,11 @@
 import { expect, type Page, test } from "@playwright/test";
 import { createBookletTheme } from "../src/theme/bookletTheme.js";
-import { resolveBookletDesign } from "../src/theme/families/resolveBookletDesign.js";
 import {
-	atlasGridCompositionFor,
 	type AtlasGridCompositionId,
 	type AtlasGridPaletteId,
+	atlasGridCompositionFor,
 } from "../src/theme/families/atlasGrid.js";
+import { resolveBookletDesign } from "../src/theme/families/resolveBookletDesign.js";
 import {
 	bookletFixtureJourneyId,
 	routeBookletApi,
@@ -21,13 +21,32 @@ type AtlasSample = {
 	readonly compositionId: AtlasGridCompositionId;
 	readonly paletteId: AtlasGridPaletteId;
 	readonly seed: number;
+	readonly styleProfileId:
+		| "atlas-grid.atlas-field-record"
+		| "atlas-grid.atlas-wayfinder";
 };
 
 const expectedPairs = [
-	["blueprint", "wide-image"],
-	["blueprint", "side-index"],
-	["forest-atlas", "wide-image"],
-	["forest-atlas", "side-index"],
+	{
+		compositionId: "wide-image",
+		paletteId: "blueprint",
+		styleProfileId: "atlas-grid.atlas-wayfinder",
+	},
+	{
+		compositionId: "side-index",
+		paletteId: "blueprint",
+		styleProfileId: "atlas-grid.atlas-wayfinder",
+	},
+	{
+		compositionId: "wide-image",
+		paletteId: "forest-atlas",
+		styleProfileId: "atlas-grid.atlas-field-record",
+	},
+	{
+		compositionId: "side-index",
+		paletteId: "forest-atlas",
+		styleProfileId: "atlas-grid.atlas-field-record",
+	},
 ] as const;
 
 function findAtlasSamples(): readonly AtlasSample[] {
@@ -39,19 +58,33 @@ function findAtlasSamples(): readonly AtlasSample[] {
 		if (design.familyId !== "atlas-grid") {
 			continue;
 		}
-		const key = `${design.paletteId}.${design.compositionId}`;
+		const expected = expectedPairs.find(
+			(pair) =>
+				pair.paletteId === design.paletteId &&
+				pair.compositionId === design.compositionId &&
+				pair.styleProfileId === design.styleProfileId,
+		);
+		if (!expected) {
+			continue;
+		}
+		const key = `${expected.styleProfileId}.${expected.paletteId}.${expected.compositionId}`;
 		if (!samples.has(key)) {
 			samples.set(key, {
-				compositionId: design.compositionId as AtlasGridCompositionId,
-				paletteId: design.paletteId as AtlasGridPaletteId,
+				compositionId: expected.compositionId,
+				paletteId: expected.paletteId,
 				seed,
+				styleProfileId: expected.styleProfileId,
 			});
 		}
 	}
-	return expectedPairs.map(([paletteId, compositionId]) => {
-		const sample = samples.get(`${paletteId}.${compositionId}`);
+	return expectedPairs.map((expected) => {
+		const sample = samples.get(
+			`${expected.styleProfileId}.${expected.paletteId}.${expected.compositionId}`,
+		);
 		if (!sample) {
-			throw new Error(`${paletteId}.${compositionId}のseedが見つかりません。`);
+			throw new Error(
+				`${expected.styleProfileId}.${expected.paletteId}.${expected.compositionId}のseedが見つかりません。`,
+			);
 		}
 		return sample;
 	});
@@ -119,8 +152,12 @@ test.describe("atlas-grid", () => {
 			await expect(page.locator(".booklet-document")).toHaveAttribute(
 				"data-booklet-theme-key",
 				new RegExp(
-					`^atlas-grid:.*:timetable:atlas-grid\\.${sample.paletteId}\\.${sample.compositionId}$`,
+					`^atlas-grid:.*:timetable:atlas-grid\\.${sample.styleProfileId}\\.${sample.paletteId}\\.${sample.compositionId}$`,
 				),
+			);
+			await expect(page.locator(".booklet-document")).toHaveAttribute(
+				"data-booklet-style-profile",
+				sample.styleProfileId,
 			);
 
 			const coverImage = page.locator(

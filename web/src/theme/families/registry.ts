@@ -7,6 +7,7 @@ import { EDITORIAL_MAGAZINE_FAMILY } from "./editorialMagazine";
 import { PAPER_COLLAGE_FAMILY } from "./paperCollage";
 import { PLAYFUL_ROUTE_FAMILY } from "./playfulRoute";
 import type { BookletStyleProfile } from "./styleProfiles";
+import { TRAVEL_NEWSPAPER_FAMILY } from "./travelNewspaper";
 
 type LegacyFamilyDefinition = {
 	readonly id: "legacy";
@@ -122,6 +123,7 @@ export const BOOKLET_FAMILY_CATALOG: ReadonlyMap<
 		(definition) => [definition.id, definition] as const,
 	),
 	[EDITORIAL_MAGAZINE_FAMILY.id, EDITORIAL_MAGAZINE_FAMILY],
+	[TRAVEL_NEWSPAPER_FAMILY.id, TRAVEL_NEWSPAPER_FAMILY],
 ]);
 
 export const REGISTERED_BOOKLET_FAMILY_IDS = Object.freeze([

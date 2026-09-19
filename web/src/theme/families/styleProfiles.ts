@@ -222,10 +222,52 @@ export const EDITORIAL_MAGAZINE_STYLE_PROFILES: readonly BookletStyleProfile[] =
 		},
 	] as const satisfies readonly BookletStyleProfile[]);
 
+/** Travel newspaper profiles are CSS-only and intentionally share no motif assets. */
+export const TRAVEL_NEWSPAPER_STYLE_PROFILES: readonly BookletStyleProfile[] =
+	Object.freeze([
+		{
+			compositionIds: ["newspaper-columns"],
+			decorAssetIds: [],
+			decorMode: "css",
+			decorVariantId: null,
+			familyId: "travel-newspaper",
+			fontFamilies: {
+				body: "Noto Serif JP",
+				display: "Shippori Mincho",
+				utility: "Noto Sans JP",
+			},
+			fontSizesPt: { body: 10, title: 28, utility: 8.5 },
+			fontWeights: { body: 400, display: 700, utility: 700 },
+			id: "travel-newspaper.classic-travel",
+			paletteId: "classic-travel",
+			photoTreatment: "left-aligned-crop",
+			ruleTreatment: "double-rule",
+		},
+		{
+			compositionIds: ["newspaper-columns"],
+			decorAssetIds: [],
+			decorMode: "css",
+			decorVariantId: null,
+			familyId: "travel-newspaper",
+			fontFamilies: {
+				body: "Noto Sans JP",
+				display: "Zen Kaku Gothic New",
+				utility: "Noto Sans JP",
+			},
+			fontSizesPt: { body: 10, title: 30, utility: 8.5 },
+			fontWeights: { body: 400, display: 700, utility: 700 },
+			id: "travel-newspaper.city-walk",
+			paletteId: "city-walk",
+			photoTreatment: "right-aligned-crop",
+			ruleTreatment: "accent-band",
+		},
+	] as const satisfies readonly BookletStyleProfile[]);
+
 export const ALL_BOOKLET_STYLE_PROFILES: readonly BookletStyleProfile[] =
 	Object.freeze([
 		...BOOKLET_STYLE_PROFILES,
 		...EDITORIAL_MAGAZINE_STYLE_PROFILES,
+		...TRAVEL_NEWSPAPER_STYLE_PROFILES,
 	]);
 
 export function styleProfilesForFamily<
