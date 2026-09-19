@@ -1,0 +1,300 @@
+@import "@fontsource/noto-sans-jp/400.css";
+@import "@fontsource/noto-sans-jp/700.css";
+@import "@fontsource/noto-serif-jp/400.css";
+@import "@fontsource/noto-serif-jp/700.css";
+@import "@fontsource/shippori-mincho/400.css";
+@import "@fontsource/shippori-mincho/700.css";
+@import "@fontsource/zen-kaku-gothic-new/400.css";
+@import "@fontsource/zen-kaku-gothic-new/700.css";
+
+.travel-newspaper {
+	--newspaper-body-family: "Noto Serif JP", serif;
+	--newspaper-display-family: "Shippori Mincho", serif;
+	--newspaper-utility-family: "Noto Sans JP", sans-serif;
+	--newspaper-paper: #f6f1e6;
+	--newspaper-ink: #252a35;
+	--newspaper-accent: #9a3e2e;
+	display: grid;
+	gap: 1.5rem;
+	width: fit-content;
+	margin: 0 auto;
+	color: var(--newspaper-ink);
+	font-family: var(--newspaper-body-family);
+	font-size: 10pt;
+	line-height: 1.35;
+}
+
+.travel-newspaper--city-walk {
+	--newspaper-body-family: "Noto Sans JP", sans-serif;
+	--newspaper-display-family: "Zen Kaku Gothic New", sans-serif;
+	--newspaper-paper: #eef4f0;
+	--newspaper-ink: #183a3a;
+	--newspaper-accent: #d56a32;
+	line-height: 1.4;
+}
+
+.travel-newspaper-page {
+	position: relative;
+	box-sizing: border-box;
+	width: 148mm;
+	height: 210mm;
+	overflow: hidden;
+	break-inside: avoid;
+	background: var(--newspaper-paper);
+	box-shadow: 0 0.75rem 2rem rgb(37 42 53 / 16%);
+}
+
+.travel-newspaper-page__content {
+	position: absolute;
+	box-sizing: border-box;
+	left: 10mm;
+	top: 10mm;
+	width: 128mm;
+	height: 190mm;
+}
+
+.travel-newspaper-page--cover .travel-newspaper-page__content {
+	position: relative;
+	left: 0;
+	top: 0;
+	width: 148mm;
+	height: 210mm;
+}
+
+.travel-newspaper-cover__masthead {
+	position: absolute;
+	left: 10mm;
+	top: 8mm;
+	margin: 0;
+	font-family: var(--newspaper-utility-family);
+	font-size: 9pt;
+	font-weight: 700;
+	letter-spacing: 0.12em;
+}
+
+.travel-newspaper-cover__masthead::after {
+	display: block;
+	width: 128mm;
+	margin-top: 2mm;
+	border-top: 0.5pt solid var(--newspaper-ink);
+	content: "";
+}
+
+.travel-newspaper-cover__title {
+	position: absolute;
+	left: 10mm;
+	top: 18mm;
+	box-sizing: border-box;
+	width: 128mm;
+	height: 24mm;
+	margin: 0;
+	font-family: var(--newspaper-display-family);
+	font-size: var(--newspaper-title-size, 28pt);
+	font-weight: 700;
+	line-height: 1.1;
+	overflow-wrap: anywhere;
+}
+
+.travel-newspaper-cover__period {
+	position: absolute;
+	left: 10mm;
+	top: 150mm;
+	box-sizing: border-box;
+	width: 128mm;
+	height: 10mm;
+	margin: 0;
+	font-family: var(--newspaper-utility-family);
+	font-size: 8.5pt;
+	font-weight: 700;
+}
+
+.travel-newspaper-cover__image {
+	position: absolute;
+	box-sizing: border-box;
+	left: var(--newspaper-cover-left);
+	top: 58mm;
+	width: var(--newspaper-cover-width);
+	height: var(--newspaper-cover-height);
+	object-fit: cover;
+}
+
+.travel-newspaper--classic-travel .travel-newspaper-cover__image {
+	border: 0.5pt double var(--newspaper-ink);
+}
+
+.travel-newspaper--city-walk .travel-newspaper-cover__image {
+	border: 1pt solid var(--newspaper-accent);
+}
+
+.travel-newspaper-day-header {
+	position: relative;
+	box-sizing: border-box;
+	height: 58mm;
+	padding-top: 4mm;
+	border-bottom: 1pt double var(--newspaper-ink);
+}
+
+.travel-newspaper-day-header__copy {
+	position: relative;
+	z-index: 1;
+	width: 58mm;
+}
+
+.travel-newspaper-day-header__label,
+.travel-newspaper-day-header__date {
+	display: block;
+	margin: 0;
+	font-family: var(--newspaper-utility-family);
+	font-weight: 700;
+}
+
+.travel-newspaper-day-header__label {
+	margin-bottom: 1mm;
+	font-size: 13pt;
+	letter-spacing: 0.04em;
+}
+
+.travel-newspaper-day-header__date {
+	font-size: 8.5pt;
+}
+
+.travel-newspaper-day-header__rule {
+	width: 36mm;
+	margin-top: 5mm;
+	border-top: 1pt double var(--newspaper-accent);
+}
+
+.travel-newspaper-day-header__image {
+	position: absolute;
+	left: 70mm;
+	top: 4mm;
+	box-sizing: border-box;
+	width: 58mm;
+	height: 28mm;
+	object-fit: cover;
+}
+
+.travel-newspaper--city-walk .travel-newspaper-day-header {
+	border-bottom: 1pt solid var(--newspaper-accent);
+}
+
+.travel-newspaper--city-walk .travel-newspaper-day-header__image {
+	border: 1pt solid var(--newspaper-accent);
+}
+
+.travel-newspaper-page--continuation .travel-newspaper-day-header,
+.travel-newspaper-day-header--continuation {
+	height: 20mm;
+	padding-top: 0;
+	border-bottom: 1pt double var(--newspaper-ink);
+}
+
+.travel-newspaper-page--continuation .travel-newspaper-day-header__label,
+.travel-newspaper-day-header--continuation .travel-newspaper-day-header__label {
+	font-size: 10pt;
+}
+
+.travel-newspaper-page--continuation .travel-newspaper-day-header__rule,
+.travel-newspaper-day-header--continuation .travel-newspaper-day-header__rule {
+	display: none;
+}
+
+.travel-newspaper-articles {
+	box-sizing: border-box;
+	width: 128mm;
+	height: 132mm;
+	padding-top: 0;
+	column-count: 2;
+	column-gap: var(--newspaper-column-gap, 10mm);
+	column-fill: auto;
+}
+
+.travel-newspaper-page--continuation .travel-newspaper-articles {
+	height: 170mm;
+}
+
+.travel-newspaper-articles--measurement {
+	column-count: 1;
+	column-gap: 0;
+	height: auto;
+}
+
+.travel-newspaper-article {
+	box-sizing: border-box;
+	width: 59mm;
+	min-width: 0;
+	margin: 0 0 4mm;
+	padding: 2mm 2mm 3mm;
+	border-top: 0.5pt solid var(--newspaper-ink);
+	break-inside: avoid;
+}
+
+.travel-newspaper--classic-travel .travel-newspaper-article {
+	border-top: 0.5pt double var(--newspaper-ink);
+}
+
+.travel-newspaper--city-walk .travel-newspaper-article {
+	border-top: 1pt solid var(--newspaper-accent);
+	border-left: 3mm solid var(--newspaper-accent);
+}
+
+.travel-newspaper-article__time {
+	display: block;
+	margin: 0 0 1mm;
+	color: var(--newspaper-accent);
+	font-family: var(--newspaper-utility-family);
+	font-size: 8.5pt;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+}
+
+.travel-newspaper-article__name {
+	display: block;
+	margin: 0;
+	font-family: var(--newspaper-display-family);
+	font-size: 11pt;
+	font-weight: 700;
+	line-height: 1.35;
+	overflow-wrap: anywhere;
+}
+
+.travel-newspaper-article__transport,
+.travel-newspaper-article__cost {
+	margin: 1mm 0 0;
+	font-family: var(--newspaper-utility-family);
+	font-size: 8.5pt;
+	font-weight: 700;
+	line-height: 1.35;
+	overflow-wrap: anywhere;
+}
+
+.travel-newspaper-empty-day {
+	box-sizing: border-box;
+	height: 10mm;
+	margin: 0;
+	padding: 3mm 2mm;
+	font-family: var(--newspaper-body-family);
+	font-size: 10pt;
+}
+
+.travel-newspaper-measurement {
+	position: fixed;
+	left: -100000px;
+	top: 0;
+	visibility: hidden;
+	pointer-events: none;
+}
+
+.travel-newspaper-measurement .travel-newspaper-page {
+	box-shadow: none;
+}
+
+@media print {
+	.travel-newspaper-page {
+		box-shadow: none;
+	}
+
+	.travel-newspaper-measurement {
+		display: none;
+	}
+}

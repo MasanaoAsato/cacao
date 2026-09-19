@@ -12,6 +12,10 @@ import {
 } from "./LegacyBookletRenderer";
 import { PaperCollageRenderer, usePaperCollagePagePlan } from "./PaperCollage";
 import { PlayfulRouteRenderer, usePlayfulRoutePagePlan } from "./PlayfulRoute";
+import {
+	TravelNewspaperRenderer,
+	useTravelNewspaperPagePlan,
+} from "./TravelNewspaper";
 
 export type BookletFamilyAdapter = {
 	readonly familyId: BookletFamilyId;
@@ -71,6 +75,11 @@ const FAMILY_ADAPTERS = createFamilyAdapterRegistry([
 		familyId: "editorial-magazine",
 		renderer: EditorialMagazineRenderer,
 		usePagePlan: useEditorialMagazinePagePlan,
+	},
+	{
+		familyId: "travel-newspaper",
+		renderer: TravelNewspaperRenderer,
+		usePagePlan: useTravelNewspaperPagePlan,
 	},
 ]);
 

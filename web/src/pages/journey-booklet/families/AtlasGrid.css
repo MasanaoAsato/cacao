@@ -203,7 +203,7 @@
 	font-family: var(--atlas-display-family, "Zen Kaku Gothic New", sans-serif);
 	font-size: 20pt;
 	font-weight: var(--atlas-display-weight, 700);
-	line-height: 1.25;
+	line-height: 1.4;
 }
 
 .atlas-grid-table {

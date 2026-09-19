@@ -2,6 +2,7 @@ import type { AtlasGridPagePlan } from "../../../booklet/families/atlasGrid";
 import type { EditorialMagazinePagePlan } from "../../../booklet/families/editorialMagazine";
 import type { PaperCollagePagePlan } from "../../../booklet/families/paperCollage";
 import type { PlayfulRoutePagePlan } from "../../../booklet/families/playfulRoute";
+import type { TravelNewspaperPagePlan } from "../../../booklet/families/travelNewspaper";
 import type {
 	BookletRenderPagePlan,
 	ResolvedBookletDesign,
@@ -29,6 +30,7 @@ import { useEditorialMagazinePagePlan } from "./EditorialMagazine";
 import { useLegacyFamilyPagePlan } from "./LegacyBookletRenderer";
 import { usePaperCollagePagePlan } from "./PaperCollage";
 import { usePlayfulRoutePagePlan } from "./PlayfulRoute";
+import { useTravelNewspaperPagePlan } from "./TravelNewspaper";
 
 export type FamilyPagePlanResult = Omit<BookletPagePlanResult, "pagePlan"> & {
 	readonly design: ResolvedBookletDesign | null;
@@ -37,7 +39,8 @@ export type FamilyPagePlanResult = Omit<BookletPagePlanResult, "pagePlan"> & {
 		| readonly AtlasGridPagePlan[]
 		| readonly PaperCollagePagePlan[]
 		| readonly PlayfulRoutePagePlan[]
-		| readonly EditorialMagazinePagePlan[];
+		| readonly EditorialMagazinePagePlan[]
+		| readonly TravelNewspaperPagePlan[];
 	readonly renderPagePlan: BookletRenderPagePlan | null;
 };
 
@@ -259,6 +262,7 @@ export function useFamilyPagePlan(
 	const paperCollageResult = usePaperCollagePagePlan(model, design);
 	const playfulRouteResult = usePlayfulRoutePagePlan(model, design);
 	const editorialMagazineResult = useEditorialMagazinePagePlan(model, design);
+	const travelNewspaperResult = useTravelNewspaperPagePlan(model, design);
 	if (design?.familyId === "atlas-grid") {
 		return atlasGridResult;
 	}
@@ -268,7 +272,10 @@ export function useFamilyPagePlan(
 	if (design?.familyId === "playful-route") {
 		return playfulRouteResult;
 	}
-	return design?.familyId === "editorial-magazine"
-		? editorialMagazineResult
+	if (design?.familyId === "editorial-magazine") {
+		return editorialMagazineResult;
+	}
+	return design?.familyId === "travel-newspaper"
+		? travelNewspaperResult
 		: legacyResult;
 }

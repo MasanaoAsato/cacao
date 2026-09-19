@@ -50,13 +50,15 @@ export async function expectNoHiddenText(page: Page): Promise<void> {
 export async function expectContentInsidePages(page: Page): Promise<void> {
 	const outside = await page
 		.locator(
-			".booklet-document .booklet-page--day, .booklet-document .atlas-grid-page--table, .booklet-document .paper-collage-page--day, .booklet-document .playful-route-page--day",
+			".booklet-document .booklet-page--day, .booklet-document .atlas-grid-page--table, .booklet-document .paper-collage-page--day, .booklet-document .playful-route-page--day, .booklet-document .travel-newspaper-page--articles, .booklet-document .travel-newspaper-page--continuation",
 		)
 		.evaluateAll(
 			(pages, tolerance) =>
 				pages.flatMap((pageElement) => {
 					const pageRect = pageElement.getBoundingClientRect();
-					const content = pageElement.querySelector(".booklet-page__content");
+					const content = pageElement.querySelector(
+						".booklet-page__content, .travel-newspaper-page__content",
+					);
 					if (!content) {
 						return ["missing-content"];
 					}
