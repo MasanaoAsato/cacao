@@ -27,24 +27,32 @@ export function resolveBookletDesignForFamily(
 					`family-style:${definition.id}`,
 					definition.styleProfiles,
 				);
+	// A legacy design has no profile. Every other family is registered with at
+	// least one profile, so property reads below are only reached with one.
+	const selectedStyleProfile = styleProfile as Exclude<
+		typeof styleProfile,
+		null
+	>;
 	const paletteId =
-		definition.id === "legacy" ? recipe.paletteId : styleProfile.paletteId;
+		definition.id === "legacy"
+			? recipe.paletteId
+			: selectedStyleProfile.paletteId;
 	const compositionId =
 		definition.id === "legacy"
 			? recipe.compositionId
 			: pick(
 					seedToken,
-					`family-composition:${styleProfile.id}`,
-					styleProfile.compositionIds,
+					`family-composition:${selectedStyleProfile.id}`,
+					selectedStyleProfile.compositionIds,
 				);
 	const decorVariantId =
-		definition.id === "legacy" ? null : styleProfile.decorVariantId;
+		definition.id === "legacy" ? null : selectedStyleProfile.decorVariantId;
 	const comparisonKey =
 		definition.id === "legacy"
 			? designKey(recipe)
 			: [
 					definition.id,
-					styleProfile.id,
+					selectedStyleProfile.id,
 					paletteId,
 					compositionId,
 					...(decorVariantId === null ? [] : [decorVariantId]),
@@ -61,9 +69,9 @@ export function resolveBookletDesignForFamily(
 				)
 			: [
 					...new Set([
-						styleProfile.fontFamilies.display,
-						styleProfile.fontFamilies.body,
-						styleProfile.fontFamilies.utility,
+						selectedStyleProfile.fontFamilies.display,
+						selectedStyleProfile.fontFamilies.body,
+						selectedStyleProfile.fontFamilies.utility,
 					]),
 				],
 	);
@@ -74,7 +82,7 @@ export function resolveBookletDesignForFamily(
 		// The selected variant owns the assets this design actually draws; the
 		// family's own list is the wider registration set.
 		decorAssetIds: Object.freeze(
-			definition.id === "legacy" ? [] : [...styleProfile.decorAssetIds],
+			definition.id === "legacy" ? [] : [...selectedStyleProfile.decorAssetIds],
 		),
 		decorVariantId,
 		familyId: definition.id,

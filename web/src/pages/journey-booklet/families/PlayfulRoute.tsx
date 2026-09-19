@@ -1208,7 +1208,7 @@ export function usePlayfulRoutePagePlan(
 			? {
 					actualCompositionId:
 						pagePlan.find(
-							(page) =>
+							(page): page is Extract<typeof page, { readonly kind: "day" }> =>
 								page.kind === "day" && page.layoutVariant !== "selected",
 						)?.layoutVariant ??
 						activeDesign?.compositionId ??

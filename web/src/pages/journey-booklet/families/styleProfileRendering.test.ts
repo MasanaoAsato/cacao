@@ -51,7 +51,10 @@ describe("family rendererの作風CSS変数", () => {
 		"正常系: %s の描画・計測共通styleはrole別フォントを解決する",
 		(styleProfileId, styleFor) => {
 			const profile = styleProfileFor(styleProfileId);
-			const style = styleFor(designFor(profile));
+			const style = styleFor(designFor(profile)) as Record<
+				string,
+				string | number | undefined
+			>;
 
 			expect(style["--booklet-body-family"]).toBe(
 				fontStack(profile.fontFamilies.body),

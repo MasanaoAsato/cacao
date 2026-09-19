@@ -26,12 +26,11 @@ export type DecorMode = "css" | "motif";
  * A reviewed visual set. Its fields deliberately are not independently
  * sampled: a profile is the only selectable style unit within a family.
  */
-export type BookletStyleProfile = {
+type BookletStyleProfileBase = {
 	readonly compositionIds: readonly string[];
 	readonly decorAssetIds: readonly MotifAssetId[];
 	readonly decorMode: DecorMode;
 	readonly decorVariantId: string | null;
-	readonly familyId: Exclude<BookletFamilyId, "legacy">;
 	readonly fontFamilies: StyleFontRoles;
 	readonly fontSizesPt: StyleFontSizesPt;
 	readonly fontWeights: StyleFontWeights;
@@ -40,6 +39,13 @@ export type BookletStyleProfile = {
 	readonly photoTreatment: string;
 	readonly ruleTreatment: string;
 };
+
+export type BookletStyleProfile = {
+	readonly [FamilyId in Exclude<
+		BookletFamilyId,
+		"legacy"
+	>]: BookletStyleProfileBase & { readonly familyId: FamilyId };
+}[Exclude<BookletFamilyId, "legacy">];
 
 const ATLAS_DECOR_ASSET_IDS = [
 	"atlas-compass",
@@ -54,125 +60,126 @@ const PAPER_DECOR_ASSET_IDS = [
 	"paper-postage",
 ] as const;
 
-export const BOOKLET_STYLE_PROFILES = Object.freeze([
-	{
-		compositionIds: ["side-index", "wide-image"],
-		decorAssetIds: ATLAS_DECOR_ASSET_IDS,
-		decorMode: "motif",
-		decorVariantId: null,
-		familyId: "atlas-grid",
-		fontFamilies: {
-			body: "Zen Kaku Gothic New",
-			display: "Zen Kaku Gothic New",
-			utility: "Noto Sans JP",
+export const BOOKLET_STYLE_PROFILES: readonly BookletStyleProfile[] =
+	Object.freeze([
+		{
+			compositionIds: ["side-index", "wide-image"],
+			decorAssetIds: ATLAS_DECOR_ASSET_IDS,
+			decorMode: "motif",
+			decorVariantId: null,
+			familyId: "atlas-grid",
+			fontFamilies: {
+				body: "Zen Kaku Gothic New",
+				display: "Zen Kaku Gothic New",
+				utility: "Noto Sans JP",
+			},
+			fontSizesPt: { body: 10, title: 28, utility: 8.5 },
+			fontWeights: { body: 400, display: 700, utility: 700 },
+			id: "atlas-grid.atlas-wayfinder",
+			paletteId: "blueprint",
+			photoTreatment: "wide-image-crop",
+			ruleTreatment: "fine-blueprint",
 		},
-		fontSizesPt: { body: 10, title: 28, utility: 8.5 },
-		fontWeights: { body: 400, display: 700, utility: 700 },
-		id: "atlas-grid.atlas-wayfinder",
-		paletteId: "blueprint",
-		photoTreatment: "wide-image-crop",
-		ruleTreatment: "fine-blueprint",
-	},
-	{
-		compositionIds: ["side-index", "wide-image"],
-		decorAssetIds: ATLAS_DECOR_ASSET_IDS,
-		decorMode: "motif",
-		decorVariantId: null,
-		familyId: "atlas-grid",
-		fontFamilies: {
-			body: "Zen Kaku Gothic New",
-			display: "Zen Kaku Gothic New",
-			utility: "Noto Sans JP",
+		{
+			compositionIds: ["side-index", "wide-image"],
+			decorAssetIds: ATLAS_DECOR_ASSET_IDS,
+			decorMode: "motif",
+			decorVariantId: null,
+			familyId: "atlas-grid",
+			fontFamilies: {
+				body: "Zen Kaku Gothic New",
+				display: "Zen Kaku Gothic New",
+				utility: "Noto Sans JP",
+			},
+			fontSizesPt: { body: 10, title: 26, utility: 8.5 },
+			fontWeights: { body: 400, display: 700, utility: 700 },
+			id: "atlas-grid.atlas-field-record",
+			paletteId: "forest-atlas",
+			photoTreatment: "record-field",
+			ruleTreatment: "forest-rule",
 		},
-		fontSizesPt: { body: 10, title: 26, utility: 8.5 },
-		fontWeights: { body: 400, display: 700, utility: 700 },
-		id: "atlas-grid.atlas-field-record",
-		paletteId: "forest-atlas",
-		photoTreatment: "record-field",
-		ruleTreatment: "forest-rule",
-	},
-	{
-		compositionIds: ["photo-left", "photo-right"],
-		decorAssetIds: PAPER_DECOR_ASSET_IDS,
-		decorMode: "motif",
-		decorVariantId: null,
-		familyId: "paper-collage",
-		fontFamilies: {
-			body: "Noto Serif JP",
-			display: "Kaisei Decol",
-			utility: "Noto Sans JP",
+		{
+			compositionIds: ["photo-left", "photo-right"],
+			decorAssetIds: PAPER_DECOR_ASSET_IDS,
+			decorMode: "motif",
+			decorVariantId: null,
+			familyId: "paper-collage",
+			fontFamilies: {
+				body: "Noto Serif JP",
+				display: "Kaisei Decol",
+				utility: "Noto Sans JP",
+			},
+			fontSizesPt: { body: 10, title: 30, utility: 8.5 },
+			fontWeights: { body: 400, display: 700, utility: 700 },
+			id: "paper-collage.paper-cut",
+			paletteId: "sage-paper",
+			photoTreatment: "straight-paper",
+			ruleTreatment: "cut-line",
 		},
-		fontSizesPt: { body: 10, title: 30, utility: 8.5 },
-		fontWeights: { body: 400, display: 700, utility: 700 },
-		id: "paper-collage.paper-cut",
-		paletteId: "sage-paper",
-		photoTreatment: "straight-paper",
-		ruleTreatment: "cut-line",
-	},
-	{
-		compositionIds: ["photo-left", "photo-right"],
-		decorAssetIds: PAPER_DECOR_ASSET_IDS,
-		decorMode: "motif",
-		decorVariantId: null,
-		familyId: "paper-collage",
-		fontFamilies: {
-			body: "Noto Serif JP",
-			display: "Kaisei Decol",
-			utility: "Noto Sans JP",
+		{
+			compositionIds: ["photo-left", "photo-right"],
+			decorAssetIds: PAPER_DECOR_ASSET_IDS,
+			decorMode: "motif",
+			decorVariantId: null,
+			familyId: "paper-collage",
+			fontFamilies: {
+				body: "Noto Serif JP",
+				display: "Kaisei Decol",
+				utility: "Noto Sans JP",
+			},
+			fontSizesPt: { body: 10, title: 28, utility: 8.5 },
+			fontWeights: { body: 400, display: 700, utility: 700 },
+			id: "paper-collage.paper-scrapbook",
+			paletteId: "lilac-paper",
+			photoTreatment: "rotated-paper",
+			ruleTreatment: "hand-pasted",
 		},
-		fontSizesPt: { body: 10, title: 28, utility: 8.5 },
-		fontWeights: { body: 400, display: 700, utility: 700 },
-		id: "paper-collage.paper-scrapbook",
-		paletteId: "lilac-paper",
-		photoTreatment: "rotated-paper",
-		ruleTreatment: "hand-pasted",
-	},
-	{
-		compositionIds: ["zigzag", "ribbon"],
-		decorAssetIds: [
-			"playful-bag",
-			"playful-sun",
-			"playful-squiggle",
-			"playful-burst",
-		],
-		decorMode: "motif",
-		decorVariantId: "sunny",
-		familyId: "playful-route",
-		fontFamilies: {
-			body: "M PLUS Rounded 1c",
-			display: "Dela Gothic One",
-			utility: "Noto Sans JP",
+		{
+			compositionIds: ["zigzag", "ribbon"],
+			decorAssetIds: [
+				"playful-bag",
+				"playful-sun",
+				"playful-squiggle",
+				"playful-burst",
+			],
+			decorMode: "motif",
+			decorVariantId: "sunny",
+			familyId: "playful-route",
+			fontFamilies: {
+				body: "M PLUS Rounded 1c",
+				display: "Dela Gothic One",
+				utility: "Noto Sans JP",
+			},
+			fontSizesPt: { body: 10, title: 32, utility: 8.5 },
+			fontWeights: { body: 700, display: 400, utility: 400 },
+			id: "playful-route.playful-pop",
+			paletteId: "berry-sun",
+			photoTreatment: "rounded-photo",
+			ruleTreatment: "rounded-route",
 		},
-		fontSizesPt: { body: 10, title: 32, utility: 8.5 },
-		fontWeights: { body: 700, display: 400, utility: 400 },
-		id: "playful-route.playful-pop",
-		paletteId: "berry-sun",
-		photoTreatment: "rounded-photo",
-		ruleTreatment: "rounded-route",
-	},
-	{
-		compositionIds: ["zigzag", "ribbon"],
-		decorAssetIds: [
-			"playful-sun",
-			"playful-footprints",
-			"playful-curved-arrow",
-		],
-		decorMode: "motif",
-		decorVariantId: "walking",
-		familyId: "playful-route",
-		fontFamilies: {
-			body: "Noto Sans JP",
-			display: "Dela Gothic One",
-			utility: "Noto Sans JP",
+		{
+			compositionIds: ["zigzag", "ribbon"],
+			decorAssetIds: [
+				"playful-sun",
+				"playful-footprints",
+				"playful-curved-arrow",
+			],
+			decorMode: "motif",
+			decorVariantId: "walking",
+			familyId: "playful-route",
+			fontFamilies: {
+				body: "Noto Sans JP",
+				display: "Dela Gothic One",
+				utility: "Noto Sans JP",
+			},
+			fontSizesPt: { body: 10, title: 28, utility: 8.5 },
+			fontWeights: { body: 400, display: 400, utility: 700 },
+			id: "playful-route.playful-travel-diary",
+			paletteId: "harbor-play",
+			photoTreatment: "diary-photo",
+			ruleTreatment: "hand-drawn-route",
 		},
-		fontSizesPt: { body: 10, title: 28, utility: 8.5 },
-		fontWeights: { body: 400, display: 400, utility: 700 },
-		id: "playful-route.playful-travel-diary",
-		paletteId: "harbor-play",
-		photoTreatment: "diary-photo",
-		ruleTreatment: "hand-drawn-route",
-	},
-] as const satisfies readonly BookletStyleProfile[]);
+	] as const satisfies readonly BookletStyleProfile[]);
 
 export function styleProfilesForFamily<
 	FamilyId extends Exclude<BookletFamilyId, "legacy">,
