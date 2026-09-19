@@ -118,6 +118,11 @@ export function paginatePaperCollage(
 	booklet: EditorialBooklet,
 	measurement: PaperCollageMeasurement,
 ): readonly PaperCollagePagePlan[] {
+	if (booklet.days.length === 0) {
+		return Object.freeze([
+			{ kind: "cover", pageId: `paper-collage-cover-${booklet.journeyId}` },
+		]);
+	}
 	validateMeasurement(booklet, measurement);
 	const layoutVariant = selectLayoutVariant(measurement);
 	const columnCount = layoutVariant === "wide-cards" ? 1 : 2;

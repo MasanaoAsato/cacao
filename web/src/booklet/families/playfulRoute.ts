@@ -138,6 +138,11 @@ export function paginatePlayfulRoute(
 	booklet: EditorialBooklet,
 	measurement: PlayfulRouteMeasurement,
 ): readonly PlayfulRoutePagePlan[] {
+	if (booklet.days.length === 0) {
+		return Object.freeze([
+			{ kind: "cover", pageId: `playful-route-cover-${booklet.journeyId}` },
+		]);
+	}
 	validateMeasurement(booklet, measurement);
 	const layoutVariant = selectLayoutVariant(measurement);
 	const pages: PlayfulRoutePagePlan[] = [

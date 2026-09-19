@@ -162,4 +162,15 @@ describe("paginatePaperCollage", () => {
 			dayIndex: 0,
 		});
 	});
+
+	it("境界値: 日がなければ計測値に依存せず表紙だけを作る", () => {
+		expect(
+			paginatePaperCollage(booklet([]), {
+				cardGap: 0,
+				continuationBodyHeight: 0,
+				days: [],
+				firstBodyHeight: 0,
+			}),
+		).toEqual([{ kind: "cover", pageId: "paper-collage-cover-journey-1" }]);
+	});
 });
