@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { BookletFamilyDefinition } from "./registry";
+import type { VisualFamilyDefinition } from "./registry";
 import {
 	ACTIVE_BOOKLET_FAMILY_IDS,
 	BOOKLET_FAMILY_REGISTRY,
@@ -8,11 +8,13 @@ import {
 } from "./registry";
 import { styleProfilesForFamily } from "./styleProfiles";
 
+type AtlasFamilyDefinition = Omit<VisualFamilyDefinition, "id"> & {
+	readonly id: "atlas-grid";
+};
+
 function validAtlas(
-	overrides: Partial<
-		Extract<BookletFamilyDefinition, { id: "atlas-grid" }>
-	> = {},
-): Extract<BookletFamilyDefinition, { id: "atlas-grid" }> {
+	overrides: Partial<AtlasFamilyDefinition> = {},
+): AtlasFamilyDefinition {
 	return {
 		compositionIds: ["table"],
 		decorAssetIds: ["atlas-compass"],

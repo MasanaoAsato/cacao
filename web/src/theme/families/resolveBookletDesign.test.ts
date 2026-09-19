@@ -70,7 +70,7 @@ describe("resolveBookletDesign", () => {
 		const unknownMood = resolveBookletDesign({
 			...theme,
 			recipe: { ...theme.recipe, moodId: "unknown" },
-		} as typeof theme);
+		} as unknown as typeof theme);
 		expect(fieldNotes.familyId).toBe("paper-collage");
 		expect(unknownMood.familyId).toBe(fieldNotes.familyId);
 		clearAxes();
