@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
 	axisRandom,
 	createDefaultThemeSeed,
@@ -51,5 +51,25 @@ describe("テーマシード", () => {
 			},
 		);
 		expect(seed).toEqual({ value: 8, version: "v2" });
+	});
+
+	it("異常系: 256候補すべて不適格なら例外を返す", () => {
+		const randomValues = vi
+			.spyOn(crypto, "getRandomValues")
+			.mockImplementation((values) => {
+				if (values instanceof Uint32Array) {
+					values[0] = 0x12345678;
+				}
+				return values;
+			});
+
+		try {
+			expect(() =>
+				createRerollSeed({ value: 0x12345678, version: "v2" }, () => false),
+			).toThrowError("異なるしおりデザインのシードを作成できませんでした。");
+			expect(randomValues).toHaveBeenCalledTimes(256);
+		} finally {
+			randomValues.mockRestore();
+		}
 	});
 });

@@ -7,7 +7,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createBookletTheme } from "../../theme/bookletTheme";
 import { resolveBookletDesign } from "../../theme/families/resolveBookletDesign";
 import { type MotifAssetId, motifAssetsFor } from "../../theme/motifAssets";
+import type { ThemeSeed } from "../../theme/types";
 import { JourneyBookletPage } from "./JourneyBookletPage";
+import { RerollUnavailableError, selectRerollSeed } from "./reroll";
 
 const journeyPayload = {
 	days: [
@@ -100,8 +102,19 @@ function seedFor(
 	throw new Error("テスト条件を満たすテーマシードが見つかりません。");
 }
 
-const playfulRouteSeed2Design = resolvedDesignForSeed(2);
+const playfulRouteSeed2 = seedFor(
+	(design) => design.familyId === "playful-route",
+);
+const playfulRouteSeed2Design = resolvedDesignForSeed(playfulRouteSeed2);
 const playfulRouteSeed2RenderKey = playfulRouteSeed2Design.renderKey;
+const sameFamilyDifferentStyleSeed = seedFor(
+	(design) =>
+		design.familyId === playfulRouteSeed2Design.familyId &&
+		design.comparisonKey !== playfulRouteSeed2Design.comparisonKey,
+);
+const differentFamilySeed = seedFor(
+	(design) => design.familyId !== playfulRouteSeed2Design.familyId,
+);
 
 const originalDecode = HTMLImageElement.prototype.decode;
 const originalFonts = Object.getOwnPropertyDescriptor(document, "fonts");
@@ -142,7 +155,9 @@ function LocationProbe() {
 	return <div data-testid="location-search">{location.search}</div>;
 }
 
-function renderPage(initialEntry = "/journeys/journey-1/booklet") {
+function renderPage(
+	initialEntry = `/journeys/journey-1/booklet?seed=${seedQuery(playfulRouteSeed2)}`,
+) {
 	return render(
 		<MemoryRouter initialEntries={[initialEntry]}>
 			<Routes>
@@ -750,7 +765,9 @@ describe("JourneyBookletPage", () => {
 			new Error("decode failed"),
 		);
 		installFetchMock();
-		renderPage("/journeys/journey-1/booklet?seed=v2-00000002");
+		renderPage(
+			`/journeys/journey-1/booklet?seed=${seedQuery(playfulRouteSeed2)}`,
+		);
 
 		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 		await waitFor(() =>
@@ -774,7 +791,9 @@ describe("JourneyBookletPage", () => {
 		}
 		installMotifDecodeFailure([selectedAssetId]);
 		installFetchMock();
-		renderPage("/journeys/journey-1/booklet?seed=v2-00000002");
+		renderPage(
+			`/journeys/journey-1/booklet?seed=${seedQuery(playfulRouteSeed2)}`,
+		);
 
 		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 		await waitFor(() =>
@@ -805,7 +824,9 @@ describe("JourneyBookletPage", () => {
 		}
 		installMotifDecodeFailure(unselectedAssetIds);
 		installFetchMock();
-		renderPage("/journeys/journey-1/booklet?seed=v2-00000002");
+		renderPage(
+			`/journeys/journey-1/booklet?seed=${seedQuery(playfulRouteSeed2)}`,
+		);
 
 		await waitFor(() =>
 			expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled(),
@@ -823,18 +844,14 @@ describe("JourneyBookletPage", () => {
 	it("境界値: シード切替後に旧パターンの素材読込が完了しても新しいreadyを維持する", async () => {
 		const initialSeed = seedFor(
 			(design) =>
-				design.familyId === "playful-route" && design.decorAssetIds.length > 0,
+				design.familyId === "atlas-grid" && design.decorAssetIds.length > 0,
 		);
 		const initialDesign = resolvedDesignForSeed(initialSeed);
 		const initialAssetId = initialDesign.decorAssetIds[0];
 		if (!initialAssetId) {
 			throw new Error("初期デザインに装飾素材がありません。");
 		}
-		const nextSeed = seedFor(
-			(design) =>
-				design.familyId === "playful-route" &&
-				design.comparisonKey !== initialDesign.comparisonKey,
-		);
+		const nextSeed = seedFor((design) => design.familyId === "playful-route");
 		const nextDesign = resolvedDesignForSeed(nextSeed);
 		const initialAssetSrc = motifAssetsFor([initialAssetId])[0]?.src;
 		if (!initialAssetSrc) {
@@ -912,7 +929,9 @@ describe("JourneyBookletPage", () => {
 					: Promise.resolve();
 			});
 		installFetchMock();
-		renderPage("/journeys/journey-1/booklet?seed=v2-00000002");
+		renderPage(
+			`/journeys/journey-1/booklet?seed=${seedQuery(playfulRouteSeed2)}`,
+		);
 
 		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 		await waitFor(() =>
@@ -942,7 +961,9 @@ describe("JourneyBookletPage", () => {
 			},
 		});
 		installFetchMock();
-		renderPage("/journeys/journey-1/booklet?seed=v2-00000002");
+		renderPage(
+			`/journeys/journey-1/booklet?seed=${seedQuery(playfulRouteSeed2)}`,
+		);
 
 		await waitFor(() =>
 			expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled(),
@@ -960,7 +981,9 @@ describe("JourneyBookletPage", () => {
 	it("異常系: 選択フォントを確認できなければ候補を進めず印刷しない", async () => {
 		vi.mocked(document.fonts.check).mockReturnValue(false);
 		installFetchMock();
-		renderPage("/journeys/journey-1/booklet?seed=v2-00000002");
+		renderPage(
+			`/journeys/journey-1/booklet?seed=${seedQuery(playfulRouteSeed2)}`,
+		);
 
 		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 		await waitFor(() =>
@@ -997,7 +1020,9 @@ describe("JourneyBookletPage", () => {
 				}) as DOMRect,
 		});
 		installFetchMock();
-		renderPage("/journeys/journey-1/booklet?seed=v2-00000002");
+		renderPage(
+			`/journeys/journey-1/booklet?seed=${seedQuery(playfulRouteSeed2)}`,
+		);
 
 		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 		await waitFor(() =>
@@ -1026,7 +1051,9 @@ describe("JourneyBookletPage", () => {
 			},
 		});
 		installFetchMock();
-		renderPage("/journeys/journey-1/booklet?seed=v2-00000002");
+		renderPage(
+			`/journeys/journey-1/booklet?seed=${seedQuery(playfulRouteSeed2)}`,
+		);
 
 		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 		await waitFor(() =>
@@ -1045,7 +1072,9 @@ describe("JourneyBookletPage", () => {
 		document.head.append(style);
 		try {
 			installFetchMock();
-			renderPage("/journeys/journey-1/booklet?seed=v2-00000002");
+			renderPage(
+				`/journeys/journey-1/booklet?seed=${seedQuery(playfulRouteSeed2)}`,
+			);
 
 			const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 			await waitFor(() =>
@@ -1094,7 +1123,9 @@ describe("JourneyBookletPage", () => {
 		});
 		try {
 			installFetchMock();
-			renderPage("/journeys/journey-1/booklet?seed=v2-00000002");
+			renderPage(
+				`/journeys/journey-1/booklet?seed=${seedQuery(playfulRouteSeed2)}`,
+			);
 
 			const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 			await waitFor(() =>
@@ -1138,7 +1169,7 @@ describe("JourneyBookletPage", () => {
 
 	it("異常系: 不正なseedクエリは既定テーマへ戻しURLから除去する", async () => {
 		installFetchMock();
-		renderPage("/journeys/journey-1/booklet?seed=v1-00000000");
+		renderPage("/journeys/journey-3/booklet?seed=v1-00000000");
 
 		await waitFor(() =>
 			expect(screen.getByTestId("location-search").textContent).toBe(""),
@@ -1146,6 +1177,104 @@ describe("JourneyBookletPage", () => {
 		await waitFor(() =>
 			expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled(),
 		);
+	});
+
+	it("正常系: 同じfamilyのstyle違いを拒否し、異なるfamilyのseedだけ採用する", () => {
+		const currentSeed: ThemeSeed = {
+			value: playfulRouteSeed2,
+			version: "v2",
+		};
+		const candidates: ThemeSeed[] = [
+			{ value: sameFamilyDifferentStyleSeed, version: "v2" },
+			{ value: differentFamilySeed, version: "v2" },
+		];
+		const attemptedValues: number[] = [];
+		const nextSeed = selectRerollSeed(
+			currentSeed,
+			playfulRouteSeed2Design.familyId,
+			null,
+			{
+				createRerollSeed: (_current, isDifferentFamily) => {
+					for (const candidate of candidates) {
+						attemptedValues.push(candidate.value);
+						if (isDifferentFamily(candidate)) {
+							return candidate;
+						}
+					}
+					throw new Error("test candidates exhausted");
+				},
+			},
+		);
+
+		expect(attemptedValues).toEqual([
+			sameFamilyDifferentStyleSeed,
+			differentFamilySeed,
+		]);
+		expect(nextSeed).toEqual(candidates[1]);
+	});
+
+	it("異常系: active familyが0件または1件なら乱数試行前に再抽選不可とする", () => {
+		const currentSeed: ThemeSeed = { value: 1, version: "v2" };
+		const createSeed = vi.fn(
+			(_current: ThemeSeed, _predicate: (candidate: ThemeSeed) => boolean) =>
+				({ value: 2, version: "v2" }) as ThemeSeed,
+		);
+
+		try {
+			selectRerollSeed(currentSeed, "playful-route", null, {
+				familyIds: [],
+				createRerollSeed: createSeed,
+			});
+			expect.fail("0件では例外になるべきです");
+		} catch (error) {
+			expect(error).toBeInstanceOf(RerollUnavailableError);
+			expect((error as RerollUnavailableError).reason).toBe("no-family");
+		}
+
+		try {
+			selectRerollSeed(currentSeed, "playful-route", null, {
+				familyIds: ["playful-route"],
+				createRerollSeed: createSeed,
+			});
+			expect.fail("1件では例外になるべきです");
+		} catch (error) {
+			expect(error).toBeInstanceOf(RerollUnavailableError);
+			expect((error as RerollUnavailableError).reason).toBe("single-family");
+		}
+
+		expect(createSeed).not.toHaveBeenCalled();
+	});
+
+	it("異常系: 256候補すべて同じfamilyならURL・現在seed・印刷準備を保持する", async () => {
+		const randomValues = vi
+			.spyOn(crypto, "getRandomValues")
+			.mockImplementation((values) => {
+				if (values instanceof Uint32Array) {
+					values[0] = sameFamilyDifferentStyleSeed;
+				}
+				return values;
+			});
+		installFetchMock();
+		renderPage();
+		await waitFor(() =>
+			expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled(),
+		);
+
+		screen.getByRole("button", { name: "別のデザインを試す" }).click();
+		await waitFor(() =>
+			expect(screen.getByRole("status")).toHaveTextContent(
+				"別のデザインを選べませんでした。現在のテーマを維持します。",
+			),
+		);
+		expect(screen.getByTestId("location-search")).toHaveTextContent(
+			`seed=${seedQuery(playfulRouteSeed2)}`,
+		);
+		expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled();
+		expect(document.querySelector(".booklet-shell")).toHaveAttribute(
+			"data-booklet-print-state",
+			"ready",
+		);
+		expect(randomValues).toHaveBeenCalledTimes(256);
 	});
 
 	it("正常系: 再抽選は異なるレシピのseedをURL履歴へ追加する", async () => {

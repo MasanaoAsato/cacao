@@ -23,6 +23,18 @@ describe("createFamilyAdapterRegistry", () => {
 		);
 	});
 
+	it("異常系: 既定のrequired IDsはactive 5 familyをすべて要求する", () => {
+		expect(() =>
+			createFamilyAdapterRegistry([
+				{
+					familyId: "legacy",
+					renderer: () => null,
+					usePagePlan: () => null as never,
+				},
+			]),
+		).toThrow("系統「atlas-grid」のアダプターが登録されていません");
+	});
+
 	it("境界値: 同じ系統のアダプターを重複登録できない", () => {
 		expect(() =>
 			createFamilyAdapterRegistry(

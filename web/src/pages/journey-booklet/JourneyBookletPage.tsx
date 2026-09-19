@@ -20,7 +20,6 @@ import { createBookletTheme } from "../../theme/bookletTheme";
 import { resolveBookletDesign } from "../../theme/families/resolveBookletDesign";
 import {
 	createDefaultThemeSeed,
-	createRerollSeed,
 	formatThemeSeed,
 	parseThemeSeed,
 } from "../../theme/seed";
@@ -30,6 +29,7 @@ import {
 	isCurrentFamilyPagePlan,
 	useFamilyPagePlan,
 } from "./families/useFamilyPagePlan";
+import { RerollUnavailableError, selectRerollSeed } from "./reroll";
 
 type LoadState =
 	| { readonly error: string; readonly status: "error" }
@@ -383,20 +383,22 @@ export function JourneyBookletPage() {
 		setDownloadError(null);
 		setRerollError(null);
 		try {
-			const nextSeed = createRerollSeed(
+			const nextSeed = selectRerollSeed(
 				requestedTheme.seed,
-				(candidate) =>
-					resolveBookletDesign(
-						createBookletTheme(candidate, { coverVisualStyle }),
-					).comparisonKey !== currentDesign.comparisonKey,
+				currentDesign.familyId,
+				coverVisualStyle,
 			);
 			const next = new URLSearchParams(searchParams);
 			next.set("seed", formatThemeSeed(nextSeed));
 			setSearchParams(next);
-		} catch {
-			setRerollError(
-				"別のデザインを選べませんでした。現在のテーマを維持します。",
-			);
+		} catch (error) {
+			if (error instanceof RerollUnavailableError) {
+				setRerollError(error.message);
+			} else {
+				setRerollError(
+					"別のデザインを選べませんでした。現在のテーマを維持します。",
+				);
+			}
 		}
 	};
 

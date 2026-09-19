@@ -102,10 +102,12 @@ function requiredElement(
 }
 
 function readHeight(element: HTMLElement, name: string): number {
+	const rectHeight = element.getBoundingClientRect().height;
 	const height = Math.max(
-		element.getBoundingClientRect().height,
-		element.offsetHeight,
-		element.scrollHeight,
+		rectHeight,
+		element.scrollHeight > element.clientHeight
+			? element.scrollHeight
+			: rectHeight,
 	);
 	if (!Number.isFinite(height) || height <= 0) {
 		throw new BookletLayoutError("dom-not-ready", `${name}を計測できません。`);
@@ -556,7 +558,7 @@ function ensureDocumentFits(
 				"editorial-magazineの紙面が横方向にあふれています。",
 			);
 		}
-		if (page.scrollHeight > page.clientHeight + LAYOUT_TOLERANCE_PX) {
+		if (page.scrollHeight > page.clientHeight) {
 			throw new BookletLayoutError(
 				"page-block-overflow",
 				"editorial-magazineの紙面が縦方向にあふれています。",
@@ -573,7 +575,7 @@ function ensureDocumentFits(
 			style.overflowY === "hidden" ||
 			style.whiteSpace === "nowrap" ||
 			text.scrollWidth > text.clientWidth + LAYOUT_TOLERANCE_PX ||
-			text.scrollHeight > text.clientHeight + LAYOUT_TOLERANCE_PX
+			text.scrollHeight > text.clientHeight
 		) {
 			throw new BookletLayoutError(
 				"text-inline-overflow",

@@ -1,144 +1,73 @@
 import { describe, expect, it } from "vitest";
-import { createFamilyRegistry, familyDefinitionFor } from "./registry";
+import type { BookletFamilyDefinition } from "./registry";
+import {
+	ACTIVE_BOOKLET_FAMILY_IDS,
+	BOOKLET_FAMILY_REGISTRY,
+	createFamilyRegistry,
+	familyDefinitionById,
+} from "./registry";
 import { styleProfilesForFamily } from "./styleProfiles";
 
+function validAtlas(
+	overrides: Partial<
+		Extract<BookletFamilyDefinition, { id: "atlas-grid" }>
+	> = {},
+): Extract<BookletFamilyDefinition, { id: "atlas-grid" }> {
+	return {
+		compositionIds: ["table"],
+		decorAssetIds: ["atlas-compass"],
+		fontFamilies: ["Noto Sans JP"],
+		id: "atlas-grid",
+		paletteIds: ["atlas-blue"],
+		policyId: "timetable",
+		styleProfiles: styleProfilesForFamily("atlas-grid"),
+		...overrides,
+	};
+}
+
 describe("BOOKLET_FAMILY_REGISTRY", () => {
-	it.each(["field-notes", "quiet-gallery"] as const)(
-		"正常系: %sをpaper-collageへ割り当てる",
-		(moodId) => {
-			expect(familyDefinitionFor(moodId)).toMatchObject({
-				compositionIds: ["photo-left", "photo-right"],
-				decorAssetIds: [
-					"paper-torn-sheet",
-					"paper-tape",
-					"paper-leaf",
-					"paper-postage",
-				],
-				fontFamilies: ["Kaisei Decol", "Noto Serif JP", "Noto Sans JP"],
-				id: "paper-collage",
-				moodIds: ["field-notes", "quiet-gallery"],
-				paletteIds: ["sage-paper", "lilac-paper"],
-				policyId: "captions",
-			});
-		},
-	);
-
-	it.each(["wayfinder", "night-train"] as const)(
-		"正常系: %sをatlas-gridへ割り当てる",
-		(moodId) => {
-			expect(familyDefinitionFor(moodId)).toMatchObject({
-				compositionIds: ["side-index", "wide-image"],
-				decorAssetIds: [
-					"atlas-compass",
-					"atlas-route-mark",
-					"atlas-perforation",
-				],
-				fontFamilies: ["Zen Kaku Gothic New", "Noto Sans JP"],
-				id: "atlas-grid",
-				moodIds: ["wayfinder", "night-train"],
-				paletteIds: ["blueprint", "forest-atlas"],
-				policyId: "timetable",
-			});
-		},
-	);
-
-	it.each(["postcard", "festival-ticket"] as const)(
-		"正常系: %sをplayful-routeへ割り当てる",
-		(moodId) => {
-			expect(familyDefinitionFor(moodId)).toMatchObject({
-				compositionIds: ["zigzag", "ribbon"],
-				decorAssetIds: [
-					"playful-bag",
-					"playful-sun",
-					"playful-squiggle",
-					"playful-burst",
-					"playful-footprints",
-					"playful-curved-arrow",
-				],
-				fontFamilies: ["Dela Gothic One", "M PLUS Rounded 1c", "Noto Sans JP"],
-				id: "playful-route",
-				moodIds: ["postcard", "festival-ticket"],
-				paletteIds: ["berry-sun", "harbor-play"],
-				policyId: "route",
-			});
-		},
-	);
-});
-
-describe("createFamilyRegistry", () => {
-	it("正常系: legacyが全moodを担当できる", () => {
-		const registry = createFamilyRegistry([
-			{
-				id: "legacy",
-				moodIds: [
-					"field-notes",
-					"wayfinder",
-					"postcard",
-					"night-train",
-					"quiet-gallery",
-					"festival-ticket",
-				],
-				policyId: "legacy-full",
-			},
+	it("正常系: active候補を固定順でID lookupできる", () => {
+		expect(ACTIVE_BOOKLET_FAMILY_IDS).toEqual([
+			"atlas-grid",
+			"paper-collage",
+			"playful-route",
+			"editorial-magazine",
+			"travel-newspaper",
 		]);
-
-		expect(registry.get("wayfinder")?.id).toBe("legacy");
+		for (const familyId of ACTIVE_BOOKLET_FAMILY_IDS) {
+			expect(familyDefinitionById(familyId).id).toBe(familyId);
+			expect(BOOKLET_FAMILY_REGISTRY.get(familyId)?.id).toBe(familyId);
+		}
 	});
 
-	it("異常系: 同じmoodを複数の系統へ登録できない", () => {
-		expect(() =>
-			createFamilyRegistry([
-				{
-					id: "legacy",
-					moodIds: [
-						"field-notes",
-						"wayfinder",
-						"postcard",
-						"night-train",
-						"quiet-gallery",
-						"festival-ticket",
-					],
-					policyId: "legacy-full",
-				},
-				{
-					compositionIds: ["table"],
-					decorAssetIds: ["atlas-compass"],
-					fontFamilies: ["Noto Sans JP"],
-					id: "atlas-grid",
-					moodIds: ["wayfinder"],
-					paletteIds: ["atlas-blue"],
-					policyId: "timetable",
-					styleProfiles: styleProfilesForFamily("atlas-grid"),
-				},
-			]),
-		).toThrow("複数の系統");
+	it("正常系: legacyはcatalogのID lookupへ残る", () => {
+		expect(familyDefinitionById("legacy")).toMatchObject({
+			id: "legacy",
+			policyId: "legacy-full",
+		});
 	});
 
-	it("境界値: 空の配色候補を持つ新系統を拒否する", () => {
+	it("異常系: 未登録IDを拒否する", () => {
+		expect(() => familyDefinitionById("unknown" as never)).toThrow(
+			"系統「unknown」が登録されていません",
+		);
+	});
+
+	it("異常系: 同じfamily IDを複数登録できない", () => {
+		expect(() => createFamilyRegistry([validAtlas(), validAtlas()])).toThrow(
+			"系統「atlas-grid」が重複しています",
+		);
+	});
+
+	it("境界値: moodなしのfamily定義を受け付ける", () => {
+		const registry = createFamilyRegistry([validAtlas()]);
+		expect(registry.get("atlas-grid")?.id).toBe("atlas-grid");
+		expect(registry.get("wayfinder" as never)).toBeUndefined();
+	});
+
+	it("異常系: 空のstyle候補を拒否する", () => {
 		expect(() =>
-			createFamilyRegistry([
-				{
-					id: "legacy",
-					moodIds: [
-						"field-notes",
-						"postcard",
-						"night-train",
-						"quiet-gallery",
-						"festival-ticket",
-					],
-					policyId: "legacy-full",
-				},
-				{
-					compositionIds: ["table"],
-					decorAssetIds: ["atlas-compass"],
-					fontFamilies: ["Noto Sans JP"],
-					id: "atlas-grid",
-					moodIds: ["wayfinder"],
-					paletteIds: [],
-					policyId: "timetable",
-					styleProfiles: styleProfilesForFamily("atlas-grid"),
-				},
-			]),
+			createFamilyRegistry([validAtlas({ styleProfiles: [] })]),
 		).toThrow("配色・構図・素材・書体が不足しています");
 	});
 });

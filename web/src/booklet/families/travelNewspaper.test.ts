@@ -148,6 +148,17 @@ describe("paginateTravelNewspaper", () => {
 		).toThrowError(expect.objectContaining({ code: "invalid-measurement" }));
 	});
 
+	it("境界値: 予約高さ24mmに等しい表紙題名を許容する", () => {
+		const days = [day(1, 1)];
+		expect(
+			paginateTravelNewspaper(
+				booklet(days),
+				{ ...measurement(days), coverTitleHeightMm: 24 },
+				profile,
+			),
+		).toHaveLength(2);
+	});
+
 	it("境界値: 通常容量と段間隔を含む高さに等しい記事を収める", () => {
 		const days = [day(1, 2)];
 		const pages = paginateTravelNewspaper(

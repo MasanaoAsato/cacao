@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 import type { BookletFamilyId } from "../../../booklet/family";
-import { REGISTERED_BOOKLET_FAMILY_IDS } from "../../../theme/families/registry";
+import { ACTIVE_BOOKLET_FAMILY_IDS } from "../../../theme/families/registry";
 import { AtlasGridRenderer, useAtlasGridPagePlan } from "./AtlasGrid";
 import {
 	EditorialMagazineRenderer,
@@ -31,7 +31,7 @@ export type BookletFamilyAdapter = {
 
 export function createFamilyAdapterRegistry(
 	adapters: readonly BookletFamilyAdapter[],
-	requiredFamilyIds: readonly BookletFamilyId[] = REGISTERED_BOOKLET_FAMILY_IDS,
+	requiredFamilyIds: readonly BookletFamilyId[] = ACTIVE_BOOKLET_FAMILY_IDS,
 ): ReadonlyMap<BookletFamilyId, BookletFamilyAdapter> {
 	const registry = new Map<BookletFamilyId, BookletFamilyAdapter>();
 	for (const adapter of adapters) {
