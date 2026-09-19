@@ -3,6 +3,7 @@ import type { BookletFamilyId } from "../../booklet/family";
 import type { MotifAssetId } from "../motifAssets";
 import type { MoodId } from "../types";
 import { ATLAS_GRID_FAMILY } from "./atlasGrid";
+import { EDITORIAL_MAGAZINE_FAMILY } from "./editorialMagazine";
 import { PAPER_COLLAGE_FAMILY } from "./paperCollage";
 import { PLAYFUL_ROUTE_FAMILY } from "./playfulRoute";
 import type { BookletStyleProfile } from "./styleProfiles";
@@ -111,11 +112,31 @@ export const BOOKLET_FAMILY_REGISTRY = createFamilyRegistry([
 	PLAYFUL_ROUTE_FAMILY,
 ]);
 
-export const REGISTERED_BOOKLET_FAMILY_IDS = Object.freeze([
-	...new Set(
-		Array.from(BOOKLET_FAMILY_REGISTRY.values(), (definition) => definition.id),
+/** ID catalog used by family adapters; mood lookup remains compatible with 21.2. */
+export const BOOKLET_FAMILY_CATALOG: ReadonlyMap<
+	BookletFamilyId,
+	BookletFamilyDefinition
+> = new Map([
+	...Array.from(
+		BOOKLET_FAMILY_REGISTRY.values(),
+		(definition) => [definition.id, definition] as const,
 	),
+	[EDITORIAL_MAGAZINE_FAMILY.id, EDITORIAL_MAGAZINE_FAMILY],
 ]);
+
+export const REGISTERED_BOOKLET_FAMILY_IDS = Object.freeze([
+	...new Set(Array.from(BOOKLET_FAMILY_CATALOG.keys())),
+]);
+
+export function familyDefinitionById(
+	familyId: BookletFamilyId,
+): BookletFamilyDefinition {
+	const definition = BOOKLET_FAMILY_CATALOG.get(familyId);
+	if (!definition) {
+		throw new Error(`系統「${familyId}」が登録されていません。`);
+	}
+	return definition;
+}
 
 export function familyDefinitionFor(moodId: MoodId): BookletFamilyDefinition {
 	const definition = BOOKLET_FAMILY_REGISTRY.get(moodId);
