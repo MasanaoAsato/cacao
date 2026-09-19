@@ -833,8 +833,7 @@ describe("JourneyBookletPage", () => {
 		const nextSeed = seedFor(
 			(design) =>
 				design.familyId === "playful-route" &&
-				design.comparisonKey !== initialDesign.comparisonKey &&
-				!design.decorAssetIds.includes(initialAssetId),
+				design.comparisonKey !== initialDesign.comparisonKey,
 		);
 		const nextDesign = resolvedDesignForSeed(nextSeed);
 		const initialAssetSrc = motifAssetsFor([initialAssetId])[0]?.src;
@@ -846,9 +845,14 @@ describe("JourneyBookletPage", () => {
 			resolveInitialAsset = resolve;
 		});
 		let initialAssetStarted = false;
+		let shouldDelayInitialAsset = true;
 		vi.mocked(HTMLImageElement.prototype.decode).mockImplementation(
 			function decode(this: HTMLImageElement) {
-				if (this.getAttribute("src") === initialAssetSrc) {
+				if (
+					shouldDelayInitialAsset &&
+					this.getAttribute("src") === initialAssetSrc
+				) {
+					shouldDelayInitialAsset = false;
 					initialAssetStarted = true;
 					return initialAssetDecode;
 				}
