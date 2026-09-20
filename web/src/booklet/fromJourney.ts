@@ -10,6 +10,7 @@ import type {
 	LegApiResponse,
 	SpotApiResponse,
 } from "../api/journeys";
+import { COVER_VISUAL_STYLES } from "../theme/coverVisualStyles";
 import type { CoverVisualStyle } from "../theme/types";
 import type {
 	ArrivalUnit,
@@ -21,15 +22,6 @@ import type {
 	BookletPlace,
 	BookletSpot,
 } from "./model";
-
-const COVER_VISUAL_STYLES = [
-	"editorial-photograph",
-	"cinematic-photograph",
-	"watercolor",
-	"gouache",
-	"oil-painting",
-	"pastel",
-] as const satisfies readonly CoverVisualStyle[];
 
 export class BookletDataError extends Error {
 	constructor(message: string) {

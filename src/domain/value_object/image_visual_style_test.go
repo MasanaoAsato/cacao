@@ -12,7 +12,12 @@ func TestImageVisualStyleValidateFor(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:    "cover accepts catalog style",
+			name:    "cover accepts v2 catalog style",
+			style:   ImageVisualStyleTransparentWatercolor,
+			purpose: ImagePurposeCover,
+		},
+		{
+			name:    "cover accepts legacy style",
 			style:   ImageVisualStyleEditorialPhotograph,
 			purpose: ImagePurposeCover,
 		},
@@ -77,16 +82,50 @@ func TestCoverImageVisualStyleCatalogReturnsIndependentCopy(t *testing.T) {
 	}
 }
 
-func TestCoverImageVisualStyleCatalogKeepsV1Order(t *testing.T) {
+func TestCoverImageVisualStyleCatalogKeepsV2Order(t *testing.T) {
 	t.Parallel()
 
 	want := []ImageVisualStyle{
-		ImageVisualStyleEditorialPhotograph,
-		ImageVisualStyleCinematicPhotograph,
-		ImageVisualStyleWatercolor,
-		ImageVisualStyleGouache,
-		ImageVisualStyleOilPainting,
-		ImageVisualStylePastel,
+		ImageVisualStyleTransparentWatercolor,
+		ImageVisualStyleRefinedTravelEditorial,
+		ImageVisualStyleLuminousAnimeBackground,
+		ImageVisualStyleRetroTravelPoster,
+		ImageVisualStyleCinematicStory,
+		ImageVisualStyleMinimalFlatLandmarks,
+		ImageVisualStyleSoftPastelHoliday,
+		ImageVisualStyleWatercolorPencilSketch,
+		ImageVisualStyleVintagePostcard,
+		ImageVisualStyleQuietPhotoBook,
+		ImageVisualStyleSunnyVacation,
+		ImageVisualStyleGoldenHourSentimental,
+		ImageVisualStyleArchitecturalPenSketch,
+		ImageVisualStyleTravelIconCollage,
+		ImageVisualStylePaperCutStorybook,
+		ImageVisualStyleJapaneseRetroTravelAd,
+		ImageVisualStyleNordicEarthMinimal,
+		ImageVisualStyleLiteraryInkWash,
+		ImageVisualStyleEmotionalFilmPhoto,
+		ImageVisualStyleLuxuryTravelAd,
+		ImageVisualStylePopGeometricTravel,
+		ImageVisualStyleSeasonalNature,
+		ImageVisualStyleAntiqueTravelJournal,
+		ImageVisualStyleEpicWideAdventure,
+		ImageVisualStyleQuietNeighborhood,
+		ImageVisualStyleBlueWhiteUrban,
+		ImageVisualStyleTranquilOutdoors,
+		ImageVisualStyleRomanticNightNeon,
+		ImageVisualStyleNotebookLineArt,
+		ImageVisualStyleElegantSemiReal,
+		ImageVisualStyleFantasyStorybook,
+		ImageVisualStyleLuminousYouthAnime,
+		ImageVisualStyleMiniatureDiorama,
+		ImageVisualStyleIdealizedPhotoIllustration,
+		ImageVisualStyleJapaneseQuietMinimal,
+		ImageVisualStyleDynamicVividPoster,
+		ImageVisualStyleHealingBacklightNature,
+		ImageVisualStyleClassicAdventureNovel,
+		ImageVisualStyleLimitedColorLineArt,
+		ImageVisualStyleNaturalTravelPhoto,
 	}
 	got := CoverImageVisualStyleCatalog()
 	if len(got) != len(want) {
@@ -96,6 +135,36 @@ func TestCoverImageVisualStyleCatalogKeepsV1Order(t *testing.T) {
 	for index, wantStyle := range want {
 		if got[index] != wantStyle {
 			t.Errorf("CoverImageVisualStyleCatalog()[%d] = %q, want %q", index, got[index], wantStyle)
+		}
+	}
+}
+
+func TestImageVisualStylesFitDatabaseColumn(t *testing.T) {
+	t.Parallel()
+
+	styles := append(
+		[]ImageVisualStyle{
+			ImageVisualStyleNone,
+			ImageVisualStyleEditorialPhotograph,
+			ImageVisualStyleCinematicPhotograph,
+			ImageVisualStyleWatercolor,
+			ImageVisualStyleGouache,
+			ImageVisualStyleOilPainting,
+			ImageVisualStylePastel,
+		},
+		CoverImageVisualStyleCatalog()...,
+	)
+	seen := map[ImageVisualStyle]struct{}{}
+	for _, style := range styles {
+		if len(style.String()) > 40 {
+			t.Errorf("style %q length = %d, want at most 40", style, len(style.String()))
+		}
+		if _, ok := seen[style]; ok {
+			t.Errorf("style %q appears more than once", style)
+		}
+		seen[style] = struct{}{}
+		if err := style.Validate(); err != nil {
+			t.Errorf("style %q Validate() error = %v", style, err)
 		}
 	}
 }

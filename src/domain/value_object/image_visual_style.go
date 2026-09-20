@@ -16,25 +16,140 @@ const (
 	ImageVisualStyleGouache             ImageVisualStyle = "gouache"
 	ImageVisualStyleOilPainting         ImageVisualStyle = "oil-painting"
 	ImageVisualStylePastel              ImageVisualStyle = "pastel"
+
+	ImageVisualStyleTransparentWatercolor      ImageVisualStyle = "transparent-watercolor"
+	ImageVisualStyleRefinedTravelEditorial     ImageVisualStyle = "refined-travel-editorial"
+	ImageVisualStyleLuminousAnimeBackground    ImageVisualStyle = "luminous-anime-background"
+	ImageVisualStyleRetroTravelPoster          ImageVisualStyle = "retro-travel-poster"
+	ImageVisualStyleCinematicStory             ImageVisualStyle = "cinematic-story"
+	ImageVisualStyleMinimalFlatLandmarks       ImageVisualStyle = "minimal-flat-landmarks"
+	ImageVisualStyleSoftPastelHoliday          ImageVisualStyle = "soft-pastel-holiday"
+	ImageVisualStyleWatercolorPencilSketch     ImageVisualStyle = "watercolor-pencil-sketch"
+	ImageVisualStyleVintagePostcard            ImageVisualStyle = "vintage-postcard"
+	ImageVisualStyleQuietPhotoBook             ImageVisualStyle = "quiet-photo-book"
+	ImageVisualStyleSunnyVacation              ImageVisualStyle = "sunny-vacation"
+	ImageVisualStyleGoldenHourSentimental      ImageVisualStyle = "golden-hour-sentimental"
+	ImageVisualStyleArchitecturalPenSketch     ImageVisualStyle = "architectural-pen-sketch"
+	ImageVisualStyleTravelIconCollage          ImageVisualStyle = "travel-icon-collage"
+	ImageVisualStylePaperCutStorybook          ImageVisualStyle = "paper-cut-storybook"
+	ImageVisualStyleJapaneseRetroTravelAd      ImageVisualStyle = "japanese-retro-travel-ad"
+	ImageVisualStyleNordicEarthMinimal         ImageVisualStyle = "nordic-earth-minimal"
+	ImageVisualStyleLiteraryInkWash            ImageVisualStyle = "literary-ink-wash"
+	ImageVisualStyleEmotionalFilmPhoto         ImageVisualStyle = "emotional-film-photo"
+	ImageVisualStyleLuxuryTravelAd             ImageVisualStyle = "luxury-travel-ad"
+	ImageVisualStylePopGeometricTravel         ImageVisualStyle = "pop-geometric-travel"
+	ImageVisualStyleSeasonalNature             ImageVisualStyle = "seasonal-nature"
+	ImageVisualStyleAntiqueTravelJournal       ImageVisualStyle = "antique-travel-journal"
+	ImageVisualStyleEpicWideAdventure          ImageVisualStyle = "epic-wide-adventure"
+	ImageVisualStyleQuietNeighborhood          ImageVisualStyle = "quiet-neighborhood"
+	ImageVisualStyleBlueWhiteUrban             ImageVisualStyle = "blue-white-urban"
+	ImageVisualStyleTranquilOutdoors           ImageVisualStyle = "tranquil-outdoors"
+	ImageVisualStyleRomanticNightNeon          ImageVisualStyle = "romantic-night-neon"
+	ImageVisualStyleNotebookLineArt            ImageVisualStyle = "notebook-line-art"
+	ImageVisualStyleElegantSemiReal            ImageVisualStyle = "elegant-semireal"
+	ImageVisualStyleFantasyStorybook           ImageVisualStyle = "fantasy-storybook"
+	ImageVisualStyleLuminousYouthAnime         ImageVisualStyle = "luminous-youth-anime"
+	ImageVisualStyleMiniatureDiorama           ImageVisualStyle = "miniature-diorama"
+	ImageVisualStyleIdealizedPhotoIllustration ImageVisualStyle = "idealized-photo-illustration"
+	ImageVisualStyleJapaneseQuietMinimal       ImageVisualStyle = "japanese-quiet-minimal"
+	ImageVisualStyleDynamicVividPoster         ImageVisualStyle = "dynamic-vivid-poster"
+	ImageVisualStyleHealingBacklightNature     ImageVisualStyle = "healing-backlight-nature"
+	ImageVisualStyleClassicAdventureNovel      ImageVisualStyle = "classic-adventure-novel"
+	ImageVisualStyleLimitedColorLineArt        ImageVisualStyle = "limited-color-line-art"
+	ImageVisualStyleNaturalTravelPhoto         ImageVisualStyle = "natural-travel-photo"
 )
 
 var validImageVisualStyles = map[ImageVisualStyle]struct{}{
-	ImageVisualStyleNone:                {},
-	ImageVisualStyleEditorialPhotograph: {},
-	ImageVisualStyleCinematicPhotograph: {},
-	ImageVisualStyleWatercolor:          {},
-	ImageVisualStyleGouache:             {},
-	ImageVisualStyleOilPainting:         {},
-	ImageVisualStylePastel:              {},
+	ImageVisualStyleNone:                       {},
+	ImageVisualStyleEditorialPhotograph:        {},
+	ImageVisualStyleCinematicPhotograph:        {},
+	ImageVisualStyleWatercolor:                 {},
+	ImageVisualStyleGouache:                    {},
+	ImageVisualStyleOilPainting:                {},
+	ImageVisualStylePastel:                     {},
+	ImageVisualStyleTransparentWatercolor:      {},
+	ImageVisualStyleRefinedTravelEditorial:     {},
+	ImageVisualStyleLuminousAnimeBackground:    {},
+	ImageVisualStyleRetroTravelPoster:          {},
+	ImageVisualStyleCinematicStory:             {},
+	ImageVisualStyleMinimalFlatLandmarks:       {},
+	ImageVisualStyleSoftPastelHoliday:          {},
+	ImageVisualStyleWatercolorPencilSketch:     {},
+	ImageVisualStyleVintagePostcard:            {},
+	ImageVisualStyleQuietPhotoBook:             {},
+	ImageVisualStyleSunnyVacation:              {},
+	ImageVisualStyleGoldenHourSentimental:      {},
+	ImageVisualStyleArchitecturalPenSketch:     {},
+	ImageVisualStyleTravelIconCollage:          {},
+	ImageVisualStylePaperCutStorybook:          {},
+	ImageVisualStyleJapaneseRetroTravelAd:      {},
+	ImageVisualStyleNordicEarthMinimal:         {},
+	ImageVisualStyleLiteraryInkWash:            {},
+	ImageVisualStyleEmotionalFilmPhoto:         {},
+	ImageVisualStyleLuxuryTravelAd:             {},
+	ImageVisualStylePopGeometricTravel:         {},
+	ImageVisualStyleSeasonalNature:             {},
+	ImageVisualStyleAntiqueTravelJournal:       {},
+	ImageVisualStyleEpicWideAdventure:          {},
+	ImageVisualStyleQuietNeighborhood:          {},
+	ImageVisualStyleBlueWhiteUrban:             {},
+	ImageVisualStyleTranquilOutdoors:           {},
+	ImageVisualStyleRomanticNightNeon:          {},
+	ImageVisualStyleNotebookLineArt:            {},
+	ImageVisualStyleElegantSemiReal:            {},
+	ImageVisualStyleFantasyStorybook:           {},
+	ImageVisualStyleLuminousYouthAnime:         {},
+	ImageVisualStyleMiniatureDiorama:           {},
+	ImageVisualStyleIdealizedPhotoIllustration: {},
+	ImageVisualStyleJapaneseQuietMinimal:       {},
+	ImageVisualStyleDynamicVividPoster:         {},
+	ImageVisualStyleHealingBacklightNature:     {},
+	ImageVisualStyleClassicAdventureNovel:      {},
+	ImageVisualStyleLimitedColorLineArt:        {},
+	ImageVisualStyleNaturalTravelPhoto:         {},
 }
 
 var coverImageVisualStyleCatalog = []ImageVisualStyle{
-	ImageVisualStyleEditorialPhotograph,
-	ImageVisualStyleCinematicPhotograph,
-	ImageVisualStyleWatercolor,
-	ImageVisualStyleGouache,
-	ImageVisualStyleOilPainting,
-	ImageVisualStylePastel,
+	ImageVisualStyleTransparentWatercolor,
+	ImageVisualStyleRefinedTravelEditorial,
+	ImageVisualStyleLuminousAnimeBackground,
+	ImageVisualStyleRetroTravelPoster,
+	ImageVisualStyleCinematicStory,
+	ImageVisualStyleMinimalFlatLandmarks,
+	ImageVisualStyleSoftPastelHoliday,
+	ImageVisualStyleWatercolorPencilSketch,
+	ImageVisualStyleVintagePostcard,
+	ImageVisualStyleQuietPhotoBook,
+	ImageVisualStyleSunnyVacation,
+	ImageVisualStyleGoldenHourSentimental,
+	ImageVisualStyleArchitecturalPenSketch,
+	ImageVisualStyleTravelIconCollage,
+	ImageVisualStylePaperCutStorybook,
+	ImageVisualStyleJapaneseRetroTravelAd,
+	ImageVisualStyleNordicEarthMinimal,
+	ImageVisualStyleLiteraryInkWash,
+	ImageVisualStyleEmotionalFilmPhoto,
+	ImageVisualStyleLuxuryTravelAd,
+	ImageVisualStylePopGeometricTravel,
+	ImageVisualStyleSeasonalNature,
+	ImageVisualStyleAntiqueTravelJournal,
+	ImageVisualStyleEpicWideAdventure,
+	ImageVisualStyleQuietNeighborhood,
+	ImageVisualStyleBlueWhiteUrban,
+	ImageVisualStyleTranquilOutdoors,
+	ImageVisualStyleRomanticNightNeon,
+	ImageVisualStyleNotebookLineArt,
+	ImageVisualStyleElegantSemiReal,
+	ImageVisualStyleFantasyStorybook,
+	ImageVisualStyleLuminousYouthAnime,
+	ImageVisualStyleMiniatureDiorama,
+	ImageVisualStyleIdealizedPhotoIllustration,
+	ImageVisualStyleJapaneseQuietMinimal,
+	ImageVisualStyleDynamicVividPoster,
+	ImageVisualStyleHealingBacklightNature,
+	ImageVisualStyleClassicAdventureNovel,
+	ImageVisualStyleLimitedColorLineArt,
+	ImageVisualStyleNaturalTravelPhoto,
 }
 
 // CoverImageVisualStyleCatalog は表紙用画風カタログのコピーを返す。

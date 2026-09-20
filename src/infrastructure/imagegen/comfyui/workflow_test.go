@@ -278,7 +278,7 @@ func TestWorkflowBuildIsSafeForConcurrentCalls(t *testing.T) {
 }
 
 func newTestBrief(t *testing.T, purpose value_object.ImagePurpose, ordinal int) domainservice.ImageBrief {
-	style := value_object.ImageVisualStyleEditorialPhotograph
+	style := value_object.ImageVisualStyleTransparentWatercolor
 	if purpose == value_object.ImagePurposeIllustration {
 		style = value_object.ImageVisualStyleNone
 	}

@@ -54,7 +54,7 @@ func TestOpenRouterImageGeneratorGenerate(t *testing.T) {
 		{
 			name:    "cover",
 			purpose: value_object.ImagePurposeCover,
-			style:   value_object.ImageVisualStyleEditorialPhotograph,
+			style:   value_object.ImageVisualStyleTransparentWatercolor,
 			aspect:  components.ImageGenerationRequestAspectRatioTwentyThree,
 			brief:   newOpenRouterImageTestBrief,
 		},
@@ -441,7 +441,7 @@ func testPNGContent(t *testing.T, width, height int) []byte {
 }
 
 func newOpenRouterImageTestBrief(t *testing.T) domainservice.ImageBrief {
-	return newOpenRouterBrief(t, value_object.ImagePurposeCover, value_object.ImageVisualStyleEditorialPhotograph)
+	return newOpenRouterBrief(t, value_object.ImagePurposeCover, value_object.ImageVisualStyleTransparentWatercolor)
 }
 
 func newOpenRouterIllustrationTestBrief(t *testing.T) domainservice.ImageBrief {

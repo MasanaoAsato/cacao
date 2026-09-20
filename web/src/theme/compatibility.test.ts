@@ -59,6 +59,36 @@ describe("テーマ相性表", () => {
 		expect(result.decors).not.toContain("dashed-ticket");
 	});
 
+	it("正常系: v2のsoft画風は夜の配色と硬い装飾を除外する", () => {
+		const mood = MOODS.get("night-train");
+		if (!mood) {
+			throw new Error("night-trainの定義がありません。");
+		}
+
+		const result = applyCompatibility(mood, {
+			coverVisualStyle: "transparent-watercolor",
+		});
+
+		expect(result.palettes).not.toContain("night-window");
+		expect(result.decors).not.toContain("stripe-band");
+		expect(result.decors).not.toContain("dashed-ticket");
+	});
+
+	it("正常系: v2のhandcrafted画風は硬い装飾だけを除外する", () => {
+		const mood = MOODS.get("night-train");
+		if (!mood) {
+			throw new Error("night-trainの定義がありません。");
+		}
+
+		const result = applyCompatibility(mood, {
+			coverVisualStyle: "paper-cut-storybook",
+		});
+
+		expect(result.palettes).toContain("night-window");
+		expect(result.decors).not.toContain("stripe-band");
+		expect(result.decors).not.toContain("dashed-ticket");
+	});
+
 	it("正常系: 写真系とnullは許可リストを変更しない", () => {
 		const mood = MOODS.get("night-train");
 		if (!mood) {

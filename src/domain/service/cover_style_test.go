@@ -6,7 +6,7 @@ import (
 	"cacao/src/domain/value_object"
 )
 
-func TestSelectCoverStyleFollowsV1Contract(t *testing.T) {
+func TestSelectCoverStyleFollowsV2Contract(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -15,34 +15,19 @@ func TestSelectCoverStyleFollowsV1Contract(t *testing.T) {
 		want value_object.ImageVisualStyle
 	}{
 		{
-			name: "editorial photograph",
+			name: "first fixed id",
 			id:   "88888888-8888-4888-8888-888888888888",
-			want: value_object.ImageVisualStyleEditorialPhotograph,
+			want: value_object.ImageVisualStyleRefinedTravelEditorial,
 		},
 		{
-			name: "cinematic photograph",
+			name: "second fixed id",
 			id:   "00000000-0000-4000-8000-000000000002",
-			want: value_object.ImageVisualStyleCinematicPhotograph,
+			want: value_object.ImageVisualStyleRetroTravelPoster,
 		},
 		{
-			name: "watercolor",
+			name: "third fixed id",
 			id:   "9574e429-0a69-40c4-a5f8-1262e433fbfc",
-			want: value_object.ImageVisualStyleWatercolor,
-		},
-		{
-			name: "gouache",
-			id:   "22222222-2222-4222-8222-222222222222",
-			want: value_object.ImageVisualStyleGouache,
-		},
-		{
-			name: "oil painting",
-			id:   "99999999-9999-4999-8999-999999999999",
-			want: value_object.ImageVisualStyleOilPainting,
-		},
-		{
-			name: "pastel",
-			id:   "33333333-3333-4333-8333-333333333333",
-			want: value_object.ImageVisualStylePastel,
+			want: value_object.ImageVisualStyleQuietNeighborhood,
 		},
 	}
 
@@ -90,17 +75,17 @@ func TestCoverStyleForSelectionKeyCoversCatalogBoundaries(t *testing.T) {
 		{
 			name:         "minimum unsigned integer selects first catalog style",
 			selectionKey: 0,
-			want:         value_object.ImageVisualStyleEditorialPhotograph,
+			want:         value_object.ImageVisualStyleTransparentWatercolor,
 		},
 		{
 			name:         "last catalog index selects last catalog style",
-			selectionKey: 5,
-			want:         value_object.ImageVisualStylePastel,
+			selectionKey: 39,
+			want:         value_object.ImageVisualStyleNaturalTravelPhoto,
 		},
 		{
 			name:         "maximum unsigned integer remains in catalog",
 			selectionKey: ^uint64(0),
-			want:         value_object.ImageVisualStyleGouache,
+			want:         value_object.ImageVisualStyleJapaneseRetroTravelAd,
 		},
 	}
 
@@ -114,6 +99,20 @@ func TestCoverStyleForSelectionKeyCoversCatalogBoundaries(t *testing.T) {
 				t.Errorf("coverStyleForSelectionKey(%d) = %q, want %q", testCase.selectionKey, style, testCase.want)
 			}
 		})
+	}
+}
+
+func TestCoverStyleForSelectionKeyReachesEveryV2Style(t *testing.T) {
+	t.Parallel()
+
+	for index, want := range value_object.CoverImageVisualStyleCatalog() {
+		style, err := coverStyleForSelectionKey(uint64(index))
+		if err != nil {
+			t.Fatalf("coverStyleForSelectionKey(%d) error = %v", index, err)
+		}
+		if style != want {
+			t.Errorf("coverStyleForSelectionKey(%d) = %q, want %q", index, style, want)
+		}
 	}
 }
 
@@ -138,8 +137,8 @@ func TestVisualStyleForSlot(t *testing.T) {
 		if err != nil {
 			t.Fatalf("VisualStyleForSlot() error = %v", err)
 		}
-		if style != value_object.ImageVisualStyleEditorialPhotograph {
-			t.Errorf("style = %q, want editorial-photograph", style)
+		if !containsStyle(value_object.CoverImageVisualStyleCatalog(), style) {
+			t.Errorf("style = %q, want a v2 catalog style", style)
 		}
 	})
 
@@ -158,4 +157,14 @@ func TestVisualStyleForSlot(t *testing.T) {
 			t.Fatal("expected error for empty id")
 		}
 	})
+}
+
+func containsStyle(styles []value_object.ImageVisualStyle, want value_object.ImageVisualStyle) bool {
+	for _, style := range styles {
+		if style == want {
+			return true
+		}
+	}
+
+	return false
 }
