@@ -157,6 +157,42 @@ describe("EditorialMagazineDocument", () => {
 		).toHaveLength(1);
 	});
 
+	it("境界値: 長いspot名を切り詰めず記事カードへ渡す", () => {
+		const longSpotName =
+			"京都国際マンガミュージアムABCDEFGHIJKLMN1234567890で企画展を鑑賞";
+		const longBooklet: EditorialBooklet = {
+			...booklet,
+			days: booklet.days.map((day) => ({
+				...day,
+				units: day.units.map((unit, index) =>
+					index === 0 ? { ...unit, spotName: longSpotName } : unit,
+				),
+			})),
+		};
+		const { container } = render(
+			<EditorialMagazineDocument
+				booklet={longBooklet}
+				design={design}
+				pagePlan={[
+					{ kind: "cover", pageId: "cover" },
+					{
+						dayIndex: 0,
+						kind: "article",
+						pageId: "article",
+						unitIndexes: [0, 1],
+					},
+				]}
+				rootRef={createRef<HTMLElement>()}
+			/>,
+		);
+
+		expect(
+			container.querySelector(
+				'[data-unit-id="unit-1"] [data-booklet-text-role="spot-name"]',
+			)?.textContent,
+		).toBe(longSpotName);
+	});
+
 	it("境界値: 継続ページでは日別挿絵を複製しない", () => {
 		const { container } = render(
 			<EditorialMagazineDocument

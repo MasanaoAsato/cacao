@@ -1,12 +1,9 @@
 import { writeFile } from "node:fs/promises";
 import { expect, type TestInfo, test } from "@playwright/test";
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
+import { createBookletTheme } from "../src/theme/bookletTheme.js";
 import {
-	createBookletTheme,
-	THEME_CATALOG_REFERENCES,
-} from "../src/theme/bookletTheme.js";
-import { MOODS } from "../src/theme/catalog.js";
-import {
+	ACTIVE_BOOKLET_FAMILY_IDS,
 	familyDefinitionById,
 	REGISTERED_BOOKLET_FAMILY_IDS,
 } from "../src/theme/families/registry.js";
@@ -14,8 +11,6 @@ import {
 	resolveBookletDesign,
 	resolveBookletDesignForFamily,
 } from "../src/theme/families/resolveBookletDesign.js";
-import { resolveTheme } from "../src/theme/resolve.js";
-import type { MoodId } from "../src/theme/types.js";
 import { DENSE_BOOKLET_EXPECTED_UNITS } from "./fixtures/booklet.js";
 import {
 	COMPARISON_EXPECTED_UNITS,
@@ -25,10 +20,7 @@ import {
 	comparisonJourneyId,
 	routeComparisonBookletApi,
 } from "./fixtures/booklet-comparison.js";
-import {
-	FAMILY_COMPARISON_SAMPLES,
-	MOOD_SAMPLE_SEEDS,
-} from "./fixtures/booklet-theme-samples.js";
+import { FAMILY_COMPARISON_SAMPLES } from "./fixtures/booklet-theme-samples.js";
 import {
 	expectBookletPrintReady,
 	expectContentInsidePages,
@@ -47,7 +39,7 @@ type ComparisonRecord = {
 	readonly comparisonKey: string | null;
 	readonly documentHtml: string;
 	readonly familyId: string | null;
-	readonly moodId: MoodId;
+	readonly sampleId: string;
 	readonly pageCompositions: readonly (string | null)[];
 	readonly pageCount: number;
 	readonly pageIds: readonly string[];
@@ -58,30 +50,41 @@ type ComparisonRecord = {
 	readonly unitIds: readonly string[];
 };
 
-const moodSamples = Object.entries(MOOD_SAMPLE_SEEDS) as ReadonlyArray<
-	readonly [MoodId, (typeof MOOD_SAMPLE_SEEDS)[MoodId]]
->;
-
-function expectedDesignFor(moodId: MoodId, seed: number) {
-	const requestedTheme = resolveTheme(
-		{ value: seed, version: "v2" },
-		{ coverVisualStyle: null },
-		MOODS,
-		THEME_CATALOG_REFERENCES,
-	);
+function expectedDesignFor(sample: (typeof FAMILY_COMPARISON_SAMPLES)[number]) {
+	const requestedTheme = createBookletTheme({
+		value: sample.seed,
+		version: "v2",
+	});
 	const design = resolveBookletDesign(requestedTheme);
-	const sample = MOOD_SAMPLE_SEEDS[moodId];
 	expect(design.familyId).toBe(sample.familyId);
-	expect(design.policyId).toBe(sample.policyId);
+	expect(design.policyId).toBe(sample.expectedPolicyId);
+	expect(design.compositionId).toBe(sample.expectedCompositionId);
+	expect(design.styleProfileId).toBe(sample.styleProfileIds[0]);
 	return design;
 }
 
-function expectRegisteredFamiliesCovered(): void {
-	const coveredFamilyIds = new Set([
-		...Object.values(MOOD_SAMPLE_SEEDS).map((sample) => sample.familyId),
-		...FAMILY_COMPARISON_SAMPLES.map((sample) => sample.familyId),
-	]);
-	expect(coveredFamilyIds).toEqual(new Set(REGISTERED_BOOKLET_FAMILY_IDS));
+function expectRegisteredFamiliesAndProfilesCovered(): void {
+	const coveredFamilyIds = new Set(
+		FAMILY_COMPARISON_SAMPLES.map((sample) => sample.familyId),
+	);
+	expect(coveredFamilyIds).toEqual(new Set(ACTIVE_BOOKLET_FAMILY_IDS));
+	expect(new Set(REGISTERED_BOOKLET_FAMILY_IDS)).toEqual(
+		new Set(["legacy", ...ACTIVE_BOOKLET_FAMILY_IDS]),
+	);
+	for (const familyId of ACTIVE_BOOKLET_FAMILY_IDS) {
+		const definition = familyDefinitionById(familyId);
+		if (definition.id === "legacy") {
+			throw new Error("active familyにlegacyは含められません。");
+		}
+		const fixtureProfileIds = FAMILY_COMPARISON_SAMPLES.filter(
+			(sample) => sample.familyId === familyId,
+		).flatMap((sample) => sample.styleProfileIds);
+		const registeredProfileIds = definition.styleProfiles.map(
+			(profile) => profile.id,
+		);
+		expect(new Set(fixtureProfileIds)).toEqual(new Set(registeredProfileIds));
+		expect(fixtureProfileIds).toHaveLength(registeredProfileIds.length);
+	}
 }
 
 async function openBooklet(
@@ -132,20 +135,18 @@ async function expectUnits(
 
 async function captureRecord(
 	page: Parameters<typeof routeComparisonBookletApi>[0],
-	moodId: MoodId,
+	sampleId: string,
 	seed: number,
 	unitIds: readonly string[],
 	scenario: ComparisonFixtureScenario = "standard",
 ): Promise<ComparisonRecord> {
 	const document = page.locator(".booklet-document");
-	await expect(document.locator(".booklet-cover__image")).toHaveJSProperty(
-		"naturalWidth",
-		800,
-	);
-	await expect(document.locator(".booklet-cover__image")).toHaveJSProperty(
-		"naturalHeight",
-		1200,
-	);
+	await expect(
+		document.locator('[data-booklet-page="true"][data-page-id*="cover-"] img'),
+	).toHaveJSProperty("naturalWidth", 800);
+	await expect(
+		document.locator('[data-booklet-page="true"][data-page-id*="cover-"] img'),
+	).toHaveJSProperty("naturalHeight", 1200);
 	const metadata = await document.evaluate(
 		(element, dataUrls) => {
 			const copy = element.cloneNode(true) as HTMLElement;
@@ -188,7 +189,7 @@ async function captureRecord(
 	expect(metadata.requestedDesign).not.toBeNull();
 	expect(metadata.themeKey).not.toBeNull();
 	expect(metadata.comparisonKey).not.toBeNull();
-	return { ...metadata, moodId, scenario, seed, unitIds };
+	return { ...metadata, sampleId, scenario, seed, unitIds };
 }
 
 function expectRecordMatchesDesign(
@@ -210,7 +211,7 @@ async function attachArtifacts(
 	const html = `<!doctype html><html lang="ja"><head>${head}</head><body><main>${records
 		.map(
 			(record) =>
-				`<section data-comparison-mood="${record.moodId}"><h1>${record.scenario}: ${record.familyId} / ${record.requestedDesign} / ${record.seed}</h1>${record.documentHtml}</section>`,
+				`<section data-comparison-family="${record.sampleId}"><h1>${record.scenario}: ${record.familyId} / ${record.requestedDesign} / ${record.seed}</h1>${record.documentHtml}</section>`,
 		)
 		.join("\n")}</main></body></html>`;
 	const json = JSON.stringify(
@@ -234,7 +235,8 @@ async function attachArtifacts(
 }
 
 test.describe("しおり比較基盤", () => {
-	test("mood aliasのないfamilyも比較用profile・policy・構造を固定する", () => {
+	test("全family・各profileの比較用policy・構造を固定する", () => {
+		expectRegisteredFamiliesAndProfilesCovered();
 		for (const sample of FAMILY_COMPARISON_SAMPLES) {
 			const requestedTheme = createBookletTheme({
 				value: sample.seed,
@@ -248,31 +250,40 @@ test.describe("しおり比較基盤", () => {
 			expect(design.policyId).toBe(sample.expectedPolicyId);
 			expect(design.compositionId).toBe(sample.expectedCompositionId);
 			expect(sample.styleProfileIds).toContain(design.styleProfileId);
-			expect(design.decorAssetIds).toEqual([]);
+			if (
+				sample.familyId === "editorial-magazine" ||
+				sample.familyId === "travel-newspaper"
+			) {
+				expect(design.decorAssetIds).toEqual([]);
+			} else {
+				expect(design.decorAssetIds.length).toBeGreaterThan(0);
+			}
 		}
 	});
 
-	test("全雰囲気を同じ12件・画像条件で比較記録に保存する", async ({
+	test("全family・各profileを同じ12件・画像条件で比較記録に保存する", async ({
 		page,
 	}, testInfo) => {
 		test.setTimeout(300_000);
 		await routeComparisonBookletApi(page);
-		expectRegisteredFamiliesCovered();
+		expectRegisteredFamiliesAndProfilesCovered();
 		const records: ComparisonRecord[] = [];
-		for (const [moodId, { seed }] of moodSamples) {
-			const design = expectedDesignFor(moodId, seed);
-			await openBooklet(page, seed);
+		for (const sample of FAMILY_COMPARISON_SAMPLES) {
+			const design = expectedDesignFor(sample);
+			await openBooklet(page, sample.seed);
 			await expectNoHiddenText(page);
 			await expectContentInsidePages(page);
 			const record = await captureRecord(
 				page,
-				moodId,
-				seed,
+				`${sample.familyId}-${sample.seed}`,
+				sample.seed,
 				await expectUnits(page),
 			);
 			expectRecordMatchesDesign(record, design);
 			records.push(record);
-			const screenshot = testInfo.outputPath(`${moodId}-${seed}.png`);
+			const screenshot = testInfo.outputPath(
+				`${sample.familyId}-${sample.seed}.png`,
+			);
 			await page.screenshot({ fullPage: true, path: screenshot });
 			await testInfo.attach("comparison.png", {
 				contentType: "image/png",
@@ -288,19 +299,19 @@ test.describe("しおり比較基盤", () => {
 		test.setTimeout(300_000);
 		await routeComparisonBookletApi(page);
 		const records: ComparisonRecord[] = [];
-		for (const [moodId, { seed }] of moodSamples) {
-			await openBooklet(page, seed);
+		for (const sample of FAMILY_COMPARISON_SAMPLES) {
+			await openBooklet(page, sample.seed);
 			const first = await captureRecord(
 				page,
-				moodId,
-				seed,
+				`${sample.familyId}-${sample.seed}`,
+				sample.seed,
 				await expectUnits(page),
 			);
-			await openBooklet(page, seed);
+			await openBooklet(page, sample.seed);
 			const reloaded = await captureRecord(
 				page,
-				moodId,
-				seed,
+				`${sample.familyId}-${sample.seed}`,
+				sample.seed,
 				await expectUnits(page),
 			);
 			expect(reloaded).toMatchObject({
@@ -318,18 +329,18 @@ test.describe("しおり比較基盤", () => {
 		await attachArtifacts(page, testInfo, records);
 	});
 
-	test("dense の16件を全雰囲気で継続ページまで入力順に保持する", async ({
+	test("dense の16件を全family・各profileで継続ページまで入力順に保持する", async ({
 		page,
 	}, testInfo) => {
 		test.setTimeout(300_000);
 		await routeComparisonBookletApi(page, "dense");
 		const records: ComparisonRecord[] = [];
-		for (const [moodId, { seed }] of moodSamples) {
-			await openBooklet(page, seed, "dense");
+		for (const sample of FAMILY_COMPARISON_SAMPLES) {
+			await openBooklet(page, sample.seed, "dense");
 			const record = await captureRecord(
 				page,
-				moodId,
-				seed,
+				`${sample.familyId}-${sample.seed}`,
+				sample.seed,
 				await expectUnits(page, DENSE_BOOKLET_EXPECTED_UNITS),
 				"dense",
 			);
@@ -346,14 +357,14 @@ test.describe("しおり比較基盤", () => {
 		const records: ComparisonRecord[] = [];
 		for (const scenario of ["empty-day", "no-days"] as const) {
 			await routeComparisonBookletApi(page, scenario);
-			for (const [moodId, { seed }] of moodSamples) {
-				await openBooklet(page, seed, scenario);
+			for (const sample of FAMILY_COMPARISON_SAMPLES) {
+				await openBooklet(page, sample.seed, scenario);
 				const expected =
 					scenario === "empty-day" ? COMPARISON_EXPECTED_UNITS : [];
 				const record = await captureRecord(
 					page,
-					moodId,
-					seed,
+					`${sample.familyId}-${sample.seed}`,
+					sample.seed,
 					await expectUnits(page, expected),
 					scenario,
 				);
@@ -379,8 +390,8 @@ test.describe("しおり比較基盤", () => {
 		test.setTimeout(300_000);
 		await routeComparisonBookletApi(page);
 		const records: ComparisonRecord[] = [];
-		for (const [moodId, { seed }] of moodSamples) {
-			await openBooklet(page, seed);
+		for (const sample of FAMILY_COMPARISON_SAMPLES) {
+			await openBooklet(page, sample.seed);
 			const unitIds = await expectUnits(page);
 			const count = await page
 				.locator(".booklet-document [data-booklet-page]")
@@ -400,7 +411,14 @@ test.describe("しおり比較基盤", () => {
 				expect(Math.abs(top - bottom - 595.28)).toBeLessThan(1);
 			}
 			await pdfDocument.destroy();
-			records.push(await captureRecord(page, moodId, seed, unitIds));
+			records.push(
+				await captureRecord(
+					page,
+					`${sample.familyId}-${sample.seed}`,
+					sample.seed,
+					unitIds,
+				),
+			);
 		}
 		await attachArtifacts(page, testInfo, records);
 	});

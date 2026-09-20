@@ -46,7 +46,7 @@
 .editorial-magazine-page__content {
 	position: absolute;
 	box-sizing: border-box;
-	left: var(--editorial-cover-left);
+	left: 10mm;
 	top: 10mm;
 	width: 128mm;
 	height: 190mm;

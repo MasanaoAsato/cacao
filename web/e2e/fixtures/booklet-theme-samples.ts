@@ -26,24 +26,74 @@ export type FamilyComparisonSample = {
 export const FAMILY_COMPARISON_SAMPLES: readonly FamilyComparisonSample[] =
 	Object.freeze([
 		{
+			expectedCompositionId: "wide-image",
+			expectedPolicyId: "timetable",
+			familyId: "atlas-grid",
+			seed: 12,
+			styleProfileIds: ["atlas-grid.atlas-wayfinder"],
+		},
+		{
+			expectedCompositionId: "wide-image",
+			expectedPolicyId: "timetable",
+			familyId: "atlas-grid",
+			seed: 13,
+			styleProfileIds: ["atlas-grid.atlas-field-record"],
+		},
+		{
+			expectedCompositionId: "photo-left",
+			expectedPolicyId: "captions",
+			familyId: "paper-collage",
+			seed: 2,
+			styleProfileIds: ["paper-collage.paper-cut"],
+		},
+		{
+			expectedCompositionId: "photo-left",
+			expectedPolicyId: "captions",
+			familyId: "paper-collage",
+			seed: 6,
+			styleProfileIds: ["paper-collage.paper-scrapbook"],
+		},
+		{
+			expectedCompositionId: "ribbon",
+			expectedPolicyId: "route",
+			familyId: "playful-route",
+			seed: 1,
+			styleProfileIds: ["playful-route.playful-pop"],
+		},
+		{
+			expectedCompositionId: "ribbon",
+			expectedPolicyId: "route",
+			familyId: "playful-route",
+			seed: 3,
+			styleProfileIds: ["playful-route.playful-travel-diary"],
+		},
+		{
 			expectedCompositionId: "magazine-feature",
 			expectedPolicyId: "captions",
 			familyId: "editorial-magazine",
-			seed: 0x2103,
-			styleProfileIds: [
-				"editorial-magazine.quiet-photo",
-				"editorial-magazine.bold-culture",
-			],
+			seed: 75,
+			styleProfileIds: ["editorial-magazine.bold-culture"],
+		},
+		{
+			expectedCompositionId: "magazine-feature",
+			expectedPolicyId: "captions",
+			familyId: "editorial-magazine",
+			seed: 92,
+			styleProfileIds: ["editorial-magazine.quiet-photo"],
 		},
 		{
 			expectedCompositionId: "newspaper-columns",
 			expectedPolicyId: "timetable",
 			familyId: "travel-newspaper",
-			seed: 0x2104,
-			styleProfileIds: [
-				"travel-newspaper.classic-travel",
-				"travel-newspaper.city-walk",
-			],
+			seed: 0,
+			styleProfileIds: ["travel-newspaper.classic-travel"],
+		},
+		{
+			expectedCompositionId: "newspaper-columns",
+			expectedPolicyId: "timetable",
+			familyId: "travel-newspaper",
+			seed: 5,
+			styleProfileIds: ["travel-newspaper.city-walk"],
 		},
 	]);
 

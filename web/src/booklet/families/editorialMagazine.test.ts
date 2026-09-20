@@ -167,6 +167,17 @@ describe("paginateEditorialMagazine", () => {
 		).toThrowError(expect.objectContaining({ code: "unit-overflow" }));
 	});
 
+	it("境界値: 予約高さ24mmに等しい表紙題名を許容する", () => {
+		const days = [day(1, 1)];
+		expect(
+			paginateEditorialMagazine(
+				booklet(days),
+				{ ...measurement(days), coverTitleHeightMm: 24 },
+				profile,
+			),
+		).toHaveLength(2);
+	});
+
 	it("境界値: 通常容量に等しいカードは記事ページに収める", () => {
 		const days = [day(1, 1)];
 		const pages = paginateEditorialMagazine(

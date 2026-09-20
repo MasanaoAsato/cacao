@@ -3,7 +3,11 @@ import { getDisplayFontDefinition, getFontPairFamilies } from "../bookletTheme";
 import { designKey } from "../resolve";
 import { axisRandom } from "../seed";
 import type { RequestedBookletTheme } from "../types";
-import { type BookletFamilyDefinition, familyDefinitionFor } from "./registry";
+import {
+	ACTIVE_BOOKLET_FAMILY_IDS,
+	type BookletFamilyDefinition,
+	familyDefinitionById,
+} from "./registry";
 
 function pick<T>(seedToken: string, axis: string, values: readonly T[]): T {
 	const selected =
@@ -100,8 +104,13 @@ export function resolveBookletDesignForFamily(
 export function resolveBookletDesign(
 	requestedTheme: RequestedBookletTheme,
 ): ResolvedBookletDesign {
+	const familyId = pick(
+		requestedTheme.seedToken,
+		"booklet-family",
+		ACTIVE_BOOKLET_FAMILY_IDS,
+	);
 	return resolveBookletDesignForFamily(
 		requestedTheme,
-		familyDefinitionFor(requestedTheme.recipe.moodId),
+		familyDefinitionById(familyId),
 	);
 }
