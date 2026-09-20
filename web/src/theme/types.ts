@@ -1,3 +1,5 @@
+import type { CoverVisualStyle as CatalogCoverVisualStyle } from "./coverVisualStyles";
+
 export type ThemeCatalogVersion = "v2";
 
 export type FontPairId =
@@ -91,13 +93,7 @@ export type ContentInsetMm = {
 	readonly top: number;
 };
 
-export type CoverVisualStyle =
-	| "editorial-photograph"
-	| "cinematic-photograph"
-	| "watercolor"
-	| "gouache"
-	| "oil-painting"
-	| "pastel";
+export type CoverVisualStyle = CatalogCoverVisualStyle;
 
 export type ThemeSeed = {
 	readonly value: number;

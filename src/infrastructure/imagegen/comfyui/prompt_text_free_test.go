@@ -24,8 +24,8 @@ func TestNewPromptCreatesTextFreeBackground(t *testing.T) {
 		"geographically and climatically authentic",
 		"Do not use generic seasonal motifs",
 		"No typography, text, letters, words, numbers, dates",
-		"editorial travel photograph",
-		"portrait composition with a balanced focal point and details extending through the entire frame",
+		"transparent watercolor illustration",
+		"portrait composition suitable for a full-bleed cover image",
 	} {
 		if !strings.Contains(prompt.Positive, want) {
 			t.Errorf("positive prompt = %q, want it contain %q", prompt.Positive, want)

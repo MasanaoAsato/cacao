@@ -20,7 +20,7 @@ func TestBuildImagePrompt(t *testing.T) {
 		{
 			name:    "cover",
 			purpose: value_object.ImagePurposeCover,
-			style:   value_object.ImageVisualStyleEditorialPhotograph,
+			style:   value_object.ImageVisualStyleTransparentWatercolor,
 			want:    "portrait composition",
 		},
 		{
@@ -65,10 +65,44 @@ func TestBuildImagePromptRejectsInvalidBrief(t *testing.T) {
 func TestRenderingInstructionRejectsInvalidIllustrationStyle(t *testing.T) {
 	t.Parallel()
 	if _, err := renderingInstruction(
-		value_object.ImageVisualStyleEditorialPhotograph,
+		value_object.ImageVisualStyleTransparentWatercolor,
 		value_object.ImagePurposeIllustration,
 	); err == nil {
 		t.Fatal("renderingInstruction() error = nil, want error")
+	}
+}
+
+func TestBuildImagePromptUsesEveryV2CoverVisualStyle(t *testing.T) {
+	t.Parallel()
+
+	for _, style := range value_object.CoverImageVisualStyleCatalog() {
+		style := style
+		t.Run(style.String(), func(t *testing.T) {
+			brief := newImagePromptTestBrief(t, value_object.ImagePurposeCover, style)
+			prompt, err := BuildImagePrompt(brief)
+			if err != nil {
+				t.Fatalf("BuildImagePrompt() error = %v", err)
+			}
+			if !strings.Contains(prompt.Positive, "No typography, text, letters, words, numbers, dates") {
+				t.Fatalf("positive prompt = %q, want text-free contract", prompt.Positive)
+			}
+			if !strings.Contains(prompt.Positive, "Fill the entire canvas") {
+				t.Fatalf("positive prompt = %q, want full-canvas contract", prompt.Positive)
+			}
+		})
+	}
+}
+
+func TestBuildImagePromptRejectsLegacyCoverVisualStyle(t *testing.T) {
+	t.Parallel()
+
+	brief := newImagePromptTestBrief(
+		t,
+		value_object.ImagePurposeCover,
+		value_object.ImageVisualStyleEditorialPhotograph,
+	)
+	if _, err := BuildImagePrompt(brief); err == nil {
+		t.Fatal("BuildImagePrompt() error = nil, want error")
 	}
 }
 

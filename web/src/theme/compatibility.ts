@@ -1,3 +1,7 @@
+import {
+	HANDCRAFTED_COVER_VISUAL_STYLES,
+	SOFT_COVER_VISUAL_STYLES,
+} from "./coverVisualStyles";
 import type { CompatibilityRule, MoodDefinition, ThemeContext } from "./types";
 
 export const COMPATIBILITY_RULES: readonly CompatibilityRule[] = [
@@ -6,7 +10,7 @@ export const COMPATIBILITY_RULES: readonly CompatibilityRule[] = [
 			decors: ["stripe-band", "dashed-ticket"],
 		},
 		when: {
-			coverVisualStyle: ["oil-painting", "gouache"],
+			coverVisualStyle: HANDCRAFTED_COVER_VISUAL_STYLES,
 		},
 	},
 	{
@@ -15,7 +19,7 @@ export const COMPATIBILITY_RULES: readonly CompatibilityRule[] = [
 			palettes: ["night-window"],
 		},
 		when: {
-			coverVisualStyle: ["watercolor", "pastel"],
+			coverVisualStyle: SOFT_COVER_VISUAL_STYLES,
 		},
 	},
 ];

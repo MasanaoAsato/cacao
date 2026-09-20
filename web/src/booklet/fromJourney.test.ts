@@ -96,6 +96,19 @@ describe("createBookletModel", () => {
 		expect(model.cover.image.visualStyle).toBeNull();
 	});
 
+	it("正常系: v2画風をモデルへ保持する", () => {
+		const model = createBookletModel({
+			coverImage: {
+				...coverImage,
+				visual_style: "transparent-watercolor",
+			},
+			journey,
+			request,
+		});
+
+		expect(model.cover.image.visualStyle).toBe("transparent-watercolor");
+	});
+
 	it("異常系: 表紙画像が未準備ならモデルを作らない", () => {
 		expect(() =>
 			createBookletModel({

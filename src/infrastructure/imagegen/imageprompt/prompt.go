@@ -70,11 +70,12 @@ func BuildImagePrompt(brief domainservice.ImageBrief) (ImagePrompt, error) {
 		geographically and climatically authentic to the destination.
 		Do not use generic seasonal motifs, landmarks, or vegetation from other regions.
 
-		Use a full-frame scenic composition.
 		%s
-		This is environmental artwork, not a travel poster, postcard, title card,
-		advertisement, brochure, magazine cover, or promotional graphic.
-		Do not reserve empty space for a title or heading.
+
+		Fill the entire canvas. The selected rendering instruction determines the
+		composition, subject arrangement, and use of visual negative space.
+		Negative space is allowed, but do not create a title panel, printed layout,
+		or text-bearing paper element.
 
 		Any signs, plaques, storefront signs, billboards, posters, displays, labels,
 		or other surfaces that would normally contain writing must instead be blank,
@@ -114,7 +115,7 @@ func newSeed() (int64, error) {
 
 func composition(purpose value_object.ImagePurpose) string {
 	if purpose == value_object.ImagePurposeCover {
-		return "Use a portrait composition with a balanced focal point and details extending through the entire frame."
+		return "Use a portrait composition suitable for a full-bleed cover image."
 	}
 
 	return "Use a landscape composition with a balanced focal point and uncluttered margins for later layout."
@@ -136,20 +137,5 @@ func renderingInstruction(
 		return "", fmt.Errorf("unsupported image purpose: %q", purpose)
 	}
 
-	switch style {
-	case value_object.ImageVisualStyleEditorialPhotograph:
-		return "Render as a natural-light editorial travel photograph with realistic materials and true-to-place color.", nil
-	case value_object.ImageVisualStyleCinematicPhotograph:
-		return "Render as a cinematic environmental photograph with restrained filmic color grading and authentic local light.", nil
-	case value_object.ImageVisualStyleWatercolor:
-		return "Render as a layered transparent watercolor painting with restrained paper texture.", nil
-	case value_object.ImageVisualStyleGouache:
-		return "Render as a matte gouache painting with clear shapes and tactile brushwork.", nil
-	case value_object.ImageVisualStyleOilPainting:
-		return "Render as a contemporary plein-air oil painting with natural colors and visible painterly texture.", nil
-	case value_object.ImageVisualStylePastel:
-		return "Render as a soft pastel painting with a controlled palette and gentle grain.", nil
-	default:
-		return "", fmt.Errorf("unsupported cover image visual style: %q", style)
-	}
+	return coverStyleInstruction(style)
 }

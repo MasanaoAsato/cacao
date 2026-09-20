@@ -11,7 +11,7 @@ import (
 // coverStyleSelectionSalt は表紙画風選択の契約バージョン。
 // 同じ画像 ID からは常に同じ画風が選ばれる必要があるため、
 // 選択ロジックを変えるときはこの値を上げて新しい契約として扱う。
-const coverStyleSelectionSalt = "cover-style-v1"
+const coverStyleSelectionSalt = "cover-style-v2"
 
 // SelectCoverStyle は画像 ID から表紙用の画風を決定的に選ぶドメインルール。
 // 表紙は画像ごとに画風を変えて「闇鍋」感を出すが、再試行しても同じ画風になるよう
