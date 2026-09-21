@@ -43,6 +43,8 @@ var safeLogOperations = map[string]struct{}{
 	"find_journey_image_slot":         {},
 	"delete_journey_image":            {},
 	"openrouter_send_chat_completion": {},
+	"ollama_send_chat":                {},
+	"searxng_search":                  {},
 	"openrouter_generate_image":       {},
 	"render_booklet_pdf":              {},
 }
@@ -81,6 +83,11 @@ const (
 	ErrorDetailOpenRouterResponseEmptyMessageContent     ErrorDetailCode = "openrouter_response_empty_message_content"
 	ErrorDetailOpenRouterResponseMessageContentNotString ErrorDetailCode = "openrouter_response_message_content_not_string"
 	ErrorDetailJourneyRouteParseFailed                   ErrorDetailCode = "journey_route_parse_failed"
+	ErrorDetailSearXNGRequestFailed                      ErrorDetailCode = "searxng_request_failed"
+	ErrorDetailSearXNGResponseInvalid                    ErrorDetailCode = "searxng_response_invalid"
+	ErrorDetailSearXNGNoResults                          ErrorDetailCode = "searxng_no_results"
+	ErrorDetailOllamaRequestFailed                       ErrorDetailCode = "ollama_request_failed"
+	ErrorDetailOllamaResponseInvalid                     ErrorDetailCode = "ollama_response_invalid"
 	ErrorDetailImageProviderTimeout                      ErrorDetailCode = "image_provider_timeout"
 	ErrorDetailImageProviderUnavailable                  ErrorDetailCode = "image_provider_unavailable"
 	ErrorDetailImageGenerationRejected                   ErrorDetailCode = "image_generation_rejected"
@@ -140,6 +147,11 @@ func isSafeErrorDetail(detail ErrorDetailCode) bool {
 		ErrorDetailOpenRouterResponseEmptyMessageContent,
 		ErrorDetailOpenRouterResponseMessageContentNotString,
 		ErrorDetailJourneyRouteParseFailed,
+		ErrorDetailSearXNGRequestFailed,
+		ErrorDetailSearXNGResponseInvalid,
+		ErrorDetailSearXNGNoResults,
+		ErrorDetailOllamaRequestFailed,
+		ErrorDetailOllamaResponseInvalid,
 		ErrorDetailImageProviderTimeout,
 		ErrorDetailImageProviderUnavailable,
 		ErrorDetailImageGenerationRejected,

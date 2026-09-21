@@ -32,6 +32,7 @@ import (
 	"cacao/src/infrastructure/imagestore/fsstore"
 	"cacao/src/infrastructure/journeygen"
 	"cacao/src/infrastructure/repository/postgres"
+	"cacao/src/infrastructure/websearch/searxng"
 	"cacao/src/infrastructure/worker"
 	"cacao/src/observability"
 	"cacao/src/presentation/controller"
@@ -170,6 +171,27 @@ func newJourneyGenerator() (domainservice.JourneyGenerator, error) {
 	}
 
 	switch llmConfig.Driver {
+	case config.LLMDriverOllama:
+		ollamaConfig, err := config.OllamaFromEnv()
+		if err != nil {
+			return nil, fmt.Errorf("load ollama config: %w", err)
+		}
+		var searcher *searxng.Client
+		if llmConfig.WebSearchEnabled {
+			searchConfig, err := config.SearXNGFromEnv()
+			if err != nil {
+				return nil, fmt.Errorf("load searxng config: %w", err)
+			}
+			searcher, err = searxng.NewClient(searchConfig)
+			if err != nil {
+				return nil, fmt.Errorf("setup searxng client: %w", err)
+			}
+		}
+		generator, err := journeygen.NewOllamaGenerator(ollamaConfig, searcher, llmConfig.WebSearchEnabled)
+		if err != nil {
+			return nil, fmt.Errorf("setup ollama generator: %w", err)
+		}
+		return generator, nil
 	case config.LLMDriverOpenAI:
 		openAIConfig, err := config.OpenAIFromEnv()
 		if err != nil {

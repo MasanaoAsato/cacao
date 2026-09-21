@@ -1,0 +1,10 @@
+[botdetection]
+# Docker 内の SearXNG は、リバースプロキシを介さず localhost 公開で使う。
+# Docker のポート転送元を trusted proxy と扱うと、存在しない
+# X-Forwarded-For / X-Real-IP を要求して検索を拒否してしまう。
+trusted_proxies = []
+
+[botdetection.ip_limit]
+# ローカルネットワークからの開発用 API 呼び出しに token は要求しない。
+filter_link_local = false
+link_token = false

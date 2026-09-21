@@ -1,4 +1,21 @@
 services:
+  searxng:
+    image: searxng/searxng@sha256:cd8812607ab73730a0b1a0dc4990223fe1b9e383f6f35947114d0bef7f8bb441
+    container_name: cacao-searxng
+    environment:
+      SEARXNG_SECRET: ${SEARXNG_SECRET:?SEARXNG_SECRET must be set in .env}
+    ports:
+      - "127.0.0.1:${SEARXNG_PORT:-8888}:8080"
+    volumes:
+      - ./config/searxng/settings.yml:/etc/searxng/settings.yml:ro
+      - ./config/searxng/limiter.toml:/etc/searxng/limiter.toml:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/search?format=json&q=health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   gotenberg:
     image: gotenberg/gotenberg:8.36.0
     container_name: cacao-gotenberg
