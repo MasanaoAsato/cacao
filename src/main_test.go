@@ -32,6 +32,31 @@ func TestNewJourneyGeneratorOpenRouter(t *testing.T) {
 	}
 }
 
+func TestNewJourneyGeneratorOllama(t *testing.T) {
+	t.Setenv("LLM_DRIVER", "ollama")
+	t.Setenv("LLM_WEB_SEARCH", "false")
+	t.Setenv("OLLAMA_MODEL", "llama3.2")
+
+	generator, err := newJourneyGenerator()
+	if err != nil {
+		t.Fatalf("newJourneyGenerator() error = %v", err)
+	}
+	if _, ok := generator.(*journeygen.OllamaGenerator); !ok {
+		t.Fatalf("generator type = %T, want *journeygen.OllamaGenerator", generator)
+	}
+}
+
+func TestNewJourneyGeneratorOllamaWithSearchRequiresValidSearXNGConfiguration(t *testing.T) {
+	t.Setenv("LLM_DRIVER", "ollama")
+	t.Setenv("LLM_WEB_SEARCH", "true")
+	t.Setenv("OLLAMA_MODEL", "llama3.2")
+	t.Setenv("SEARXNG_RESULT_LIMIT", "0")
+
+	if _, err := newJourneyGenerator(); err == nil {
+		t.Fatal("newJourneyGenerator() error = nil, want invalid SearXNG config error")
+	}
+}
+
 func TestNewJourneyGeneratorOpenRouterRejectsMissingConfiguration(t *testing.T) {
 	tests := []struct {
 		name   string

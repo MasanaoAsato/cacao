@@ -171,3 +171,35 @@ go test -race ./...
 golangci-lint fmt --diff
 golangci-lint run
 ```
+
+## Ollama と SearXNG によるローカル旅程生成
+
+Ollama は開発機で起動し、使用するモデルをあらかじめ取得します。SearXNG は検索を有効にする場合だけ起動します。検索語には出発地・目的地・旅行日が含まれ、SearXNG が設定済みの外部検索エンジンへ送信します。
+
+```bash
+ollama serve
+ollama pull llama3.2
+
+# .env にランダムな値を設定してから起動します。
+# SEARXNG_SECRET=$(openssl rand -hex 32)
+docker compose up -d searxng
+curl 'http://127.0.0.1:8888/search?format=json&q=%E6%9D%B1%E4%BA%AC'
+```
+
+`.env` では次のように設定します。Ollama と SearXNG の疎通やモデルの存在はアプリ起動時には確認せず、最初の旅程生成要求で安全に失敗します。
+
+```dotenv
+LLM_DRIVER=ollama
+LLM_WEB_SEARCH=true
+OLLAMA_BASE_URL=http://127.0.0.1:11434
+OLLAMA_MODEL=llama3.2
+OLLAMA_THINK=false
+OLLAMA_REQUEST_TIMEOUT=180s
+SEARXNG_BASE_URL=http://127.0.0.1:8888
+SEARXNG_REQUEST_TIMEOUT=10s
+SEARXNG_RESULT_LIMIT=5
+SEARXNG_PORT=8888
+SEARXNG_SECRET=set-a-random-secret-in-your-local-env-file
+```
+
+`LLM_WEB_SEARCH=false` なら SearXNG は起動不要で、Ollama だけで旅程を生成します。SearXNG はローカル開発では Bing のみを検索先とし、公開ポートは `127.0.0.1` に限定されます。`SEARXNG_SECRET` や検索内容、Ollama/SearXNG の応答本文はログ・HTTPレスポンスに出しません。`OLLAMA_THINK=false` は、対応モデルの思考出力を無効化して JSON 形式の旅程を返しやすくします。
