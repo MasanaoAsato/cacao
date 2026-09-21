@@ -72,6 +72,31 @@ func TestStub_Generate(t *testing.T) {
 			if strings.Contains(spot.Name, req.Destination().City()) {
 				t.Errorf("spot name %q should not imply destination %q", spot.Name, req.Destination().City())
 			}
+
+			startAt := spot.StartAt
+			earliest := time.Date(
+				startAt.Year(),
+				startAt.Month(),
+				startAt.Day(),
+				8,
+				0,
+				0,
+				0,
+				startAt.Location(),
+			)
+			latest := time.Date(
+				startAt.Year(),
+				startAt.Month(),
+				startAt.Day(),
+				22,
+				0,
+				0,
+				0,
+				startAt.Location(),
+			)
+			if startAt.Before(earliest) || startAt.After(latest) {
+				t.Errorf("spot startAt = %s, want between 08:00:00 and 22:00:00", startAt.Format(time.RFC3339Nano))
+			}
 		}
 	}
 }

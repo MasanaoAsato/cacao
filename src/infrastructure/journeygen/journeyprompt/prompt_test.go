@@ -2,6 +2,7 @@ package journeyprompt
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -74,6 +75,7 @@ func TestBuildJourneyPrompt(t *testing.T) {
 		// 作成ルールの確認（1日あたりの予算の目安と通貨指定）
 		for _, want := range []string{
 			"各日に1つ以上のスポット",
+			"現地時刻で08:00:00以上22:00:00以下",
 			"JPY 10000", // 30000 / 3日
 			"目的地（都市・国）周辺を主な旅行エリア",
 			"出発地周辺だけで旅程を完結させない",
@@ -172,6 +174,79 @@ func TestBuildJourneyPrompt(t *testing.T) {
 	// 異常系: BuildJourneyPrompt は error を返し得るシグネチャだが、
 	// 値オブジェクト・エンティティの生成時に妥当性が保証されているため、
 	// 有効な JourneyRequest からは常にプロンプトを構築でき、現状エラー経路は存在しない。
+}
+
+func TestParseGeneratedRoute_DailyTimeWindow(t *testing.T) {
+	start := time.Date(2026, 8, 1, 0, 0, 0, 0, time.UTC)
+	end := time.Date(2026, 8, 3, 0, 0, 0, 0, time.UTC)
+	request := mustBuildRequest(t, start, end, 30000, "JPY")
+
+	t.Run("境界値: 現地時刻08時と22時ちょうどを受け入れる", func(t *testing.T) {
+		tests := []struct {
+			name    string
+			startAt string
+		}{
+			{
+				name:    "開始境界",
+				startAt: "2026-08-01T08:00:00+09:00",
+			},
+			{
+				name:    "終了境界",
+				startAt: "2026-08-01T22:00:00+09:00",
+			},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				content := routeJSONWithSingleSpotStartAt(tt.startAt)
+
+				route, err := ParseGeneratedRoute(content, request)
+				if err != nil {
+					t.Fatalf("ParseGeneratedRoute() error = %v", err)
+				}
+				if len(route.Days) != 1 {
+					t.Fatalf("len(route.Days) = %d, want 1", len(route.Days))
+				}
+			})
+		}
+	})
+
+	t.Run("異常系: 現地時刻が日内範囲外", func(t *testing.T) {
+		tests := []struct {
+			name    string
+			startAt string
+		}{
+			{
+				name:    "開始前",
+				startAt: "2026-08-01T07:59:59+09:00",
+			},
+			{
+				name:    "終了後",
+				startAt: "2026-08-01T22:00:01+09:00",
+			},
+			{
+				name:    "終了直後のナノ秒",
+				startAt: "2026-08-01T22:00:00.000000001+09:00",
+			},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				content := routeJSONWithSingleSpotStartAt(tt.startAt)
+
+				route, err := ParseGeneratedRoute(content, request)
+				if err == nil {
+					t.Fatal("ParseGeneratedRoute() error = nil, want time-window error")
+				}
+				if len(route.Days) != 0 {
+					t.Fatalf("len(route.Days) = %d, want 0", len(route.Days))
+				}
+				if !strings.Contains(err.Error(), "outside daily itinerary hours") {
+					t.Fatalf("ParseGeneratedRoute() error = %v, want daily time-window error", err)
+				}
+			})
+		}
+	})
 }
 
 func TestParseGeneratedRoute(t *testing.T) {
@@ -386,7 +461,7 @@ func TestRouteJSONSchema(t *testing.T) {
 									"properties": {
 										"name": {"type": "string", "description": "スポット名"},
 										"description": {"type": "string", "description": "スポットの説明（1〜2文）"},
-										"startAt": {"type": "string", "description": "RFC 3339 形式の訪問開始時刻"},
+										"startAt": {"type": "string", "description": "RFC 3339 形式の訪問開始時刻。現地時刻で08:00:00以上22:00:00以下"},
 										"estimatedCost": {
 											"type": "object",
 											"properties": {
@@ -453,4 +528,20 @@ func TestRouteJSONSchema(t *testing.T) {
 
 	// 異常系・境界値系: RouteJSONSchema は引数を取らず常に同じスキーマを返す純粋関数のため、
 	// エラー経路・境界値は存在しない。
+}
+
+func routeJSONWithSingleSpotStartAt(startAt string) string {
+	return fmt.Sprintf(`{
+		"days": [
+			{
+				"date": "2026-08-01",
+				"spots": [
+					{"name": "浅草寺", "description": "東京最古の寺院", "startAt": %q, "estimatedCost": {"amount": 0, "currency": "JPY"}}
+				],
+				"legs": [
+					{"from": "東京（出発地）", "mode": "walk", "durationMinutes": 1, "cost": {"amount": 0, "currency": "JPY"}}
+				]
+			}
+		]
+	}`, startAt)
 }

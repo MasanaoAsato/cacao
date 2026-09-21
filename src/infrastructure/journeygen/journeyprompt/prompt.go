@@ -9,6 +9,11 @@ import (
 	"time"
 )
 
+const (
+	dailyItineraryStartHour = 8
+	dailyItineraryEndHour   = 22
+)
+
 // SystemInstruction は LLM に送るシステムプロンプトを返す。
 func SystemInstruction() string {
 	return systemInstruction
@@ -42,7 +47,7 @@ func BuildJourneyPrompt(request entity.JourneyRequest) (string, error) {
 2. 1日あたりの予算配分の目安は %s %d とすること
 3. 全日程のスポット費用と移動費用の合計が総予算を超えないこと
 4. スポットの費用はすべて %s 建ての整数で記載すること
-5. 各スポットには訪問開始時刻を設定し、1日の中で時系列が前後しないこと
+5. 各スポットには訪問開始時刻を設定し、現地時刻で08:00:00以上22:00:00以下、かつ1日の中で時系列が前後しないこと
 6. 目的地（都市・国）周辺を主な旅行エリアとしてスポットを選び、出発地周辺だけで旅程を完結させないこと
 7. 目的地は訪問エリアの条件として扱い、最終Legの終点として別途追加しないこと
 8. 出発地と目的地が同じ場合は、市内旅行または近郊旅行として扱うこと
@@ -66,7 +71,7 @@ func BuildJourneyPrompt(request entity.JourneyRequest) (string, error) {
         {
           "name": "スポット名",
           "description": "スポットの説明（1〜2文）",
-          "startAt": "RFC 3339 形式の現地時刻（例: 2026-08-01T09:00:00+09:00）",
+          "startAt": "RFC 3339 形式の現地時刻。08:00:00以上22:00:00以下（例: 2026-08-01T09:00:00+09:00）",
           "estimatedCost": { "amount": 金額の整数, "currency": "%s" }
         }
       ],
@@ -190,7 +195,7 @@ func spotJSONSchema() map[string]any {
 		"properties": map[string]any{
 			"name":        map[string]any{"type": "string", "description": "スポット名"},
 			"description": map[string]any{"type": "string", "description": "スポットの説明（1〜2文）"},
-			"startAt":     map[string]any{"type": "string", "description": "RFC 3339 形式の訪問開始時刻"},
+			"startAt":     map[string]any{"type": "string", "description": "RFC 3339 形式の訪問開始時刻。現地時刻で08:00:00以上22:00:00以下"},
 			"estimatedCost": map[string]any{
 				"type": "object",
 				"properties": map[string]any{
@@ -245,7 +250,7 @@ type moneyJSON struct {
 // LLM の出力は鵜呑みにせず、request を基準に以下を検証する。
 //   - 日付が YYYY-MM-DD 形式で、旅行期間（request.Period()）内であること
 //   - 各日に1つ以上のスポットがあり、スポット名が空でないこと
-//   - 開始時刻が RFC 3339 形式であること
+//   - 開始時刻が RFC 3339 形式で、現地時刻08:00:00から22:00:00の範囲内であること
 //   - 通貨が予算の通貨（request.Budget().Currency()）と一致すること
 //   - 金額が0以上であること（value_object.NewMoney が保証）
 func ParseGeneratedRoute(content string, request entity.JourneyRequest) (service.GeneratedRoute, error) {
@@ -384,6 +389,9 @@ func parseSpot(s spotJSON, wantCurrency value_object.Currency) (service.Generate
 	if err != nil {
 		return service.GeneratedSpot{}, fmt.Errorf("invalid startAt %q (expect RFC 3339): %w", s.StartAt, err)
 	}
+	if err := validateStartAtInDailyWindow(startAt); err != nil {
+		return service.GeneratedSpot{}, err
+	}
 
 	currency, err := value_object.NewCurrency(s.EstimatedCost.Currency)
 	if err != nil {
@@ -407,4 +415,27 @@ func parseSpot(s spotJSON, wantCurrency value_object.Currency) (service.Generate
 		StartAt:       startAt,
 		EstimatedCost: cost,
 	}, nil
+}
+
+func validateStartAtInDailyWindow(startAt time.Time) error {
+	startOfDay := time.Date(
+		startAt.Year(),
+		startAt.Month(),
+		startAt.Day(),
+		0,
+		0,
+		0,
+		0,
+		startAt.Location(),
+	)
+	earliest := startOfDay.Add(dailyItineraryStartHour * time.Hour)
+	latest := startOfDay.Add(dailyItineraryEndHour * time.Hour)
+	if startAt.Before(earliest) || startAt.After(latest) {
+		return fmt.Errorf(
+			"startAt %q is outside daily itinerary hours 08:00:00 through 22:00:00",
+			startAt.Format(time.RFC3339Nano),
+		)
+	}
+
+	return nil
 }
