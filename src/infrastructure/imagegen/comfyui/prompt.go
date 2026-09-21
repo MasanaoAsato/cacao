@@ -37,10 +37,10 @@ func NewPrompt(brief domainservice.ImageBrief) (Prompt, error) {
 
 func imageSize(purpose value_object.ImagePurpose) (int, int) {
 	if purpose == value_object.ImagePurposeCover {
-		return 448, 640
+		return 896, 1280
 	}
 
-	return 512, 384
+	return 1024, 768
 }
 
 func validatePrompt(prompt Prompt) error {
