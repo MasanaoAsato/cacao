@@ -12,6 +12,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync/atomic"
 	"testing"
 )
@@ -298,6 +299,41 @@ func (t redirectTransport) RoundTrip(request *http.Request) (*http.Response, err
 	clone := request.Clone(request.Context())
 	clone.URL.Path = t.target
 	return http.DefaultTransport.RoundTrip(clone)
+}
+
+func TestClientErrorHidesUntrustedCauseAndPreservesChain(t *testing.T) {
+	const secret = "api_key=secret-value prompt=private-itinerary"
+	cause := errors.New(secret)
+	err := newClientError(failureUnavailable, "submit prompt", cause)
+
+	if got, want := err.Error(), "comfyui submit prompt unavailable"; got != want {
+		t.Errorf("Error() = %q, want %q", got, want)
+	}
+	if errors.Is(err, cause) == false {
+		t.Fatalf("client error does not preserve cause: %v", err)
+	}
+	if got := err.Error(); strings.Contains(got, secret) {
+		t.Errorf("Error() exposes secret: %q", got)
+	}
+}
+
+func TestClientErrorPreservesProviderStatus(t *testing.T) {
+	err := newClientError(
+		failureRejected,
+		"submit prompt",
+		&statusError{statusCode: http.StatusTooManyRequests},
+	)
+
+	if got, want := err.Error(), "comfyui submit prompt returned HTTP status 429"; got != want {
+		t.Errorf("Error() = %q, want %q", got, want)
+	}
+	var carrier interface{ ProviderStatusCode() int }
+	if !errors.As(err, &carrier) {
+		t.Fatal("client error does not preserve provider status")
+	}
+	if got, want := carrier.ProviderStatusCode(), http.StatusTooManyRequests; got != want {
+		t.Errorf("ProviderStatusCode() = %d, want %d", got, want)
+	}
 }
 
 func testPNG(t *testing.T) []byte {

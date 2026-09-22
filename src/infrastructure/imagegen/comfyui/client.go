@@ -45,11 +45,30 @@ type clientError struct {
 }
 
 func (e *clientError) Error() string {
-	return fmt.Sprintf("%s: %v", e.op, e.err)
+	return e.SafeLogMessage()
 }
 
 func (e *clientError) Unwrap() error {
 	return e.err
+}
+
+// SafeLogMessage はComfyUIのレスポンス本文や接続先を含めずに失敗を識別する。
+func (e *clientError) SafeLogMessage() string {
+	var statusErr *statusError
+	if errors.As(e.err, &statusErr) {
+		return fmt.Sprintf("comfyui %s returned HTTP status %d", e.op, statusErr.statusCode)
+	}
+
+	failure := "failed"
+	switch e.kind {
+	case failureUnavailable:
+		failure = "unavailable"
+	case failureRejected:
+		failure = "rejected"
+	case failureInvalid:
+		failure = "returned invalid data"
+	}
+	return fmt.Sprintf("comfyui %s %s", e.op, failure)
 }
 
 type bodyLimitError struct {
@@ -57,7 +76,23 @@ type bodyLimitError struct {
 }
 
 func (e *bodyLimitError) Error() string {
-	return fmt.Sprintf("response body exceeds %d bytes", e.limit)
+	return e.SafeLogMessage()
+}
+
+func (e *bodyLimitError) SafeLogMessage() string {
+	return "comfyui response body exceeds configured limit"
+}
+
+type statusError struct {
+	statusCode int
+}
+
+func (e *statusError) Error() string {
+	return fmt.Sprintf("comfyui returned HTTP status %d", e.statusCode)
+}
+
+func (e *statusError) ProviderStatusCode() int {
+	return e.statusCode
 }
 
 // ClientOption はComfyUI clientの設定を変更する関数である。
@@ -177,13 +212,13 @@ func (c *Client) Submit(ctx context.Context, workflow []byte) (string, error) {
 		if readErr != nil {
 			return "", newClientError(failureUnavailable, "read prompt response", readErr)
 		}
-		return "", newClientError(failureUnavailable, "submit prompt", fmt.Errorf("server returned %s", response.Status))
+		return "", newClientError(failureUnavailable, "submit prompt", &statusError{statusCode: response.StatusCode})
 	}
 	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
 		if readErr != nil {
 			return "", newClientError(failureRejected, "read prompt response", readErr)
 		}
-		return "", newClientError(failureRejected, "submit prompt", fmt.Errorf("server returned %s", response.Status))
+		return "", newClientError(failureRejected, "submit prompt", &statusError{statusCode: response.StatusCode})
 	}
 	if readErr != nil {
 		return "", newClientError(failureRejected, "read prompt response", readErr)
@@ -277,13 +312,13 @@ func (c *Client) View(ctx context.Context, output OutputReference) (Image, error
 		if readErr != nil {
 			return Image{}, newClientError(failureUnavailable, "read image response", readErr)
 		}
-		return Image{}, newClientError(failureUnavailable, "get image", fmt.Errorf("server returned %s", response.Status))
+		return Image{}, newClientError(failureUnavailable, "get image", &statusError{statusCode: response.StatusCode})
 	}
 	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
 		if readErr != nil {
 			return Image{}, newClientError(failureRejected, "read image response", readErr)
 		}
-		return Image{}, newClientError(failureRejected, "get image", fmt.Errorf("server returned %s", response.Status))
+		return Image{}, newClientError(failureRejected, "get image", &statusError{statusCode: response.StatusCode})
 	}
 	if readErr != nil {
 		var limitErr *bodyLimitError
@@ -316,13 +351,13 @@ func (c *Client) getHistory(ctx context.Context, promptID string) (map[string]hi
 		if readErr != nil {
 			return nil, newClientError(failureUnavailable, "read history response", readErr)
 		}
-		return nil, newClientError(failureUnavailable, "poll history", fmt.Errorf("server returned %s", response.Status))
+		return nil, newClientError(failureUnavailable, "poll history", &statusError{statusCode: response.StatusCode})
 	}
 	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
 		if readErr != nil {
 			return nil, newClientError(failureRejected, "read history response", readErr)
 		}
-		return nil, newClientError(failureRejected, "poll history", fmt.Errorf("server returned %s", response.Status))
+		return nil, newClientError(failureRejected, "poll history", &statusError{statusCode: response.StatusCode})
 	}
 	if readErr != nil {
 		return nil, newClientError(failureRejected, "read history response", readErr)

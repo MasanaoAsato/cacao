@@ -12,6 +12,7 @@ import (
 	"io"
 	"io/fs"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 
@@ -435,6 +436,22 @@ func newTestFileSystemImageStorage(
 ) *Storage {
 	t.Helper()
 	return newTestFileSystemImageStorageAt(t, t.TempDir(), limits)
+}
+
+func TestSafeStorageErrorHidesPathAndPreservesCause(t *testing.T) {
+	const secret = "/private/storage/api_key=secret-value"
+	cause := errors.New(secret)
+	err := &safeStorageError{operation: "save image", cause: cause}
+
+	if got, want := err.Error(), "save image failed"; got != want {
+		t.Errorf("Error() = %q, want %q", got, want)
+	}
+	if !errors.Is(err, cause) {
+		t.Fatalf("safe storage error does not preserve cause: %v", err)
+	}
+	if strings.Contains(err.Error(), secret) {
+		t.Errorf("Error() exposes secret: %q", err)
+	}
 }
 
 func newTestFileSystemImageStorageAt(

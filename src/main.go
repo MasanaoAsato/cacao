@@ -32,7 +32,7 @@ func main() {
 			logger,
 			slog.LevelError,
 			observability.FailureContext{Operation: "run_application"},
-			err,
+			observability.WithSafeLogMessage("run application failed", err),
 		)
 		os.Exit(1)
 	}
@@ -41,12 +41,12 @@ func main() {
 // run は設定の読み込みと依存関係の組み立て（wire.go）を行い、HTTP サーバーと worker を起動する。
 func run() error {
 	if err := loadDotEnv(); err != nil {
-		return err
+		return observability.WithSafeLogMessage("load dotenv file failed", err)
 	}
 
 	app, err := buildApplication(context.Background())
 	if err != nil {
-		return err
+		return observability.WithSafeLogMessage("build application failed", err)
 	}
 	defer app.Close()
 
@@ -55,7 +55,10 @@ func run() error {
 		Handler:           app.Router,
 		ReadHeaderTimeout: 10 * time.Second,
 	}
-	return serve(server, app.ImageWorker)
+	if err := serve(server, app.ImageWorker); err != nil {
+		return observability.WithSafeLogMessage("serve application failed", err)
+	}
+	return nil
 }
 
 func loadDotEnv() error {

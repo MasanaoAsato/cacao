@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/jackc/pgx/v5/pgconn"
@@ -60,6 +61,9 @@ func TestMapPostgresError(t *testing.T) {
 			}
 			if gotOperation := observability.SourceOperation(got); gotOperation != testCase.operation {
 				t.Errorf("SourceOperation() = %q, want %q", gotOperation, testCase.operation)
+			}
+			if strings.Contains(got.Error(), "private-itinerary") {
+				t.Errorf("mapPostgresError() exposes PostgreSQL detail: %q", got)
 			}
 		})
 	}

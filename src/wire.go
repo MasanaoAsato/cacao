@@ -59,7 +59,7 @@ func (a *application) Close() {
 			slog.Default(),
 			slog.LevelError,
 			observability.FailureContext{Operation: "close_database"},
-			err,
+			observability.WithSafeLogMessage("close database failed", err),
 		)
 	}
 }
@@ -70,47 +70,62 @@ func (a *application) Close() {
 func buildApplication(ctx context.Context) (*application, error) {
 	imageConfig, err := config.ImageFromEnv()
 	if err != nil {
-		return nil, fmt.Errorf("load image config: %w", err)
+		return nil, observability.WithSafeLogMessage(
+			"image configuration invalid; check IMAGE_GENERATOR_DRIVER and IMAGE_* settings",
+			err,
+		)
 	}
 	bookletConfig, err := config.BookletFromEnv()
 	if err != nil {
-		return nil, fmt.Errorf("load booklet config: %w", err)
+		return nil, observability.WithSafeLogMessage(
+			"booklet configuration invalid; check BOOKLET_PDF_DRIVER and BOOKLET_* settings",
+			err,
+		)
 	}
 	journeyGenerator, err := newJourneyGenerator()
 	if err != nil {
-		return nil, fmt.Errorf("setup journey generator: %w", err)
+		return nil, observability.WithSafeLogMessage(
+			"journey generator setup failed; check LLM_DRIVER and selected provider settings",
+			err,
+		)
 	}
 	databaseConfig, err := config.DatabaseFromEnv()
 	if err != nil {
-		return nil, fmt.Errorf("load database config: %w", err)
+		return nil, observability.WithSafeLogMessage(
+			"database configuration invalid; check POSTGRESQL_URL or POSTGRES_PASSWORD",
+			err,
+		)
 	}
 
 	db, err := database.CreateGORMClient(ctx, databaseConfig)
 	if err != nil {
-		return nil, fmt.Errorf("connect database: %w", err)
+		return nil, observability.WithSafeLogMessage("connect database failed", err)
 	}
 	sqlDB, err := db.DB()
 	if err != nil {
-		return nil, fmt.Errorf("get database connection: %w", err)
+		return nil, observability.WithSafeLogMessage("get database connection failed", err)
 	}
 	app := &application{db: sqlDB}
 
 	imageStorage, err := newImageStorage(imageConfig)
 	if err != nil {
 		app.Close()
-		return nil, fmt.Errorf("setup image storage: %w", err)
+		return nil, observability.WithSafeLogMessage("set up image storage failed", err)
 	}
 	app.imageStorage = imageStorage
 
 	imageGenerator, err := newImageGenerator(imageConfig)
 	if err != nil {
 		app.Close()
-		return nil, fmt.Errorf("setup image generator: %w", err)
+		return nil, observability.WithSafeLogMessage(
+			"image generator setup failed; check selected provider settings",
+			err,
+		)
 	}
 	bookletRenderer, err := newBookletRenderer(bookletConfig)
 	if err != nil {
 		app.Close()
-		return nil, fmt.Errorf("setup booklet renderer: %w", err)
+		return nil, observability.WithSafeLogMessage("set up booklet renderer failed", err)
 	}
 
 	requestRepo := postgres.NewJourneyRequestRepository(db)
@@ -130,12 +145,12 @@ func buildApplication(ctx context.Context) (*application, error) {
 	)
 	if err != nil {
 		app.Close()
-		return nil, fmt.Errorf("setup generate journey image use case: %w", err)
+		return nil, observability.WithSafeLogMessage("set up journey image use case failed", err)
 	}
 	imageWorker, err := worker.NewJourneyImageWorker(newWorkerConfig(imageConfig), imageRepo, generateImageUC)
 	if err != nil {
 		app.Close()
-		return nil, fmt.Errorf("setup journey image worker: %w", err)
+		return nil, observability.WithSafeLogMessage("set up journey image worker failed", err)
 	}
 	app.ImageWorker = imageWorker
 
@@ -274,7 +289,7 @@ func closeImageStorage(storage domainservice.ImageStorage) {
 			slog.Default(),
 			slog.LevelError,
 			observability.FailureContext{Operation: "close_image_storage"},
-			err,
+			observability.WithSafeLogMessage("close image storage failed", err),
 		)
 	}
 }

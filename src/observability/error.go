@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net"
 	"os"
+	"runtime/debug"
 	"strings"
 
 	"github.com/google/uuid"
@@ -98,6 +99,10 @@ type safeErrorDetailCarrier interface {
 	SafeLogErrorDetail() ErrorDetailCode
 }
 
+type safeLogMessageCarrier interface {
+	SafeLogMessage() string
+}
+
 // WithErrorDetail は allowlist 済みの固定原因コードを error chain に付与する。
 func WithErrorDetail(detail ErrorDetailCode, err error) error {
 	if err == nil || !isSafeErrorDetail(detail) {
@@ -115,6 +120,7 @@ func (e *errorDetailError) Error() string {
 	if e.cause == nil {
 		return string(e.detail)
 	}
+
 	return e.cause.Error()
 }
 
@@ -124,6 +130,66 @@ func (e *errorDetailError) Unwrap() error {
 
 func (e *errorDetailError) SafeLogErrorDetail() ErrorDetailCode {
 	return e.detail
+}
+
+type safeLogMessageError struct {
+	message string
+	cause   error
+}
+
+func (e *safeLogMessageError) Error() string {
+	return e.message
+}
+
+func (e *safeLogMessageError) Unwrap() error {
+	return e.cause
+}
+
+func (e *safeLogMessageError) SafeLogMessage() string {
+	return e.message
+}
+
+// WithSafeLogMessage は、機微情報を含まない固定メッセージをエラーに付与する。
+// message にユーザー入力や外部サービスの本文を渡してはならない。
+func WithSafeLogMessage(message string, err error) error {
+	if err == nil || strings.TrimSpace(message) == "" {
+		return err
+	}
+	return &safeLogMessageError{message: message, cause: err}
+}
+
+// SafeLogMessage は error chain から最も内側にある明示的に安全な診断メッセージを返す。
+// 内側のメッセージを優先することで、最上位境界の汎用文脈がアダプターの具体的な
+// 診断情報を上書きしない。ErrorDetailCode は別属性の error_detail に記録するため、
+// error 属性のメッセージとしては扱わない。
+func SafeLogMessage(err error) string {
+	return safeLogMessage(err, 0)
+}
+
+func safeLogMessage(err error, depth int) string {
+	const maximumUnwrapDepth = 16
+	if err == nil || depth == maximumUnwrapDepth {
+		return ""
+	}
+
+	if multi, ok := err.(interface{ Unwrap() []error }); ok {
+		for _, cause := range multi.Unwrap() {
+			if message := safeLogMessage(cause, depth+1); message != "" {
+				return message
+			}
+		}
+	}
+	if single, ok := err.(interface{ Unwrap() error }); ok {
+		if message := safeLogMessage(single.Unwrap(), depth+1); message != "" {
+			return message
+		}
+	}
+
+	carrier, ok := err.(safeLogMessageCarrier)
+	if !ok || carrier == nil {
+		return ""
+	}
+	return strings.TrimSpace(carrier.SafeLogMessage())
 }
 
 // ErrorDetail は error chain から allowlist 済みの原因コードだけを返す。
@@ -162,7 +228,8 @@ func isSafeErrorDetail(detail ErrorDetailCode) bool {
 	}
 }
 
-// LogFailure は error の本文を出力せず、分類済みの失敗イベントを記録する。
+// LogFailure は分類済みの失敗イベントを記録する。
+// HTTP の 4xx は入力値を含み得るため error 属性を出力しない。
 func LogFailure(
 	ctx context.Context,
 	logger *slog.Logger,
@@ -214,8 +281,20 @@ func LogFailure(
 	if sqlState := PostgresSQLState(err); sqlState != "" {
 		attrs = append(attrs, slog.String("postgres_sqlstate", sqlState))
 	}
+	if message := SafeLogMessage(err); shouldLogErrorMessage(failureContext.Status, err) && message != "" {
+		attrs = append(attrs, slog.String("error", message))
+	}
 
 	logger.LogAttrs(ctx, level, "operation failed", attrs...)
+}
+
+func shouldLogErrorMessage(status int, err error) bool {
+	if err == nil {
+		return false
+	}
+
+	status = safeStatus(status)
+	return status == 0 || status >= httpStatusInternalServerError
 }
 
 // LogRecoveredPanic は panic 値を文字列化せず、安全な情報だけを記録する。
@@ -236,6 +315,7 @@ func LogRecoveredPanic(
 	attrs := []slog.Attr{
 		slog.String("operation", safeOperation(operation)),
 		slog.String("panic_type", fmt.Sprintf("%T", recovered)),
+		slog.String("stack", string(debug.Stack())),
 	}
 	if safeRoute := safeRoute(route); safeRoute != "" {
 		attrs = append(attrs, slog.String("route", safeRoute))
@@ -243,6 +323,8 @@ func LogRecoveredPanic(
 
 	logger.LogAttrs(ctx, slog.LevelError, "panic recovered", attrs...)
 }
+
+const httpStatusInternalServerError = 500
 
 // errorKind はアプリケーション契約上の失敗分類を返す。
 func errorKind(err error) string {
