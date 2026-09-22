@@ -6,6 +6,7 @@ import (
 	"cacao/src/infrastructure/websearch"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -39,7 +40,12 @@ func NewClient(searchConfig config.SearXNG) (*Client, error) {
 }
 
 // Search retrieves up to the configured number of valid results.
-func (c *Client) Search(ctx context.Context, query string) ([]websearch.Result, error) {
+func (c *Client) Search(ctx context.Context, query string) (results []websearch.Result, err error) {
+	defer func() {
+		if err != nil {
+			err = &safeSearchError{cause: err}
+		}
+	}()
 	if c == nil || c.client == nil {
 		return nil, fmt.Errorf("searxng client is not configured")
 	}
@@ -73,6 +79,34 @@ func (c *Client) Search(ctx context.Context, query string) ([]websearch.Result, 
 		return nil, fmt.Errorf("decode searxng response: %w: %w", websearch.ErrResponseInvalid, err)
 	}
 	return sanitizeResults(payload.Results, c.resultLimit), nil
+}
+
+// safeSearchError は検索語やプロバイダー応答本文をログへ出さず、
+// errors.Is と errors.As のために原因を保持する。
+type safeSearchError struct {
+	cause error
+}
+
+func (e *safeSearchError) Error() string {
+	return e.SafeLogMessage()
+}
+
+func (e *safeSearchError) Unwrap() error {
+	return e.cause
+}
+
+func (e *safeSearchError) SafeLogMessage() string {
+	var statusErr *statusError
+	switch {
+	case errors.As(e.cause, &statusErr):
+		return fmt.Sprintf("searxng search returned HTTP status %d", statusErr.statusCode)
+	case errors.Is(e.cause, websearch.ErrResponseInvalid):
+		return "searxng search returned invalid response"
+	case errors.Is(e.cause, context.DeadlineExceeded):
+		return "searxng search timed out"
+	default:
+		return "searxng search request failed"
+	}
 }
 
 func (c *Client) searchURL(query string) (string, error) {

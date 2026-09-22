@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"io"
-	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -212,6 +211,9 @@ func TestRendererTimesOutGotenbergRequest(t *testing.T) {
 	if !errors.Is(err, domainservice.ErrBookletRenderTimeout) {
 		t.Errorf("Render() error = %v, want ErrBookletRenderTimeout", err)
 	}
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Errorf("Render() error = %v, want context.DeadlineExceeded", err)
+	}
 
 	select {
 	case <-requestStarted:
@@ -236,10 +238,6 @@ func TestRendererRejectsConcurrentRender(t *testing.T) {
 			MediaType: domainservice.BookletPDFMediaType,
 		}, nil
 	}
-
-	previousLogger := slog.Default()
-	slog.SetDefault(slog.New(slog.NewTextHandler(io.Discard, nil)))
-	defer slog.SetDefault(previousLogger)
 
 	firstDone := make(chan error, 1)
 	go func() {

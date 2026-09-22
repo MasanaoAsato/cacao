@@ -90,6 +90,9 @@ func (e *RequestError) Error() string { return "openrouter request failed" }
 
 func (e *RequestError) Unwrap() error { return e.cause }
 
+// SafeLogMessage は SDK が返す本文を含まない診断メッセージを返す。
+func (e *RequestError) SafeLogMessage() string { return e.Error() }
+
 // ProviderStatusCode は HTTP ステータスコードを返す。不明なときは 0。
 // observability が SDK に依存せずステータスを取り出すための契約。
 func (e *RequestError) ProviderStatusCode() int { return e.status }

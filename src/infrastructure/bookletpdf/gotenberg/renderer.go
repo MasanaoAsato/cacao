@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log/slog"
 	"mime"
 	"mime/multipart"
 	"net/http"
@@ -14,7 +13,6 @@ import (
 
 	domainservice "cacao/src/domain/service"
 	"cacao/src/infrastructure/config"
-	"cacao/src/observability"
 )
 
 const bookletReadyExpression = `(() => {
@@ -65,17 +63,12 @@ func (r *Renderer) Render(
 	request domainservice.BookletRenderRequest,
 ) (domainservice.RenderedBooklet, error) {
 	if !r.tryAcquire() {
-		err := domainservice.ErrBookletRendererBusy
-		r.logFailure(ctx, request, slog.LevelWarn, err)
-
-		return domainservice.RenderedBooklet{}, err
+		return domainservice.RenderedBooklet{}, domainservice.ErrBookletRendererBusy
 	}
 	defer func() { <-r.slots }()
 
 	rendered, err := r.renderFn(ctx, request)
 	if err != nil {
-		r.logFailure(ctx, request, slog.LevelError, err)
-
 		return domainservice.RenderedBooklet{}, err
 	}
 
@@ -98,9 +91,9 @@ func (r *Renderer) render(
 	renderURL, err := r.bookletURL(request)
 	if err != nil {
 		return domainservice.RenderedBooklet{}, fmt.Errorf(
-			"%w: build booklet URL: %v",
+			"%w: build booklet URL: %w",
 			domainservice.ErrBookletRenderFailed,
-			err,
+			newSafeGotenbergError("build gotenberg render URL failed", err),
 		)
 	}
 
@@ -110,9 +103,9 @@ func (r *Renderer) render(
 	httpRequest, err := r.newConversionRequest(renderContext, renderURL)
 	if err != nil {
 		return domainservice.RenderedBooklet{}, fmt.Errorf(
-			"%w: build Gotenberg request: %v",
+			"%w: build Gotenberg request: %w",
 			domainservice.ErrBookletRenderFailed,
-			err,
+			newSafeGotenbergError("build gotenberg request failed", err),
 		)
 	}
 
@@ -127,23 +120,23 @@ func (r *Renderer) render(
 	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
 		if response.StatusCode == http.StatusGatewayTimeout {
 			return domainservice.RenderedBooklet{}, fmt.Errorf(
-				"%w: Gotenberg returned HTTP %d",
+				"%w: %w",
 				domainservice.ErrBookletRenderTimeout,
-				response.StatusCode,
+				newSafeGotenbergError("gotenberg returned HTTP 504", nil),
 			)
 		}
 
 		return domainservice.RenderedBooklet{}, fmt.Errorf(
-			"%w: Gotenberg returned HTTP %d",
+			"%w: %w",
 			domainservice.ErrBookletRenderFailed,
-			response.StatusCode,
+			newSafeGotenbergError(fmt.Sprintf("gotenberg returned HTTP %d", response.StatusCode), nil),
 		)
 	}
 	if err := validatePDFMediaType(response.Header.Get("Content-Type")); err != nil {
 		return domainservice.RenderedBooklet{}, fmt.Errorf(
-			"%w: %v",
+			"%w: %w",
 			domainservice.ErrBookletRenderFailed,
-			err,
+			newSafeGotenbergError("gotenberg returned invalid PDF content type", err),
 		)
 	}
 
@@ -212,10 +205,39 @@ func (r *Renderer) newConversionRequest(
 func (r *Renderer) classifyRequestError(ctx context.Context, err error) error {
 	if errors.Is(ctx.Err(), context.DeadlineExceeded) ||
 		errors.Is(err, context.DeadlineExceeded) {
-		return fmt.Errorf("%w: %v", domainservice.ErrBookletRenderTimeout, err)
+		return fmt.Errorf(
+			"%w: %w",
+			domainservice.ErrBookletRenderTimeout,
+			newSafeGotenbergError("gotenberg request timed out", err),
+		)
 	}
 
-	return fmt.Errorf("%w: Gotenberg request: %v", domainservice.ErrBookletRenderFailed, err)
+	return fmt.Errorf(
+		"%w: %w",
+		domainservice.ErrBookletRenderFailed,
+		newSafeGotenbergError("gotenberg request failed", err),
+	)
+}
+
+type safeGotenbergError struct {
+	message string
+	cause   error
+}
+
+func newSafeGotenbergError(message string, cause error) *safeGotenbergError {
+	return &safeGotenbergError{message: message, cause: cause}
+}
+
+func (e *safeGotenbergError) Error() string {
+	return e.message
+}
+
+func (e *safeGotenbergError) Unwrap() error {
+	return e.cause
+}
+
+func (e *safeGotenbergError) SafeLogMessage() string {
+	return e.message
 }
 
 func (r *Renderer) bookletURL(
@@ -254,20 +276,4 @@ func validatePDFMediaType(value string) error {
 	}
 
 	return nil
-}
-
-func (r *Renderer) logFailure(
-	ctx context.Context,
-	request domainservice.BookletRenderRequest,
-	level slog.Level,
-	err error,
-) {
-	failureContext := observability.FailureContext{
-		JourneyID: request.JourneyID().String(),
-		Operation: "render_booklet_pdf",
-	}
-	if seed, ok := request.ThemeSeed(); ok {
-		failureContext.ThemeSeed = seed.String()
-	}
-	observability.LogFailure(ctx, slog.Default(), level, failureContext, err)
 }

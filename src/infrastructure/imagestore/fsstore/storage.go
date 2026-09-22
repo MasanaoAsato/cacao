@@ -40,7 +40,12 @@ type Storage struct {
 var _ domainservice.ImageStorage = (*Storage)(nil)
 
 // New はファイルシステム画像ストレージを生成する。
-func New(config config.ImageStorage) (*Storage, error) {
+func New(config config.ImageStorage) (storage *Storage, err error) {
+	defer func() {
+		if err != nil {
+			err = &safeStorageError{operation: "initialize image storage", cause: err}
+		}
+	}()
 	if err := config.Validate(); err != nil {
 		return nil, err
 	}
@@ -65,7 +70,29 @@ func New(config config.ImageStorage) (*Storage, error) {
 
 // Close は保存先rootのファイルディスクリプタを閉じる。
 func (s *Storage) Close() error {
-	return s.root.Close()
+	if err := s.root.Close(); err != nil {
+		return &safeStorageError{operation: "close image storage", cause: err}
+	}
+	return nil
+}
+
+// safeStorageError はファイルパスやOSエラーの本文をログへ出さず、
+// errors.Is と errors.As のために原因を保持する。
+type safeStorageError struct {
+	operation string
+	cause     error
+}
+
+func (e *safeStorageError) Error() string {
+	return e.operation + " failed"
+}
+
+func (e *safeStorageError) Unwrap() error {
+	return e.cause
+}
+
+func (e *safeStorageError) SafeLogMessage() string {
+	return e.Error()
 }
 
 // Save は検証済みの生成画像を保存し、その参照情報を返す。
@@ -73,7 +100,12 @@ func (s *Storage) Save(
 	ctx context.Context,
 	imageID value_object.ID,
 	generatedImage domainservice.GeneratedImage,
-) (value_object.ImageAssetReference, error) {
+) (assetReference value_object.ImageAssetReference, err error) {
+	defer func() {
+		if err != nil {
+			err = &safeStorageError{operation: "save image", cause: err}
+		}
+	}()
 	if err := ctx.Err(); err != nil {
 		return value_object.ImageAssetReference{}, fmt.Errorf("save image: %w", err)
 	}
@@ -87,7 +119,7 @@ func (s *Storage) Save(
 	if err != nil {
 		return value_object.ImageAssetReference{}, err
 	}
-	assetReference, err := value_object.NewImageAssetReference(
+	assetReference, err = value_object.NewImageAssetReference(
 		storageKey,
 		info.MediaType,
 		info.Width,
@@ -145,7 +177,12 @@ func (s *Storage) Save(
 func (s *Storage) Open(
 	ctx context.Context,
 	assetReference value_object.ImageAssetReference,
-) (io.ReadCloser, error) {
+) (file io.ReadCloser, err error) {
+	defer func() {
+		if err != nil {
+			err = &safeStorageError{operation: "open image", cause: err}
+		}
+	}()
 	if err := ctx.Err(); err != nil {
 		return nil, fmt.Errorf("open image: %w", err)
 	}
@@ -154,7 +191,7 @@ func (s *Storage) Open(
 		return nil, err
 	}
 
-	file, err := s.root.Open(storagePath)
+	file, err = s.root.Open(storagePath)
 	if err != nil {
 		return nil, fmt.Errorf("open stored image: %w", err)
 	}
@@ -165,7 +202,12 @@ func (s *Storage) Open(
 func (s *Storage) Delete(
 	ctx context.Context,
 	assetReference value_object.ImageAssetReference,
-) error {
+) (err error) {
+	defer func() {
+		if err != nil {
+			err = &safeStorageError{operation: "delete image", cause: err}
+		}
+	}()
 	if err := ctx.Err(); err != nil {
 		return fmt.Errorf("delete image: %w", err)
 	}

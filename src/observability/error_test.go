@@ -31,10 +31,13 @@ func TestLogFailure(t *testing.T) {
 	}{
 		{
 			name: "正常系: 既知の生成タイムアウトを分類する",
-			err: fmt.Errorf(
-				"generate journey: %w: %w",
-				application.ErrGenerationFailed,
-				context.DeadlineExceeded,
+			err: WithSafeLogMessage(
+				"journey generation request timed out",
+				fmt.Errorf(
+					"generate journey: %w: %w",
+					application.ErrGenerationFailed,
+					context.DeadlineExceeded,
+				),
 			),
 			failureContext: FailureContext{
 				Operation: "http_request",
@@ -46,11 +49,15 @@ func TestLogFailure(t *testing.T) {
 				`"error_kind":"generation_failed"`,
 				`"cause_kind":"deadline_exceeded"`,
 				`"status":502`,
+				`"error":"journey generation request timed out"`,
 			},
 		},
 		{
-			name: "異常系: 未知エラーの本文を出力しない",
-			err:  errors.New(secret),
+			name: "正常系: ワーカーは具体的なエラーを出力する",
+			err: WithSafeLogMessage(
+				"generated image has unsupported media type",
+				errors.New("untrusted cause"),
+			),
 			failureContext: FailureContext{
 				Operation:      "generate_journey_image",
 				JourneyImageID: uuid.NewString(),
@@ -59,8 +66,26 @@ func TestLogFailure(t *testing.T) {
 				`"error_kind":"internal_error"`,
 				`"cause_kind":"internal_error"`,
 				`"journey_image_id":"`,
+				`"error":"generated image has unsupported media type"`,
 			},
-			forbidden: []string{secret, "secret-value", "private-itinerary"},
+		},
+		{
+			name: "異常系: HTTP 4xx は詳細エラーを出力しない",
+			err:  errors.New(secret),
+			failureContext: FailureContext{
+				Operation: "http_request",
+				Status:    http.StatusBadRequest,
+			},
+			forbidden: []string{secret, "secret-value", "private-itinerary", `"error":`},
+		},
+		{
+			name: "異常系: 安全な診断情報を持たない HTTP 5xx は詳細エラーを出力しない",
+			err:  errors.New(secret),
+			failureContext: FailureContext{
+				Operation: "http_request",
+				Status:    http.StatusInternalServerError,
+			},
+			forbidden: []string{secret, "secret-value", "private-itinerary", `"error":`},
 		},
 		{
 			name: "境界値系: nil と未検証の追加値を安全に扱う",
@@ -129,11 +154,62 @@ func TestLogFailureIncludesSafeErrorDetail(t *testing.T) {
 	if !strings.Contains(logText, `"error_detail":"journey_route_parse_failed"`) {
 		t.Errorf("logs = %q, want safe error detail", logText)
 	}
+	if strings.Contains(logText, `"error":`) {
+		t.Errorf("logs = %q, want no error text without a safe message", logText)
+	}
 	if strings.Contains(logText, secret) || strings.Contains(logText, "private itinerary") {
 		t.Errorf("logs expose error detail: %q", logText)
 	}
 	if !errors.Is(err, cause) {
 		t.Fatalf("WithErrorDetail() does not preserve cause: %v", err)
+	}
+}
+
+func TestLogFailurePrefersSpecificSafeMessageOverErrorDetailAndBoundary(t *testing.T) {
+	const secret = "api_key=secret-value provider body=private-itinerary"
+
+	var logs bytes.Buffer
+	err := WithSafeLogMessage(
+		"run application failed",
+		WithErrorDetail(
+			ErrorDetailOpenRouterRequestFailed,
+			WithSafeLogMessage("openrouter request failed", errors.New(secret)),
+		),
+	)
+	LogFailure(
+		context.Background(),
+		slog.New(slog.NewJSONHandler(&logs, nil)),
+		slog.LevelError,
+		FailureContext{Operation: "http_request", Status: http.StatusBadGateway},
+		err,
+	)
+
+	logText := logs.String()
+	for _, want := range []string{
+		`"error_detail":"openrouter_request_failed"`,
+		`"error":"openrouter request failed"`,
+	} {
+		if !strings.Contains(logText, want) {
+			t.Errorf("logs = %q, want fragment %q", logText, want)
+		}
+	}
+	for _, forbidden := range []string{secret, "secret-value", "private-itinerary", "run application failed"} {
+		if strings.Contains(logText, forbidden) {
+			t.Errorf("logs expose %q: %q", forbidden, logText)
+		}
+	}
+}
+
+func TestSafeLogMessageUsesBoundaryMessageAsFallbackForJoinedErrors(t *testing.T) {
+	const secret = "authorization=Bearer secret-value"
+	cause := errors.New(secret)
+	err := WithSafeLogMessage("serve application failed", errors.Join(cause, context.Canceled))
+
+	if got := SafeLogMessage(err); got != "serve application failed" {
+		t.Fatalf("SafeLogMessage() = %q, want boundary fallback", got)
+	}
+	if !errors.Is(err, cause) || !errors.Is(err, context.Canceled) {
+		t.Fatalf("SafeLogMessage wrapper does not preserve joined causes: %v", err)
 	}
 }
 
@@ -239,6 +315,9 @@ func TestLogRecoveredPanicDoesNotLogValue(t *testing.T) {
 	logText := logs.String()
 	if !strings.Contains(logText, `"panic_type":"*errors.errorString"`) {
 		t.Errorf("logs = %q, want panic type", logText)
+	}
+	if !strings.Contains(logText, `"stack":"goroutine `) {
+		t.Errorf("logs = %q, want stack trace", logText)
 	}
 	if strings.Contains(logText, secret) || strings.Contains(logText, "secret-value") {
 		t.Errorf("logs expose panic value: %q", logText)
@@ -428,10 +507,13 @@ func (e *testProviderError) Error() string {
 func TestLogFailureIncludesSafeBookletContext(t *testing.T) {
 	var logs bytes.Buffer
 	journeyID := uuid.NewString()
-	err := fmt.Errorf(
-		"private booklet contents: %w: %w",
-		application.ErrBookletRenderFailed,
-		domainservice.ErrBookletRenderTimeout,
+	err := WithSafeLogMessage(
+		"gotenberg request timed out",
+		fmt.Errorf(
+			"gotenberg request timed out: %w: %w",
+			application.ErrBookletRenderFailed,
+			domainservice.ErrBookletRenderTimeout,
+		),
 	)
 
 	LogFailure(
@@ -453,13 +535,11 @@ func TestLogFailureIncludesSafeBookletContext(t *testing.T) {
 		"\"theme_seed\":\"v2-abcdef12\"",
 		"\"error_kind\":\"booklet_render_failed\"",
 		"\"cause_kind\":\"booklet_render_timeout\"",
+		"\"error\":\"gotenberg request timed out\"",
 	} {
 		if !strings.Contains(logText, fragment) {
 			t.Errorf("logs = %q, want fragment %q", logText, fragment)
 		}
-	}
-	if strings.Contains(logText, "private booklet contents") {
-		t.Errorf("logs expose renderer error text: %q", logText)
 	}
 }
 

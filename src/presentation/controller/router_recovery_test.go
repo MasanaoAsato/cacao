@@ -42,6 +42,7 @@ func TestSafeRecoveryLogsPanicTypeWithoutPanicValue(t *testing.T) {
 		`"operation":"http_panic"`,
 		`"route":"/api/v1/journeys/:id"`,
 		`"panic_type":"*errors.errorString"`,
+		`"stack":"goroutine `,
 	} {
 		if !strings.Contains(logText, want) {
 			t.Errorf("logs = %q, want fragment %q", logText, want)

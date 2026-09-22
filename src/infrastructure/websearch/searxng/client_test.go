@@ -2,8 +2,10 @@ package searxng
 
 import (
 	"cacao/src/infrastructure/config"
+	"cacao/src/infrastructure/websearch"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -53,9 +55,9 @@ func TestClientSearchRejectsInvalidResponses(t *testing.T) {
 		body   string
 		want   string
 	}{
-		{name: "non success", status: http.StatusBadGateway, body: "provider body must not escape", want: "status 502"},
-		{name: "invalid JSON", status: http.StatusOK, body: "{", want: "decode"},
-		{name: "oversized JSON", status: http.StatusOK, body: strings.Repeat("x", maximumResponseBytes+1), want: "exceeds"},
+		{name: "non success", status: http.StatusBadGateway, body: "provider body must not escape", want: "HTTP status 502"},
+		{name: "invalid JSON", status: http.StatusOK, body: "{", want: "invalid response"},
+		{name: "oversized JSON", status: http.StatusOK, body: strings.Repeat("x", maximumResponseBytes+1), want: "invalid response"},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -74,6 +76,9 @@ func TestClientSearchRejectsInvalidResponses(t *testing.T) {
 			}
 			if strings.Contains(err.Error(), "provider body") {
 				t.Errorf("Search() error leaks provider body: %q", err)
+			}
+			if testCase.name != "non success" && !errors.Is(err, websearch.ErrResponseInvalid) {
+				t.Errorf("Search() error does not preserve ErrResponseInvalid: %v", err)
 			}
 		})
 	}

@@ -269,6 +269,11 @@ func (e *safeProviderError) Unwrap() error {
 	return e.cause
 }
 
+// SafeLogMessage は外部サービスの本文を含まない固定の診断メッセージを返す。
+func (e *safeProviderError) SafeLogMessage() string {
+	return e.message
+}
+
 func searxngFailure(detail observability.ErrorDetailCode, cause error) error {
 	return observability.WithOperation(
 		"searxng_search",
