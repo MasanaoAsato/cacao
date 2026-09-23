@@ -5,7 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
-		"build": "tsc -b && vite build",
+		"build": "vitest run src/theme/artwork/catalog.test.ts && tsc -b && vite build",
 		"check": "biome check src vite.config.ts package.json biome.json",
 		"lint": "biome lint src",
 		"format": "biome format --write src e2e vite.config.ts playwright.config.ts package.json biome.json",
