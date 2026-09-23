@@ -20,10 +20,10 @@ function unit(startAt: string, currency = "JPY", durationMinutes = 30) {
 		leg: {
 			duration_minutes: durationMinutes,
 			estimated_cost: { amount: 100, currency },
-			from: { id: "from", name: "出発地" },
+			from: { id: "from", label: "出発地", name: "出発地" },
 			id: `leg-${startAt}`,
 			mode: "train",
-			to: { id: "to", name: "到着地" },
+			to: { id: "to", label: "到着地", name: "到着地" },
 		},
 		spot: {
 			description: "",
