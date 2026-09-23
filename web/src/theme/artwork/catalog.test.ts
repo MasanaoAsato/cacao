@@ -75,7 +75,7 @@ describe("production artwork catalog", () => {
 		).toEqual([]);
 	});
 
-	it("正常系: 12タッチ288原画を審査・寸法・SVG安全条件付きで登録する", () => {
+	it("正常系: 12タッチ288原画の寸法・SVG安全条件を検証する", () => {
 		expect(Object.keys(bundledUrls)).toHaveLength(288);
 		expect(ARTWORK_MANIFEST).toHaveLength(288);
 		expect(
@@ -83,12 +83,39 @@ describe("production artwork catalog", () => {
 				aliases: ARTWORK_ALIASES,
 				bundledUrls,
 				svgSources,
-				requireReviewed: true,
-				requireComplete: true,
 			}),
 		).toEqual([]);
-		expect(ARTWORK_CATALOG).toHaveLength(288);
 	});
+
+	it("異常系: draft素材は審査ゲートで拒否する", () => {
+		const unreviewed = ARTWORK_MANIFEST.filter(
+			(item) => !item.reviewId?.trim(),
+		);
+		const activeIds = new Set(ARTWORK_CATALOG.map((item) => item.id));
+		expect(unreviewed.every((item) => !activeIds.has(item.id))).toBe(true);
+		const errors = validateArtworkCatalog(ARTWORK_MANIFEST, {
+			requireReviewed: true,
+		});
+		expect(errors).toHaveLength(unreviewed.length);
+		expect(
+			errors.every((error) => error.endsWith("artwork is not reviewed")),
+		).toBe(true);
+	});
+
+	it.runIf(process.env.ARTWORK_RELEASE_CHECK === "1")(
+		"25.5最終条件: 288原画の審査が完了している",
+		() => {
+			expect(
+				validateArtworkCatalog(ARTWORK_MANIFEST, {
+					aliases: ARTWORK_ALIASES,
+					bundledUrls,
+					svgSources,
+					requireReviewed: true,
+					requireComplete: true,
+				}),
+			).toEqual([]);
+		},
+	);
 
 	it("正常系: WebPの実ファイル寸法とalphaがmanifestに一致する", () => {
 		for (const artwork of ARTWORK_MANIFEST.filter(
