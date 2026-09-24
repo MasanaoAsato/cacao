@@ -6,4 +6,5 @@ export const STAMP_DIRECTION = defineDirection({
 	styleBundleId: "bright",
 	touch: "screenprint",
 	signature: { label: "スタンプラリー", description: "予定ごとに紙上の押印欄" },
+	config: { participation: "stamp" },
 });

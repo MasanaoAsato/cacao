@@ -9,4 +9,5 @@ export const FILM_DIRECTION = defineDirection({
 		label: "フィルム写真",
 		description: "余白とフィルム縁、画像だけに粒子処理",
 	},
+	config: { imageTreatment: "film" },
 });

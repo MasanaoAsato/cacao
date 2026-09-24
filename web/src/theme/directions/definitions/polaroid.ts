@@ -9,4 +9,5 @@ export const POLAROID_DIRECTION = defineDirection({
 		label: "ポラロイドアルバム",
 		description: "写真の白枠と下の書込み余白",
 	},
+	config: { imageTreatment: "polaroid" },
 });

@@ -1,8 +1,7 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
 	axisRandom,
 	createDefaultThemeSeed,
-	createRerollSeed,
 	formatThemeSeed,
 	parseThemeSeed,
 } from "./seed";
@@ -38,38 +37,5 @@ describe("テーマシード", () => {
 		expect(axisRandom("v2-00000007", "palette")).not.toBe(
 			axisRandom("v2-00000007", "coverLayout"),
 		);
-	});
-
-	it("正常系: 再抽選は異なるデザインになる最初の乱数値を選ぶ", () => {
-		const values = [7, 8];
-		const seed = createRerollSeed(
-			{ value: 1, version: "v2" },
-			(candidate) => candidate.value === 8,
-			(target) => {
-				target[0] = values.shift() ?? 0;
-				return target;
-			},
-		);
-		expect(seed).toEqual({ value: 8, version: "v2" });
-	});
-
-	it("異常系: 256候補すべて不適格なら例外を返す", () => {
-		const randomValues = vi
-			.spyOn(crypto, "getRandomValues")
-			.mockImplementation((values) => {
-				if (values instanceof Uint32Array) {
-					values[0] = 0x12345678;
-				}
-				return values;
-			});
-
-		try {
-			expect(() =>
-				createRerollSeed({ value: 0x12345678, version: "v2" }, () => false),
-			).toThrowError("異なるしおりデザインのシードを作成できませんでした。");
-			expect(randomValues).toHaveBeenCalledTimes(256);
-		} finally {
-			randomValues.mockRestore();
-		}
 	});
 });

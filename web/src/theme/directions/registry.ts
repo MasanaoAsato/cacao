@@ -140,6 +140,9 @@ const DIRECTION_DEFINITIONS = [
 export const DIRECTION_REGISTRY = createDirectionRegistry(
 	DIRECTION_DEFINITIONS,
 );
+/** Publication order. Compilation enumerates this array, never object keys. */
+export const ACTIVE_DIRECTION_DEFINITIONS: readonly DirectionDefinition[] =
+	Object.freeze([...DIRECTION_DEFINITIONS]);
 export const ACTIVE_DIRECTION_IDS = Object.freeze([
 	...DIRECTION_REGISTRY.keys(),
 ]);

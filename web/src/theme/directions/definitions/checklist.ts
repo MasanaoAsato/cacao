@@ -9,4 +9,5 @@ export const CHECKLIST_DIRECTION = defineDirection({
 		label: "チェックリスト中心",
 		description: "予定ごとのチェック欄と一覧性",
 	},
+	config: { participation: "checklist" },
 });
