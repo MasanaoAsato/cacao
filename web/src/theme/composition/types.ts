@@ -140,6 +140,8 @@ export type DirectionContribution = {
 export type CompositionCatalog = {
 	readonly artwork: readonly ArtworkAsset[];
 	readonly directions: readonly DirectionDefinition[];
+	/** Deployment limit; an omitted limit keeps injected test catalogs unrestricted. */
+	readonly maxDirections?: number;
 	readonly revision: string;
 };
 
@@ -158,6 +160,7 @@ export type AssetTrace = {
 
 export type CompositionStopReason =
 	| "random-stop"
+	| "max-directions"
 	| "no-compatible-contribution";
 
 /** Comparison record. It never carries names, places or reservation data. */

@@ -49,3 +49,5 @@ web/test-results/
 .agents/skills/vercel-react-best-practices
 
 .vscode/settings.json
+
+opencode.json

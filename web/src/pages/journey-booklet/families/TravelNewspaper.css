@@ -44,6 +44,12 @@
 	box-shadow: 0 0.75rem 2rem rgb(37 42 53 / 16%);
 }
 
+/* The extracted program page inherits .booklet-page's 12mm padding. The
+   newspaper positions its own cover relative to the full A5 page. */
+.booklet-page.program-page--travel-newspaper {
+	padding: 0;
+}
+
 .travel-newspaper-page__content {
 	position: absolute;
 	box-sizing: border-box;

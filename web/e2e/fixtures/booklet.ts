@@ -256,6 +256,45 @@ const denseImageList = {
 	journey_request_id: "request-dense",
 };
 
+/** The 25.5 comparison uses three days with four visits each, not random trip data. */
+const comparisonJourney = {
+	...journey,
+	days: [1, 2, 3].map((day) => ({
+		date: `2026-08-${String(27 + day)}T00:00:00+09:00`,
+		id: `comparison-day-${day}`,
+		legs: longJourney.days[0].legs.slice(0, 4).map((leg, index) => ({
+			...leg,
+			id: `comparison-leg-${day}-${index}`,
+			to: { ...leg.to, spot_id: `comparison-spot-${day}-${index}` },
+		})),
+		spots: longSpots.slice(0, 4).map((spot, index) => ({
+			...spot,
+			id: `comparison-spot-${day}-${index}`,
+			start_at: spot.start_at.replace("2026-08-28", `2026-08-${27 + day}`),
+		})),
+	})),
+	day_count: 3,
+	id: "journey-comparison",
+	request_id: "request-comparison",
+};
+export const COMPARISON_BOOKLET_EXPECTED_UNITS = comparisonJourney.days.flatMap(
+	(day) => day.spots.map((spot, index) => `${day.legs[index]?.id}:${spot.id}`),
+);
+const comparisonRequest = {
+	...request,
+	id: "request-comparison",
+	period: { ...request.period, end_date: "2026-08-30T00:00:00+09:00" },
+};
+const comparisonImageList = {
+	...imageList,
+	journey_request_id: "request-comparison",
+};
+export const COMPARISON_BOOKLET_RESPONSES = {
+	journey: comparisonJourney,
+	request: comparisonRequest,
+	images: comparisonImageList.images,
+};
+
 const coverSvg = `
 <svg xmlns="http://www.w3.org/2000/svg" width="800" height="1200" viewBox="0 0 800 1200">
   <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#1f4968"/><stop offset="1" stop-color="#d58a5b"/></linearGradient></defs>
@@ -264,7 +303,12 @@ const coverSvg = `
   <path d="M0 900 C220 760 430 1080 800 820 V1200 H0Z" fill="#183a42" opacity=".72"/>
 </svg>`;
 
-export type BookletFixtureScenario = "default" | "dense" | "legacy" | "long";
+export type BookletFixtureScenario =
+	| "comparison"
+	| "default"
+	| "dense"
+	| "legacy"
+	| "long";
 export type BookletFixtureImageMode = "artwork" | "geometry";
 
 export function bookletFixtureJourneyId(
@@ -275,6 +319,9 @@ export function bookletFixtureJourneyId(
 	}
 	if (scenario === "dense") {
 		return "journey-dense";
+	}
+	if (scenario === "comparison") {
+		return "journey-comparison";
 	}
 	return "journey-1";
 }
@@ -304,9 +351,15 @@ export async function routeBookletApi(
 						journey: denseJourney,
 						request: denseRequest,
 					}
-				: scenario === "legacy"
-					? { imageList, journey, request: legacyRequest }
-					: { imageList, journey, request };
+				: scenario === "comparison"
+					? {
+							imageList: comparisonImageList,
+							journey: comparisonJourney,
+							request: comparisonRequest,
+						}
+					: scenario === "legacy"
+						? { imageList, journey, request: legacyRequest }
+						: { imageList, journey, request };
 	const responseImageList =
 		imageMode === "artwork"
 			? {
