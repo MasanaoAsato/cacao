@@ -59,12 +59,13 @@ const previewSvgIds =
 		? [
 				...new Set(
 					result.program.scenes.flatMap((scene) =>
-						scene.config.bindings
-							.filter(
-								(binding) =>
-									previewArtworkById(binding.assetId).format === "svg",
-							)
-							.map((binding) => binding.assetId),
+						scene.config.bindings.flatMap((binding) => {
+							const assetId = binding.assetId;
+							if (assetId === null) return [];
+							return previewArtworkById(assetId).format === "svg"
+								? [assetId]
+								: [];
+						}),
 					),
 				),
 			]
