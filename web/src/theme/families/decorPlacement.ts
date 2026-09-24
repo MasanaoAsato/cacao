@@ -1,13 +1,27 @@
-import { PAGE_HEIGHT_MM, PAGE_WIDTH_MM, rotatedBounds } from "../decorGeometry";
+import {
+	collidableTextRects as collidableRects,
+	contains,
+	firstTextCollision as firstCollision,
+	fitsWithin,
+	GEOMETRY_EPSILON_MM,
+	inflate,
+	isUsableRect,
+	overlaps,
+	PAGE_RECT,
+	type ProtectedTextRect,
+	placeWithZeroFallback,
+	type RectMm,
+	TEXT_CLEARANCE_MM,
+	unmeasurableText,
+} from "../artwork/placement";
+import { contrastRatio } from "../contrast";
+import { rotatedBounds } from "../decorGeometry";
 import type { MotifAsset, MotifAssetId } from "../motifAssets";
-import { contrastRatio } from "../recipeSafety";
 import { axisRandom } from "../seed";
 import type { MotifColor } from "../types";
 
-/** Clearance every decor shape keeps from a printed text rect. */
-export const TEXT_CLEARANCE_MM = 1;
-/** Absorbs float noise in mm comparisons; far below print precision. */
-const GEOMETRY_EPSILON_MM = 1e-6;
+export type { ProtectedTextRect, RectMm };
+export { TEXT_CLEARANCE_MM };
 
 /**
  * The one asset allowed to sit under text as a ground. Named explicitly so the
@@ -23,14 +37,6 @@ export const FAMILY_BODY_FONT_SIZE_PT = 10;
 export const FAMILY_UTILITY_FONT_SIZE_PT = 8.5;
 /** WCAG's large-text threshold, which justifies the relaxed display ratio. */
 export const FAMILY_DISPLAY_FONT_SIZE_PT = 18;
-
-/** Rectangle in mm with the A5 page's top-left corner as the origin. */
-export type RectMm = {
-	readonly heightMm: number;
-	readonly widthMm: number;
-	readonly xMm: number;
-	readonly yMm: number;
-};
 
 export type DecorAnchorKind = "title" | "illustration" | "section" | "unit";
 
@@ -90,12 +96,6 @@ export type FamilyDecoration =
 	| DecorPlacement
 	| FrameDecoration
 	| ConnectorDecoration;
-
-/** Rect of one printed text element, read from `data-booklet-text-role`. */
-export type ProtectedTextRect = {
-	readonly rect: RectMm;
-	readonly role: string;
-};
 
 export type ResolvedDecorAsset = {
 	readonly kind: "asset";
@@ -176,50 +176,6 @@ export class DecorPlacementError extends Error {
 		this.code = code;
 		this.name = "DecorPlacementError";
 	}
-}
-
-const PAGE_RECT: RectMm = {
-	heightMm: PAGE_HEIGHT_MM,
-	widthMm: PAGE_WIDTH_MM,
-	xMm: 0,
-	yMm: 0,
-};
-
-function isUsableRect(rect: RectMm): boolean {
-	return (
-		[rect.xMm, rect.yMm, rect.widthMm, rect.heightMm].every(Number.isFinite) &&
-		rect.widthMm > 0 &&
-		rect.heightMm > 0
-	);
-}
-
-function inflate(rect: RectMm, amountMm: number): RectMm {
-	return {
-		heightMm: rect.heightMm + 2 * amountMm,
-		widthMm: rect.widthMm + 2 * amountMm,
-		xMm: rect.xMm - amountMm,
-		yMm: rect.yMm - amountMm,
-	};
-}
-
-function contains(outer: RectMm, inner: RectMm): boolean {
-	return (
-		inner.xMm >= outer.xMm - GEOMETRY_EPSILON_MM &&
-		inner.yMm >= outer.yMm - GEOMETRY_EPSILON_MM &&
-		inner.xMm + inner.widthMm <=
-			outer.xMm + outer.widthMm + GEOMETRY_EPSILON_MM &&
-		inner.yMm + inner.heightMm <=
-			outer.yMm + outer.heightMm + GEOMETRY_EPSILON_MM
-	);
-}
-
-function overlaps(left: RectMm, right: RectMm): boolean {
-	return (
-		left.xMm < right.xMm + right.widthMm - GEOMETRY_EPSILON_MM &&
-		right.xMm < left.xMm + left.widthMm - GEOMETRY_EPSILON_MM &&
-		left.yMm < right.yMm + right.heightMm - GEOMETRY_EPSILON_MM &&
-		right.yMm < left.yMm + left.heightMm - GEOMETRY_EPSILON_MM
-	);
 }
 
 function segmentBounds(
@@ -347,33 +303,18 @@ function indexAssets(
 	return new Map(assets.map((asset) => [asset.id, asset] as const));
 }
 
-/**
- * Text rects a shape must clear. A rect with no area cannot hold visible ink,
- * so it is dropped instead of becoming a clearance-sized exclusion zone.
- */
+/** Text rects a shape must clear; an unmeasurable rect is a definition error. */
 function collidableTextRects(
 	texts: readonly ProtectedTextRect[],
 ): readonly RectMm[] {
-	return texts.flatMap((text) => {
-		if (
-			![
-				text.rect.xMm,
-				text.rect.yMm,
-				text.rect.widthMm,
-				text.rect.heightMm,
-			].every(Number.isFinite) ||
-			text.rect.widthMm < 0 ||
-			text.rect.heightMm < 0
-		) {
-			throw new DecorPlacementError(
-				"decor-definition-invalid",
-				`文字「${text.role}」の矩形を計測できませんでした。`,
-			);
-		}
-		return text.rect.widthMm === 0 || text.rect.heightMm === 0
-			? []
-			: [text.rect];
-	});
+	const invalid = unmeasurableText(texts);
+	if (invalid) {
+		throw new DecorPlacementError(
+			"decor-definition-invalid",
+			`文字「${invalid.role}」の矩形を計測できませんでした。`,
+		);
+	}
+	return collidableRects(texts);
 }
 
 type ShapeFit = {
@@ -388,22 +329,11 @@ function firstTextCollision(
 	fit: ShapeFit,
 	textRects: readonly RectMm[],
 ): RectMm | null {
-	if (fit.skipTextClearance) {
-		return null;
-	}
-	for (const textRect of textRects) {
-		if (overlaps(fit.bounds, inflate(textRect, TEXT_CLEARANCE_MM))) {
-			return textRect;
-		}
-	}
-	return null;
+	return fit.skipTextClearance ? null : firstCollision(fit.bounds, textRects);
 }
 
 function fitsPage(fit: ShapeFit): boolean {
-	return (
-		contains(PAGE_RECT, fit.bounds) &&
-		(fit.within === undefined || contains(fit.within, fit.bounds))
-	);
+	return fitsWithin(fit.bounds, fit.within);
 }
 
 function resolveAsset(
@@ -473,31 +403,33 @@ function resolveAsset(
 	);
 	// The seeded rotation first, then a single attempt at 0° with the same
 	// anchor and size. Shrinking, dropping or swapping the asset is not allowed.
-	const attempts = seededDeg === 0 ? [0] : [seededDeg, 0];
-	for (const rotateDeg of attempts) {
+	const placed = placeWithZeroFallback(seededDeg, (rotateDeg) => {
 		const fit: ShapeFit = {
 			bounds: rotatedBounds(xMm, yMm, widthMm, heightMm, rotateDeg),
 			skipTextClearance,
 			within,
 		};
-		if (fitsPage(fit) && firstTextCollision(fit, textRects) === null) {
-			return {
-				anchorId: anchor.id,
-				assetId: placement.assetId,
-				boundsMm: fit.bounds,
-				color: placement.color,
-				definition,
-				heightMm,
-				instanceIndex,
-				kind: "asset",
-				layer: placement.layer,
-				rotateDeg,
-				rotationFallback: rotateDeg !== seededDeg,
-				widthMm,
-				xMm,
-				yMm,
-			};
-		}
+		return fitsPage(fit) && firstTextCollision(fit, textRects) === null
+			? fit
+			: null;
+	});
+	if (placed) {
+		return {
+			anchorId: anchor.id,
+			assetId: placement.assetId,
+			boundsMm: placed.result.bounds,
+			color: placement.color,
+			definition,
+			heightMm,
+			instanceIndex,
+			kind: "asset",
+			layer: placement.layer,
+			rotateDeg: placed.rotateDeg,
+			rotationFallback: placed.rotateDeg !== seededDeg,
+			widthMm,
+			xMm,
+			yMm,
+		};
 	}
 	throw new DecorPlacementError(
 		"decor-collision",

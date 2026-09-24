@@ -2,16 +2,6 @@ import type { BookletModel } from "../model";
 import type { BookletProgram, DayScene } from "./model";
 import { MODULE_CAPABILITIES } from "./moduleCapabilities";
 
-export class ProgramValidationError extends Error {
-	readonly issues: readonly string[];
-
-	constructor(issues: readonly string[]) {
-		super(`冊子プログラムが不正です: ${issues.join(" / ")}`);
-		this.name = "ProgramValidationError";
-		this.issues = issues;
-	}
-}
-
 /**
  * Checks the structural contract before measurement: one leading cover, at
  * most one trailing endcap, every unit exactly once in day scenes in input
@@ -121,6 +111,10 @@ export function programIssues(
 			);
 			if (scene.unitRefs.some((unitId) => !dayUnits.has(unitId)))
 				issues.push(`memo「${scene.sceneId}」が別の日のunitを参照しています。`);
+			if (scene.participation === "memory-album" && scene.unitRefs.length > 0)
+				issues.push(
+					`memo「${scene.sceneId}」はアルバム頁なのでunitを参照しません。`,
+				);
 		}
 	});
 	for (const kind of ["divider", "memo"] as const) {
@@ -133,10 +127,51 @@ export function programIssues(
 	return issues;
 }
 
-export function assertValidProgram(
+/** One `data-unit-id` (owned) or `data-unit-ref` (referenced) read from the document. */
+export type RenderedUnitMark = {
+	readonly kind: "owned" | "ref";
+	readonly sceneId: string;
+	readonly unitId: string;
+};
+
+/**
+ * The same coverage contract on the final DOM: every input unit is drawn as
+ * body exactly once, in input order, inside its own day scene. References on
+ * extras are never counted as body and only point at their memo's units.
+ */
+export function renderedCoverageIssues(
 	program: BookletProgram,
 	model: BookletModel,
-): void {
-	const issues = programIssues(program, model);
-	if (issues.length > 0) throw new ProgramValidationError(issues);
+	marks: readonly RenderedUnitMark[],
+): readonly string[] {
+	const issues: string[] = [];
+	const expected = model.days.flatMap((day) =>
+		day.units.map((unit) => unit.id),
+	);
+	const owned = marks.filter((mark) => mark.kind === "owned");
+	if (
+		owned.length !== expected.length ||
+		owned.some((mark, index) => mark.unitId !== expected[index])
+	)
+		issues.push("紙面が全unitを入力順に一回ずつ描いていません。");
+	const scenes = new Map(program.scenes.map((scene) => [scene.sceneId, scene]));
+	for (const mark of marks) {
+		const scene = scenes.get(mark.sceneId);
+		if (!scene) {
+			issues.push(`unit「${mark.unitId}」がscene外に描かれています。`);
+			continue;
+		}
+		if (mark.kind === "owned") {
+			if (scene.kind !== "day" || !scene.unitIds.includes(mark.unitId))
+				issues.push(
+					`unit「${mark.unitId}」がscene「${scene.sceneId}」の本体として描かれています。`,
+				);
+			continue;
+		}
+		if (scene.kind !== "memo" || !scene.unitRefs.includes(mark.unitId))
+			issues.push(
+				`scene「${scene.sceneId}」が参照できないunit「${mark.unitId}」を参照しています。`,
+			);
+	}
+	return issues;
 }

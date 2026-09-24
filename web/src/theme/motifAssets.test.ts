@@ -35,7 +35,6 @@ describe("MOTIF_ASSETS", () => {
 		expect(new Set(MOTIF_ASSETS.map((asset) => asset.id)).size).toBe(13);
 		for (const asset of MOTIF_ASSETS) {
 			expect(asset.src).toMatch(/^(data:image\/svg\+xml|file:)/);
-			expect(asset.coverage).toBe(1);
 			expect(asset.recolor).toBe(
 				asset.id === "paper-torn-sheet" || asset.id === "paper-tape"
 					? "none"

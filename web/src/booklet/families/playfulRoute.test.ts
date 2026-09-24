@@ -4,10 +4,10 @@ import type {
 	EditorialBooklet,
 	EditorialDay,
 } from "../editorialModel";
-import { PaginationError } from "../paginate";
+import { PaginationError } from "../paginationError";
 import {
 	type PlayfulRouteMeasurement,
-	paginatePlayfulRoute,
+	paginatePlayfulRouteDays,
 } from "./playfulRoute";
 
 function unit(id: string): EditorialArrivalUnit {
@@ -82,13 +82,12 @@ function measurement(
 	};
 }
 
-describe("paginatePlayfulRoute", () => {
+describe("paginatePlayfulRouteDays", () => {
 	it("正常系: 元の順で詰め、継続ページでも日内indexを保つ", () => {
 		const days = [day(1, 7), day(2, 1)];
-		const pages = paginatePlayfulRoute(booklet(days), measurement(days));
+		const pages = paginatePlayfulRouteDays(booklet(days), measurement(days));
 
 		expect(pages).toEqual([
-			{ kind: "cover", pageId: "playful-route-cover-journey-1" },
 			{
 				blockHeightsMm: [40, 40, 40],
 				continuation: false,
@@ -131,26 +130,32 @@ describe("paginatePlayfulRoute", () => {
 	it("異常系: 最後の候補でも単体超過するブロックを拒否する", () => {
 		const days = [day(1, 1)];
 		expect(() =>
-			paginatePlayfulRoute(booklet(days), measurement(days, 159, 159)),
+			paginatePlayfulRouteDays(booklet(days), measurement(days, 159, 159)),
 		).toThrow(PaginationError);
 	});
 
 	it("境界値: 先頭容量にちょうど収まる場合はselectedを保つ", () => {
 		const days = [day(1, 1)];
-		const pages = paginatePlayfulRoute(booklet(days), measurement(days, 140));
-		expect(pages[1]).toMatchObject({ layoutVariant: "selected" });
+		const pages = paginatePlayfulRouteDays(
+			booklet(days),
+			measurement(days, 140),
+		);
+		expect(pages[0]).toMatchObject({ layoutVariant: "selected" });
 	});
 
 	it("境界値: 先頭容量を1px超える場合はcompact-headerへ退避する", () => {
 		const days = [day(1, 1)];
-		const pages = paginatePlayfulRoute(booklet(days), measurement(days, 141));
-		expect(pages[1]).toMatchObject({ layoutVariant: "compact-header" });
+		const pages = paginatePlayfulRouteDays(
+			booklet(days),
+			measurement(days, 141),
+		);
+		expect(pages[0]).toMatchObject({ layoutVariant: "compact-header" });
 	});
 
 	it("境界値: 2件目が先頭容量を超えても通常の継続ページで収まればselectedを保つ", () => {
 		const days = [day(1, 2)];
 		const measured = measurement(days);
-		const pages = paginatePlayfulRoute(booklet(days), {
+		const pages = paginatePlayfulRouteDays(booklet(days), {
 			...measured,
 			days: [
 				{
@@ -160,7 +165,7 @@ describe("paginatePlayfulRoute", () => {
 			],
 		});
 
-		expect(pages.slice(1)).toEqual([
+		expect(pages).toEqual([
 			expect.objectContaining({
 				continuation: false,
 				layoutVariant: "selected",
@@ -176,40 +181,68 @@ describe("paginatePlayfulRoute", () => {
 
 	it("境界値: 104mm幅だけが超過する場合はwide-ribbonへ退避する", () => {
 		const days = [day(1, 1)];
-		const pages = paginatePlayfulRoute(
+		const pages = paginatePlayfulRouteDays(
 			booklet(days),
 			measurement(days, 159, 100),
 		);
-		expect(pages[1]).toMatchObject({ layoutVariant: "wide-ribbon" });
+		expect(pages[0]).toMatchObject({ layoutVariant: "wide-ribbon" });
 	});
 
 	it("境界値: ribbonでは重複するwide-ribbon候補を使わない", () => {
 		const days = [day(1, 1)];
 		expect(() =>
-			paginatePlayfulRoute(booklet(days), measurement(days, 159, 100, 128)),
+			paginatePlayfulRouteDays(booklet(days), measurement(days, 159, 100, 128)),
 		).toThrow(PaginationError);
 	});
 
 	it("境界値: 空の日も日見出し用のページを作る", () => {
 		const days = [day(1, 0)];
-		const pages = paginatePlayfulRoute(booklet(days), measurement(days));
-		expect(pages[1]).toMatchObject({
+		const pages = paginatePlayfulRouteDays(booklet(days), measurement(days));
+		expect(pages[0]).toMatchObject({
 			continuation: false,
 			dayIndex: 0,
 			unitIndexes: [],
 		});
 	});
 
-	it("境界値: 日がなければ計測値に依存せず表紙だけを作る", () => {
-		expect(
-			paginatePlayfulRoute(booklet([]), {
-				blockGap: 0,
-				continuationBodyHeight: 0,
-				days: [],
-				firstBodyHeight: 0,
-				selectedBlockWidth: 0,
-				wideBlockWidth: 0,
+	it("異常系: 日ごとの計測件数やブロック件数がモデルと一致しなければ拒否する", () => {
+		const days = [day(1, 2)];
+		const measured = measurement(days);
+		expect(() =>
+			paginatePlayfulRouteDays(booklet(days), { ...measured, days: [] }),
+		).toThrow("日ごとの計測結果の件数が一致しません。");
+		expect(() =>
+			paginatePlayfulRouteDays(booklet(days), {
+				...measured,
+				days: [{ selectedBlockHeights: [40], wideBlockHeights: [30, 30] }],
 			}),
-		).toEqual([{ kind: "cover", pageId: "playful-route-cover-journey-1" }]);
+		).toThrow("Day 1のブロック計測結果の件数が一致しません。");
+	});
+
+	it.each([
+		["blockGap", 0],
+		["firstBodyHeight", -1],
+		["continuationBodyHeight", Number.NaN],
+		["selectedBlockWidth", Number.POSITIVE_INFINITY],
+	] as const)("異常系: %sが%sの計測値を拒否する", (key, value) => {
+		const days = [day(1, 1)];
+		let caught: unknown = null;
+		try {
+			paginatePlayfulRouteDays(booklet(days), {
+				...measurement(days),
+				[key]: value,
+			});
+		} catch (error) {
+			caught = error;
+		}
+		expect(caught).toBeInstanceOf(PaginationError);
+		expect((caught as PaginationError).code).toBe("invalid-measurement");
+	});
+
+	it("異常系: 0以下のブロック高さを拒否する", () => {
+		const days = [day(1, 1)];
+		expect(() =>
+			paginatePlayfulRouteDays(booklet(days), measurement(days, 0)),
+		).toThrow("Day 1の選択幅ブロック 1の高さが不正です。");
 	});
 });

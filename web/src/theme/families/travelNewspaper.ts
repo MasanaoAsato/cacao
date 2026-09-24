@@ -1,9 +1,4 @@
 import { validateFamilyTextSafety } from "./decorPlacement";
-import type { VisualFamilyDefinition } from "./registry";
-import {
-	derivedStyleProfileFields,
-	TRAVEL_NEWSPAPER_STYLE_PROFILES,
-} from "./styleProfiles";
 
 export const TRAVEL_NEWSPAPER_PALETTES = {
 	"classic-travel": {
@@ -45,22 +40,6 @@ export const TRAVEL_NEWSPAPER_COMPOSITIONS = {
 
 export type TravelNewspaperCompositionId =
 	keyof typeof TRAVEL_NEWSPAPER_COMPOSITIONS;
-
-const PROFILE_FIELDS = derivedStyleProfileFields(
-	TRAVEL_NEWSPAPER_STYLE_PROFILES,
-);
-
-export const TRAVEL_NEWSPAPER_DECOR_ASSET_IDS = PROFILE_FIELDS.decorAssetIds;
-export const TRAVEL_NEWSPAPER_FONT_FAMILIES = PROFILE_FIELDS.fontFamilies;
-
-/** Family selection is owned by 21.5; this family has no mood aliases. */
-export const TRAVEL_NEWSPAPER_FAMILY = {
-	...PROFILE_FIELDS,
-	id: "travel-newspaper",
-	moodIds: [],
-	policyId: "timetable",
-	styleProfiles: TRAVEL_NEWSPAPER_STYLE_PROFILES,
-} as const satisfies VisualFamilyDefinition;
 
 export function travelNewspaperPaletteFor(paletteId: string) {
 	const palette =

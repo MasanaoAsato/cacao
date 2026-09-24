@@ -1,10 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+	PLAYFUL_ROUTE_COMPOSITIONS,
 	PLAYFUL_ROUTE_COVER_SUN_ASSET_ID,
-	PLAYFUL_ROUTE_DECOR_ASSET_IDS,
-	PLAYFUL_ROUTE_DECOR_VARIANT_IDS,
 	PLAYFUL_ROUTE_DECOR_VARIANTS,
-	PLAYFUL_ROUTE_FAMILY,
+	PLAYFUL_ROUTE_PALETTES,
 	playfulRouteCompositionFor,
 	playfulRouteDecorVariantFor,
 	playfulRoutePaletteFor,
@@ -12,21 +11,21 @@ import {
 import { styleProfilesForFamily } from "./styleProfiles";
 
 describe("playful-routeのテーマ定義", () => {
-	it("正常系: 2配色・2構図・全パターンの6素材とroute方針を登録する", () => {
-		expect(PLAYFUL_ROUTE_FAMILY).toMatchObject({
-			compositionIds: ["zigzag", "ribbon"],
-			decorAssetIds: [
-				"playful-bag",
-				"playful-sun",
-				"playful-squiggle",
-				"playful-burst",
-				"playful-footprints",
-				"playful-curved-arrow",
-			],
-			moodIds: ["postcard", "festival-ticket"],
-			paletteIds: ["berry-sun", "harbor-play"],
-			policyId: "route",
-		});
+	it("正常系: 2配色・2構図を登録し、profileは登録済みの配色と構図だけを使う", () => {
+		expect(Object.keys(PLAYFUL_ROUTE_PALETTES)).toEqual([
+			"berry-sun",
+			"harbor-play",
+		]);
+		expect(Object.keys(PLAYFUL_ROUTE_COMPOSITIONS).sort()).toEqual([
+			"ribbon",
+			"zigzag",
+		]);
+		for (const profile of styleProfilesForFamily("playful-route")) {
+			expect(() => playfulRoutePaletteFor(profile.paletteId)).not.toThrow();
+			for (const compositionId of profile.compositionIds) {
+				expect(() => playfulRouteCompositionFor(compositionId)).not.toThrow();
+			}
+		}
 	});
 
 	it("異常系: 未登録の配色と構図を拒否する", () => {
@@ -42,7 +41,10 @@ describe("playful-routeのテーマ定義", () => {
 
 describe("playful-routeの装飾パターン", () => {
 	it("正常系: 候補順はsunny・walkingで、sunnyが20.9の初期配置を保つ", () => {
-		expect(PLAYFUL_ROUTE_DECOR_VARIANT_IDS).toEqual(["sunny", "walking"]);
+		expect(PLAYFUL_ROUTE_DECOR_VARIANTS.map((variant) => variant.id)).toEqual([
+			"sunny",
+			"walking",
+		]);
 		expect(playfulRouteDecorVariantFor("sunny")).toMatchObject({
 			decorAssetIds: [
 				"playful-bag",
@@ -139,15 +141,21 @@ describe("playful-routeの装飾パターン", () => {
 		]);
 	});
 
-	it("正常系: 登録素材の集合は全パターンの重複を除いた和集合になる", () => {
-		expect(PLAYFUL_ROUTE_DECOR_ASSET_IDS).toEqual([
+	it("正常系: 全パターンの素材は重複を除いて6素材になる", () => {
+		expect([
 			...new Set(
 				PLAYFUL_ROUTE_DECOR_VARIANTS.flatMap(
 					(variant) => variant.decorAssetIds,
 				),
 			),
+		]).toEqual([
+			"playful-bag",
+			"playful-sun",
+			"playful-squiggle",
+			"playful-burst",
+			"playful-footprints",
+			"playful-curved-arrow",
 		]);
-		expect(PLAYFUL_ROUTE_DECOR_ASSET_IDS).toHaveLength(6);
 	});
 
 	it("異常系: nullと未登録のパターンIDを拒否し、sunnyへ補完しない", () => {

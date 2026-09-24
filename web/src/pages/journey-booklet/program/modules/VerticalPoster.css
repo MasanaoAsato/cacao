@@ -1,0 +1,10 @@
+/* vertical-poster: only titles and headings are vertical. */
+
+.program-page--vertical-poster .program-title-region {
+	display: flex;
+	justify-content: center;
+}
+
+.program-page--vertical-poster .program-unit {
+	writing-mode: horizontal-tb;
+}

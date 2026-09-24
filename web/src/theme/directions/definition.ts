@@ -7,8 +7,8 @@ import type {
 	DirectionId,
 	DirectionModuleId,
 	DirectionSignature,
+	DirectionStyleBundleId,
 	DirectionTouchId,
-	StyleBundleId,
 } from "./types";
 
 const COVERAGE = Object.freeze({
@@ -26,7 +26,7 @@ type DirectionDefinitionInput<Id extends DirectionId> = {
 	readonly id: Id;
 	readonly module: DirectionModuleId;
 	readonly signature: DirectionSignature;
-	readonly styleBundleId: StyleBundleId;
+	readonly styleBundleId: DirectionStyleBundleId;
 	readonly touch: DirectionTouchId;
 };
 

@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { DayScene, ProgramScene } from "../../booklet/program/model";
 import { programIssues } from "../../booklet/program/validateProgram";
 import { defineDirection } from "../directions/definition";
-import { ACTIVE_DIRECTION_DEFINITIONS } from "../directions/registry";
+import { REGISTERED_DIRECTION_DEFINITIONS } from "../directions/registry";
 import type { DirectionId } from "../directions/types";
 import { compileBooklet } from "./compileBooklet";
 import {
@@ -144,6 +144,55 @@ describe("compileBooklet", () => {
 			"divider:d3",
 			"day:d3",
 		]);
+	});
+
+	it("境界値系: 訪問一覧の記入欄は日の全unitを参照し、アルバムの記入欄はunitを参照しない", () => {
+		const memosOf = (result: ReturnType<typeof compiled>) =>
+			result.program.scenes.flatMap((item) =>
+				item.kind === "memo" ? [item] : [],
+			);
+		const stamp = compiled(
+			compileBooklet(testModel(), SEED, testCatalog(FUSION_ORDER), {
+				random: scriptedRandom({
+					choices: { direction: 0, operation: 0.99, scope: 0 },
+					steps: 4,
+				}),
+			}),
+		);
+		const d1Units = testModel().days[0]?.units.map((unit) => unit.id);
+		expect(scene(stamp, "memo:d1")).toMatchObject({
+			participation: "stamp",
+			unitRefs: d1Units,
+		});
+
+		// The album's own baseline and the album fused into another direction.
+		const own = compiled(
+			compileBooklet(testModel(), SEED, testCatalog(["memory-album"]), {
+				random: scriptedRandom({ steps: 0 }),
+			}),
+		);
+		const fused = compiled(
+			compileBooklet(
+				testModel(),
+				SEED,
+				testCatalog(["travel-magazine", "memory-album"]),
+				{
+					random: scriptedRandom({
+						choices: { direction: 0, operation: 0.99, scope: 0 },
+						steps: 1,
+					}),
+				},
+			),
+		);
+		for (const result of [own, fused]) {
+			const memos = memosOf(result);
+			expect(memos.length).toBeGreaterThan(0);
+			for (const memo of memos) {
+				expect(memo.participation).toBe("memory-album");
+				expect(memo.unitRefs).toEqual([]);
+			}
+			expect(programIssues(result.program, testModel())).toEqual([]);
+		}
 	});
 
 	it("正常系: 章変化はday sceneを別方向のmodule・styleへ置き換え、他の日は保つ", () => {
@@ -442,11 +491,11 @@ describe("compileBooklet", () => {
 			destinationPlace: { city: "Kyoto", country: "Japan" },
 		});
 		const catalog = fullTestCatalog();
-		ACTIVE_DIRECTION_DEFINITIONS.forEach((definition, index) => {
+		REGISTERED_DIRECTION_DEFINITIONS.forEach((definition, index) => {
 			const result = compiled(
 				compileBooklet(model, SEED, catalog, {
 					random: scriptedRandom({
-						base: (index + 0.5) / ACTIVE_DIRECTION_DEFINITIONS.length,
+						base: (index + 0.5) / REGISTERED_DIRECTION_DEFINITIONS.length,
 						steps: 0,
 					}),
 				}),

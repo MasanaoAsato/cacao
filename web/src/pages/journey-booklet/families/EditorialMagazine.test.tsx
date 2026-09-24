@@ -1,20 +1,21 @@
 /** @vitest-environment jsdom */
 
 import { render } from "@testing-library/react";
-import { createRef } from "react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type {
 	EditorialArrivalUnit,
 	EditorialBooklet,
+	EditorialDay,
 } from "../../../booklet/editorialModel";
-import type { EditorialMagazinePagePlan } from "../../../booklet/families/editorialMagazine";
-import type { ResolvedBookletDesign } from "../../../booklet/family";
-import { createBookletTheme } from "../../../theme/bookletTheme";
-import { styleProfileFor } from "../../../theme/families/styleProfiles";
+import { editorialMagazinePaletteFor } from "../../../theme/families/editorialMagazine";
+import { familyProfileById } from "../program/modules/familyStyle";
 import {
-	EditorialMagazineDocument,
-	EditorialMagazineMeasurement,
-	editorialMagazineStyle,
+	collectEditorialMagazineDayMeasurement,
+	editorialMagazineStyleFor,
+	editorialMagazineVariantOf,
+	MagazineCover,
+	MagazineDayMeasurementSample,
+	MagazineDayPage,
 } from "./EditorialMagazine";
 
 function unit(
@@ -77,57 +78,47 @@ const booklet: EditorialBooklet = {
 	policyId: "captions",
 };
 
-const styleProfile = styleProfileFor("editorial-magazine.quiet-photo");
-const design: ResolvedBookletDesign = {
-	comparisonKey:
-		"editorial-magazine.editorial-magazine.quiet-photo.quiet-photo.magazine-feature",
-	compositionId: "magazine-feature",
-	decorAssetIds: [],
-	decorVariantId: null,
-	familyId: "editorial-magazine",
-	fontFamilies: [
-		styleProfile.fontFamilies.display,
-		styleProfile.fontFamilies.body,
-		styleProfile.fontFamilies.utility,
-	],
-	paletteId: styleProfile.paletteId,
-	policyId: "captions",
-	renderKey:
-		"editorial-magazine:v2-00000013:captions:editorial-magazine.editorial-magazine.quiet-photo.quiet-photo.magazine-feature",
-	requestedTheme: createBookletTheme({ value: 19, version: "v2" }),
-	seedToken: "v2-00000013",
-	styleProfile,
-	styleProfileId: styleProfile.id,
-};
+function firstDay(source: EditorialBooklet = booklet): EditorialDay {
+	const day = source.days[0];
+	if (!day) throw new Error("日がありません。");
+	return day;
+}
 
-describe("EditorialMagazineDocument", () => {
+function styleOf(styleProfileId: string) {
+	const profile = familyProfileById("editorial-magazine", styleProfileId);
+	return editorialMagazineStyleFor({
+		compositionId: "magazine-feature",
+		palette: editorialMagazinePaletteFor(profile.paletteId),
+		typography: profile,
+		variant: editorialMagazineVariantOf(profile.id),
+	});
+}
+
+afterEach(() => {
+	vi.restoreAllMocks();
+});
+
+describe("MagazineCover / MagazineDayPage", () => {
 	it("正常系: 表紙と日別記事を描き、説明が空ならcaption要素を作らない", () => {
-		const pagePlan: readonly EditorialMagazinePagePlan[] = [
-			{ kind: "cover", pageId: "cover" },
-			{
-				dayIndex: 0,
-				kind: "article",
-				pageId: "article",
-				unitIndexes: [0, 1],
-			},
-		];
 		const { container } = render(
-			<EditorialMagazineDocument
-				booklet={booklet}
-				design={design}
-				pagePlan={pagePlan}
-				rootRef={createRef<HTMLElement>()}
-			/>,
+			<>
+				<MagazineCover booklet={booklet} measurement={false} />
+				<MagazineDayPage
+					day={firstDay()}
+					page={{
+						dayIndex: 0,
+						kind: "article",
+						pageId: "article",
+						unitIndexes: [0, 1],
+					}}
+				/>
+			</>,
 		);
 
 		expect(
-			container.querySelectorAll('[data-booklet-family="editorial-magazine"]'),
-		).toHaveLength(3);
-		expect(
-			container
-				.querySelector(".booklet-document")
-				?.getAttribute("data-booklet-design"),
-		).toBe(design.requestedTheme.recipe.id);
+			container.querySelector('[data-booklet-text-role="cover-title"]')
+				?.textContent,
+		).toBe("金沢");
 		expect(container.querySelectorAll("[data-unit-id]")).toHaveLength(2);
 		expect(
 			container
@@ -157,7 +148,7 @@ describe("EditorialMagazineDocument", () => {
 		).toHaveLength(1);
 	});
 
-	it("境界値: 長いspot名を切り詰めず記事カードへ渡す", () => {
+	it("境界値系: 長いspot名を切り詰めず記事カードへ渡す", () => {
 		const longSpotName =
 			"京都国際マンガミュージアムABCDEFGHIJKLMN1234567890で企画展を鑑賞";
 		const longBooklet: EditorialBooklet = {
@@ -170,19 +161,14 @@ describe("EditorialMagazineDocument", () => {
 			})),
 		};
 		const { container } = render(
-			<EditorialMagazineDocument
-				booklet={longBooklet}
-				design={design}
-				pagePlan={[
-					{ kind: "cover", pageId: "cover" },
-					{
-						dayIndex: 0,
-						kind: "article",
-						pageId: "article",
-						unitIndexes: [0, 1],
-					},
-				]}
-				rootRef={createRef<HTMLElement>()}
+			<MagazineDayPage
+				day={firstDay(longBooklet)}
+				page={{
+					dayIndex: 0,
+					kind: "article",
+					pageId: "article",
+					unitIndexes: [0, 1],
+				}}
 			/>,
 		);
 
@@ -193,21 +179,16 @@ describe("EditorialMagazineDocument", () => {
 		).toBe(longSpotName);
 	});
 
-	it("境界値: 継続ページでは日別挿絵を複製しない", () => {
+	it("境界値系: 継続ページでは日別挿絵を複製しない", () => {
 		const { container } = render(
-			<EditorialMagazineDocument
-				booklet={booklet}
-				design={design}
-				pagePlan={[
-					{ kind: "cover", pageId: "cover" },
-					{
-						dayIndex: 0,
-						kind: "continuation",
-						pageId: "continuation",
-						unitIndexes: [1],
-					},
-				]}
-				rootRef={createRef<HTMLElement>()}
+			<MagazineDayPage
+				day={firstDay()}
+				page={{
+					dayIndex: 0,
+					kind: "continuation",
+					pageId: "continuation",
+					unitIndexes: [1],
+				}}
 			/>,
 		);
 
@@ -215,29 +196,63 @@ describe("EditorialMagazineDocument", () => {
 			container.querySelectorAll(".editorial-magazine-day-header__image"),
 		).toHaveLength(0);
 		expect(
-			container
-				.querySelector('[data-page-id="continuation"]')
-				?.getAttribute("data-day-id"),
-		).toBe("day-1");
+			container.querySelector(".editorial-magazine-day-header--continuation"),
+		).not.toBeNull();
+		expect(container.querySelectorAll("[data-unit-id]")).toHaveLength(1);
 	});
 
-	it("正常系: 計測candidate DOMは全unitをpage planなしで描く", () => {
-		const rootRef = createRef<HTMLDivElement>();
+	it("境界値系: 予定0件の日の記事ページは予定なしの文言を描く", () => {
+		const emptyDay: EditorialDay = { ...firstDay(), units: [] };
 		const { container } = render(
-			<EditorialMagazineMeasurement
-				booklet={booklet}
-				design={design}
-				rootRef={rootRef}
+			<MagazineDayPage
+				day={emptyDay}
+				page={{
+					dayIndex: 0,
+					kind: "article",
+					pageId: "article",
+					unitIndexes: [],
+				}}
 			/>,
+		);
+
+		expect(
+			container.querySelector('[data-booklet-text-role="empty-day"]')
+				?.textContent,
+		).toBe("予定はありません");
+	});
+
+	it("境界値系: 先頭カードが継続ページへ送られた記事ページには予定なしの文言を出さない", () => {
+		const { container } = render(
+			<MagazineDayPage
+				day={firstDay()}
+				page={{
+					dayIndex: 0,
+					kind: "article",
+					pageId: "article",
+					unitIndexes: [],
+				}}
+			/>,
+		);
+
+		expect(
+			container.querySelector('[data-booklet-text-role="empty-day"]'),
+		).toBeNull();
+		expect(container.querySelectorAll("[data-unit-id]")).toHaveLength(0);
+	});
+});
+
+describe("MagazineDayMeasurementSample", () => {
+	it("正常系: 計測candidate DOMは全unitをpage planなしで描く", () => {
+		const { container } = render(
+			<MagazineDayMeasurementSample day={firstDay()} />,
 		);
 
 		expect(
 			container.querySelectorAll("[data-editorial-magazine-card]"),
 		).toHaveLength(2);
 		expect(
-			container.querySelectorAll("[data-editorial-magazine-measurement-day]"),
-		).toHaveLength(1);
-		expect(rootRef.current?.dataset.bookletThemeKey).toBe(design.renderKey);
+			container.querySelectorAll(".editorial-magazine-day-header"),
+		).toHaveLength(2);
 		expect(
 			container.querySelector('[data-editorial-magazine-card="unit-1"] h3'),
 		).not.toBeNull();
@@ -247,25 +262,125 @@ describe("EditorialMagazineDocument", () => {
 			),
 		).not.toBeNull();
 	});
+});
 
+describe("collectEditorialMagazineDayMeasurement", () => {
+	function renderSample() {
+		return render(
+			<div
+				className="editorial-magazine-page"
+				data-editorial-magazine-measurement-day="day-1"
+			>
+				<MagazineDayMeasurementSample day={firstDay()} />
+			</div>,
+		);
+	}
+
+	function mockRects(heightPx: (element: Element) => number) {
+		vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
+			function (this: HTMLElement) {
+				const width = this.matches(".editorial-magazine-page") ? 296 : 256;
+				const height = heightPx(this);
+				return {
+					bottom: height,
+					height,
+					left: 0,
+					right: width,
+					toJSON: () => ({}),
+					top: 0,
+					width,
+					x: 0,
+					y: 0,
+				};
+			},
+		);
+	}
+
+	it("正常系: ページ幅148mm換算でヘッダーとカードの高さを返す", () => {
+		mockRects((element) => {
+			if (element.matches(".editorial-magazine-day-header--continuation"))
+				return 20;
+			if (element.matches(".editorial-magazine-day-header")) return 60;
+			if (element.getAttribute("data-editorial-magazine-card") === "unit-1")
+				return 80;
+			return 50;
+		});
+		const { container } = renderSample();
+
+		const measurement = collectEditorialMagazineDayMeasurement(
+			container as HTMLElement,
+			{ ...booklet, days: [firstDay()] },
+		);
+
+		expect(measurement).toEqual({
+			articleHeaderHeightMm: 30,
+			articleStartYmm: 80,
+			cardGapMm: 3,
+			continuationHeaderHeightMm: 10,
+			continuationStartYmm: 30,
+			pageBottomYmm: 200,
+			unitHeightsMm: new Map([
+				["unit-1", 40],
+				["unit-2", 25],
+			]),
+		});
+	});
+
+	it("異常系: 日別計測用DOMがなければdom-not-readyになる", () => {
+		mockRects(() => 10);
+		const { container } = render(
+			<MagazineDayMeasurementSample day={firstDay()} />,
+		);
+
+		expect(() =>
+			collectEditorialMagazineDayMeasurement(container as HTMLElement, {
+				...booklet,
+				days: [firstDay()],
+			}),
+		).toThrowError(expect.objectContaining({ code: "dom-not-ready" }));
+	});
+
+	it("異常系: 高さ0の計測カードはdom-not-readyになる", () => {
+		mockRects((element) =>
+			element.hasAttribute("data-editorial-magazine-card") ? 0 : 10,
+		);
+		const { container } = renderSample();
+
+		expect(() =>
+			collectEditorialMagazineDayMeasurement(container as HTMLElement, {
+				...booklet,
+				days: [firstDay()],
+			}),
+		).toThrowError(expect.objectContaining({ code: "dom-not-ready" }));
+	});
+});
+
+describe("editorialMagazineStyleFor", () => {
 	it("正常系: 作風ごとの表紙画像寸法をstyleから渡す", () => {
-		const boldProfile = styleProfileFor("editorial-magazine.bold-culture");
-		const boldDesign: ResolvedBookletDesign = {
-			...design,
-			paletteId: boldProfile.paletteId,
-			styleProfile: boldProfile,
-			styleProfileId: boldProfile.id,
-		};
-
-		expect(editorialMagazineStyle(design)).toMatchObject({
+		expect(styleOf("editorial-magazine.quiet-photo")).toMatchObject({
 			"--editorial-cover-height": "92mm",
 			"--editorial-cover-left": "10mm",
 			"--editorial-cover-width": "128mm",
 		});
-		expect(editorialMagazineStyle(boldDesign)).toMatchObject({
+		expect(styleOf("editorial-magazine.bold-culture")).toMatchObject({
 			"--editorial-cover-height": "72mm",
 			"--editorial-cover-left": "60mm",
 			"--editorial-cover-width": "78mm",
 		});
+	});
+
+	it("異常系: 未登録の構図は拒否する", () => {
+		const profile = familyProfileById(
+			"editorial-magazine",
+			"editorial-magazine.quiet-photo",
+		);
+		expect(() =>
+			editorialMagazineStyleFor({
+				compositionId: "unknown",
+				palette: editorialMagazinePaletteFor(profile.paletteId),
+				typography: profile,
+				variant: "quiet-photo",
+			}),
+		).toThrow("editorial-magazineの構図「unknown」がありません。");
 	});
 });

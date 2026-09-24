@@ -563,4 +563,24 @@ body {
 		break-after: auto;
 		page-break-after: auto;
 	}
+
+	/*
+	 * A program document (25.4) nests each scene's pages in a scene root, so
+	 * :last-child would end a scene without a break. Every page except the
+	 * first breaks before itself instead.
+	 */
+	.program-document .booklet-page {
+		break-after: auto;
+		page-break-after: auto;
+	}
+
+	.program-document .booklet-page:not([data-page-number="1"]) {
+		break-before: page;
+		page-break-before: always;
+	}
+
+	/* The measurement DOM is never printed, whatever the print state. */
+	.program-measurement {
+		display: none;
+	}
 }

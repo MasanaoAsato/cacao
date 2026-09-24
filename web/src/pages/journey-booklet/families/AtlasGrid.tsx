@@ -1,37 +1,18 @@
-import {
-	type CSSProperties,
-	type RefObject,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-} from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { formatBookletDate } from "../../../booklet/dateFormat";
 import type {
 	EditorialArrivalUnit,
 	EditorialBooklet,
 	EditorialDay,
 } from "../../../booklet/editorialModel";
-import {
-	type AtlasGridDayMeasurement,
-	type AtlasGridPagePlan,
-	paginateAtlasGrid,
-} from "../../../booklet/families/atlasGrid";
 import type {
-	BookletRenderPagePlan,
-	ResolvedBookletDesign,
-} from "../../../booklet/family";
+	AtlasGridDayMeasurement,
+	AtlasGridMeasurement,
+	AtlasGridPagePlan,
+} from "../../../booklet/families/atlasGrid";
+import type { FamilyDecorDesign } from "../../../booklet/family";
 import { formatTransportMode } from "../../../booklet/itineraryFormat";
-import type { BookletModel } from "../../../booklet/model";
-import { projectBooklet } from "../../../booklet/projectBooklet";
-import {
-	getThemeCandidates,
-	resolveBookletTheme,
-} from "../../../theme/bookletTheme";
-import {
-	atlasGridCompositionFor,
-	atlasGridPaletteFor,
-} from "../../../theme/families/atlasGrid";
+import { atlasGridCompositionFor } from "../../../theme/families/atlasGrid";
 import {
 	type DecorAnchor,
 	type FamilyDecoration,
@@ -39,19 +20,16 @@ import {
 } from "../../../theme/families/decorPlacement";
 import { fontStack } from "../../../theme/families/styleProfiles";
 import { motifAssetsFor } from "../../../theme/motifAssets";
-import type { CoverVeilBounds } from "../../../theme/types";
-import { waitForMotifAssets } from "../decor/assetReadiness";
 import { FamilyDecorLayer } from "../decor/FamilyDecorLayer";
-import {
-	BookletLayoutError,
-	type BookletPagePlanStatus,
-} from "../useBookletPagePlan";
-import type { FamilyPagePlanResult } from "./useFamilyPagePlan";
-import { prepareFamilyDecor } from "./useFamilyPagePlan";
+import { BookletLayoutError } from "../layoutError";
+import type {
+	FamilyPalette,
+	FamilyTypography,
+} from "../program/modules/familyStyle";
+import type { EffectMarks } from "../program/sceneParts";
 import "./AtlasGrid.css";
 
 const COVER_TITLE_SIZES_PT = [40, 34, 28, 22] as const;
-const COVER_BOUNDS: CoverVeilBounds = { height: 44, width: 128, x: 10, y: 10 };
 const LAYOUT_TOLERANCE_PX = 1;
 
 function formatMoney(money: {
@@ -85,43 +63,10 @@ function requiredElement(
 	return element;
 }
 
-async function waitForAtlasFonts(design: ResolvedBookletDesign): Promise<void> {
-	if (!document.fonts) {
-		return;
-	}
-	await document.fonts.ready;
-	const profile = design.styleProfile;
-	if (!profile) {
-		throw new Error("atlas-gridの作風プロファイルがありません。");
-	}
-	const requiredFonts = new Map([
-		[profile.fontFamilies.display, profile.fontWeights.display],
-		[profile.fontFamilies.body, profile.fontWeights.body],
-		[profile.fontFamilies.utility, profile.fontWeights.utility],
-	]);
-	for (const [family, weight] of requiredFonts) {
-		const descriptor = `${weight} 10pt "${family}"`;
-		await document.fonts.load(descriptor, "東京の旅程・京都散策");
-		if (!document.fonts.check(descriptor, "東京の旅程・京都散策")) {
-			throw new Error(`${family} ${weight} の読み込みを確認できませんでした。`);
-		}
-	}
-}
-
-async function waitForImages(root: ParentNode): Promise<void> {
-	await Promise.all(
-		Array.from(root.querySelectorAll("img")).map(async (image) => {
-			try {
-				await image.decode();
-			} catch {
-				throw new Error(`画像「${image.alt}」の読み込みに失敗しました。`);
-			}
-		}),
-	);
-}
-
-function titleSizeCandidates(design: ResolvedBookletDesign): readonly number[] {
-	const titleSizePt = design.styleProfile?.fontSizesPt.title;
+/** The family's own title step-down, starting at the style's title size. */
+export function atlasTitleSizes(
+	titleSizePt: number | undefined,
+): readonly number[] {
 	return titleSizePt === undefined
 		? COVER_TITLE_SIZES_PT
 		: [
@@ -130,7 +75,7 @@ function titleSizeCandidates(design: ResolvedBookletDesign): readonly number[] {
 			];
 }
 
-function measureCoverTitle(
+export function measureAtlasCoverTitle(
 	root: HTMLElement,
 	titleSizesPt: readonly number[],
 ): number {
@@ -153,11 +98,14 @@ function measureCoverTitle(
 	);
 }
 
-function collectMeasurement(
+/**
+ * Row heights of every day sample drawn by `AtlasDayMeasurementSample`; a
+ * program scene measures its single day this way.
+ */
+export function collectAtlasTableMeasurement(
 	root: HTMLElement,
 	editorial: EditorialBooklet,
-	titleSizesPt: readonly number[],
-) {
+): AtlasGridMeasurement {
 	const body = requiredElement(root, "[data-atlas-grid-table-body]", "表本体");
 	const days: AtlasGridDayMeasurement[] = editorial.days.map(
 		(day, dayIndex) => {
@@ -188,90 +136,7 @@ function collectMeasurement(
 			};
 		},
 	);
-	return {
-		coverTitleSizePt: measureCoverTitle(root, titleSizesPt),
-		measurement: { bodyHeight: body.clientHeight, days },
-	};
-}
-
-function nextFrame(): Promise<void> {
-	return new Promise((resolve) => requestAnimationFrame(() => resolve()));
-}
-
-async function waitForOutput(
-	getRoot: () => HTMLElement | null,
-	renderKey: string,
-): Promise<HTMLElement | null> {
-	await nextFrame();
-	for (let frame = 0; frame < 12; frame += 1) {
-		const root = getRoot();
-		if (root?.dataset.bookletThemeKey === renderKey) {
-			return root;
-		}
-		await nextFrame();
-	}
-	return null;
-}
-
-function hidesText(style: CSSStyleDeclaration): boolean {
-	const unsafe = new Set(["hidden", "clip", "scroll", "auto"]);
-	const lineClamp = (
-		style as CSSStyleDeclaration & { webkitLineClamp?: string }
-	).webkitLineClamp;
-	return (
-		unsafe.has(style.overflow) ||
-		unsafe.has(style.overflowX) ||
-		unsafe.has(style.overflowY) ||
-		style.whiteSpace === "nowrap" ||
-		(style.textOverflow !== "" && style.textOverflow !== "clip") ||
-		(lineClamp !== undefined && lineClamp !== "" && lineClamp !== "none") ||
-		style.transform.includes("scale")
-	);
-}
-
-function ensureDocumentFits(
-	root: HTMLElement,
-	pagePlan: readonly AtlasGridPagePlan[],
-): void {
-	const pages = Array.from(
-		root.querySelectorAll<HTMLElement>("[data-booklet-page]"),
-	);
-	if (pages.length !== pagePlan.length) {
-		throw new BookletLayoutError(
-			"dom-not-ready",
-			"atlas-gridのページ数がページ計画と一致しません。",
-		);
-	}
-	for (const page of pages) {
-		if (page.scrollWidth > page.clientWidth + LAYOUT_TOLERANCE_PX) {
-			throw new BookletLayoutError(
-				"page-inline-overflow",
-				"atlas-gridの紙面が横方向にあふれています。",
-			);
-		}
-		if (page.scrollHeight > page.clientHeight + LAYOUT_TOLERANCE_PX) {
-			throw new BookletLayoutError(
-				"page-block-overflow",
-				"atlas-gridの紙面が縦方向にあふれています。",
-			);
-		}
-	}
-	for (const text of root.querySelectorAll<HTMLElement>(
-		"[data-booklet-text-role]",
-	)) {
-		if (hidesText(getComputedStyle(text))) {
-			throw new BookletLayoutError(
-				"hidden-text",
-				"atlas-gridで文字を隠す表示設定を検出しました。",
-			);
-		}
-		if (text.scrollWidth > text.clientWidth + LAYOUT_TOLERANCE_PX) {
-			throw new BookletLayoutError(
-				"text-inline-overflow",
-				`${text.dataset.bookletTextRole ?? "文字"}が横方向にあふれています。`,
-			);
-		}
-	}
+	return { bodyHeight: body.clientHeight, days };
 }
 
 function anchor(
@@ -361,7 +226,10 @@ export function atlasDecorDefinition(
 	return { anchors, decorations };
 }
 
-function atlasDecorFor(page: AtlasGridPagePlan, design: ResolvedBookletDesign) {
+export function atlasDecorFor(
+	page: AtlasGridPagePlan,
+	design: FamilyDecorDesign,
+) {
 	const definition = atlasDecorDefinition(page, design.compositionId);
 	return resolveFamilyDecor({
 		anchors: definition.anchors,
@@ -374,7 +242,7 @@ function atlasDecorFor(page: AtlasGridPagePlan, design: ResolvedBookletDesign) {
 	});
 }
 
-function decorationsByPage(
+export function atlasDecorationsByPage(
 	pagePlan: readonly AtlasGridPagePlan[],
 	compositionId: string,
 ): ReadonlyMap<string, readonly FamilyDecoration[]> {
@@ -386,18 +254,23 @@ function decorationsByPage(
 	);
 }
 
-export function atlasStyle(design: ResolvedBookletDesign): CSSProperties {
-	const palette = atlasGridPaletteFor(design.paletteId);
-	const composition = atlasGridCompositionFor(design.compositionId);
-	const profile = design.styleProfile;
-	if (!profile) {
-		throw new Error("atlas-gridの作風プロファイルがありません。");
-	}
+/** Neutral inputs of the atlas style: a registered profile or a direction bundle. */
+export type AtlasStyleInput = {
+	readonly compositionId: string;
+	readonly palette: FamilyPalette;
+	readonly photoTreatment: string;
+	readonly ruleTreatment: string;
+	readonly typography: FamilyTypography;
+};
+
+export function atlasStyleFor(input: AtlasStyleInput): CSSProperties {
+	const { palette, typography } = input;
+	const composition = atlasGridCompositionFor(input.compositionId);
 	return {
 		"--atlas-accent": palette.accent,
-		"--atlas-body-family": fontStack(profile.fontFamilies.body),
-		"--atlas-body-size": `${profile.fontSizesPt.body}pt`,
-		"--atlas-body-weight": profile.fontWeights.body,
+		"--atlas-body-family": fontStack(typography.fontFamilies.body),
+		"--atlas-body-size": `${typography.fontSizesPt.body}pt`,
+		"--atlas-body-weight": typography.fontWeights.body,
 		"--atlas-column-transport": `${composition.columnWidthsMm[2]}mm`,
 		"--atlas-column-place": `${composition.columnWidthsMm[1]}mm`,
 		"--atlas-column-time": `${composition.columnWidthsMm[0]}mm`,
@@ -406,25 +279,25 @@ export function atlasStyle(design: ResolvedBookletDesign): CSSProperties {
 		"--atlas-secondary": palette.secondary,
 		"--atlas-soft": palette.soft,
 		"--atlas-time-size": `${composition.timeFontSizePt}pt`,
-		"--booklet-body-family": fontStack(profile.fontFamilies.body),
-		"--booklet-body-size": `${profile.fontSizesPt.body}pt`,
-		"--atlas-display-family": fontStack(profile.fontFamilies.display),
-		"--atlas-display-weight": profile.fontWeights.display,
+		"--booklet-body-family": fontStack(typography.fontFamilies.body),
+		"--booklet-body-size": `${typography.fontSizesPt.body}pt`,
+		"--atlas-display-family": fontStack(typography.fontFamilies.display),
+		"--atlas-display-weight": typography.fontWeights.display,
 		"--atlas-photo-border":
-			profile.photoTreatment === "record-field"
+			input.photoTreatment === "record-field"
 				? "0.7pt solid var(--atlas-accent)"
 				: "none",
 		"--atlas-photo-padding":
-			profile.photoTreatment === "record-field" ? "1.5mm" : "0",
+			input.photoTreatment === "record-field" ? "1.5mm" : "0",
 		"--atlas-rule-width":
-			profile.ruleTreatment === "forest-rule" ? "0.7pt" : "0.35pt",
-		"--atlas-utility-family": fontStack(profile.fontFamilies.utility),
-		"--atlas-utility-size": `${profile.fontSizesPt.utility}pt`,
-		"--atlas-utility-weight": profile.fontWeights.utility,
+			input.ruleTreatment === "forest-rule" ? "0.7pt" : "0.35pt",
+		"--atlas-utility-family": fontStack(typography.fontFamilies.utility),
+		"--atlas-utility-size": `${typography.fontSizesPt.utility}pt`,
+		"--atlas-utility-weight": typography.fontWeights.utility,
 	} as CSSProperties;
 }
 
-function DecorAnchorElement({
+export function DecorAnchorElement({
 	id,
 	kind,
 	reserveMm,
@@ -444,16 +317,29 @@ function DecorAnchorElement({
 	);
 }
 
-function AtlasCover({
+/**
+ * Program scenes pass effect marks for the elements that prove a claim and
+ * may replace the photo with a transplanted image treatment. Measurement
+ * passes neither.
+ */
+export type AtlasCoverSlots = {
+	readonly image?: ReactNode;
+	readonly imageMarks?: EffectMarks;
+	readonly titleMarks?: EffectMarks;
+};
+
+export function AtlasCover({
 	booklet,
 	compositionId,
 	measurement,
+	slots = {},
 	titleSizePt,
 	titleSizesPt,
 }: {
 	readonly booklet: EditorialBooklet;
 	readonly compositionId: string;
 	readonly measurement: boolean;
+	readonly slots?: AtlasCoverSlots;
 	readonly titleSizePt: number;
 	readonly titleSizesPt: readonly number[];
 }) {
@@ -467,20 +353,23 @@ function AtlasCover({
 					data-booklet-text-role="cover-destination"
 					key={sizePt}
 					style={{ fontSize: `${sizePt}pt` }}
+					{...(measurement ? {} : slots.titleMarks)}
 				>
 					{booklet.cover.title}
 				</h1>
 			))}
-			<figure className="atlas-grid-cover__image">
-				<img
-					className="booklet-cover__image"
-					alt={`${booklet.cover.title}の表紙画像`}
-					decoding="async"
-					height={booklet.cover.image.height}
-					loading="eager"
-					src={booklet.cover.image.contentUrl}
-					width={booklet.cover.image.width}
-				/>
+			<figure className="atlas-grid-cover__image" {...slots.imageMarks}>
+				{slots.image ?? (
+					<img
+						className="booklet-cover__image"
+						alt={`${booklet.cover.title}の表紙画像`}
+						decoding="async"
+						height={booklet.cover.image.height}
+						loading="eager"
+						src={booklet.cover.image.contentUrl}
+						width={booklet.cover.image.width}
+					/>
+				)}
 			</figure>
 			<div
 				className="atlas-grid-cover__period"
@@ -513,7 +402,7 @@ function AtlasCover({
 	);
 }
 
-function AtlasDayBand({
+export function AtlasDayBand({
 	continuation,
 	day,
 }: {
@@ -581,7 +470,7 @@ export function AtlasGridRow({
 	);
 }
 
-function AtlasEmptyRow({
+export function AtlasEmptyRow({
 	measurement = false,
 }: {
 	readonly measurement?: boolean;
@@ -598,7 +487,7 @@ function AtlasEmptyRow({
 	);
 }
 
-function AtlasColumnHeadings() {
+export function AtlasColumnHeadings() {
 	return (
 		<thead className="atlas-grid-columns">
 			<tr>
@@ -610,39 +499,64 @@ function AtlasColumnHeadings() {
 	);
 }
 
-function AtlasTableHeader({
+export function AtlasTableHeader({
 	continuation,
+	extra,
+	heading,
+	marks,
 }: {
 	readonly continuation: boolean;
+	/** Program scenes add their section label after the family heading. */
+	readonly extra?: ReactNode;
+	/** A transplanted heading system drawn in the header's place. */
+	readonly heading?: ReactNode;
+	readonly marks?: EffectMarks;
 }) {
 	return (
 		<>
-			<header className="atlas-grid-table__header">
-				<p data-booklet-text-role="utility-label">ITINERARY / ATLAS</p>
-				<h2 data-booklet-text-role="page-title">
-					旅程一覧{continuation ? "・続き" : ""}
-				</h2>
+			<header className="atlas-grid-table__header" {...marks}>
+				{heading ?? (
+					<>
+						<p data-booklet-text-role="utility-label">ITINERARY / ATLAS</p>
+						<h2 data-booklet-text-role="page-title">
+							旅程一覧{continuation ? "・続き" : ""}
+						</h2>
+					</>
+				)}
+				{extra}
 			</header>
 			<DecorAnchorElement id="table-compass" kind="section" />
 		</>
 	);
 }
 
-function AtlasTablePage({
+export type AtlasTableSlots = {
+	readonly bodyMarks?: EffectMarks;
+	readonly heading?: ReactNode;
+	readonly headingExtra?: ReactNode;
+	readonly headingMarks?: EffectMarks;
+};
+
+export function AtlasTablePage({
 	booklet,
 	page,
+	slots = {},
 }: {
 	readonly booklet: EditorialBooklet;
 	readonly page: Extract<AtlasGridPagePlan, { readonly kind: "table" }>;
+	readonly slots?: AtlasTableSlots;
 }) {
 	return (
 		<>
 			<AtlasTableHeader
 				continuation={page.sections[0]?.continuation ?? false}
+				extra={slots.headingExtra}
+				heading={slots.heading}
+				marks={slots.headingMarks}
 			/>
 			<table className="atlas-grid-table">
 				<AtlasColumnHeadings />
-				<tbody className="atlas-grid-table__body">
+				<tbody className="atlas-grid-table__body" {...slots.bodyMarks}>
 					{page.sections.flatMap((section) => {
 						const day = booklet.days[section.dayIndex];
 						if (!day) {
@@ -670,12 +584,12 @@ function AtlasTablePage({
 	);
 }
 
-function AtlasDecor({
+export function AtlasDecor({
 	design,
 	page,
 	scope,
 }: {
-	readonly design: ResolvedBookletDesign;
+	readonly design: FamilyDecorDesign;
 	readonly page: AtlasGridPagePlan;
 	readonly scope: "measurement" | "output";
 }) {
@@ -698,318 +612,36 @@ function AtlasDecor({
 	);
 }
 
-export function AtlasGridDocument({
-	booklet,
-	design,
-	pagePlan,
-	rootRef,
-	titleSizePt,
+/** One day's rows as a program scene's measurement DOM draws them. */
+export function AtlasDayMeasurementSample({
+	day,
+	dayIndex,
+	heading,
 }: {
-	readonly booklet: EditorialBooklet;
-	readonly design: ResolvedBookletDesign;
-	readonly pagePlan: readonly AtlasGridPagePlan[];
-	readonly rootRef: RefObject<HTMLElement | null>;
-	readonly titleSizePt: number;
+	readonly day: EditorialDay;
+	readonly dayIndex: number;
+	readonly heading?: ReactNode;
 }) {
-	return (
-		<main
-			aria-label="旅のしおり印刷プレビュー"
-			className={`booklet-document booklet-theme atlas-grid atlas-grid--${design.compositionId}`}
-			data-booklet-design={design.requestedTheme.recipe.id}
-			data-booklet-family="atlas-grid"
-			data-booklet-photo-treatment={design.styleProfile?.photoTreatment}
-			data-booklet-style-profile={design.styleProfileId ?? undefined}
-			data-booklet-theme-key={design.renderKey}
-			ref={rootRef}
-			style={atlasStyle(design)}
-		>
-			{pagePlan.map((page) => (
-				<article
-					className={`booklet-page atlas-grid-page atlas-grid-page--${page.kind}`}
-					data-booklet-composition={design.compositionId}
-					data-booklet-page="true"
-					data-booklet-theme-key={design.renderKey}
-					data-page-id={page.pageId}
-					key={page.pageId}
-				>
-					<AtlasDecor design={design} page={page} scope="output" />
-					<div className="booklet-page__content">
-						{page.kind === "cover" ? (
-							<AtlasCover
-								booklet={booklet}
-								compositionId={design.compositionId}
-								measurement={false}
-								titleSizePt={titleSizePt}
-								titleSizesPt={titleSizeCandidates(design)}
-							/>
-						) : (
-							<AtlasTablePage booklet={booklet} page={page} />
-						)}
-					</div>
-				</article>
-			))}
-		</main>
-	);
-}
-
-function AtlasGridMeasurement({
-	booklet,
-	design,
-	rootRef,
-}: {
-	readonly booklet: EditorialBooklet;
-	readonly design: ResolvedBookletDesign;
-	readonly rootRef: RefObject<HTMLDivElement | null>;
-}) {
-	const coverPlan: AtlasGridPagePlan = {
-		kind: "cover",
-		pageId: `atlas-cover-${booklet.journeyId}`,
-	};
-	return (
-		<div
-			aria-hidden="true"
-			className={`booklet-measurement booklet-theme atlas-grid atlas-grid--${design.compositionId}`}
-			data-booklet-family="atlas-grid"
-			data-booklet-photo-treatment={design.styleProfile?.photoTreatment}
-			data-booklet-style-profile={design.styleProfileId ?? undefined}
-			data-booklet-theme-key={design.renderKey}
-			ref={rootRef}
-			style={atlasStyle(design)}
-		>
-			<article className="booklet-page atlas-grid-page atlas-grid-page--cover">
-				<AtlasDecor design={design} page={coverPlan} scope="measurement" />
-				<div className="booklet-page__content">
-					<AtlasCover
-						booklet={booklet}
-						compositionId={design.compositionId}
-						measurement
-						titleSizePt={titleSizeCandidates(design)[0] ?? 22}
-						titleSizesPt={titleSizeCandidates(design)}
-					/>
-				</div>
-			</article>
-			{booklet.days.map((day, dayIndex) => (
-				<article
-					className="booklet-page atlas-grid-page atlas-grid-page--table"
-					data-atlas-grid-measurement-day={dayIndex}
-					key={day.id}
-				>
-					<div className="booklet-page__content">
-						<AtlasTableHeader continuation={false} />
-						<table className="atlas-grid-table">
-							<AtlasColumnHeadings />
-							<tbody
-								className="atlas-grid-table__body"
-								data-atlas-grid-table-body="true"
-							>
-								<AtlasDayBand continuation={false} day={day} />
-								<AtlasEmptyRow measurement />
-								{day.units.map((unit, unitIndex) => (
-									<AtlasGridRow
-										key={unit.id}
-										measurementKey={`${dayIndex}-${unitIndex}`}
-										unit={unit}
-									/>
-								))}
-							</tbody>
-						</table>
-					</div>
-				</article>
-			))}
-		</div>
-	);
-}
-
-export function useAtlasGridPagePlan(
-	model: BookletModel | null,
-	design: ResolvedBookletDesign | null,
-): FamilyPagePlanResult {
-	const activeDesign = design?.familyId === "atlas-grid" ? design : null;
-	const editorial = useMemo(
-		() => (model && activeDesign ? projectBooklet(model, "timetable") : null),
-		[activeDesign, model],
-	);
-	const activeTheme = useMemo(() => {
-		if (!activeDesign) {
-			return null;
-		}
-		const candidate = getThemeCandidates(activeDesign.requestedTheme)[0];
-		return candidate
-			? resolveBookletTheme(activeDesign.requestedTheme, candidate)
-			: null;
-	}, [activeDesign]);
-	const measurementRef = useRef<HTMLDivElement>(null);
-	const documentRef = useRef<HTMLElement>(null);
-	const runIdRef = useRef(0);
-	const [pagePlan, setPagePlan] = useState<readonly AtlasGridPagePlan[] | null>(
-		null,
-	);
-	const [coverTitleSizePt, setCoverTitleSizePt] = useState<number | null>(null);
-	const [preparedModel, setPreparedModel] = useState<BookletModel | null>(null);
-	const [preparedRenderKey, setPreparedRenderKey] = useState<string | null>(
-		null,
-	);
-	const [error, setError] = useState<string | null>(null);
-	const [status, setStatus] = useState<BookletPagePlanStatus>("idle");
-
-	useEffect(() => {
-		runIdRef.current += 1;
-		setPagePlan(null);
-		setCoverTitleSizePt(null);
-		setPreparedModel(null);
-		setPreparedRenderKey(null);
-		setError(null);
-		setStatus(model && activeDesign && activeTheme ? "measuring" : "idle");
-	}, [activeDesign, activeTheme, model]);
-
-	useEffect(() => {
-		if (!model || !editorial || !activeDesign || !activeTheme) {
-			return;
-		}
-		const runId = ++runIdRef.current;
-		let cancelled = false;
-		const run = async () => {
-			try {
-				setStatus("measuring");
-				await waitForAtlasFonts(activeDesign);
-				await waitForMotifAssets(activeDesign.decorAssetIds);
-				const measurementRoot = measurementRef.current;
-				if (!measurementRoot) {
-					throw new BookletLayoutError(
-						"dom-not-ready",
-						"atlas-gridの計測用DOMを準備できませんでした。",
-					);
-				}
-				await waitForImages(measurementRoot);
-				const measured =
-					editorial.days.length === 0
-						? null
-						: collectMeasurement(
-								measurementRoot,
-								editorial,
-								titleSizeCandidates(activeDesign),
-							);
-				const nextPagePlan =
-					measured === null
-						? [
-								{
-									kind: "cover" as const,
-									pageId: `atlas-cover-${editorial.journeyId}`,
-								},
-							]
-						: paginateAtlasGrid(editorial, measured.measurement);
-				if (cancelled || runId !== runIdRef.current) {
-					return;
-				}
-				setCoverTitleSizePt(
-					measured?.coverTitleSizePt ??
-						measureCoverTitle(
-							measurementRoot,
-							titleSizeCandidates(activeDesign),
-						),
-				);
-				setPagePlan(nextPagePlan);
-				setStatus("checking");
-				const output = await waitForOutput(
-					() => documentRef.current,
-					activeDesign.renderKey,
-				);
-				if (cancelled || runId !== runIdRef.current) {
-					return;
-				}
-				if (!output) {
-					throw new BookletLayoutError(
-						"dom-not-ready",
-						"atlas-gridの印刷ページDOMを準備できませんでした。",
-					);
-				}
-				ensureDocumentFits(output, nextPagePlan);
-				prepareFamilyDecor(
-					output,
-					activeDesign,
-					decorationsByPage(nextPagePlan, activeDesign.compositionId),
-				);
-				setPreparedModel(model);
-				setPreparedRenderKey(activeDesign.renderKey);
-				setStatus("ready");
-			} catch (runError) {
-				if (cancelled || runId !== runIdRef.current) {
-					return;
-				}
-				setPagePlan(null);
-				setCoverTitleSizePt(null);
-				setPreparedModel(null);
-				setPreparedRenderKey(null);
-				setError(
-					runError instanceof Error
-						? runError.message
-						: "atlas-gridの印刷準備に失敗しました。",
-				);
-				setStatus("error");
-			}
-		};
-		void run();
-		return () => {
-			cancelled = true;
-		};
-	}, [activeDesign, activeTheme, editorial, model]);
-
-	const renderPagePlan: BookletRenderPagePlan | null =
-		pagePlan && coverTitleSizePt !== null
-			? {
-					actualCompositionId: activeDesign?.compositionId ?? "",
-					coverTitleSizePt,
-					familyId: "atlas-grid",
-					pagePlan,
-				}
-			: null;
-
-	return {
-		activeTheme,
-		coverVeilBounds: pagePlan ? COVER_BOUNDS : null,
-		design: activeDesign,
-		documentRef,
-		error,
-		fallbackLog: [],
-		measurementRef,
-		pagePlan,
-		preparedModel,
-		preparedRenderKey,
-		renderPagePlan,
-		resolvedTheme: status === "ready" ? activeTheme : null,
-		status,
-	};
-}
-
-export function AtlasGridRenderer({
-	model,
-	pagePlanResult,
-}: {
-	readonly model: BookletModel;
-	readonly pagePlanResult: FamilyPagePlanResult;
-}) {
-	const { design, documentRef, measurementRef, renderPagePlan } =
-		pagePlanResult;
-	if (design?.familyId !== "atlas-grid") {
-		return null;
-	}
-	const editorial = projectBooklet(model, "timetable");
 	return (
 		<>
-			<AtlasGridMeasurement
-				booklet={editorial}
-				design={design}
-				rootRef={measurementRef}
-			/>
-			{renderPagePlan?.familyId === "atlas-grid" ? (
-				<AtlasGridDocument
-					booklet={editorial}
-					design={design}
-					pagePlan={renderPagePlan.pagePlan}
-					rootRef={documentRef}
-					titleSizePt={renderPagePlan.coverTitleSizePt}
-				/>
-			) : null}
+			<AtlasTableHeader continuation={false} heading={heading} />
+			<table className="atlas-grid-table">
+				<AtlasColumnHeadings />
+				<tbody
+					className="atlas-grid-table__body"
+					data-atlas-grid-table-body="true"
+				>
+					<AtlasDayBand continuation={false} day={day} />
+					<AtlasEmptyRow measurement />
+					{day.units.map((unit, unitIndex) => (
+						<AtlasGridRow
+							key={unit.id}
+							measurementKey={`${dayIndex}-${unitIndex}`}
+							unit={unit}
+						/>
+					))}
+				</tbody>
+			</table>
 		</>
 	);
 }

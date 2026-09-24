@@ -13,13 +13,7 @@ export async function expectBookletPrintReady(page: Page): Promise<void> {
 	);
 }
 
-export async function expectSelectedCandidate(page: Page): Promise<void> {
-	await expect(page.locator(".booklet-shell")).not.toHaveAttribute(
-		"data-booklet-fallback-log",
-		/.+/,
-	);
-}
-
+/** No printed text is clipped, cut with an ellipsis, forced to one line or scaled. */
 export async function expectNoHiddenText(page: Page): Promise<void> {
 	const problems = await page
 		.locator(".booklet-document [data-booklet-text-role]")
@@ -47,32 +41,75 @@ export async function expectNoHiddenText(page: Page): Promise<void> {
 	expect(problems).toEqual([]);
 }
 
+/**
+ * Every printed page keeps its box (no scroll overflow) and every text
+ * element inside it stays within the A5 page.
+ */
 export async function expectContentInsidePages(page: Page): Promise<void> {
 	const outside = await page
-		.locator(
-			".booklet-document .booklet-page--day, .booklet-document .atlas-grid-page--table, .booklet-document .paper-collage-page--day, .booklet-document .playful-route-page--day, .booklet-document .travel-newspaper-page--articles, .booklet-document .travel-newspaper-page--continuation",
-		)
+		.locator(".booklet-document [data-booklet-page]")
 		.evaluateAll(
 			(pages, tolerance) =>
 				pages.flatMap((pageElement) => {
+					const pageId = pageElement.getAttribute("data-page-id") ?? "page";
 					const pageRect = pageElement.getBoundingClientRect();
-					const content = pageElement.querySelector(
-						".booklet-page__content, .travel-newspaper-page__content",
-					);
-					if (!content) {
-						return ["missing-content"];
-					}
-					const rect = content.getBoundingClientRect();
-					return rect.left < pageRect.left - tolerance ||
-						rect.top < pageRect.top - tolerance ||
-						rect.right > pageRect.right + tolerance ||
-						rect.bottom > pageRect.bottom + tolerance ||
+					const problems =
 						pageElement.scrollHeight > pageElement.clientHeight + tolerance ||
 						pageElement.scrollWidth > pageElement.clientWidth + tolerance
-						? [pageElement.getAttribute("data-page-id") ?? "page"]
-						: [];
+							? [`${pageId}: page overflow`]
+							: [];
+					for (const text of pageElement.querySelectorAll<HTMLElement>(
+						"[data-booklet-text-role]",
+					)) {
+						const rect = text.getBoundingClientRect();
+						if (
+							rect.left < pageRect.left - tolerance ||
+							rect.top < pageRect.top - tolerance ||
+							rect.right > pageRect.right + tolerance ||
+							rect.bottom > pageRect.bottom + tolerance
+						)
+							problems.push(`${pageId}: ${text.dataset.bookletTextRole}`);
+					}
+					return problems;
 				}),
 			LAYOUT_ROUNDING_TOLERANCE_PX,
 		);
 	expect(outside).toEqual([]);
+}
+
+/** Drawn artwork never covers printed text on the same page. */
+export async function expectArtworkClearOfText(page: Page): Promise<void> {
+	const collisions = await page
+		.locator(".booklet-document [data-booklet-page]")
+		.evaluateAll(
+			(pages, tolerance) =>
+				pages.flatMap((pageElement) => {
+					const pageId = pageElement.getAttribute("data-page-id") ?? "page";
+					const texts = Array.from(
+						pageElement.querySelectorAll<HTMLElement>(
+							"[data-booklet-text-role]",
+						),
+						(text) => ({
+							rect: text.getBoundingClientRect(),
+							role: text.dataset.bookletTextRole ?? "text",
+						}),
+					).filter(({ rect }) => rect.width > 0 && rect.height > 0);
+					return Array.from(
+						pageElement.querySelectorAll(".program-art__asset"),
+						(art) => art.getBoundingClientRect(),
+					).flatMap((art) =>
+						texts
+							.filter(
+								({ rect }) =>
+									rect.left < art.right - tolerance &&
+									art.left < rect.right - tolerance &&
+									rect.top < art.bottom - tolerance &&
+									art.top < rect.bottom - tolerance,
+							)
+							.map(({ role }) => `${pageId}: artwork over ${role}`),
+					);
+				}),
+			LAYOUT_ROUNDING_TOLERANCE_PX,
+		);
+	expect(collisions).toEqual([]);
 }

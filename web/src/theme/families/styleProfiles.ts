@@ -1,4 +1,3 @@
-import type { PolicyId } from "../../booklet/editorialModel";
 import type { BookletFamilyId } from "../../booklet/family";
 import type { MotifAssetId } from "../motifAssets";
 
@@ -41,11 +40,10 @@ type BookletStyleProfileBase = {
 };
 
 export type BookletStyleProfile = {
-	readonly [FamilyId in Exclude<
-		BookletFamilyId,
-		"legacy"
-	>]: BookletStyleProfileBase & { readonly familyId: FamilyId };
-}[Exclude<BookletFamilyId, "legacy">];
+	readonly [FamilyId in BookletFamilyId]: BookletStyleProfileBase & {
+		readonly familyId: FamilyId;
+	};
+}[BookletFamilyId];
 
 const ATLAS_DECOR_ASSET_IDS = [
 	"atlas-compass",
@@ -270,9 +268,7 @@ export const ALL_BOOKLET_STYLE_PROFILES: readonly BookletStyleProfile[] =
 		...TRAVEL_NEWSPAPER_STYLE_PROFILES,
 	]);
 
-export function styleProfilesForFamily<
-	FamilyId extends Exclude<BookletFamilyId, "legacy">,
->(
+export function styleProfilesForFamily<FamilyId extends BookletFamilyId>(
 	familyId: FamilyId,
 ): readonly Extract<BookletStyleProfile, { familyId: FamilyId }>[] {
 	return ALL_BOOKLET_STYLE_PROFILES.filter(
@@ -281,16 +277,6 @@ export function styleProfilesForFamily<
 		): profile is Extract<BookletStyleProfile, { familyId: FamilyId }> =>
 			profile.familyId === familyId,
 	);
-}
-
-export function styleProfileFor(styleProfileId: string): BookletStyleProfile {
-	const profile = ALL_BOOKLET_STYLE_PROFILES.find(
-		(candidate) => candidate.id === styleProfileId,
-	);
-	if (!profile) {
-		throw new Error(`作風プロファイル「${styleProfileId}」がありません。`);
-	}
-	return profile;
 }
 
 export function fontStack(family: string): string {
@@ -302,41 +288,3 @@ export function fontStack(family: string): string {
 			: "sans-serif";
 	return `"${family}", ${generic}`;
 }
-
-export function derivedStyleProfileFields(
-	profiles: readonly BookletStyleProfile[],
-): Pick<BookletStyleProfile, "compositionIds" | "decorAssetIds"> & {
-	readonly fontFamilies: readonly string[];
-	readonly paletteIds: readonly string[];
-} {
-	if (profiles.length === 0) {
-		throw new Error("系統に作風プロファイルがありません。");
-	}
-	return Object.freeze({
-		compositionIds: Object.freeze([
-			...new Set(profiles.flatMap((profile) => profile.compositionIds)),
-		]),
-		decorAssetIds: Object.freeze([
-			...new Set(profiles.flatMap((profile) => profile.decorAssetIds)),
-		]),
-		fontFamilies: Object.freeze([
-			...new Set(
-				profiles.flatMap((profile) => [
-					profile.fontFamilies.display,
-					profile.fontFamilies.body,
-					profile.fontFamilies.utility,
-				]),
-			),
-		]),
-		paletteIds: Object.freeze([
-			...new Set(profiles.map((profile) => profile.paletteId)),
-		]),
-	});
-}
-
-export type FamilyStyleProfileDefinition = {
-	readonly id: Exclude<BookletFamilyId, "legacy">;
-	readonly moodIds: readonly import("../types").MoodId[];
-	readonly policyId: PolicyId;
-	readonly styleProfiles: readonly BookletStyleProfile[];
-};

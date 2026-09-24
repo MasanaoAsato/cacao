@@ -2,13 +2,15 @@
 import "@testing-library/jest-dom/vitest";
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { MOTIFS } from "../../../theme/motifs";
+import { MOTIF_ASSETS } from "../../../theme/motifAssets";
 import { MotifShapes } from "./MotifShapes";
 
 describe("MotifShapes", () => {
 	it("正常系: recolor可能なSVG素材をマスクと色付き矩形で描画する", () => {
-		const definition = MOTIFS.get("atlas-compass");
-		if (definition?.kind !== "asset") {
+		const definition = MOTIF_ASSETS.find(
+			(asset) => asset.id === "atlas-compass",
+		);
+		if (!definition) {
 			throw new Error("atlas-compass が未登録です。");
 		}
 		const { container } = render(
@@ -31,8 +33,8 @@ describe("MotifShapes", () => {
 	});
 
 	it("正常系: 固有色を選ぶ素材は元SVGを直接描画する", () => {
-		const asset = MOTIFS.get("paper-tape");
-		if (asset?.kind !== "asset") {
+		const asset = MOTIF_ASSETS.find((asset) => asset.id === "paper-tape");
+		if (!asset) {
 			throw new Error("paper-tape が未登録です。");
 		}
 		const { container } = render(
@@ -44,16 +46,22 @@ describe("MotifShapes", () => {
 		expect(container.querySelector("mask")).not.toBeInTheDocument();
 	});
 
-	it("境界値系: 手続き図形は既存の図形要素を描画する", () => {
-		const definition = MOTIFS.get("dot");
+	it("境界値系: 色の指定がなければ recolor 可能な素材もマスクせず描画する", () => {
+		const definition = MOTIF_ASSETS.find(
+			(asset) => asset.id === "atlas-compass",
+		);
 		if (!definition) {
-			throw new Error("dot が未登録です。");
+			throw new Error("atlas-compass が未登録です。");
 		}
 		const { container } = render(
 			<svg aria-label="装飾素材の描画領域">
-				<MotifShapes color="black" definition={definition} maskId="dot-mask" />
+				<MotifShapes color={null} definition={definition} maskId="plain-mask" />
 			</svg>,
 		);
-		expect(container.querySelector("circle")).toBeInTheDocument();
+		expect(container.querySelector("image")).toHaveAttribute(
+			"href",
+			definition.src,
+		);
+		expect(container.querySelector("mask")).not.toBeInTheDocument();
 	});
 });

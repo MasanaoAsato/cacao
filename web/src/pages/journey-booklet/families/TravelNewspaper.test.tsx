@@ -1,20 +1,20 @@
 /** @vitest-environment jsdom */
 
 import { render } from "@testing-library/react";
-import { createRef } from "react";
 import { describe, expect, it } from "vitest";
 import type {
 	EditorialArrivalUnit,
 	EditorialBooklet,
 } from "../../../booklet/editorialModel";
-import type { TravelNewspaperPagePlan } from "../../../booklet/families/travelNewspaper";
-import type { ResolvedBookletDesign } from "../../../booklet/family";
-import { createBookletTheme } from "../../../theme/bookletTheme";
-import { styleProfileFor } from "../../../theme/families/styleProfiles";
+import { travelNewspaperPaletteFor } from "../../../theme/families/travelNewspaper";
+import { familyProfileById } from "../program/modules/familyStyle";
 import {
-	TravelNewspaperDocument,
-	TravelNewspaperMeasurement,
-	travelNewspaperStyle,
+	collectTravelNewspaperDayHeights,
+	TravelNewspaperArticles,
+	TravelNewspaperCover,
+	TravelNewspaperDayMeasurementSample,
+	travelNewspaperStyleFor,
+	travelNewspaperVariantOf,
 } from "./TravelNewspaper";
 
 function unit(
@@ -77,57 +77,37 @@ const booklet: EditorialBooklet = {
 	policyId: "timetable",
 };
 
-const profile = styleProfileFor("travel-newspaper.classic-travel");
-const design: ResolvedBookletDesign = {
-	comparisonKey:
-		"travel-newspaper.travel-newspaper.classic-travel.classic-travel.newspaper-columns",
-	compositionId: "newspaper-columns",
-	decorAssetIds: [],
-	decorVariantId: null,
-	familyId: "travel-newspaper",
-	fontFamilies: [
-		profile.fontFamilies.display,
-		profile.fontFamilies.body,
-		profile.fontFamilies.utility,
-	],
-	paletteId: profile.paletteId,
-	policyId: "timetable",
-	renderKey:
-		"travel-newspaper:v2-00000013:timetable:travel-newspaper.travel-newspaper.classic-travel.classic-travel.newspaper-columns",
-	requestedTheme: createBookletTheme({ value: 19, version: "v2" }),
-	seedToken: "v2-00000013",
-	styleProfile: profile,
-	styleProfileId: profile.id,
-};
+describe("TravelNewspaperCover", () => {
+	it("正常系: 題字・題名・期間と表紙画像を描く", () => {
+		const { container } = render(<TravelNewspaperCover booklet={booklet} />);
 
-describe("TravelNewspaperDocument", () => {
-	it("正常系: 表紙・日別記事・時刻表メタデータとdata属性を描く", () => {
-		const pagePlan: readonly TravelNewspaperPagePlan[] = [
-			{ kind: "cover", pageId: "cover" },
-			{
-				dayIndex: 0,
-				kind: "articles",
-				pageId: "articles",
-				unitIndexes: [0, 1],
-			},
-		];
+		expect(
+			container.querySelector('[data-booklet-text-role="cover-title"]')
+				?.textContent,
+		).toBe("金沢");
+		expect(
+			container.querySelectorAll(
+				'[data-booklet-text-role="cover-period"] time',
+			),
+		).toHaveLength(2);
+		expect(container.querySelectorAll(".booklet-cover__image")).toHaveLength(1);
+	});
+});
+
+describe("TravelNewspaperArticles", () => {
+	it("正常系: 日別記事と時刻表メタデータを描く", () => {
 		const { container } = render(
-			<TravelNewspaperDocument
+			<TravelNewspaperArticles
 				booklet={booklet}
-				design={design}
-				pagePlan={pagePlan}
-				rootRef={createRef<HTMLElement>()}
+				page={{
+					dayIndex: 0,
+					kind: "articles",
+					pageId: "articles",
+					unitIndexes: [0, 1],
+				}}
 			/>,
 		);
 
-		expect(
-			container.querySelectorAll('[data-booklet-family="travel-newspaper"]'),
-		).toHaveLength(3);
-		expect(
-			container.querySelector(
-				'[data-booklet-resolved-composition="newspaper-columns"]',
-			),
-		).not.toBeNull();
 		expect(container.querySelectorAll("[data-unit-id]")).toHaveLength(2);
 		expect(
 			container
@@ -154,24 +134,21 @@ describe("TravelNewspaperDocument", () => {
 				'[data-unit-id="unit-1"] [data-booklet-text-role="unit-description"]',
 			),
 		).toBeNull();
-		expect(container.querySelectorAll(".booklet-cover__image")).toHaveLength(1);
+		expect(
+			container.querySelectorAll(".travel-newspaper-day-header__image"),
+		).toHaveLength(1);
 	});
 
 	it("境界値: 継続ページでは日別挿絵を複製しない", () => {
 		const { container } = render(
-			<TravelNewspaperDocument
+			<TravelNewspaperArticles
 				booklet={booklet}
-				design={design}
-				pagePlan={[
-					{ kind: "cover", pageId: "cover" },
-					{
-						dayIndex: 0,
-						kind: "continuation",
-						pageId: "continuation",
-						unitIndexes: [1],
-					},
-				]}
-				rootRef={createRef<HTMLElement>()}
+				page={{
+					dayIndex: 0,
+					kind: "continuation",
+					pageId: "continuation",
+					unitIndexes: [1],
+				}}
 			/>,
 		);
 
@@ -179,46 +156,105 @@ describe("TravelNewspaperDocument", () => {
 			container.querySelectorAll(".travel-newspaper-day-header__image"),
 		).toHaveLength(0);
 		expect(
-			container
-				.querySelector('[data-page-id="continuation"]')
-				?.getAttribute("data-day-id"),
-		).toBe("day-1");
+			container.querySelector(".travel-newspaper-day-header--continuation"),
+		).not.toBeNull();
+		expect(container.querySelectorAll("[data-unit-id]")).toHaveLength(1);
 	});
 
-	it("正常系: 計測candidate DOMはpage planなしで全unitを描く", () => {
-		const rootRef = createRef<HTMLDivElement>();
+	it("境界値: 単位0件のページは予定なしの表示を描く", () => {
 		const { container } = render(
-			<TravelNewspaperMeasurement
+			<TravelNewspaperArticles
 				booklet={booklet}
-				design={design}
-				rootRef={rootRef}
+				page={{
+					dayIndex: 0,
+					kind: "articles",
+					pageId: "empty",
+					unitIndexes: [],
+				}}
 			/>,
+		);
+
+		expect(
+			container.querySelector('[data-booklet-text-role="empty-day"]'),
+		).not.toBeNull();
+	});
+
+	it("異常系: 存在しない日のページは何も描かない", () => {
+		const { container } = render(
+			<TravelNewspaperArticles
+				booklet={booklet}
+				page={{
+					dayIndex: 5,
+					kind: "articles",
+					pageId: "missing",
+					unitIndexes: [0],
+				}}
+			/>,
+		);
+
+		expect(container.childElementCount).toBe(0);
+	});
+});
+
+describe("TravelNewspaperDayMeasurementSample", () => {
+	it("正常系: 計測用DOMはpage planなしで日の全unitと両ヘッダーを描く", () => {
+		const day = booklet.days[0];
+		if (!day) throw new Error("fixture day is missing");
+		const { container } = render(
+			<TravelNewspaperDayMeasurementSample day={day} />,
 		);
 
 		expect(
 			container.querySelectorAll("[data-travel-newspaper-card]"),
 		).toHaveLength(2);
 		expect(
-			container.querySelectorAll("[data-travel-newspaper-measurement-day]"),
-		).toHaveLength(1);
-		expect(rootRef.current?.dataset.bookletThemeKey).toBe(design.renderKey);
+			container.querySelectorAll(".travel-newspaper-day-header"),
+		).toHaveLength(2);
 	});
+});
 
+describe("collectTravelNewspaperDayHeights", () => {
+	it("異常系: 日別計測用紙面がなければdom-not-readyになる", () => {
+		const root = document.createElement("div");
+		expect(() =>
+			collectTravelNewspaperDayHeights(root, booklet, 1),
+		).toThrowError(expect.objectContaining({ code: "dom-not-ready" }));
+	});
+});
+
+describe("travelNewspaperStyleFor", () => {
 	it("正常系: 作風paletteと表紙位置をstyleへ渡す", () => {
-		const cityProfile = styleProfileFor("travel-newspaper.city-walk");
-		const cityDesign: ResolvedBookletDesign = {
-			...design,
-			paletteId: cityProfile.paletteId,
-			styleProfile: cityProfile,
-			styleProfileId: cityProfile.id,
+		const styleOf = (profileId: string) => {
+			const profile = familyProfileById("travel-newspaper", profileId);
+			return travelNewspaperStyleFor({
+				compositionId: "newspaper-columns",
+				palette: travelNewspaperPaletteFor(profile.paletteId),
+				typography: profile,
+				variant: travelNewspaperVariantOf(profile.id),
+			});
 		};
-		expect(travelNewspaperStyle(design)).toMatchObject({
+		expect(styleOf("travel-newspaper.classic-travel")).toMatchObject({
 			"--newspaper-cover-left": "10mm",
 			"--newspaper-cover-width": "78mm",
 			"--newspaper-cover-height": "74mm",
 		});
-		expect(travelNewspaperStyle(cityDesign)).toMatchObject({
+		expect(styleOf("travel-newspaper.city-walk")).toMatchObject({
 			"--newspaper-cover-left": "60mm",
 		});
+	});
+
+	it("異常系: 未登録の構図を拒否する", () => {
+		const profile = familyProfileById(
+			"travel-newspaper",
+			"travel-newspaper.classic-travel",
+		);
+		expect(() =>
+			travelNewspaperStyleFor({
+				compositionId: "unknown",
+				palette: travelNewspaperPaletteFor(profile.paletteId),
+				typography: profile,
+				variant: "classic-travel",
+			}),
+		).toThrow();
 	});
 });

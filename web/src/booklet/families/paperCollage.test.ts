@@ -4,10 +4,10 @@ import type {
 	EditorialBooklet,
 	EditorialDay,
 } from "../editorialModel";
-import { PaginationError } from "../paginate";
+import { PaginationError } from "../paginationError";
 import {
 	type PaperCollageMeasurement,
-	paginatePaperCollage,
+	paginatePaperCollageDays,
 } from "./paperCollage";
 
 function unit(id: string): EditorialArrivalUnit {
@@ -79,13 +79,12 @@ function measurement(
 	};
 }
 
-describe("paginatePaperCollage", () => {
+describe("paginatePaperCollageDays", () => {
 	it("正常系: 2列を列優先で詰め、日が変わると新しいページにする", () => {
 		const days = [day(1, 7), day(2, 1)];
-		const pages = paginatePaperCollage(booklet(days), measurement(days));
+		const pages = paginatePaperCollageDays(booklet(days), measurement(days));
 
 		expect(pages).toEqual([
-			{ kind: "cover", pageId: "paper-collage-cover-journey-1" },
 			{
 				columns: [
 					[0, 1, 2],
@@ -120,33 +119,57 @@ describe("paginatePaperCollage", () => {
 		const days = [day(1, 1)];
 		const measured = measurement(days, 180, 173);
 
-		expect(() => paginatePaperCollage(booklet(days), measured)).toThrow(
+		expect(() => paginatePaperCollageDays(booklet(days), measured)).toThrow(
 			PaginationError,
+		);
+	});
+
+	it("異常系: 0以下の計測値はinvalid-measurementとして拒否する", () => {
+		const days = [day(1, 1)];
+		const measured = { ...measurement(days), firstBodyHeight: 0 };
+
+		expect(() => paginatePaperCollageDays(booklet(days), measured)).toThrow(
+			expect.objectContaining({ code: "invalid-measurement" }),
+		);
+	});
+
+	it("異常系: カード計測の件数が予定数と違えばinvalid-measurementとして拒否する", () => {
+		const days = [day(1, 2)];
+		const measured = measurement([day(1, 1)]);
+
+		expect(() => paginatePaperCollageDays(booklet(days), measured)).toThrow(
+			expect.objectContaining({ code: "invalid-measurement" }),
 		);
 	});
 
 	it("境界値: 先頭容量にちょうど収まるカードはselectedを保つ", () => {
 		const days = [day(1, 1)];
-		const pages = paginatePaperCollage(booklet(days), measurement(days, 146));
+		const pages = paginatePaperCollageDays(
+			booklet(days),
+			measurement(days, 146),
+		);
 
-		expect(pages[1]).toMatchObject({ layoutVariant: "selected" });
+		expect(pages[0]).toMatchObject({ layoutVariant: "selected" });
 	});
 
 	it("境界値: 先頭容量だけを超えるカードはcompact-headerへ退避する", () => {
 		const days = [day(1, 1)];
-		const pages = paginatePaperCollage(booklet(days), measurement(days, 147));
+		const pages = paginatePaperCollageDays(
+			booklet(days),
+			measurement(days, 147),
+		);
 
-		expect(pages[1]).toMatchObject({ layoutVariant: "compact-header" });
+		expect(pages[0]).toMatchObject({ layoutVariant: "compact-header" });
 	});
 
 	it("境界値: 狭幅で継続容量を超えるカードはwide-cardsへ退避する", () => {
 		const days = [day(1, 2)];
-		const pages = paginatePaperCollage(
+		const pages = paginatePaperCollageDays(
 			booklet(days),
 			measurement(days, 173, 80),
 		);
 
-		expect(pages[1]).toMatchObject({
+		expect(pages[0]).toMatchObject({
 			columns: [[0, 1]],
 			layoutVariant: "wide-cards",
 		});
@@ -154,23 +177,14 @@ describe("paginatePaperCollage", () => {
 
 	it("境界値: 空の日も日見出し用の1ページを作る", () => {
 		const days = [day(1, 0)];
-		const pages = paginatePaperCollage(booklet(days), measurement(days));
+		const pages = paginatePaperCollageDays(booklet(days), measurement(days));
 
-		expect(pages[1]).toMatchObject({
-			columns: [[], []],
-			continuation: false,
-			dayIndex: 0,
-		});
-	});
-
-	it("境界値: 日がなければ計測値に依存せず表紙だけを作る", () => {
-		expect(
-			paginatePaperCollage(booklet([]), {
-				cardGap: 0,
-				continuationBodyHeight: 0,
-				days: [],
-				firstBodyHeight: 0,
+		expect(pages).toEqual([
+			expect.objectContaining({
+				columns: [[], []],
+				continuation: false,
+				dayIndex: 0,
 			}),
-		).toEqual([{ kind: "cover", pageId: "paper-collage-cover-journey-1" }]);
+		]);
 	});
 });

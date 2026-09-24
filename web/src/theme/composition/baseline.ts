@@ -207,7 +207,7 @@ export function paperColorFor(config: DraftSceneConfig): string {
 	return STYLE_BUNDLES[config.surface.styleBundleId].paperColor;
 }
 
-function baselinePool(
+export function baselinePool(
 	id: DirectionId,
 	slot: ArtworkSlotSpec,
 ): HeroSubjectPool | { readonly kind: "medium-subjects" } {
@@ -474,7 +474,8 @@ export function buildBaselineState(
 						kind: "memo" as const,
 						participation,
 						sceneId: `memo:${day.id}`,
-						unitRefs: day.units.map((unit) => unit.id),
+						// The album page lists no visits, so it references no unit.
+						unitRefs: needsUnits ? day.units.map((unit) => unit.id) : [],
 					}
 				: null;
 		if (memo)

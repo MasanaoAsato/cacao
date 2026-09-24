@@ -28,8 +28,11 @@ export type TimeSection = {
 };
 
 export type DayFacts = {
+	/** Same-currency sums of the day's stay and transport costs. */
+	readonly costTotals: readonly CurrencyTotal[];
 	readonly date: string;
 	readonly dayNumber: number;
+	readonly movementMinutes: number;
 	readonly season: SeasonalMotif;
 	readonly timeSections: readonly TimeSection[];
 };
@@ -99,7 +102,8 @@ export function timeSectionsFor(day: BookletDay): readonly TimeSection[] {
 	return sections;
 }
 
-function sumCosts(model: BookletModel): readonly CurrencyTotal[] {
+/** Amounts are summed per currency; different currencies are never added. */
+function sumCosts(units: readonly ArrivalUnit[]): readonly CurrencyTotal[] {
 	const amounts = new Map<string, number>();
 	const add = (money: BookletMoney) => {
 		amounts.set(
@@ -107,26 +111,29 @@ function sumCosts(model: BookletModel): readonly CurrencyTotal[] {
 			(amounts.get(money.currency) ?? 0) + money.amount,
 		);
 	};
-	for (const day of model.days) {
-		for (const unit of day.units) {
-			add(unit.leg.estimated_cost);
-			add(unit.spot.estimated_cost);
-		}
+	for (const unit of units) {
+		add(unit.leg.estimated_cost);
+		add(unit.spot.estimated_cost);
 	}
 	return [...amounts].map(([currency, amount]) => ({ amount, currency }));
 }
 
+function movementMinutesOf(units: readonly ArrivalUnit[]): number {
+	return units.reduce((total, unit) => total + unit.leg.duration_minutes, 0);
+}
+
 export function deriveFacts(model: BookletModel): BookletFacts {
+	const units = model.days.flatMap((day) => day.units);
 	return {
-		costTotals: sumCosts(model),
+		costTotals: sumCosts(units),
 		days: model.days.map((day) => ({
+			costTotals: sumCosts(day.units),
 			date: day.date,
 			dayNumber: day.dayNumber,
+			movementMinutes: movementMinutesOf(day.units),
 			season: seasonalMotifFor(day.date),
 			timeSections: timeSectionsFor(day),
 		})),
-		movementMinutes: model.days
-			.flatMap((day) => day.units)
-			.reduce((total, unit) => total + unit.leg.duration_minutes, 0),
+		movementMinutes: movementMinutesOf(units),
 	};
 }

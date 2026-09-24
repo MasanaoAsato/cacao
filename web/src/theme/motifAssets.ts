@@ -1,5 +1,3 @@
-import type { MotifDefinition } from "./types";
-
 const atlasCompassUrl = new URL(
 	"../assets/motifs/atlas-ink/atlas-compass.svg",
 	import.meta.url,
@@ -68,11 +66,18 @@ export type MotifAssetId =
 	| "playful-footprints"
 	| "playful-curved-arrow";
 
-export type MotifAsset = Extract<
-	MotifDefinition,
-	{ readonly kind: "asset" }
-> & {
+/** Visual family of the repository-managed artwork. */
+export type MotifStyleId = "atlas-ink" | "paper-cut" | "playful-doodle";
+
+/** One repository-managed SVG drawn by family decor. */
+export type MotifAsset = {
+	/** Box width divided by height; the SVG viewBox is the authority. */
+	readonly aspect: number;
 	readonly id: MotifAssetId;
+	readonly kind: "asset";
+	readonly recolor: "mask" | "none";
+	readonly src: string;
+	readonly styleId: MotifStyleId;
 };
 
 function asset(
@@ -82,7 +87,7 @@ function asset(
 	src: string,
 	recolor: MotifAsset["recolor"] = "mask",
 ): MotifAsset {
-	return { aspect, coverage: 1, id, kind: "asset", recolor, src, styleId };
+	return { aspect, id, kind: "asset", recolor, src, styleId };
 }
 
 /**

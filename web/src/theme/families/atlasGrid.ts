@@ -1,9 +1,4 @@
 import { validateFamilyTextSafety } from "./decorPlacement";
-import type { VisualFamilyDefinition } from "./registry";
-import {
-	derivedStyleProfileFields,
-	styleProfilesForFamily,
-} from "./styleProfiles";
 
 export const ATLAS_GRID_PALETTES = {
 	blueprint: {
@@ -43,16 +38,6 @@ export const ATLAS_GRID_COMPOSITIONS = {
 
 export type AtlasGridCompositionId = keyof typeof ATLAS_GRID_COMPOSITIONS;
 
-const ATLAS_GRID_STYLE_PROFILES = styleProfilesForFamily("atlas-grid");
-const ATLAS_GRID_PROFILE_FIELDS = derivedStyleProfileFields(
-	ATLAS_GRID_STYLE_PROFILES,
-);
-
-export const ATLAS_GRID_DECOR_ASSET_IDS =
-	ATLAS_GRID_PROFILE_FIELDS.decorAssetIds;
-
-export const ATLAS_GRID_FONT_FAMILIES = ATLAS_GRID_PROFILE_FIELDS.fontFamilies;
-
 export function atlasGridPaletteFor(paletteId: string) {
 	const palette = ATLAS_GRID_PALETTES[paletteId as AtlasGridPaletteId];
 	if (!palette) {
@@ -79,11 +64,3 @@ for (const palette of Object.values(ATLAS_GRID_PALETTES)) {
 		]);
 	}
 }
-
-export const ATLAS_GRID_FAMILY = {
-	...ATLAS_GRID_PROFILE_FIELDS,
-	id: "atlas-grid",
-	moodIds: ["wayfinder", "night-train"],
-	policyId: "timetable",
-	styleProfiles: ATLAS_GRID_STYLE_PROFILES,
-} as const satisfies VisualFamilyDefinition;

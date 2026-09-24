@@ -13,8 +13,8 @@ import { deriveFacts } from "../../booklet/program/deriveFacts";
 import type { ArtworkAsset } from "../artwork/types";
 import { localePackFor } from "../directions/localePacks";
 import {
-	ACTIVE_DIRECTION_DEFINITIONS,
 	directionDefinitionById,
+	REGISTERED_DIRECTION_DEFINITIONS,
 } from "../directions/registry";
 import type { DirectionDefinition, DirectionId } from "../directions/types";
 import type { AxisRandom, CompileContext, CompositionCatalog } from "./types";
@@ -125,7 +125,7 @@ export function testCatalog(
 }
 
 export function fullTestCatalog(
-	directions: readonly DirectionDefinition[] = ACTIVE_DIRECTION_DEFINITIONS,
+	directions: readonly DirectionDefinition[] = REGISTERED_DIRECTION_DEFINITIONS,
 ): CompositionCatalog {
 	return {
 		artwork: REVIEWED_TEST_ARTWORK,

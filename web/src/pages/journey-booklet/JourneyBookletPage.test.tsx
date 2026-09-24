@@ -4,9 +4,12 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createBookletTheme } from "../../theme/bookletTheme";
-import { resolveBookletDesign } from "../../theme/families/resolveBookletDesign";
-import { type MotifAssetId, motifAssetsFor } from "../../theme/motifAssets";
+import { selectCoverImage, selectIllustrations } from "../../api/journeyImages";
+import { createBookletModel } from "../../booklet/fromJourney";
+import type { BookletProgram } from "../../booklet/program/model";
+import { programComparisonKey } from "../../booklet/program/programKeys";
+import { compileBooklet } from "../../theme/composition/compileBooklet";
+import { createDefaultThemeSeed } from "../../theme/seed";
 import { JourneyBookletPage } from "./JourneyBookletPage";
 
 const journeyPayload = {
@@ -81,72 +84,73 @@ const imagePayload = {
 	journey_request_id: "request-1",
 };
 
-function resolvedDesignForSeed(value: number) {
-	return resolveBookletDesign(createBookletTheme({ value, version: "v2" }));
+/** The same model the page builds from the mocked API. */
+const model = createBookletModel({
+	coverImage: selectCoverImage(
+		imagePayload.images as unknown as Parameters<typeof selectCoverImage>[0],
+	),
+	illustrationImages: selectIllustrations(
+		imagePayload.images as unknown as Parameters<typeof selectIllustrations>[0],
+	),
+	journey: journeyPayload as unknown as Parameters<
+		typeof createBookletModel
+	>[0]["journey"],
+	request: requestPayload as unknown as Parameters<
+		typeof createBookletModel
+	>[0]["request"],
+});
+
+/**
+ * Modules whose layout the jsdom mock below can stand in for: their regions
+ * are mm-positioned and every unit wraps at the full 128mm body width.
+ */
+const MOCKED_MODULES = new Set([
+	"woodcut-folio",
+	"photo-essay",
+	"vertical-poster",
+	"ledger",
+	"schematic-map",
+]);
+
+function programFor(value: number): BookletProgram | null {
+	const result = compileBooklet(model, { seed: { value, version: "v2" } });
+	return result.status === "compiled" ? result.program : null;
+}
+
+function drawable(program: BookletProgram | null): program is BookletProgram {
+	return (
+		program?.scenes.every((scene) => MOCKED_MODULES.has(scene.moduleId)) ??
+		false
+	);
+}
+
+function seedFor(predicate: (program: BookletProgram) => boolean): number {
+	for (let value = 0; value <= 0xffff; value += 1) {
+		const program = programFor(value);
+		if (drawable(program) && predicate(program)) return value;
+	}
+	throw new Error("テスト条件を満たすseedが見つかりません。");
 }
 
 function seedQuery(value: number): string {
 	return `v2-${value.toString(16).padStart(8, "0")}`;
 }
 
-function seedFor(
-	predicate: (design: ReturnType<typeof resolvedDesignForSeed>) => boolean,
-): number {
-	for (let value = 0; value <= 0xffff; value += 1) {
-		if (predicate(resolvedDesignForSeed(value))) {
-			return value;
-		}
+const firstSeed = seedFor(() => true);
+const firstProgram = programFor(firstSeed);
+const otherSeed = seedFor(
+	(program) =>
+		firstProgram !== null &&
+		programComparisonKey(program) !== programComparisonKey(firstProgram),
+);
+const defaultJourneyId = (() => {
+	for (let index = 0; index < 5000; index += 1) {
+		const journeyId = `journey-${index}`;
+		if (drawable(programFor(createDefaultThemeSeed(journeyId).value)))
+			return journeyId;
 	}
-	throw new Error("テスト条件を満たすテーマシードが見つかりません。");
-}
-
-const playfulRouteSeed2 = seedFor(
-	(design) => design.familyId === "playful-route",
-);
-const playfulRouteSeed2Design = resolvedDesignForSeed(playfulRouteSeed2);
-const playfulRouteSeed2RenderKey = playfulRouteSeed2Design.renderKey;
-const sameFamilyDifferentStyleSeed = seedFor(
-	(design) =>
-		design.familyId === playfulRouteSeed2Design.familyId &&
-		design.comparisonKey !== playfulRouteSeed2Design.comparisonKey,
-);
-const differentFamilySeed = seedFor(
-	(design) => design.familyId !== playfulRouteSeed2Design.familyId,
-);
-
-const originalDecode = HTMLImageElement.prototype.decode;
-const originalFonts = Object.getOwnPropertyDescriptor(document, "fonts");
-const originalPrint = Object.getOwnPropertyDescriptor(window, "print");
-const originalCreateObjectURL = Object.getOwnPropertyDescriptor(
-	URL,
-	"createObjectURL",
-);
-const originalRevokeObjectURL = Object.getOwnPropertyDescriptor(
-	URL,
-	"revokeObjectURL",
-);
-const originalClientHeight = Object.getOwnPropertyDescriptor(
-	HTMLElement.prototype,
-	"clientHeight",
-);
-const originalClientWidth = Object.getOwnPropertyDescriptor(
-	HTMLElement.prototype,
-	"clientWidth",
-);
-const originalScrollHeight = Object.getOwnPropertyDescriptor(
-	HTMLElement.prototype,
-	"scrollHeight",
-);
-const originalScrollWidth = Object.getOwnPropertyDescriptor(
-	HTMLElement.prototype,
-	"scrollWidth",
-);
-const originalOffsetHeight = Object.getOwnPropertyDescriptor(
-	HTMLElement.prototype,
-	"offsetHeight",
-);
-const originalGetBoundingClientRect =
-	HTMLElement.prototype.getBoundingClientRect;
+	throw new Error("既定seedで描けるjourney IDが見つかりません。");
+})();
 
 function LocationProbe() {
 	const location = useLocation();
@@ -154,7 +158,7 @@ function LocationProbe() {
 }
 
 function renderPage(
-	initialEntry = `/journeys/journey-1/booklet?seed=${seedQuery(playfulRouteSeed2)}`,
+	initialEntry = `/journeys/journey-1/booklet?seed=${seedQuery(firstSeed)}`,
 ) {
 	return render(
 		<MemoryRouter initialEntries={[initialEntry]}>
@@ -173,12 +177,9 @@ function renderPage(
 	);
 }
 
-function domRect(
-	left: number,
-	top: number,
-	width: number,
-	height: number,
-): DOMRect {
+const PX_PER_MM = 560 / 148;
+
+function domRect(left: number, top: number, width: number, height: number) {
 	return {
 		bottom: top + height,
 		height,
@@ -189,95 +190,71 @@ function domRect(
 		x: left,
 		y: top,
 		toJSON: () => ({}),
-	};
+	} as DOMRect;
 }
 
-function coverSafeAreaFor(element: HTMLElement) {
-	const theme = element.closest<HTMLElement>(".booklet-theme");
-	if (theme?.classList.contains("booklet-theme--cover-north-west")) {
-		return { height: 70, width: 80, x: 12, y: 12 };
-	}
-	if (theme?.classList.contains("booklet-theme--cover-north-east")) {
-		return { height: 70, width: 80, x: 56, y: 12 };
-	}
-	if (theme?.classList.contains("booklet-theme--cover-south-west")) {
-		return { height: 70, width: 80, x: 12, y: 128 };
-	}
-	if (theme?.classList.contains("booklet-theme--cover-south-east")) {
-		return { height: 70, width: 80, x: 56, y: 128 };
-	}
-	if (theme?.classList.contains("booklet-theme--cover-split-left")) {
-		return { height: 210, width: 70, x: 0, y: 0 };
-	}
-	if (theme?.classList.contains("booklet-theme--cover-horizon")) {
-		return { height: 62, width: 148, x: 0, y: 148 };
-	}
-	if (theme?.classList.contains("booklet-theme--cover-safe-cover")) {
-		return { height: 190, width: 128, x: 10, y: 10 };
-	}
-	return { height: 76, width: 104, x: 22, y: 67 };
+function mm(value: string): number | null {
+	return value.endsWith("mm") ? Number.parseFloat(value) : null;
 }
 
-function playfulRouteRect(element: HTMLElement): DOMRect | null {
-	const page = element.closest<HTMLElement>("[data-booklet-page]");
-	if (!page) {
-		return null;
-	}
-	const scale = 560 / 148;
-	const rectMm = (x: number, y: number, width: number, height: number) =>
-		domRect(x * scale, y * scale, width * scale, height * scale);
-	if (element === page) {
-		return rectMm(0, 0, 148, 210);
-	}
-	const composition = page.dataset.bookletComposition;
-	const anchorId = element.dataset.bookletAnchor;
-	if (anchorId === "playful-cover-sun") {
-		return composition === "zigzag"
-			? rectMm(116, 10, 20, 20)
-			: rectMm(18, 150, 24, 24);
-	}
-	if (anchorId === "playful-cover-bag") {
-		return composition === "zigzag"
-			? rectMm(10, 148, 18, 24)
-			: rectMm(50, 154, 18, 24);
-	}
-	if (anchorId === "playful-cover-burst") {
-		return composition === "zigzag"
-			? rectMm(10, 68, 24, 12)
-			: rectMm(10, 70, 24, 12);
-	}
-	if (anchorId === "playful-day-squiggle") {
-		return rectMm(62, 194, 24, 8);
-	}
-	if (element.classList.contains("playful-route-block")) {
-		const heightMm = Number.parseFloat(element.style.height) || 26.5;
-		const wide =
-			composition === "ribbon" ||
-			element.closest(".playful-route-blocks--wide-ribbon") !== null;
-		const right =
-			!wide && element.classList.contains("playful-route-block--right");
-		const compact = element.closest(".playful-route-blocks--selected") === null;
-		return rectMm(
-			right ? 34 : 10,
-			compact ? 34 : 52,
-			wide ? 128 : 104,
-			heightMm,
+/**
+ * A stand-in for layout: pages are 148×210mm, mm-positioned regions sit where
+ * their inline style says, units are 10mm rows at the body's full width, and
+ * any other element fills its region.
+ */
+function layoutRect(element: HTMLElement): DOMRect {
+	const page = element.closest<HTMLElement>("[data-program-page]");
+	if (!page) return domRect(0, 0, 0, 0);
+	if (element === page) return domRect(0, 0, 148 * PX_PER_MM, 210 * PX_PER_MM);
+	const left = mm(element.style.left);
+	const top = mm(element.style.top);
+	const width = mm(element.style.width);
+	const height = mm(element.style.height);
+	const parent = element.parentElement?.closest<HTMLElement>(
+		".program-region, [data-program-page]",
+	);
+	if (left !== null && top !== null && width !== null && height !== null) {
+		const base = parent ? layoutRect(parent) : domRect(0, 0, 0, 0);
+		return domRect(
+			base.left + left * PX_PER_MM,
+			base.top + top * PX_PER_MM,
+			width * PX_PER_MM,
+			height * PX_PER_MM,
 		);
 	}
-	const role = element.dataset.bookletTextRole;
-	if (!role) {
-		return null;
-	}
-	if (page.classList.contains("playful-route-page--cover")) {
-		return role === "cover-period"
-			? rectMm(10, 180, 100, 12)
-			: rectMm(15, 15, 85, 35);
-	}
-	if (role === "day-label" || role === "day-date") {
-		return rectMm(10, 10, 88, 30);
-	}
-	return rectMm(32, 56, 70, 18);
+	const region = parent ? layoutRect(parent) : domRect(0, 0, 0, 0);
+	if (
+		element.classList.contains("program-unit") ||
+		element.classList.contains("program-memo-entry")
+	)
+		return domRect(region.left, region.top, region.width, 10 * PX_PER_MM);
+	return region;
 }
+
+const originals = {
+	decode: Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, "decode"),
+	fonts: Object.getOwnPropertyDescriptor(document, "fonts"),
+	print: Object.getOwnPropertyDescriptor(window, "print"),
+	rect: Object.getOwnPropertyDescriptor(
+		HTMLElement.prototype,
+		"getBoundingClientRect",
+	),
+	sizes: (
+		[
+			"clientHeight",
+			"clientWidth",
+			"offsetHeight",
+			"scrollHeight",
+			"scrollWidth",
+		] as const
+	).map(
+		(name) =>
+			[
+				name,
+				Object.getOwnPropertyDescriptor(HTMLElement.prototype, name),
+			] as const,
+	),
+};
 
 function installBrowserMocks() {
 	Object.defineProperty(HTMLImageElement.prototype, "decode", {
@@ -296,157 +273,84 @@ function installBrowserMocks() {
 		configurable: true,
 		value: vi.fn(),
 	});
-	Object.defineProperties(HTMLElement.prototype, {
-		clientHeight: {
-			configurable: true,
-			get: () => 200,
-		},
-		clientWidth: {
-			configurable: true,
-			get: () => 200,
-		},
-		offsetHeight: {
-			configurable: true,
-			get: () => 20,
-		},
-		scrollHeight: {
-			configurable: true,
-			get: () => 100,
-		},
-		scrollWidth: {
-			configurable: true,
-			get: () => 200,
-		},
-	});
 	Object.defineProperty(HTMLElement.prototype, "getBoundingClientRect", {
 		configurable: true,
-		value: function getBoundingClientRectMock(this: HTMLElement) {
-			const playfulRect = playfulRouteRect(this);
-			if (playfulRect) {
-				return playfulRect;
-			}
-			if (this.classList.contains("booklet-cover-content")) {
-				return domRect(0, 0, 560, 794);
-			}
-			if (this.classList.contains("booklet-cover__text")) {
-				const safeArea = coverSafeAreaFor(this);
-				const scaleX = 560 / 148;
-				const scaleY = 794 / 210;
-				return domRect(
-					safeArea.x * scaleX,
-					safeArea.y * scaleY,
-					Math.min(58, safeArea.width) * scaleX,
-					Math.min(38, safeArea.height) * scaleY,
-				);
-			}
-			if (this.hasAttribute("data-booklet-cover-copy")) {
-				const safeArea = coverSafeAreaFor(this);
-				const scaleX = 560 / 148;
-				const scaleY = 794 / 210;
-				return domRect(
-					(safeArea.x + 4) * scaleX,
-					(safeArea.y + 4) * scaleY,
-					Math.min(50, safeArea.width - 8) * scaleX,
-					Math.min(30, safeArea.height - 8) * scaleY,
-				);
-			}
-			return domRect(0, 0, 200, 20);
+		value(this: HTMLElement) {
+			return layoutRect(this);
 		},
 	});
+	const sized = (read: (rect: DOMRect) => number) => ({
+		configurable: true,
+		get(this: HTMLElement) {
+			return read(layoutRect(this));
+		},
+	});
+	Object.defineProperties(HTMLElement.prototype, {
+		clientHeight: sized((rect) => rect.height),
+		clientWidth: sized((rect) => rect.width),
+		offsetHeight: sized((rect) => rect.height),
+		scrollHeight: sized((rect) => rect.height),
+		scrollWidth: sized((rect) => rect.width),
+	});
+}
+
+function restore(
+	target: object,
+	name: string,
+	descriptor: PropertyDescriptor | undefined,
+) {
+	if (descriptor) Object.defineProperty(target, name, descriptor);
+	else Reflect.deleteProperty(target, name);
 }
 
 function restoreBrowserMocks() {
-	if (originalDecode) {
-		Object.defineProperty(HTMLImageElement.prototype, "decode", {
-			configurable: true,
-			value: originalDecode,
-		});
-	} else {
-		Reflect.deleteProperty(HTMLImageElement.prototype, "decode");
-	}
-	if (originalFonts) {
-		Object.defineProperty(document, "fonts", originalFonts);
-	} else {
-		Reflect.deleteProperty(document, "fonts");
-	}
-	if (originalPrint) {
-		Object.defineProperty(window, "print", originalPrint);
-	}
-	if (originalCreateObjectURL) {
-		Object.defineProperty(URL, "createObjectURL", originalCreateObjectURL);
-	} else {
-		Reflect.deleteProperty(URL, "createObjectURL");
-	}
-	if (originalRevokeObjectURL) {
-		Object.defineProperty(URL, "revokeObjectURL", originalRevokeObjectURL);
-	} else {
-		Reflect.deleteProperty(URL, "revokeObjectURL");
-	}
-	for (const [property, descriptor] of [
-		["clientHeight", originalClientHeight],
-		["clientWidth", originalClientWidth],
-		["offsetHeight", originalOffsetHeight],
-		["scrollHeight", originalScrollHeight],
-		["scrollWidth", originalScrollWidth],
-	] as const) {
-		if (descriptor) {
-			Object.defineProperty(HTMLElement.prototype, property, descriptor);
-		} else {
-			Reflect.deleteProperty(HTMLElement.prototype, property);
-		}
-	}
-	Object.defineProperty(HTMLElement.prototype, "getBoundingClientRect", {
-		configurable: true,
-		value: originalGetBoundingClientRect,
-	});
-}
-
-/**
- * Fails decode for the named decor artwork only. Vite inlines the SVGs, so the
- * registered `src` is the only reliable way to recognise one asset.
- */
-function installMotifDecodeFailure(assetIds: readonly MotifAssetId[]): void {
-	const failing = new Set(
-		motifAssetsFor(assetIds).map((asset) => asset.src as string),
-	);
-	vi.mocked(HTMLImageElement.prototype.decode)
-		.mockReset()
-		.mockImplementation(function decodeMotifAsset(this: HTMLImageElement) {
-			return failing.has(this.getAttribute("src") ?? "")
-				? Promise.reject(new Error("motif decode failed"))
-				: Promise.resolve();
-		});
+	restore(HTMLImageElement.prototype, "decode", originals.decode);
+	restore(document, "fonts", originals.fonts);
+	restore(window, "print", originals.print);
+	restore(HTMLElement.prototype, "getBoundingClientRect", originals.rect);
+	for (const [name, descriptor] of originals.sizes)
+		restore(HTMLElement.prototype, name, descriptor);
 }
 
 function installFetchMock(
-	imageStatus: string = "ready",
+	imageStatus = "ready",
 	imageRequestId = "request-1",
-	illustrationStatus: string = "ready",
+	illustrationStatus = "ready",
 ) {
-	const fetchMock = vi.fn(
-		async (input: RequestInfo | URL, _init?: RequestInit) => {
-			const path = String(input);
-			if (path.includes("/journeys/")) {
-				return new Response(JSON.stringify(journeyPayload), { status: 200 });
-			}
-			if (path.includes("/journey-requests/request-1/images")) {
-				return new Response(
-					JSON.stringify({
-						...imagePayload,
-						images: [
-							{ ...imagePayload.images[0], status: imageStatus },
-							{ ...imagePayload.images[1], status: illustrationStatus },
-						],
-						journey_request_id: imageRequestId,
-					}),
-					{ status: 200 },
-				);
-			}
-			return new Response(JSON.stringify(requestPayload), { status: 200 });
-		},
-	);
+	const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+		const path = String(input);
+		if (path.includes("/journeys/")) {
+			return new Response(JSON.stringify(journeyPayload), { status: 200 });
+		}
+		if (path.includes("/journey-requests/request-1/images")) {
+			return new Response(
+				JSON.stringify({
+					...imagePayload,
+					images: [
+						{ ...imagePayload.images[0], status: imageStatus },
+						{ ...imagePayload.images[1], status: illustrationStatus },
+					],
+					journey_request_id: imageRequestId,
+				}),
+				{ status: 200 },
+			);
+		}
+		return new Response(JSON.stringify(requestPayload), { status: 200 });
+	});
 	vi.stubGlobal("fetch", fetchMock);
 	return fetchMock;
+}
+
+const shell = () => document.querySelector(".booklet-shell");
+const printButton = () => screen.getByRole("button", { name: "PDFを印刷" });
+const downloadButton = () =>
+	screen.getByRole("button", { name: "PDFをダウンロード" });
+
+function mockRandomSeed(value: number) {
+	return vi.spyOn(crypto, "getRandomValues").mockImplementation((values) => {
+		if (values instanceof Uint32Array) values[0] = value;
+		return values;
+	});
 }
 
 describe("JourneyBookletPage", () => {
@@ -462,86 +366,77 @@ describe("JourneyBookletPage", () => {
 		vi.restoreAllMocks();
 	});
 
-	it("正常系: APIデータから表紙と本文を描画し印刷できる", async () => {
+	it("正常系: compilerのprogramを描画し、全体の確認後にだけ印刷できる", async () => {
 		const fetchMock = installFetchMock();
 		renderPage();
 
-		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
-		await waitFor(() => expect(printButton).toBeEnabled());
-
+		await waitFor(() => expect(printButton()).toBeEnabled());
 		expect(screen.getByRole("status")).toHaveTextContent(
 			/^しおりの印刷準備ができました。$/,
 		);
-		expect(screen.getByRole("status")).not.toHaveTextContent("v2-");
-		expect(screen.getByRole("link", { name: "ホームに戻る" })).toHaveAttribute(
-			"href",
-			"/",
+		expect(shell()).toHaveAttribute("data-booklet-print-state", "ready");
+		expect(shell()).toHaveAttribute(
+			"data-booklet-direction-id",
+			firstProgram?.baseDirectionId,
 		);
-		expect(screen.getByRole("heading", { name: "京都" })).toBeInTheDocument();
-		expect(screen.getByRole("heading", { name: "浅草" })).toBeInTheDocument();
-		expect(document.querySelectorAll("[data-booklet-page]")).toHaveLength(2);
-		expect(document.querySelector(".booklet-shell")).toHaveAttribute(
-			"data-booklet-family",
-			"playful-route",
+		expect(shell()).toHaveAttribute(
+			"data-booklet-catalog-revision",
+			firstProgram?.catalogRevision,
 		);
-		expect(document.querySelector(".booklet-document")).toHaveAttribute(
-			"data-booklet-family",
-			"playful-route",
+		expect(shell()).toHaveAttribute(
+			"data-booklet-comparison-key",
+			firstProgram ? programComparisonKey(firstProgram) : "",
 		);
-
-		printButton.click();
-		expect(window.print).toHaveBeenCalledTimes(1);
-		expect(fetchMock).toHaveBeenCalledTimes(3);
-		expect(fetchMock.mock.calls[0]?.[0]).toBe("/api/v1/journeys/journey-1");
+		// A program is never labelled with an invented single family.
+		expect(shell()).not.toHaveAttribute("data-booklet-family");
+		const pages = Array.from(
+			document.querySelectorAll<HTMLElement>(
+				".booklet-document [data-booklet-page]",
+			),
+		);
+		expect(pages[0]?.dataset.pageId).toBe("cover/cover");
+		expect(pages.map((page) => page.dataset.pageNumber)).toEqual(
+			pages.map((_page, index) => String(index + 1)),
+		);
 		expect(
-			vi
-				.mocked(document.fonts.load)
-				.mock.calls.some(
-					([, sampleText]) => sampleText === "東京の旅程・京都散策",
-				),
-		).toBe(true);
+			Array.from(
+				document.querySelectorAll(".booklet-document [data-unit-id]"),
+				(element) => element.getAttribute("data-unit-id"),
+			),
+		).toEqual(model.days.flatMap((day) => day.units.map((unit) => unit.id)));
+		expect(screen.getAllByText("浅草").length).toBeGreaterThan(0);
+
+		printButton().click();
+		expect(window.print).toHaveBeenCalledTimes(1);
+		expect(fetchMock.mock.calls[0]?.[0]).toBe("/api/v1/journeys/journey-1");
+		expect(document.fonts.load).toHaveBeenCalled();
 	});
 
-	it("状態: データ読込中はレンダラーにloadingを通知する", async () => {
+	it("状態: データ読込中はloading、計測中はpreparingで印刷できない", async () => {
 		vi.stubGlobal(
 			"fetch",
 			vi.fn(() => new Promise<Response>(() => {})),
 		);
-
 		renderPage();
-
 		await waitFor(() =>
-			expect(document.querySelector(".booklet-shell")).toHaveAttribute(
-				"data-booklet-print-state",
-				"loading",
-			),
+			expect(shell()).toHaveAttribute("data-booklet-print-state", "loading"),
 		);
-		expect(
-			screen.getByRole("button", { name: "PDFをダウンロード" }),
-		).toBeDisabled();
-	});
+		expect(downloadButton()).toBeDisabled();
+		cleanup();
 
-	it("状態: ページ計測中はレンダラーにpreparingを通知する", async () => {
-		const imageDecodePending = new Promise<void>(() => {});
 		vi.mocked(HTMLImageElement.prototype.decode).mockReturnValue(
-			imageDecodePending,
+			new Promise<void>(() => {}),
 		);
 		installFetchMock();
-
 		renderPage();
-
 		await waitFor(() =>
-			expect(document.querySelector(".booklet-shell")).toHaveAttribute(
-				"data-booklet-print-state",
-				"preparing",
-			),
+			expect(shell()).toHaveAttribute("data-booklet-print-state", "preparing"),
 		);
-		expect(
-			screen.getByRole("button", { name: "PDFをダウンロード" }),
-		).toBeDisabled();
+		expect(downloadButton()).toBeDisabled();
+		expect(printButton()).toBeDisabled();
 	});
 
-	it("正常系: 準備完了したしおりをPDFとしてダウンロードできる", async () => {
+	it("正常系: 準備完了したしおりを同じseedのPDFとしてダウンロードできる", async () => {
 		const fetchMock = installFetchMock();
 		const createObjectURL = vi.fn(() => "blob:journey-booklet");
 		const revokeObjectURL = vi.fn();
@@ -559,17 +454,8 @@ describe("JourneyBookletPage", () => {
 				clickedFileName = this.download;
 			},
 		);
-
 		renderPage();
-
-		const downloadButton = screen.getByRole("button", {
-			name: "PDFをダウンロード",
-		});
-		await waitFor(() => expect(downloadButton).toBeEnabled());
-		expect(document.querySelector(".booklet-shell")).toHaveAttribute(
-			"data-booklet-print-state",
-			"ready",
-		);
+		await waitFor(() => expect(downloadButton()).toBeEnabled());
 		fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
 			if (String(input).includes("/booklet.pdf")) {
 				return new Response("%PDF-1.4\n", {
@@ -580,734 +466,176 @@ describe("JourneyBookletPage", () => {
 			throw new Error("unexpected request");
 		});
 
-		downloadButton.click();
+		downloadButton().click();
 
 		await waitFor(() => expect(createObjectURL).toHaveBeenCalledTimes(1));
-		const bookletPath = fetchMock.mock.calls
-			.map(([input]) => String(input))
-			.find((path) => path.includes("/booklet.pdf"));
-		expect(bookletPath).toMatch(
-			/^\/api\/v1\/journeys\/journey-1\/booklet\.pdf\?seed=v2-[0-9a-f]{8}$/,
+		expect(
+			fetchMock.mock.calls
+				.map(([input]) => String(input))
+				.find((path) => path.includes("/booklet.pdf")),
+		).toBe(
+			`/api/v1/journeys/journey-1/booklet.pdf?seed=${seedQuery(firstSeed)}`,
 		);
 		expect(clickedFileName).toBe("旅のしおり-京都-2026-08-28.pdf");
 		expect(revokeObjectURL).toHaveBeenCalledWith("blob:journey-booklet");
 	});
 
-	it("状態: PDF作成中は両方の操作を無効にして進行中を表示する", async () => {
-		const fetchMock = installFetchMock();
-		renderPage();
-
-		const downloadButton = screen.getByRole("button", {
-			name: "PDFをダウンロード",
-		});
-		await waitFor(() => expect(downloadButton).toBeEnabled());
-		fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
-			if (String(input).includes("/booklet.pdf")) {
-				return new Promise<Response>(() => {});
-			}
-			throw new Error("unexpected request");
-		});
-
-		downloadButton.click();
-
-		await waitFor(() =>
-			expect(screen.getByRole("status")).toHaveTextContent(
-				"PDFを作成しています…",
-			),
-		);
-		expect(downloadButton).toBeDisabled();
-		expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeDisabled();
-	});
-
-	it("異常系: 混雑時はPDFを再試行できる状態で案内する", async () => {
-		const fetchMock = installFetchMock();
-		renderPage();
-
-		const downloadButton = screen.getByRole("button", {
-			name: "PDFをダウンロード",
-		});
-		await waitFor(() => expect(downloadButton).toBeEnabled());
-		fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
-			if (String(input).includes("/booklet.pdf")) {
-				return new Response("", { status: 503 });
-			}
-			throw new Error("unexpected request");
-		});
-
-		downloadButton.click();
-
-		await waitFor(() =>
-			expect(screen.getByRole("status")).toHaveTextContent(
-				"混み合っています。数秒後にもう一度お試しください。",
-			),
-		);
-		expect(downloadButton).toBeEnabled();
-		expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled();
-	});
-
-	it("異常系: 表紙画像が未準備ならPDFを再試行できる状態で案内する", async () => {
-		const fetchMock = installFetchMock();
-		renderPage();
-
-		const downloadButton = screen.getByRole("button", {
-			name: "PDFをダウンロード",
-		});
-		await waitFor(() => expect(downloadButton).toBeEnabled());
-		fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
-			if (String(input).includes("/booklet.pdf")) {
-				return new Response("", { status: 409 });
-			}
-			throw new Error("unexpected request");
-		});
-
-		downloadButton.click();
-
-		await waitFor(() =>
-			expect(screen.getByRole("status")).toHaveTextContent(
-				"表紙または挿絵がまだ準備できていません。",
-			),
-		);
-		expect(downloadButton).toBeEnabled();
-		expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled();
-	});
-
 	it("異常系: PDF生成に失敗したら印刷で保存する代替手段を案内する", async () => {
 		const fetchMock = installFetchMock();
 		renderPage();
-
-		const downloadButton = screen.getByRole("button", {
-			name: "PDFをダウンロード",
-		});
-		await waitFor(() => expect(downloadButton).toBeEnabled());
-		fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
-			if (String(input).includes("/booklet.pdf")) {
-				return new Response("", { status: 500 });
-			}
-			throw new Error("unexpected request");
-		});
-
-		downloadButton.click();
-
+		await waitFor(() => expect(downloadButton()).toBeEnabled());
+		fetchMock.mockImplementation(async () => new Response("", { status: 500 }));
+		downloadButton().click();
 		await waitFor(() =>
 			expect(screen.getByRole("status")).toHaveTextContent(
 				"PDFを作成できませんでした。「PDFを印刷」からも保存できます。",
 			),
 		);
-		expect(screen.getByRole("status")).not.toHaveTextContent(
-			"しおりの印刷準備ができました。",
-		);
-		expect(downloadButton).toBeEnabled();
-		expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled();
 	});
 
-	it("異常系: 表紙画像が未準備なら印刷と生成要求を行わない", async () => {
-		const fetchMock = installFetchMock("processing");
+	it("異常系: 表紙画像・挿絵が未準備なら印刷しない", async () => {
+		installFetchMock("pending");
 		renderPage();
-
-		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 		await waitFor(() =>
-			expect(screen.getByRole("status")).toHaveTextContent("準備できていない"),
-		);
-
-		expect(printButton).toBeDisabled();
-		expect(document.querySelector(".booklet-shell")).toHaveAttribute(
-			"data-booklet-print-state",
-			"error",
-		);
-		expect(document.querySelector(".booklet-shell")).toHaveAttribute(
-			"data-booklet-print-error",
-			"表紙画像が準備できていないため、印刷できません。",
-		);
-		expect(window.print).not.toHaveBeenCalled();
-		expect(fetchMock).toHaveBeenCalledTimes(3);
-		expect(
-			fetchMock.mock.calls.every((call) => call[1]?.method === "GET"),
-		).toBe(true);
-	});
-
-	it("異常系: 挿絵が未準備なら印刷を無効にする", async () => {
-		installFetchMock("ready", "request-1", "processing");
-		renderPage();
-
-		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
-		await waitFor(() =>
-			expect(screen.getByRole("status")).toHaveTextContent(
-				"挿絵がまだ準備できていない",
+			expect(shell()).toHaveAttribute(
+				"data-booklet-print-error",
+				"表紙画像が準備できていないため、印刷できません。",
 			),
 		);
+		expect(printButton()).toBeDisabled();
+		cleanup();
 
-		expect(printButton).toBeDisabled();
-		expect(document.querySelector(".booklet-shell")).toHaveAttribute(
-			"data-booklet-print-state",
-			"error",
-		);
-	});
-
-	it("異常系: 表紙画像一覧が別のリクエストなら印刷しない", async () => {
-		installFetchMock("ready", "request-2");
+		installFetchMock("ready", "request-1", "pending");
 		renderPage();
-
-		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 		await waitFor(() =>
-			expect(screen.getByRole("status")).toHaveTextContent(
-				"識別子が一致しません",
+			expect(shell()).toHaveAttribute(
+				"data-booklet-print-error",
+				"挿絵がまだ準備できていないため、印刷できません。",
 			),
 		);
-
-		expect(printButton).toBeDisabled();
-		expect(window.print).not.toHaveBeenCalled();
+		expect(printButton()).toBeDisabled();
 	});
 
-	it("異常系: 表紙画像のdecodeに失敗したら印刷しない", async () => {
+	it("異常系: 使用する画像のdecodeに失敗したら全体をerrorにし印刷しない", async () => {
 		vi.mocked(HTMLImageElement.prototype.decode).mockRejectedValue(
 			new Error("decode failed"),
 		);
 		installFetchMock();
-		renderPage(
-			`/journeys/journey-1/booklet?seed=${seedQuery(playfulRouteSeed2)}`,
-		);
-
-		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
+		renderPage();
 		await waitFor(() =>
-			expect(screen.getByRole("status")).toHaveTextContent(
-				"読み込みに失敗しました",
-			),
+			expect(shell()).toHaveAttribute("data-booklet-print-state", "error"),
 		);
-
-		expect(printButton).toBeDisabled();
-		expect(
-			document.querySelector<HTMLElement>(".booklet-measurement")?.dataset
-				.bookletThemeKey,
-		).toBe(playfulRouteSeed2RenderKey);
-		expect(window.print).not.toHaveBeenCalled();
+		expect(shell()?.getAttribute("data-booklet-print-error")).toContain(
+			"読み込みに失敗しました",
+		);
+		expect(printButton()).toBeDisabled();
+		expect(document.querySelector(".booklet-document")).toBeNull();
 	});
 
-	it("異常系: 選んだパターンの装飾素材のdecodeに失敗したら印刷しない", async () => {
-		const selectedAssetId = playfulRouteSeed2Design.decorAssetIds[0];
-		if (!selectedAssetId) {
-			throw new Error("選択済みデザインに装飾素材がありません。");
-		}
-		installMotifDecodeFailure([selectedAssetId]);
-		installFetchMock();
-		renderPage(
-			`/journeys/journey-1/booklet?seed=${seedQuery(playfulRouteSeed2)}`,
-		);
-
-		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
-		await waitFor(() =>
-			expect(screen.getByRole("status")).toHaveTextContent(
-				`装飾素材「${selectedAssetId}」の読み込みに失敗しました`,
-			),
-		);
-		expect(printButton).toBeDisabled();
-		expect(window.print).not.toHaveBeenCalled();
-	});
-
-	it("境界値: 選んでいない装飾素材のdecode失敗に影響されない", async () => {
-		const unselectedAssetIds = [
-			"playful-bag",
-			"playful-burst",
-			"playful-curved-arrow",
-			"playful-footprints",
-			"playful-squiggle",
-			"playful-sun",
-		].filter(
-			(assetId): assetId is MotifAssetId =>
-				!playfulRouteSeed2Design.decorAssetIds.includes(
-					assetId as MotifAssetId,
-				),
-		);
-		if (unselectedAssetIds.length === 0) {
-			throw new Error("選んでいない装飾素材がありません。");
-		}
-		installMotifDecodeFailure(unselectedAssetIds);
-		installFetchMock();
-		renderPage(
-			`/journeys/journey-1/booklet?seed=${seedQuery(playfulRouteSeed2)}`,
-		);
-
-		await waitFor(() =>
-			expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled(),
-		);
-		expect(document.querySelector(".booklet-document")).toHaveAttribute(
-			"data-booklet-decor-variant",
-			playfulRouteSeed2Design.decorVariantId,
-		);
-		expect(document.querySelector(".booklet-shell")).toHaveAttribute(
-			"data-booklet-comparison-key",
-			playfulRouteSeed2Design.comparisonKey,
-		);
-	});
-
-	it("境界値: シード切替後に旧パターンの素材読込が完了しても新しいreadyを維持する", async () => {
-		const initialSeed = seedFor(
-			(design) =>
-				design.familyId === "atlas-grid" && design.decorAssetIds.length > 0,
-		);
-		const initialDesign = resolvedDesignForSeed(initialSeed);
-		const initialAssetId = initialDesign.decorAssetIds[0];
-		if (!initialAssetId) {
-			throw new Error("初期デザインに装飾素材がありません。");
-		}
-		const nextSeed = seedFor((design) => design.familyId === "playful-route");
-		const nextDesign = resolvedDesignForSeed(nextSeed);
-		const initialAssetSrc = motifAssetsFor([initialAssetId])[0]?.src;
-		if (!initialAssetSrc) {
-			throw new Error("初期デザインの装飾素材が登録されていません。");
-		}
-		let resolveInitialAsset: (() => void) | undefined;
-		const initialAssetDecode = new Promise<void>((resolve) => {
-			resolveInitialAsset = resolve;
-		});
-		let initialAssetStarted = false;
-		let shouldDelayInitialAsset = true;
-		vi.mocked(HTMLImageElement.prototype.decode).mockImplementation(
-			function decode(this: HTMLImageElement) {
-				if (
-					shouldDelayInitialAsset &&
-					this.getAttribute("src") === initialAssetSrc
-				) {
-					shouldDelayInitialAsset = false;
-					initialAssetStarted = true;
-					return initialAssetDecode;
-				}
-				return Promise.resolve();
-			},
-		);
-		vi.spyOn(crypto, "getRandomValues").mockImplementation((values) => {
-			if (values instanceof Uint32Array) {
-				values[0] = nextSeed;
-			}
-			return values;
-		});
-		installFetchMock();
-		renderPage(`/journeys/journey-1/booklet?seed=${seedQuery(initialSeed)}`);
-
-		await waitFor(() => expect(initialAssetStarted).toBe(true));
-		screen.getByRole("button", { name: "別のデザインを試す" }).click();
-		await waitFor(() =>
-			expect(screen.getByTestId("location-search")).toHaveTextContent(
-				`seed=${seedQuery(nextSeed)}`,
-			),
-		);
-		await waitFor(() =>
-			expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled(),
-		);
-		expect(document.querySelector(".booklet-document")).toHaveAttribute(
-			"data-booklet-decor-variant",
-			nextDesign.decorVariantId,
-		);
-
-		if (!resolveInitialAsset) {
-			throw new Error("初期デザインの装飾素材のdecodeが開始されていません。");
-		}
-		resolveInitialAsset();
-		await Promise.resolve();
-
-		await waitFor(() =>
-			expect(document.querySelector(".booklet-shell")).toHaveAttribute(
-				"data-booklet-print-state",
-				"ready",
-			),
-		);
-		expect(document.querySelector(".booklet-document")).toHaveAttribute(
-			"data-booklet-decor-variant",
-			nextDesign.decorVariantId,
-		);
-	});
-
-	it("異常系: 出力側の日別画像のdecodeに失敗したら印刷しない", async () => {
-		vi.mocked(HTMLImageElement.prototype.decode)
-			.mockReset()
-			.mockImplementation(function decodeOutputImage(this: HTMLImageElement) {
-				return this.closest(
-					".booklet-document .playful-route-day-header__image",
-				)
-					? Promise.reject(new Error("day image decode failed"))
-					: Promise.resolve();
-			});
-		installFetchMock();
-		renderPage(
-			`/journeys/journey-1/booklet?seed=${seedQuery(playfulRouteSeed2)}`,
-		);
-
-		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
-		await waitFor(() =>
-			expect(screen.getByRole("status")).toHaveTextContent(
-				"画像「京都の旅のイメージ」の読み込みに失敗しました",
-			),
-		);
-		expect(printButton).toBeDisabled();
-		expect(window.print).not.toHaveBeenCalled();
-	});
-
-	it("境界値: 単体が先頭本文だけを超える場合はcompact-headerの退避理由を記録する", async () => {
-		Object.defineProperty(HTMLElement.prototype, "scrollHeight", {
-			configurable: true,
-			get() {
-				const element = this as HTMLElement;
-				if (element.hasAttribute("data-playful-route-first-body")) {
-					return 530;
-				}
-				if (element.hasAttribute("data-playful-route-continuation-body")) {
-					return 598;
-				}
-				if (element.dataset.playfulRouteBlock?.startsWith("selected-")) {
-					return 534;
-				}
-				return 100;
-			},
-		});
-		installFetchMock();
-		renderPage(
-			`/journeys/journey-1/booklet?seed=${seedQuery(playfulRouteSeed2)}`,
-		);
-
-		await waitFor(() =>
-			expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled(),
-		);
-		const shell = document.querySelector(".booklet-shell");
-		expect(shell).toHaveAttribute(
-			"data-booklet-resolved-composition",
-			"compact-header",
-		);
-		expect(shell?.getAttribute("data-booklet-fallback-log")).toContain(
-			"selected:unit-overflow",
-		);
-	});
-
-	it("異常系: 選択フォントを確認できなければ候補を進めず印刷しない", async () => {
+	it("異常系: 使用書体のweightを確認できなければ印刷しない", async () => {
 		vi.mocked(document.fonts.check).mockReturnValue(false);
 		installFetchMock();
-		renderPage(
-			`/journeys/journey-1/booklet?seed=${seedQuery(playfulRouteSeed2)}`,
-		);
-
-		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
-		await waitFor(() =>
-			expect(screen.getByRole("status")).toHaveTextContent(
-				"読み込みを確認できませんでした",
-			),
-		);
-		expect(printButton).toBeDisabled();
-		expect(
-			document.querySelector<HTMLElement>(".booklet-measurement")?.dataset
-				.bookletThemeKey,
-		).toBe(playfulRouteSeed2RenderKey);
-		expect(window.print).not.toHaveBeenCalled();
-	});
-
-	it("異常系: 計測DOMの寸法が不正なら候補を進めず印刷しない", async () => {
-		Object.defineProperties(HTMLElement.prototype, {
-			clientHeight: { configurable: true, get: () => 0 },
-			clientWidth: { configurable: true, get: () => 0 },
-			offsetHeight: { configurable: true, get: () => 0 },
-			scrollHeight: { configurable: true, get: () => 0 },
-			scrollWidth: { configurable: true, get: () => 0 },
-		});
-		Object.defineProperty(HTMLElement.prototype, "getBoundingClientRect", {
-			configurable: true,
-			value: () =>
-				({
-					bottom: 0,
-					height: 0,
-					left: 0,
-					right: 0,
-					top: 0,
-					width: 0,
-				}) as DOMRect,
-		});
-		installFetchMock();
-		renderPage(
-			`/journeys/journey-1/booklet?seed=${seedQuery(playfulRouteSeed2)}`,
-		);
-
-		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
-		await waitFor(() =>
-			expect(screen.getByRole("status")).toHaveTextContent(
-				"計測用紙面の幅を計測できません",
-			),
-		);
-		expect(printButton).toBeDisabled();
-		expect(
-			document.querySelector<HTMLElement>(".booklet-measurement")?.dataset
-				.bookletThemeKey,
-		).toBe(playfulRouteSeed2RenderKey);
-		expect(window.print).not.toHaveBeenCalled();
-	});
-
-	it("異常系: 装飾anchorが紙面外なら印刷しない", async () => {
-		Object.defineProperty(HTMLElement.prototype, "getBoundingClientRect", {
-			configurable: true,
-			value: function outsidePage(this: HTMLElement) {
-				if (this.dataset.bookletAnchor === "playful-cover-sun") {
-					return domRect(600, 0, 80, 80);
-				}
-				const playfulRect = playfulRouteRect(this);
-				if (playfulRect) return playfulRect;
-				return domRect(0, 0, 200, 20);
-			},
-		});
-		installFetchMock();
-		renderPage(
-			`/journeys/journey-1/booklet?seed=${seedQuery(playfulRouteSeed2)}`,
-		);
-
-		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
-		await waitFor(() =>
-			expect(screen.getByRole("status")).toHaveTextContent(
-				"装飾「playful-sun」を基準「playful-cover-sun」に配置できませんでした",
-			),
-		);
-		expect(printButton).toBeDisabled();
-		expect(window.print).not.toHaveBeenCalled();
-	});
-
-	it("異常系: 文字を隠す表示設定があれば候補を進めず印刷しない", async () => {
-		const style = document.createElement("style");
-		style.textContent =
-			"[data-booklet-text-role] { overflow: hidden !important; }";
-		document.head.append(style);
-		try {
-			installFetchMock();
-			renderPage(
-				`/journeys/journey-1/booklet?seed=${seedQuery(playfulRouteSeed2)}`,
-			);
-
-			const printButton = screen.getByRole("button", { name: "PDFを印刷" });
-			await waitFor(() =>
-				expect(screen.getByRole("status")).toHaveTextContent(
-					"文字を隠す表示設定を検出しました",
-				),
-			);
-			expect(printButton).toBeDisabled();
-			expect(
-				document.querySelector<HTMLElement>(".booklet-measurement")?.dataset
-					.bookletThemeKey,
-			).toBe(playfulRouteSeed2RenderKey);
-			expect(window.print).not.toHaveBeenCalled();
-		} finally {
-			style.remove();
-		}
-	});
-
-	it("異常系: 実ページ数が計画と一致しなければ候補を進めず印刷しない", async () => {
-		const originalQuerySelectorAll = Object.getOwnPropertyDescriptor(
-			Element.prototype,
-			"querySelectorAll",
-		);
-		if (!originalQuerySelectorAll) {
-			throw new Error("querySelectorAllの記述子がありません。");
-		}
-		Object.defineProperty(Element.prototype, "querySelectorAll", {
-			configurable: true,
-			value: function <E extends Element = Element>(
-				this: HTMLElement,
-				selectors: string,
-			): NodeListOf<E> {
-				if (
-					selectors === "[data-booklet-page]" &&
-					this.classList.contains("booklet-document")
-				) {
-					return document
-						.createDocumentFragment()
-						.querySelectorAll<E>(selectors);
-				}
-				return originalQuerySelectorAll.value.call(
-					this,
-					selectors,
-				) as NodeListOf<E>;
-			},
-		});
-		try {
-			installFetchMock();
-			renderPage(
-				`/journeys/journey-1/booklet?seed=${seedQuery(playfulRouteSeed2)}`,
-			);
-
-			const printButton = screen.getByRole("button", { name: "PDFを印刷" });
-			await waitFor(() =>
-				expect(screen.getByRole("status")).toHaveTextContent(
-					"playful-routeのページ数がページ計画と一致しません",
-				),
-			);
-			expect(printButton).toBeDisabled();
-			expect(
-				document.querySelector<HTMLElement>(".booklet-measurement")?.dataset
-					.bookletThemeKey,
-			).toBe(playfulRouteSeed2RenderKey);
-			expect(window.print).not.toHaveBeenCalled();
-		} finally {
-			Object.defineProperty(
-				Element.prototype,
-				"querySelectorAll",
-				originalQuerySelectorAll,
-			);
-		}
-	});
-
-	it("異常系: 22ptでも表紙都市名が収まらなければ印刷しない", async () => {
-		installFetchMock();
-		Object.defineProperty(HTMLElement.prototype, "scrollHeight", {
-			configurable: true,
-			get: () => 300,
-		});
 		renderPage();
-
-		const printButton = screen.getByRole("button", { name: "PDFを印刷" });
 		await waitFor(() =>
-			expect(screen.getByRole("status")).toHaveTextContent(
-				"表紙の都市名が22ptでも予約領域に収まりません",
-			),
+			expect(shell()).toHaveAttribute("data-booklet-print-state", "error"),
 		);
-		expect(printButton).toBeDisabled();
-		printButton.click();
-		expect(window.print).not.toHaveBeenCalled();
+		expect(shell()?.getAttribute("data-booklet-print-error")).toContain(
+			"読み込みを確認できませんでした",
+		);
+		expect(printButton()).toBeDisabled();
 	});
 
-	it("異常系: 不正なseedクエリは既定テーマへ戻しURLから除去する", async () => {
+	it("異常系: 不正なseedクエリは既定seedへ戻しURLから除去する", async () => {
 		installFetchMock();
-		renderPage("/journeys/journey-3/booklet?seed=v1-00000000");
-
+		renderPage(`/journeys/${defaultJourneyId}/booklet?seed=v1-00000000`);
 		await waitFor(() =>
 			expect(screen.getByTestId("location-search").textContent).toBe(""),
 		);
-		await waitFor(() =>
-			expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled(),
-		);
+		await waitFor(() => expect(printButton()).toBeEnabled());
 	});
 
-	it("正常系: 同じfamilyのseedでも除外せず、乱数1回でURLへ採用する", async () => {
+	it("正常系: 再抽選は乱数1回で新しいseedをURLへ採用し、新しいprogramを描く", async () => {
 		installFetchMock();
 		renderPage();
-		await waitFor(() =>
-			expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled(),
-		);
-		const randomValues = vi
-			.spyOn(crypto, "getRandomValues")
-			.mockImplementation((values) => {
-				if (values instanceof Uint32Array) {
-					values[0] = sameFamilyDifferentStyleSeed;
-				}
-				return values;
-			});
+		await waitFor(() => expect(printButton()).toBeEnabled());
+		const randomValues = mockRandomSeed(otherSeed);
 
 		screen.getByRole("button", { name: "別のデザインを試す" }).click();
+
 		await waitFor(() =>
 			expect(screen.getByTestId("location-search")).toHaveTextContent(
-				`seed=${seedQuery(sameFamilyDifferentStyleSeed)}`,
+				`seed=${seedQuery(otherSeed)}`,
 			),
 		);
 		expect(randomValues).toHaveBeenCalledTimes(1);
-		await waitFor(() =>
-			expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled(),
+		await waitFor(() => expect(printButton()).toBeEnabled());
+		const other = programFor(otherSeed);
+		expect(shell()).toHaveAttribute(
+			"data-booklet-comparison-key",
+			other ? programComparisonKey(other) : "",
 		);
 	});
 
-	it("境界値: 現在と同じseedが出ても正常な抽選として印刷準備を保持する", async () => {
+	it("境界値系: 現在と同じseedが出ても正常な抽選として印刷準備を保持する", async () => {
 		installFetchMock();
 		renderPage();
-		await waitFor(() =>
-			expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled(),
-		);
-		vi.spyOn(crypto, "getRandomValues").mockImplementation((values) => {
-			if (values instanceof Uint32Array) {
-				values[0] = playfulRouteSeed2;
-			}
-			return values;
-		});
+		await waitFor(() => expect(printButton()).toBeEnabled());
+		mockRandomSeed(firstSeed);
 
 		screen.getByRole("button", { name: "別のデザインを試す" }).click();
 
 		await waitFor(() =>
 			expect(screen.getByTestId("location-search")).toHaveTextContent(
-				`seed=${seedQuery(playfulRouteSeed2)}`,
+				`seed=${seedQuery(firstSeed)}`,
 			),
 		);
 		expect(screen.getByRole("status")).not.toHaveTextContent(
 			"別のデザインを選べませんでした",
 		);
-		expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled();
+		expect(printButton()).toBeEnabled();
 	});
 
 	it("異常系: cryptoが失敗したらURL・現在seed・印刷準備を保持する", async () => {
 		installFetchMock();
 		renderPage();
-		await waitFor(() =>
-			expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled(),
-		);
+		await waitFor(() => expect(printButton()).toBeEnabled());
 		vi.spyOn(crypto, "getRandomValues").mockImplementation(() => {
 			throw new Error("crypto unavailable");
 		});
 
 		screen.getByRole("button", { name: "別のデザインを試す" }).click();
+
 		await waitFor(() =>
 			expect(screen.getByRole("status")).toHaveTextContent(
 				"別のデザインを選べませんでした。現在のテーマを維持します。",
 			),
 		);
 		expect(screen.getByTestId("location-search")).toHaveTextContent(
-			`seed=${seedQuery(playfulRouteSeed2)}`,
+			`seed=${seedQuery(firstSeed)}`,
 		);
-		expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled();
-		expect(document.querySelector(".booklet-shell")).toHaveAttribute(
-			"data-booklet-print-state",
-			"ready",
-		);
+		expect(printButton()).toBeEnabled();
+		expect(shell()).toHaveAttribute("data-booklet-print-state", "ready");
 	});
 
-	it("異常系: 再抽選後の描画失敗は新しいseedのエラーとして表示し印刷しない", async () => {
+	it("異常系・境界値系: 再抽選後の描画失敗は新しいseedのerrorとし、古いreadyで印刷しない", async () => {
 		installFetchMock();
 		renderPage();
-		await waitFor(() =>
-			expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled(),
-		);
+		await waitFor(() => expect(printButton()).toBeEnabled());
 		vi.mocked(HTMLImageElement.prototype.decode).mockRejectedValue(
 			new Error("decode failed"),
 		);
-		vi.spyOn(crypto, "getRandomValues").mockImplementation((values) => {
-			if (values instanceof Uint32Array) {
-				values[0] = differentFamilySeed;
-			}
-			return values;
-		});
+		mockRandomSeed(otherSeed);
 
 		screen.getByRole("button", { name: "別のデザインを試す" }).click();
 
+		// The previous seed's ready state never carries over to the new seed.
+		await waitFor(() => expect(printButton()).toBeDisabled());
 		await waitFor(() =>
-			expect(document.querySelector(".booklet-shell")).toHaveAttribute(
-				"data-booklet-print-state",
-				"error",
-			),
+			expect(shell()).toHaveAttribute("data-booklet-print-state", "error"),
 		);
 		expect(screen.getByTestId("location-search")).toHaveTextContent(
-			`seed=${seedQuery(differentFamilySeed)}`,
+			`seed=${seedQuery(otherSeed)}`,
 		);
-		expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeDisabled();
 		expect(window.print).not.toHaveBeenCalled();
-	});
-
-	it("正常系: 再抽選は異なるレシピのseedをURL履歴へ追加する", async () => {
-		const randomValues = vi
-			.spyOn(crypto, "getRandomValues")
-			.mockImplementation((values) => {
-				if (values instanceof Uint32Array) {
-					values[0] = 7;
-				}
-				return values;
-			});
-		installFetchMock();
-		renderPage();
-
-		await waitFor(() =>
-			expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled(),
-		);
-		screen.getByRole("button", { name: "別のデザインを試す" }).click();
-		await waitFor(() =>
-			expect(screen.getByTestId("location-search")).toHaveTextContent(
-				"seed=v2-00000007",
-			),
-		);
-		expect(randomValues).toHaveBeenCalled();
 	});
 });

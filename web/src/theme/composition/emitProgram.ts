@@ -228,13 +228,16 @@ function moduleBinding(
 	bindings: readonly ArtworkBinding[],
 ): ModuleSceneBinding {
 	const common = commonConfig(config, bindings);
+	// Compiled scenes always draw with the direction's own bundle, never a family profile.
+	const extracted = { ...common, styleProfileId: null };
 	switch (config.moduleId) {
 		case "atlas-grid":
 		case "editorial-magazine":
 		case "paper-collage":
+		case "travel-newspaper":
+			return { config: extracted, moduleId: config.moduleId };
 		case "schematic-map":
 		case "specimen-board":
-		case "travel-newspaper":
 		case "vertical-poster":
 			return { config: common, moduleId: config.moduleId };
 		case "ledger":
@@ -249,7 +252,7 @@ function moduleBinding(
 			};
 		case "playful-route":
 			return {
-				config: { ...common, dayHeader: config.dayHeader },
+				config: { ...extracted, dayHeader: config.dayHeader },
 				moduleId: "playful-route",
 			};
 		case "quest-board":

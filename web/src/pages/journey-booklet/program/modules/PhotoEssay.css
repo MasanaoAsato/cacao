@@ -1,0 +1,10 @@
+/* photo-essay: one large plate and a separate full-width list. */
+
+.program-page--photo-essay .program-heading {
+	border-bottom: 0;
+}
+
+.program-page--photo-essay .program-unit--full-width-list {
+	border-top: 0.25mm solid var(--scene-accent);
+	padding-top: 1mm;
+}

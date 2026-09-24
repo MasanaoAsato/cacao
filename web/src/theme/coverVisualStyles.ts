@@ -48,37 +48,3 @@ export const COVER_VISUAL_STYLES = [
 ] as const;
 
 export type CoverVisualStyle = (typeof COVER_VISUAL_STYLES)[number];
-
-export const SOFT_COVER_VISUAL_STYLES = [
-	"watercolor",
-	"pastel",
-	"transparent-watercolor",
-	"soft-pastel-holiday",
-	"watercolor-pencil-sketch",
-	"quiet-photo-book",
-	"golden-hour-sentimental",
-	"nordic-earth-minimal",
-	"literary-ink-wash",
-	"emotional-film-photo",
-	"antique-travel-journal",
-	"quiet-neighborhood",
-	"notebook-line-art",
-	"japanese-quiet-minimal",
-	"healing-backlight-nature",
-] as const satisfies readonly CoverVisualStyle[];
-
-export const HANDCRAFTED_COVER_VISUAL_STYLES = [
-	"gouache",
-	"oil-painting",
-	"luminous-anime-background",
-	"architectural-pen-sketch",
-	"paper-cut-storybook",
-	"seasonal-nature",
-	"tranquil-outdoors",
-	"elegant-semireal",
-	"fantasy-storybook",
-	"luminous-youth-anime",
-	"miniature-diorama",
-	"classic-adventure-novel",
-	"limited-color-line-art",
-] as const satisfies readonly CoverVisualStyle[];

@@ -1,11 +1,7 @@
 import type { MotifAssetId } from "../motifAssets";
 import type { MotifColor } from "../types";
 import { validateFamilyTextSafety } from "./decorPlacement";
-import type { VisualFamilyDefinition } from "./registry";
-import {
-	derivedStyleProfileFields,
-	styleProfilesForFamily,
-} from "./styleProfiles";
+import { styleProfilesForFamily } from "./styleProfiles";
 
 export const PLAYFUL_ROUTE_PALETTES = {
 	"berry-sun": {
@@ -178,19 +174,12 @@ export const PLAYFUL_ROUTE_DECOR_VARIANTS: readonly PlayfulRouteDecorVariant[] =
 		),
 	]);
 
-export const PLAYFUL_ROUTE_DECOR_VARIANT_IDS: readonly PlayfulRouteDecorVariantId[] =
-	Object.freeze(PLAYFUL_ROUTE_DECOR_VARIANTS.map((variant) => variant.id));
-
 /**
- * Every asset the family registers, which is the union over all variants. This
- * is the registration set; a resolved design carries only its own variant's.
+ * A registered profile names a decor variant and carries its asset set; the
+ * program's profile path draws the variant's slots with the profile's assets,
+ * so the two must be the same set in the same order.
  */
-const PLAYFUL_ROUTE_STYLE_PROFILES = styleProfilesForFamily("playful-route");
-const PLAYFUL_ROUTE_PROFILE_FIELDS = derivedStyleProfileFields(
-	PLAYFUL_ROUTE_STYLE_PROFILES,
-);
-
-for (const profile of PLAYFUL_ROUTE_STYLE_PROFILES) {
+for (const profile of styleProfilesForFamily("playful-route")) {
 	const variant = PLAYFUL_ROUTE_DECOR_VARIANTS.find(
 		(candidate) => candidate.id === profile.decorVariantId,
 	);
@@ -207,12 +196,6 @@ for (const profile of PLAYFUL_ROUTE_STYLE_PROFILES) {
 	}
 }
 
-export const PLAYFUL_ROUTE_DECOR_ASSET_IDS =
-	PLAYFUL_ROUTE_PROFILE_FIELDS.decorAssetIds;
-
-export const PLAYFUL_ROUTE_FONT_FAMILIES =
-	PLAYFUL_ROUTE_PROFILE_FIELDS.fontFamilies;
-
 export function playfulRoutePaletteFor(paletteId: string) {
 	const palette = PLAYFUL_ROUTE_PALETTES[paletteId as PlayfulRoutePaletteId];
 	if (!palette) {
@@ -222,7 +205,7 @@ export function playfulRoutePaletteFor(paletteId: string) {
 }
 
 /**
- * The decor variant a resolved design selected. A missing or unknown ID is a
+ * The decor variant a scene's profile selected. A missing or unknown ID is a
  * definition error; it is never completed to `sunny`.
  */
 export function playfulRouteDecorVariantFor(
@@ -257,11 +240,3 @@ for (const palette of Object.values(PLAYFUL_ROUTE_PALETTES)) {
 		]);
 	}
 }
-
-export const PLAYFUL_ROUTE_FAMILY = {
-	...PLAYFUL_ROUTE_PROFILE_FIELDS,
-	id: "playful-route",
-	moodIds: ["postcard", "festival-ticket"],
-	policyId: "route",
-	styleProfiles: PLAYFUL_ROUTE_STYLE_PROFILES,
-} as const satisfies VisualFamilyDefinition;

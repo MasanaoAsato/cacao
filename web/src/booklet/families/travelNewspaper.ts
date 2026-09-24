@@ -1,6 +1,5 @@
-import type { BookletStyleProfile } from "../../theme/families/styleProfiles";
 import type { EditorialBooklet } from "../editorialModel";
-import { PaginationError } from "../paginate";
+import { PaginationError } from "../paginationError";
 
 /** The fixed geometry of a travel-newspaper A5 page (21.4). */
 export const TRAVEL_NEWSPAPER_ARTICLE_START_Y_MM = 68;
@@ -8,17 +7,13 @@ export const TRAVEL_NEWSPAPER_CONTINUATION_START_Y_MM = 30;
 export const TRAVEL_NEWSPAPER_PAGE_BOTTOM_Y_MM = 200;
 export const TRAVEL_NEWSPAPER_COLUMN_GAP_MM = 10;
 export const TRAVEL_NEWSPAPER_ARTICLE_GAP_MM = 4;
-export const TRAVEL_NEWSPAPER_COVER_TITLE_MAX_HEIGHT_MM = 24;
 export const TRAVEL_NEWSPAPER_ARTICLE_CAPACITY_MM =
 	TRAVEL_NEWSPAPER_PAGE_BOTTOM_Y_MM - TRAVEL_NEWSPAPER_ARTICLE_START_Y_MM;
 export const TRAVEL_NEWSPAPER_CONTINUATION_CAPACITY_MM =
 	TRAVEL_NEWSPAPER_PAGE_BOTTOM_Y_MM - TRAVEL_NEWSPAPER_CONTINUATION_START_Y_MM;
-export const TRAVEL_NEWSPAPER_EMPTY_DAY_LABEL_HEIGHT_MM = 10;
 
 export type TravelNewspaperMeasurements = {
-	readonly styleProfileId: string;
 	readonly unitHeightsMm: ReadonlyMap<string, number>;
-	readonly coverTitleHeightMm: number;
 	readonly dayHeaderHeightMm: number;
 	readonly continuationHeaderHeightMm: number;
 	readonly articleStartYmm: number;
@@ -75,29 +70,11 @@ function requireFixedMeasurement(
 	}
 }
 
+/** Day geometry and unit heights of a program scene's days. */
 function validateMeasurement(
 	booklet: EditorialBooklet,
 	measurement: TravelNewspaperMeasurements,
-	styleProfile: BookletStyleProfile,
 ): void {
-	if (
-		styleProfile.familyId !== "travel-newspaper" ||
-		measurement.styleProfileId !== styleProfile.id
-	) {
-		throw new PaginationError(
-			"invalid-measurement",
-			"計測結果の作風プロファイルが一致しません。",
-		);
-	}
-	requireNonNegativeFinite(measurement.coverTitleHeightMm, "表紙題名の高さ");
-	if (
-		measurement.coverTitleHeightMm > TRAVEL_NEWSPAPER_COVER_TITLE_MAX_HEIGHT_MM
-	) {
-		throw new PaginationError(
-			"unit-overflow",
-			"表紙題名が予約領域に収まりません。",
-		);
-	}
 	requireNonNegativeFinite(measurement.dayHeaderHeightMm, "日付ヘッダーの高さ");
 	requireNonNegativeFinite(
 		measurement.continuationHeaderHeightMm,
@@ -183,10 +160,9 @@ function pageId(
 	return `travel-newspaper-${kind}-${dayId}-${ordinal}`;
 }
 
-function freezePage(page: TravelNewspaperPagePlan): TravelNewspaperPagePlan {
-	if (page.kind === "cover") {
-		return Object.freeze(page);
-	}
+function freezePage(
+	page: TravelNewspaperArticlesPagePlan | TravelNewspaperContinuationPagePlan,
+): TravelNewspaperPagePlan {
 	return Object.freeze({
 		...page,
 		unitIndexes: Object.freeze([...page.unitIndexes]),
@@ -196,22 +172,14 @@ function freezePage(page: TravelNewspaperPagePlan): TravelNewspaperPagePlan {
 /**
  * Splits complete article units into two newspaper columns and A5 pages.
  * Heights come from the candidate DOM; this function never reads layout.
+ * A program scene calls it with its single day (25.4).
  */
-export function paginateTravelNewspaper(
+export function paginateTravelNewspaperDays(
 	booklet: EditorialBooklet,
 	measurement: TravelNewspaperMeasurements,
-	styleProfile: BookletStyleProfile,
 ): readonly TravelNewspaperPagePlan[] {
-	const cover = freezePage({
-		kind: "cover",
-		pageId: `travel-newspaper-cover-${booklet.journeyId}`,
-	});
-	if (booklet.days.length === 0) {
-		return Object.freeze([cover]);
-	}
-	validateMeasurement(booklet, measurement, styleProfile);
-
-	const pages: TravelNewspaperPagePlan[] = [cover];
+	validateMeasurement(booklet, measurement);
+	const pages: TravelNewspaperPagePlan[] = [];
 	let ordinal = 1;
 
 	for (const [dayIndex, day] of booklet.days.entries()) {

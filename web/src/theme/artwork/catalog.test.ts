@@ -2,6 +2,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { ARTWORK_MANIFEST } from "../../assets/artwork/manifest";
+import { isDirectionArtworkReady } from "../composition/activeDirections";
+import { REGISTERED_DIRECTION_DEFINITIONS } from "../directions/registry";
 import { ARTWORK_ALIASES, ARTWORK_CATALOG, artworkById } from "./catalog";
 import { validateArtworkCatalog } from "./validateCatalog";
 
@@ -114,6 +116,16 @@ describe("production artwork catalog", () => {
 					requireComplete: true,
 				}),
 			).toEqual([]);
+		},
+	);
+
+	it.runIf(process.env.ARTWORK_RELEASE_CHECK === "1")(
+		"25.5最終条件: 審査済み素材で登録52方向がすべてactiveになる",
+		() => {
+			const inactive = REGISTERED_DIRECTION_DEFINITIONS.filter(
+				(definition) => !isDirectionArtworkReady(definition, ARTWORK_CATALOG),
+			).map((definition) => definition.id);
+			expect(inactive).toEqual([]);
 		},
 	);
 

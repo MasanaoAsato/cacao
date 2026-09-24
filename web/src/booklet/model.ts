@@ -54,9 +54,6 @@ export type BookletPlace = {
 	readonly country: string;
 };
 
-/** @deprecated Use BookletImage. */
-export type CoverImage = BookletImage;
-
 export type BookletCover = {
 	readonly budget: BookletMoney;
 	readonly destination: string;
@@ -72,19 +69,3 @@ export type BookletModel = {
 	readonly days: readonly BookletDay[];
 	readonly journeyId: JourneyApiResponse["id"];
 };
-
-export type CoverPagePlan = {
-	readonly kind: "cover";
-	readonly pageId: string;
-};
-
-export type DayPagePlan = {
-	readonly continuation: boolean;
-	readonly dayIndex: number;
-	readonly illustration: boolean;
-	readonly kind: "day";
-	readonly pageId: string;
-	readonly unitIndexes: readonly number[];
-};
-
-export type BookletPagePlan = CoverPagePlan | DayPagePlan;

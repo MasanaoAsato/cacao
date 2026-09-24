@@ -1,9 +1,4 @@
 import { validateFamilyTextSafety } from "./decorPlacement";
-import type { VisualFamilyDefinition } from "./registry";
-import {
-	derivedStyleProfileFields,
-	EDITORIAL_MAGAZINE_STYLE_PROFILES,
-} from "./styleProfiles";
 
 export const EDITORIAL_MAGAZINE_PALETTES = {
 	"quiet-photo": {
@@ -39,13 +34,6 @@ export const EDITORIAL_MAGAZINE_COMPOSITIONS = {
 export type EditorialMagazineCompositionId =
 	keyof typeof EDITORIAL_MAGAZINE_COMPOSITIONS;
 
-const PROFILE_FIELDS = derivedStyleProfileFields(
-	EDITORIAL_MAGAZINE_STYLE_PROFILES,
-);
-
-export const EDITORIAL_MAGAZINE_DECOR_ASSET_IDS = PROFILE_FIELDS.decorAssetIds;
-export const EDITORIAL_MAGAZINE_FONT_FAMILIES = PROFILE_FIELDS.fontFamilies;
-
 export function editorialMagazinePaletteFor(paletteId: string) {
 	const palette =
 		EDITORIAL_MAGAZINE_PALETTES[paletteId as EditorialMagazinePaletteId];
@@ -75,12 +63,3 @@ for (const palette of Object.values(EDITORIAL_MAGAZINE_PALETTES)) {
 		{ colorHex: palette.ink, fontSizePt: 8.5, role: "utility" },
 	]);
 }
-
-/** The family is available to the ID catalog; family selection is owned by 21.5. */
-export const EDITORIAL_MAGAZINE_FAMILY = {
-	...PROFILE_FIELDS,
-	id: "editorial-magazine",
-	moodIds: [],
-	policyId: "captions",
-	styleProfiles: EDITORIAL_MAGAZINE_STYLE_PROFILES,
-} as const satisfies VisualFamilyDefinition;

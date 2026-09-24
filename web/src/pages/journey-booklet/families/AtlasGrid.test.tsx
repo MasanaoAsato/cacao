@@ -1,18 +1,25 @@
 /** @vitest-environment jsdom */
 
 import { render } from "@testing-library/react";
-import { createRef } from "react";
 import { describe, expect, it } from "vitest";
 import type {
 	EditorialArrivalUnit,
 	EditorialBooklet,
 } from "../../../booklet/editorialModel";
 import type { AtlasGridPagePlan } from "../../../booklet/families/atlasGrid";
-import type { ResolvedBookletDesign } from "../../../booklet/family";
-import { createBookletTheme } from "../../../theme/bookletTheme";
-import { styleProfileFor } from "../../../theme/families/styleProfiles";
-import { AtlasGridDocument, atlasDecorDefinition } from "./AtlasGrid";
-import { prepareFamilyDecor } from "./useFamilyPagePlan";
+import type { FamilyDecorDesign } from "../../../booklet/family";
+import { atlasGridPaletteFor } from "../../../theme/families/atlasGrid";
+import { familyProfileById } from "../program/modules/familyStyle";
+import {
+	AtlasCover,
+	AtlasDecor,
+	AtlasTablePage,
+	atlasDecorationsByPage,
+	atlasDecorDefinition,
+	atlasStyleFor,
+	atlasTitleSizes,
+} from "./AtlasGrid";
+import { prepareFamilyDecorPages } from "./familyDecor";
 
 function unit(id: string, name: string): EditorialArrivalUnit {
 	return {
@@ -68,25 +75,64 @@ const booklet: EditorialBooklet = {
 	policyId: "timetable",
 };
 
-const requestedTheme = createBookletTheme({ value: 0, version: "v2" });
+const profile = familyProfileById("atlas-grid", "atlas-grid.atlas-wayfinder");
 
-const design: ResolvedBookletDesign = {
-	comparisonKey: "atlas-grid.blueprint.side-index",
+const design: FamilyDecorDesign = {
 	compositionId: "side-index",
-	decorAssetIds: ["atlas-compass", "atlas-route-mark", "atlas-perforation"],
-	decorVariantId: null,
+	decorAssetIds: profile.decorAssetIds,
 	familyId: "atlas-grid",
-	fontFamilies: ["Zen Kaku Gothic New", "Noto Sans JP"],
-	paletteId: "blueprint",
-	policyId: "timetable",
-	renderKey: "atlas-grid:v2-0000002a:timetable:atlas-grid.blueprint.side-index",
-	requestedTheme,
 	seedToken: "v2-0000002a",
-	styleProfile: styleProfileFor("atlas-grid.atlas-wayfinder"),
-	styleProfileId: "atlas-grid.atlas-wayfinder",
 };
 
 const PX_PER_MM = 4;
+
+/** Cover and table pages drawn from the kept family parts, as a scene does. */
+function AtlasPages({
+	decorDesign,
+	pagePlan,
+	titleSizePt,
+}: {
+	readonly decorDesign: FamilyDecorDesign;
+	readonly pagePlan: readonly AtlasGridPagePlan[];
+	readonly titleSizePt: number;
+}) {
+	return (
+		<main
+			className={`atlas-grid atlas-grid--${decorDesign.compositionId}`}
+			style={atlasStyleFor({
+				compositionId: decorDesign.compositionId,
+				palette: atlasGridPaletteFor(profile.paletteId),
+				photoTreatment: profile.photoTreatment,
+				ruleTreatment: profile.ruleTreatment,
+				typography: profile,
+			})}
+		>
+			{pagePlan.map((page) => (
+				<article
+					className={`booklet-page atlas-grid-page atlas-grid-page--${page.kind}`}
+					data-booklet-page="true"
+					data-page-id={page.pageId}
+					key={page.pageId}
+				>
+					<AtlasDecor design={decorDesign} page={page} scope="output" />
+					<div className="booklet-page__content">
+						{page.kind === "cover" ? (
+							<AtlasCover
+								booklet={booklet}
+								compositionId={decorDesign.compositionId}
+								measurement={false}
+								titleSizePt={titleSizePt}
+								titleSizesPt={atlasTitleSizes(profile.fontSizesPt.title)}
+							/>
+						) : (
+							<AtlasTablePage booklet={booklet} page={page} />
+						)}
+					</div>
+				</article>
+			))}
+		</main>
+	);
+}
 
 function stubRect(
 	element: Element,
@@ -112,11 +158,12 @@ function stubRect(
 function prepareRenderedDecor(
 	container: HTMLElement,
 	pagePlan: readonly AtlasGridPagePlan[],
-	resolvedDesign: ResolvedBookletDesign,
+	decorDesign: FamilyDecorDesign,
 ): void {
-	for (const pageElement of container.querySelectorAll<HTMLElement>(
-		"[data-booklet-page]",
-	)) {
+	const pageElements = Array.from(
+		container.querySelectorAll<HTMLElement>("[data-booklet-page]"),
+	);
+	for (const pageElement of pageElements) {
 		stubRect(pageElement, 0, 0, 148, 210);
 	}
 	for (const text of container.querySelectorAll<HTMLElement>(
@@ -125,7 +172,7 @@ function prepareRenderedDecor(
 		stubRect(text, 0, 0, 0, 0);
 	}
 	for (const page of pagePlan) {
-		const definition = atlasDecorDefinition(page, resolvedDesign.compositionId);
+		const definition = atlasDecorDefinition(page, decorDesign.compositionId);
 		for (const anchor of definition.anchors) {
 			const element = container.querySelector<HTMLElement>(
 				`[data-page-id="${page.pageId}"] [data-booklet-anchor="${anchor.id}"]`,
@@ -142,20 +189,15 @@ function prepareRenderedDecor(
 			);
 		}
 	}
-	prepareFamilyDecor(
-		container,
-		resolvedDesign,
-		new Map(
-			pagePlan.map((page) => [
-				page.pageId,
-				atlasDecorDefinition(page, resolvedDesign.compositionId).decorations,
-			]),
-		),
+	prepareFamilyDecorPages(
+		pageElements,
+		decorDesign,
+		atlasDecorationsByPage(pagePlan, decorDesign.compositionId),
 	);
 }
 
-describe("AtlasGridDocument", () => {
-	it("正常系: 複数日・費用・atlas素材を表紙と同じ文書へ描く", () => {
+describe("atlas-gridの表紙・表ページ・装飾", () => {
+	it("正常系: 複数日・費用・atlas素材を表紙と表ページへ描く", () => {
 		const pagePlan: readonly AtlasGridPagePlan[] = [
 			{ kind: "cover", pageId: "cover" },
 			{
@@ -168,13 +210,7 @@ describe("AtlasGridDocument", () => {
 			},
 		];
 		const { container } = render(
-			<AtlasGridDocument
-				booklet={booklet}
-				design={design}
-				pagePlan={pagePlan}
-				rootRef={createRef<HTMLElement>()}
-				titleSizePt={40}
-			/>,
+			<AtlasPages decorDesign={design} pagePlan={pagePlan} titleSizePt={40} />,
 		);
 
 		expect(container.querySelectorAll("[data-booklet-page]")).toHaveLength(2);
@@ -201,13 +237,7 @@ describe("AtlasGridDocument", () => {
 			},
 		];
 		const { container } = render(
-			<AtlasGridDocument
-				booklet={booklet}
-				design={design}
-				pagePlan={pagePlan}
-				rootRef={createRef<HTMLElement>()}
-				titleSizePt={34}
-			/>,
+			<AtlasPages decorDesign={design} pagePlan={pagePlan} titleSizePt={34} />,
 		);
 
 		expect(container.textContent).toContain("旅程一覧・続き");
@@ -219,7 +249,7 @@ describe("AtlasGridDocument", () => {
 	it.each(["wide-image", "side-index"] as const)(
 		"回帰: %sの実測anchorと描画済み装飾が一致する",
 		(compositionId) => {
-			const resolvedDesign = { ...design, compositionId };
+			const decorDesign = { ...design, compositionId };
 			const pagePlan: readonly AtlasGridPagePlan[] = [
 				{ kind: "cover", pageId: `cover-${compositionId}` },
 				{
@@ -229,18 +259,30 @@ describe("AtlasGridDocument", () => {
 				},
 			];
 			const { container } = render(
-				<AtlasGridDocument
-					booklet={booklet}
-					design={resolvedDesign}
+				<AtlasPages
+					decorDesign={decorDesign}
 					pagePlan={pagePlan}
-					rootRef={createRef<HTMLElement>()}
 					titleSizePt={40}
 				/>,
 			);
 
 			expect(() =>
-				prepareRenderedDecor(container, pagePlan, resolvedDesign),
+				prepareRenderedDecor(container, pagePlan, decorDesign),
 			).not.toThrow();
 		},
 	);
+});
+
+describe("atlasTitleSizes", () => {
+	it("正常系: 作風の題名サイズから既定の段階だけを小さい順に続ける", () => {
+		expect(atlasTitleSizes(36)).toEqual([36, 34, 28, 22]);
+	});
+
+	it("境界値: 題名サイズが既定の段階と同じなら重複させない", () => {
+		expect(atlasTitleSizes(34)).toEqual([34, 28, 22]);
+	});
+
+	it("境界値: 題名サイズがなければ既定の段階を使う", () => {
+		expect(atlasTitleSizes(undefined)).toEqual([40, 34, 28, 22]);
+	});
 });
