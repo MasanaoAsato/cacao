@@ -63,25 +63,3 @@ export function mulberry32(seed: number): () => number {
 export function axisRandom(seedToken: string, axis: string): number {
 	return mulberry32(fnv1a32(`${seedToken}:${axis}`))();
 }
-
-export function createRerollSeed(
-	current: ThemeSeed,
-	isDifferentTheme: (candidate: ThemeSeed) => boolean,
-	getRandomValues: (
-		values: Uint32Array<ArrayBuffer>,
-	) => Uint32Array<ArrayBuffer> = (values) => {
-		crypto.getRandomValues(values);
-		return values;
-	},
-): ThemeSeed {
-	for (let attempt = 0; attempt < 256; attempt += 1) {
-		const values = getRandomValues(
-			new Uint32Array(new ArrayBuffer(Uint32Array.BYTES_PER_ELEMENT)),
-		);
-		const candidate = { value: values[0], version: THEME_VERSION } as const;
-		if (candidate.value !== current.value && isDifferentTheme(candidate)) {
-			return candidate;
-		}
-	}
-	throw new Error("異なるしおりデザインのシードを作成できませんでした。");
-}

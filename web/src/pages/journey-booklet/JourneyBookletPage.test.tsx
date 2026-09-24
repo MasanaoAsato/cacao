@@ -7,9 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createBookletTheme } from "../../theme/bookletTheme";
 import { resolveBookletDesign } from "../../theme/families/resolveBookletDesign";
 import { type MotifAssetId, motifAssetsFor } from "../../theme/motifAssets";
-import type { ThemeSeed } from "../../theme/types";
 import { JourneyBookletPage } from "./JourneyBookletPage";
-import { RerollUnavailableError, selectRerollSeed } from "./reroll";
 
 const journeyPayload = {
 	days: [
@@ -1179,73 +1177,12 @@ describe("JourneyBookletPage", () => {
 		);
 	});
 
-	it("正常系: 同じfamilyのstyle違いを拒否し、異なるfamilyのseedだけ採用する", () => {
-		const currentSeed: ThemeSeed = {
-			value: playfulRouteSeed2,
-			version: "v2",
-		};
-		const candidates: ThemeSeed[] = [
-			{ value: sameFamilyDifferentStyleSeed, version: "v2" },
-			{ value: differentFamilySeed, version: "v2" },
-		];
-		const attemptedValues: number[] = [];
-		const nextSeed = selectRerollSeed(
-			currentSeed,
-			playfulRouteSeed2Design.familyId,
-			null,
-			{
-				createRerollSeed: (_current, isDifferentFamily) => {
-					for (const candidate of candidates) {
-						attemptedValues.push(candidate.value);
-						if (isDifferentFamily(candidate)) {
-							return candidate;
-						}
-					}
-					throw new Error("test candidates exhausted");
-				},
-			},
+	it("正常系: 同じfamilyのseedでも除外せず、乱数1回でURLへ採用する", async () => {
+		installFetchMock();
+		renderPage();
+		await waitFor(() =>
+			expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled(),
 		);
-
-		expect(attemptedValues).toEqual([
-			sameFamilyDifferentStyleSeed,
-			differentFamilySeed,
-		]);
-		expect(nextSeed).toEqual(candidates[1]);
-	});
-
-	it("異常系: active familyが0件または1件なら乱数試行前に再抽選不可とする", () => {
-		const currentSeed: ThemeSeed = { value: 1, version: "v2" };
-		const createSeed = vi.fn(
-			(_current: ThemeSeed, _predicate: (candidate: ThemeSeed) => boolean) =>
-				({ value: 2, version: "v2" }) as ThemeSeed,
-		);
-
-		try {
-			selectRerollSeed(currentSeed, "playful-route", null, {
-				familyIds: [],
-				createRerollSeed: createSeed,
-			});
-			expect.fail("0件では例外になるべきです");
-		} catch (error) {
-			expect(error).toBeInstanceOf(RerollUnavailableError);
-			expect((error as RerollUnavailableError).reason).toBe("no-family");
-		}
-
-		try {
-			selectRerollSeed(currentSeed, "playful-route", null, {
-				familyIds: ["playful-route"],
-				createRerollSeed: createSeed,
-			});
-			expect.fail("1件では例外になるべきです");
-		} catch (error) {
-			expect(error).toBeInstanceOf(RerollUnavailableError);
-			expect((error as RerollUnavailableError).reason).toBe("single-family");
-		}
-
-		expect(createSeed).not.toHaveBeenCalled();
-	});
-
-	it("異常系: 256候補すべて同じfamilyならURL・現在seed・印刷準備を保持する", async () => {
 		const randomValues = vi
 			.spyOn(crypto, "getRandomValues")
 			.mockImplementation((values) => {
@@ -1254,11 +1191,54 @@ describe("JourneyBookletPage", () => {
 				}
 				return values;
 			});
+
+		screen.getByRole("button", { name: "別のデザインを試す" }).click();
+		await waitFor(() =>
+			expect(screen.getByTestId("location-search")).toHaveTextContent(
+				`seed=${seedQuery(sameFamilyDifferentStyleSeed)}`,
+			),
+		);
+		expect(randomValues).toHaveBeenCalledTimes(1);
+		await waitFor(() =>
+			expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled(),
+		);
+	});
+
+	it("境界値: 現在と同じseedが出ても正常な抽選として印刷準備を保持する", async () => {
 		installFetchMock();
 		renderPage();
 		await waitFor(() =>
 			expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled(),
 		);
+		vi.spyOn(crypto, "getRandomValues").mockImplementation((values) => {
+			if (values instanceof Uint32Array) {
+				values[0] = playfulRouteSeed2;
+			}
+			return values;
+		});
+
+		screen.getByRole("button", { name: "別のデザインを試す" }).click();
+
+		await waitFor(() =>
+			expect(screen.getByTestId("location-search")).toHaveTextContent(
+				`seed=${seedQuery(playfulRouteSeed2)}`,
+			),
+		);
+		expect(screen.getByRole("status")).not.toHaveTextContent(
+			"別のデザインを選べませんでした",
+		);
+		expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled();
+	});
+
+	it("異常系: cryptoが失敗したらURL・現在seed・印刷準備を保持する", async () => {
+		installFetchMock();
+		renderPage();
+		await waitFor(() =>
+			expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled(),
+		);
+		vi.spyOn(crypto, "getRandomValues").mockImplementation(() => {
+			throw new Error("crypto unavailable");
+		});
 
 		screen.getByRole("button", { name: "別のデザインを試す" }).click();
 		await waitFor(() =>
@@ -1274,7 +1254,37 @@ describe("JourneyBookletPage", () => {
 			"data-booklet-print-state",
 			"ready",
 		);
-		expect(randomValues).toHaveBeenCalledTimes(256);
+	});
+
+	it("異常系: 再抽選後の描画失敗は新しいseedのエラーとして表示し印刷しない", async () => {
+		installFetchMock();
+		renderPage();
+		await waitFor(() =>
+			expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeEnabled(),
+		);
+		vi.mocked(HTMLImageElement.prototype.decode).mockRejectedValue(
+			new Error("decode failed"),
+		);
+		vi.spyOn(crypto, "getRandomValues").mockImplementation((values) => {
+			if (values instanceof Uint32Array) {
+				values[0] = differentFamilySeed;
+			}
+			return values;
+		});
+
+		screen.getByRole("button", { name: "別のデザインを試す" }).click();
+
+		await waitFor(() =>
+			expect(document.querySelector(".booklet-shell")).toHaveAttribute(
+				"data-booklet-print-state",
+				"error",
+			),
+		);
+		expect(screen.getByTestId("location-search")).toHaveTextContent(
+			`seed=${seedQuery(differentFamilySeed)}`,
+		);
+		expect(screen.getByRole("button", { name: "PDFを印刷" })).toBeDisabled();
+		expect(window.print).not.toHaveBeenCalled();
 	});
 
 	it("正常系: 再抽選は異なるレシピのseedをURL履歴へ追加する", async () => {

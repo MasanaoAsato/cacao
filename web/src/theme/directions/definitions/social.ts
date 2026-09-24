@@ -9,4 +9,5 @@ export const SOCIAL_DIRECTION = defineDirection({
 		label: "SNS投稿",
 		description: "画像と短文の投稿単位、場所ラベル",
 	},
+	config: { imageTreatment: "post" },
 });

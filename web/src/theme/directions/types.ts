@@ -1,4 +1,11 @@
 import type { BookletModel, BookletPlace } from "../../booklet/model";
+import type {
+	ImageTreatmentId,
+	ParticipationId,
+} from "../../booklet/program/model";
+import type { DirectionContribution } from "../composition/types";
+
+export type { DirectionContribution };
 
 export const DIRECTION_IDS = [
 	"travel-magazine",
@@ -110,11 +117,11 @@ export type DirectionSignature = {
 
 export type DirectionBaselineConfig = {
 	readonly dayHeader?: "DAY / EVENT" | "DAY / MISSION" | "第○章 / 訪問地点";
-	readonly imageTreatments?: readonly ("collage" | "film")[];
+	readonly imageTreatment?: ImageTreatmentId;
 	readonly ledgerHeading?: "data-book" | "flight" | "practical" | "rail";
 	readonly minimalDecoration?: true;
 	readonly numberedEntries?: true;
-	readonly participation?: "memory-album";
+	readonly participation?: ParticipationId;
 	readonly storyFlow?: "chapters" | "continuous-story" | "time-sections";
 };
 
@@ -126,11 +133,6 @@ export type DirectionBaseline = {
 	readonly signature: DirectionSignature;
 	readonly styleBundleId: StyleBundleId;
 	readonly touch: DirectionTouchId;
-};
-
-export type DirectionContribution = {
-	readonly kind: "visual-language";
-	readonly signature: string;
 };
 
 export type DirectionEligibility =

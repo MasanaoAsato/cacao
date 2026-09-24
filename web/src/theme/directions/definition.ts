@@ -1,3 +1,4 @@
+import { standardContributions } from "../composition/contributions";
 import type {
 	DirectionBaseline,
 	DirectionContribution,
@@ -32,12 +33,7 @@ type DirectionDefinitionInput<Id extends DirectionId> = {
 export function defineDirection<Id extends DirectionId>(
 	input: DirectionDefinitionInput<Id>,
 ): DirectionDefinition<Id> {
-	const config = Object.freeze({
-		...input.config,
-		imageTreatments: input.config?.imageTreatments
-			? Object.freeze([...input.config.imageTreatments])
-			: undefined,
-	});
+	const config = Object.freeze({ ...input.config });
 	const eligibility = input.eligibility
 		? Object.freeze({
 				...input.eligibility,
@@ -63,10 +59,7 @@ export function defineDirection<Id extends DirectionId>(
 		baseline: () => baseline,
 		contributions: Object.freeze(
 			[
-				{
-					kind: "visual-language" as const,
-					signature: input.signature.description,
-				},
+				...standardContributions(input.id, baseline),
 				...(input.contributions ?? []),
 			].map((contribution) => Object.freeze({ ...contribution })),
 		),

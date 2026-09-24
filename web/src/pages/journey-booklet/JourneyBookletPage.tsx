@@ -29,7 +29,7 @@ import {
 	isCurrentFamilyPagePlan,
 	useFamilyPagePlan,
 } from "./families/useFamilyPagePlan";
-import { RerollUnavailableError, selectRerollSeed } from "./reroll";
+import { selectRerollSeed } from "./reroll";
 
 type LoadState =
 	| { readonly error: string; readonly status: "error" }
@@ -375,31 +375,25 @@ export function JourneyBookletPage() {
 	};
 
 	const handleReroll = () => {
-		const requestedTheme = themeRequest.requestedTheme;
-		const currentDesign = themeRequest.design;
-		if (!requestedTheme || !currentDesign) {
+		if (!themeRequest.requestedTheme) {
 			return;
 		}
 		setDownloadError(null);
 		setRerollError(null);
+		let nextSeed: ReturnType<typeof selectRerollSeed>;
 		try {
-			const nextSeed = selectRerollSeed(
-				requestedTheme.seed,
-				currentDesign.familyId,
-				coverVisualStyle,
+			nextSeed = selectRerollSeed();
+		} catch {
+			// The current seed and its ready booklet stay untouched.
+			setRerollError(
+				"別のデザインを選べませんでした。現在のテーマを維持します。",
 			);
-			const next = new URLSearchParams(searchParams);
-			next.set("seed", formatThemeSeed(nextSeed));
-			setSearchParams(next);
-		} catch (error) {
-			if (error instanceof RerollUnavailableError) {
-				setRerollError(error.message);
-			} else {
-				setRerollError(
-					"別のデザインを選べませんでした。現在のテーマを維持します。",
-				);
-			}
+			return;
 		}
+		// Later compile/render failures belong to the new seed and show as its error.
+		const next = new URLSearchParams(searchParams);
+		next.set("seed", formatThemeSeed(nextSeed));
+		setSearchParams(next);
 	};
 
 	return (

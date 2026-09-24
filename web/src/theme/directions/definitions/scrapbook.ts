@@ -9,5 +9,5 @@ export const SCRAPBOOK_DIRECTION = defineDirection({
 		label: "スクラップブック",
 		description: "写真と紙片の重なり、独立した台紙",
 	},
-	config: { imageTreatments: ["film", "collage"] },
+	config: { imageTreatment: "collage" },
 });

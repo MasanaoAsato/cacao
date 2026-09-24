@@ -9,4 +9,5 @@ export const MISSION_DIRECTION = defineDirection({
 		label: "旅のミッションブック",
 		description: "予定名を使った訪問ミッションと達成欄",
 	},
+	config: { participation: "mission" },
 });
