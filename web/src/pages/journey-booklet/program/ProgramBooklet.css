@@ -1,0 +1,646 @@
+/*
+ * Shared parts of the 25.4 program pages. Every rule is scoped under
+ * .program-page so one scene's style never leaks into another; module rules
+ * live in modules/<Module>.css under .program-page--<module>.
+ * Body surfaces are opaque; no rule hides, clips or shrinks text.
+ */
+
+/*
+ * Display lines leave room for the glyphs of every bundled display face
+ * (Noto Serif JP, M PLUS Rounded 1c and Zen Kurenaido overflow a 1.25 line
+ * box, vertically and in vertical writing), so no ink spills out of a
+ * reserved title or heading rect.
+ */
+.program-page {
+	--program-display-line-height: 1.4;
+}
+
+/* Extracted families keep their own page box (.program-page--family). */
+.booklet-page.program-page:not(.program-page--family) {
+	display: block;
+	position: relative;
+	padding: 0;
+	overflow: visible;
+	color: var(--scene-ink);
+	background: var(--scene-paper);
+	font-family: var(--scene-body-family);
+	font-size: var(--scene-body-size);
+	font-weight: var(--scene-body-weight);
+	line-height: var(--scene-body-line-height);
+	font-synthesis: none;
+	-webkit-print-color-adjust: exact;
+	print-color-adjust: exact;
+}
+
+.program-page .program-region {
+	position: absolute;
+	box-sizing: border-box;
+	min-width: 0;
+}
+
+.program-page .program-page__footer {
+	position: absolute;
+	top: 200mm;
+	left: 10mm;
+	width: 128mm;
+	height: 6mm;
+	font-family: var(--scene-utility-family);
+	font-size: var(--scene-utility-size);
+	font-weight: var(--scene-utility-weight);
+	line-height: var(--scene-utility-line-height);
+	text-align: center;
+}
+
+/* ---- Titles and headings: the reserved rect holds an opaque band ---- */
+
+.program-page .program-title-region,
+.program-page .program-heading-region {
+	color: var(--scene-heading-ink);
+	background: var(--scene-heading-paper);
+}
+
+.program-page .program-title,
+.program-page .program-extra-title {
+	margin: 0;
+	font-family: var(--scene-heading-family);
+	font-size: var(--scene-heading-size);
+	font-weight: var(--scene-heading-weight);
+	line-height: var(--program-display-line-height);
+	overflow-wrap: anywhere;
+	line-break: strict;
+}
+
+.program-page .program-title--vertical {
+	height: 100%;
+	writing-mode: vertical-rl;
+}
+
+.program-page .program-period {
+	margin: 0;
+	font-family: var(--scene-utility-family);
+	font-size: var(--scene-utility-size);
+	font-weight: var(--scene-utility-weight);
+	line-height: var(--scene-utility-line-height);
+}
+
+.program-page .program-heading {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 1mm 4mm;
+	box-sizing: border-box;
+	padding: 1.5mm 0;
+	border-bottom: 0.35mm solid var(--scene-heading-accent);
+}
+
+.program-page .program-heading__title {
+	margin: 0;
+	font-family: var(--scene-heading-family);
+	font-size: var(--scene-heading-size);
+	font-weight: var(--scene-heading-weight);
+	line-height: var(--program-display-line-height);
+}
+
+.program-page .program-heading__date,
+.program-page .program-heading__totals {
+	font-family: var(--scene-utility-family);
+	font-size: var(--scene-utility-size);
+	font-weight: var(--scene-utility-weight);
+	line-height: var(--scene-utility-line-height);
+}
+
+.program-page .program-heading__section {
+	font-family: var(--scene-heading-family);
+	font-size: var(--scene-heading-size);
+	font-weight: var(--scene-heading-weight);
+	line-height: var(--program-display-line-height);
+}
+
+.program-page .program-heading--vertical {
+	flex-direction: column;
+	align-items: flex-start;
+	height: 100%;
+	padding: 0 1.5mm;
+	border-bottom: 0;
+	border-left: 0.35mm solid var(--scene-heading-accent);
+	writing-mode: vertical-rl;
+}
+
+/* Transplanted heading systems (25.3 heading-system) only restyle lettering and rules. */
+.program-page .program-heading--note {
+	border-bottom: 0.5mm dotted var(--scene-heading-accent);
+}
+
+.program-page .program-heading--station-sign .program-heading__title {
+	padding: 0 4mm;
+	border: 0.6mm solid var(--scene-heading-ink);
+	border-radius: 3mm;
+}
+
+.program-page .program-heading--boarding-pass {
+	padding-right: 6mm;
+	border-right: 0.6mm dashed var(--scene-heading-accent);
+	border-bottom-style: double;
+	border-bottom-width: 1mm;
+}
+
+.program-page .program-heading--chalkboard {
+	padding: 1.5mm 3mm;
+	border: 0.6mm solid var(--scene-heading-accent);
+	border-radius: 1mm;
+}
+
+.program-page .program-heading--masthead {
+	border-top: 1mm double var(--scene-heading-ink);
+	border-bottom: 1mm double var(--scene-heading-ink);
+}
+
+.program-page .program-heading--literary {
+	padding-left: 3mm;
+	border-bottom: 0;
+	border-left: 0.35mm solid var(--scene-heading-accent);
+}
+
+.program-page .program-heading--ledger-rail .program-heading__title {
+	padding: 0 5mm;
+	color: var(--scene-heading-paper);
+	background: var(--scene-heading-ink);
+	border-radius: 1.5mm;
+}
+
+.program-page .program-heading--ledger-flight {
+	border-bottom: 0.6mm dashed var(--scene-heading-accent);
+}
+
+/* ---- Images: contain inside the treatment's effective rect ---- */
+
+.program-page .program-image {
+	background: var(--scene-paper);
+}
+
+.program-page .program-image__frame {
+	position: absolute;
+	margin: 0;
+	overflow: hidden;
+}
+
+.program-page .program-image__img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.program-page .program-image__caption {
+	position: absolute;
+	bottom: 0;
+	display: flex;
+	align-items: center;
+	margin: 0;
+	font-family: var(--scene-utility-family);
+	font-size: var(--scene-utility-size);
+	font-weight: var(--scene-utility-weight);
+	line-height: var(--scene-utility-line-height);
+}
+
+.program-page .program-image--film {
+	background: #1f1c1a;
+}
+
+.program-page .program-image--film .program-image__img {
+	filter: saturate(0.65);
+}
+
+.program-page .program-image--polaroid,
+.program-page .program-image--post,
+.program-page .program-image--caption-margin {
+	color: #2a2622;
+	background: #ffffff;
+	box-shadow: inset 0 0 0 0.3mm #d9d3ca;
+}
+
+.program-page .program-image--collage .program-image__frame {
+	clip-path: polygon(
+		0 2%,
+		6% 0,
+		40% 1.5%,
+		72% 0,
+		100% 2.5%,
+		99% 60%,
+		100% 98%,
+		62% 100%,
+		30% 98.5%,
+		0 100%,
+		1.5% 55%
+	);
+}
+
+.program-page .program-image--collage {
+	background: var(--scene-accent);
+}
+
+.program-page .program-image--gallery-margin {
+	background: color-mix(in srgb, var(--scene-paper) 80%, var(--scene-ink));
+}
+
+.program-page .program-image--sketch-note {
+	box-shadow: inset 0 0 0 0.4mm var(--scene-ink);
+}
+
+/* ---- Artwork: a reserved slot, never under text ---- */
+
+.program-page .program-art__asset {
+	position: absolute;
+	display: block;
+	background-repeat: no-repeat;
+}
+
+.program-page .program-art__asset--mask {
+	background-color: var(--scene-accent);
+	mask-position: center;
+	mask-repeat: no-repeat;
+	mask-size: contain;
+	-webkit-mask-position: center;
+	-webkit-mask-repeat: no-repeat;
+	-webkit-mask-size: contain;
+}
+
+.program-page .program-art__img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+/* ---- Body structures ---- */
+
+.program-page .program-body__columns {
+	position: relative;
+	z-index: 1;
+	display: grid;
+	align-items: start;
+}
+
+.program-page .program-body__column {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.program-page .program-body__header {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	align-items: stretch;
+	box-sizing: border-box;
+	padding-bottom: 2mm;
+}
+
+.program-page .program-body__header > * {
+	flex: 1 1 auto;
+}
+
+.program-page .program-unit {
+	box-sizing: border-box;
+	display: grid;
+	grid-template-columns: 18mm minmax(0, 1fr);
+	column-gap: 4mm;
+	min-width: 0;
+	color: var(--scene-ink);
+	background: var(--scene-paper);
+}
+
+.program-page .program-unit__time,
+.program-page .program-unit__number,
+.program-page .program-unit__label,
+.program-page .program-unit__transport,
+.program-page .program-unit__cost,
+.program-page .program-unit__cell,
+.program-page .program-unit__stage,
+.program-page .program-unit__node {
+	font-family: var(--scene-utility-family);
+	font-size: var(--scene-utility-size);
+	font-weight: var(--scene-utility-weight);
+	line-height: var(--scene-utility-line-height);
+}
+
+.program-page .program-unit__main {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.program-page .program-unit__name {
+	font-weight: 700;
+	overflow-wrap: anywhere;
+}
+
+.program-page .program-unit__caption {
+	margin: 0;
+	overflow-wrap: anywhere;
+}
+
+.program-page .program-unit--full-width-list {
+	grid-template-columns: 18mm 106mm;
+}
+
+.program-page .program-unit--ledger-rows,
+.program-page .program-unit--data-columns,
+.program-page .program-unit--fixed-columns {
+	grid-template-columns: 18mm 18mm 64mm 28mm;
+	column-gap: 0;
+}
+
+.program-page .program-unit--ledger-rows > *,
+.program-page .program-unit--data-columns > *,
+.program-page .program-unit--fixed-columns > * {
+	box-sizing: border-box;
+	padding: 0 2mm;
+	overflow-wrap: anywhere;
+}
+
+.program-page .program-ledger-head {
+	display: grid;
+	grid-template-columns: 18mm 18mm 64mm 28mm;
+	align-items: end;
+	height: 100%;
+	box-sizing: border-box;
+	border-bottom: 0.35mm solid var(--scene-accent);
+	font-family: var(--scene-utility-family);
+	font-size: var(--scene-utility-size);
+	font-weight: 700;
+	line-height: var(--scene-utility-line-height);
+}
+
+.program-page .program-ledger-head > span {
+	padding: 0 2mm;
+}
+
+.program-page .program-unit--numbered-route,
+.program-page .program-unit--concept-route,
+.program-page .program-unit--route-line,
+.program-page .program-unit--board-squares {
+	grid-template-columns: 8mm 18mm minmax(0, 1fr);
+	column-gap: 2mm;
+}
+
+.program-page .program-unit__node {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 7mm;
+	height: 7mm;
+	border: 0.35mm solid var(--scene-ink);
+	border-radius: 50%;
+}
+
+.program-page .program-unit--board-squares .program-unit__node {
+	border-radius: 0;
+}
+
+.program-page .program-unit--timeline {
+	box-shadow: inset 0.6mm 0 0 var(--scene-accent);
+	padding-left: 0;
+}
+
+.program-page .program-unit--cards,
+.program-page .program-unit--stage-panels {
+	box-shadow: inset 0 0 0 0.3mm var(--scene-ink);
+}
+
+.program-page .program-unit--cards > *,
+.program-page .program-unit--stage-panels > * {
+	padding: 2mm 0;
+}
+
+.program-page .program-unit--stage-panels {
+	grid-template-columns: 16mm 18mm minmax(0, 1fr);
+	column-gap: 2mm;
+}
+
+.program-page .program-unit__bands {
+	display: flex;
+	flex-direction: column;
+	gap: 1mm;
+}
+
+.program-page .program-unit__band {
+	display: flex;
+	gap: 3mm;
+	margin: 0;
+	padding-left: 2mm;
+	border-left: 1.5mm solid;
+}
+
+.program-page .program-unit--quest-panels {
+	grid-template-columns: minmax(0, 1fr);
+	padding: 4mm;
+	box-shadow: inset 0 0 0 0.3mm var(--scene-ink);
+}
+
+.program-page .program-unit--quest-panels[data-lane="stamp"] {
+	grid-template-columns: minmax(0, 1fr) 24mm;
+}
+
+.program-page .program-unit--quest-panels[data-lane="checklist"] {
+	grid-template-columns: 6mm minmax(0, 1fr);
+}
+
+.program-page .program-unit__panel-text {
+	display: grid;
+	grid-template-columns: 18mm minmax(0, 1fr);
+	column-gap: 4mm;
+	min-width: 0;
+}
+
+.program-page .program-unit__stamp {
+	justify-self: end;
+	width: 20mm;
+	height: 20mm;
+	box-sizing: border-box;
+	border: 0.35mm dashed var(--scene-ink);
+	border-radius: 50%;
+}
+
+.program-page .program-unit__checkbox {
+	width: 4mm;
+	height: 4mm;
+	box-sizing: border-box;
+	border: 0.35mm solid var(--scene-ink);
+}
+
+.program-page .program-lane {
+	z-index: 0;
+	background: color-mix(in srgb, var(--scene-paper) 88%, var(--scene-accent));
+}
+
+.program-page .program-empty-day {
+	position: relative;
+	z-index: 1;
+	margin: 0;
+}
+
+/* ---- Concept route: order only, no scale or position ---- */
+
+.program-page .program-route {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+.program-page .program-route__line {
+	stroke: var(--scene-accent);
+	stroke-width: 1.2;
+	stroke-linejoin: round;
+}
+
+.program-page .program-route--route-line .program-route__line {
+	stroke-width: 2;
+}
+
+.program-page .program-route__node {
+	fill: var(--scene-paper);
+	stroke: var(--scene-ink);
+	stroke-width: 0.5;
+}
+
+.program-page .program-route__label {
+	fill: var(--scene-ink);
+	font-family: var(--scene-utility-family);
+	font-size: 3.4px;
+	font-weight: 700;
+}
+
+/* ---- Divider, memo and endcap ---- */
+
+.program-page .program-memo-body {
+	display: flex;
+	flex-direction: column;
+	gap: 3mm;
+}
+
+.program-page .program-memo-entry {
+	display: flex;
+	align-items: center;
+	gap: 3mm;
+	min-height: 6mm;
+}
+
+.program-page .program-memo-entry__text {
+	flex: 1 1 auto;
+	overflow-wrap: anywhere;
+}
+
+.program-page .program-memo-entry__stamp {
+	flex: 0 0 20mm;
+	height: 20mm;
+	box-sizing: border-box;
+	border: 0.35mm dashed var(--scene-ink);
+	border-radius: 50%;
+}
+
+.program-page .program-memo-entry__checkbox {
+	flex: 0 0 4mm;
+	height: 4mm;
+	box-sizing: border-box;
+	border: 0.35mm solid var(--scene-ink);
+}
+
+.program-page .program-album__photo,
+.program-page .program-album__note {
+	box-sizing: border-box;
+	padding: 2mm;
+	border: 0.35mm solid var(--scene-ink);
+}
+
+.program-page .program-album__note {
+	background-image: repeating-linear-gradient(
+		to bottom,
+		transparent 0,
+		transparent 7.5mm,
+		var(--scene-accent) 7.5mm,
+		var(--scene-accent) 7.8mm
+	);
+}
+
+.program-page .program-endcap-line {
+	display: block;
+	width: 100%;
+	height: 100%;
+	stroke: var(--scene-accent);
+	stroke-width: 0.6;
+}
+
+/* ---- Measurement DOM: same parts and CSS, never printed or read aloud ---- */
+
+.booklet-measurement .program-page {
+	margin: 0 0 4mm;
+}
+
+.program-page .program-body--measure .program-body__column {
+	display: block;
+}
+
+/* ---- Extracted families inside the program document ---- */
+
+/* Stronger than any family root rule (e.g. `.travel-newspaper { display: grid }`). */
+.booklet-document .program-scene,
+.booklet-measurement .program-scene {
+	display: contents;
+}
+
+.program-image--fill {
+	position: absolute;
+	inset: 0;
+	display: block;
+}
+
+.program-image--fill .program-image__frame,
+.program-image--fill .program-image__caption {
+	position: absolute;
+	display: flex;
+}
+
+/*
+ * The running number sits at the right end of the shared footer rect on
+ * family pages, clear of family decor drawn near the bottom centre.
+ */
+.program-page--family .program-page__footer {
+	z-index: 2;
+	text-align: right;
+}
+
+.program-family-page__footer {
+	position: absolute;
+	top: 200mm;
+	left: 10mm;
+	width: 128mm;
+	height: 6mm;
+	font-family: var(--scene-utility-family);
+	font-size: var(--scene-utility-size);
+	line-height: var(--scene-utility-line-height);
+	text-align: center;
+}
+
+.program-family-body {
+	position: relative;
+	flex: 1 1 auto;
+	box-sizing: border-box;
+	min-height: 0;
+}
+
+.program-family-body[data-program-family-stack] {
+	flex: 0 0 auto;
+}
+
+.program-family-body .program-body__columns {
+	position: relative;
+	display: grid;
+	align-items: start;
+}
+
+.program-family-body .program-body__column {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}

@@ -15,7 +15,8 @@ export default defineConfig({
 		viewport: { height: 1000, width: 1440 },
 	},
 	webServer: {
-		command: "corepack pnpm vite --host 127.0.0.1 --port 4173",
+		command:
+			"node ./node_modules/vite/bin/vite.js --host 127.0.0.1 --port 4173",
 		port: 4173,
 		reuseExistingServer: !process.env.CI,
 	},

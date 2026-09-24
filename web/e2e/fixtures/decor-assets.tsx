@@ -3,12 +3,12 @@ import { createRoot } from "react-dom/client";
 import { FamilyDecorLayer } from "../../src/pages/journey-booklet/decor/FamilyDecorLayer";
 import { MotifShapes } from "../../src/pages/journey-booklet/decor/MotifShapes";
 import {
-	prepareFamilyDecor,
+	prepareFamilyDecorPages,
 	readDecorAnchors,
 	readProtectedTextRects,
-} from "../../src/pages/journey-booklet/families/useFamilyPagePlan";
+} from "../../src/pages/journey-booklet/families/familyDecor";
 import "../../src/print.css";
-import type { ResolvedBookletDesign } from "../../src/booklet/family";
+import type { FamilyDecorDesign } from "../../src/booklet/family";
 import {
 	DecorPlacementError,
 	type FamilyDecoration,
@@ -20,7 +20,6 @@ import {
 	type MotifAssetId,
 	motifAssetsFor,
 } from "../../src/theme/motifAssets";
-import type { RequestedBookletTheme } from "../../src/theme/types";
 
 const SEED_TOKEN = "v2-0000002a";
 
@@ -267,21 +266,12 @@ const PLACEMENT_EXAMPLES: readonly PlacementExample[] = [
 	},
 ];
 
-function designFor(example: PlacementExample): ResolvedBookletDesign {
+function designFor(example: PlacementExample): FamilyDecorDesign {
 	return {
-		comparisonKey: `paper-collage.paper-cut.${example.id}`,
 		compositionId: example.id,
 		decorAssetIds: example.assetIds,
-		decorVariantId: null,
 		familyId: "paper-collage",
-		fontFamilies: [],
-		policyId: "legacy-full",
-		paletteId: "paper-cut",
-		renderKey: `paper-collage:${SEED_TOKEN}:legacy-full:${example.id}`,
-		requestedTheme: {} as RequestedBookletTheme,
 		seedToken: SEED_TOKEN,
-		styleProfile: null,
-		styleProfileId: null,
 	};
 }
 
@@ -330,8 +320,8 @@ function PlacementCase({ example }: { readonly example: PlacementExample }) {
 				});
 				return;
 			}
-			prepareFamilyDecor(
-				root,
+			prepareFamilyDecorPages(
+				[page],
 				designFor(example),
 				new Map([[example.id, example.decorations]]),
 			);

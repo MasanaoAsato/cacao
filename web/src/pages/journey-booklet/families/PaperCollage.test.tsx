@@ -1,21 +1,22 @@
 /** @vitest-environment jsdom */
 
 import { render } from "@testing-library/react";
-import { createRef } from "react";
 import { describe, expect, it } from "vitest";
 import type {
 	EditorialArrivalUnit,
 	EditorialBooklet,
 } from "../../../booklet/editorialModel";
 import type { PaperCollagePagePlan } from "../../../booklet/families/paperCollage";
-import type { ResolvedBookletDesign } from "../../../booklet/family";
-import { createBookletTheme } from "../../../theme/bookletTheme";
-import { styleProfileFor } from "../../../theme/families/styleProfiles";
+import type { FamilyDecorDesign } from "../../../booklet/family";
+import { prepareFamilyDecorPages } from "./familyDecor";
 import {
-	PaperCollageDocument,
+	PaperCollageCover,
+	PaperCollageDayPage,
+	PaperCollageDecor,
+	paperCollageDecorationsByPage,
 	paperCollageDecorDefinition,
+	paperCollageTitleSizes,
 } from "./PaperCollage";
-import { prepareFamilyDecor } from "./useFamilyPagePlan";
 
 function unit(
 	id: string,
@@ -71,8 +72,7 @@ const booklet: EditorialBooklet = {
 	policyId: "captions",
 };
 
-const design: ResolvedBookletDesign = {
-	comparisonKey: "paper-collage.sage-paper.photo-left",
+const design: FamilyDecorDesign = {
 	compositionId: "photo-left",
 	decorAssetIds: [
 		"paper-torn-sheet",
@@ -80,17 +80,8 @@ const design: ResolvedBookletDesign = {
 		"paper-leaf",
 		"paper-postage",
 	],
-	decorVariantId: null,
 	familyId: "paper-collage",
-	fontFamilies: ["Kaisei Decol", "Noto Serif JP", "Noto Sans JP"],
-	paletteId: "sage-paper",
-	policyId: "captions",
-	renderKey:
-		"paper-collage:v2-00000013:captions:paper-collage.sage-paper.photo-left",
-	requestedTheme: createBookletTheme({ value: 19, version: "v2" }),
 	seedToken: "v2-00000013",
-	styleProfile: styleProfileFor("paper-collage.paper-cut"),
-	styleProfileId: "paper-collage.paper-cut",
 };
 
 const PX_PER_MM = 4;
@@ -116,14 +107,53 @@ function stubRect(
 		}) as DOMRect;
 }
 
+/** The family's pages as a program scene draws them: decor, then content. */
+function PaperCollagePages({
+	decorDesign,
+	pagePlan,
+}: {
+	readonly decorDesign: FamilyDecorDesign;
+	readonly pagePlan: readonly PaperCollagePagePlan[];
+}) {
+	return (
+		<main
+			className={`paper-collage paper-collage--${decorDesign.compositionId}`}
+		>
+			{pagePlan.map((page) => (
+				<article
+					className={`booklet-page paper-collage-page paper-collage-page--${page.kind}`}
+					data-booklet-page="true"
+					data-page-id={page.pageId}
+					key={page.pageId}
+				>
+					<PaperCollageDecor design={decorDesign} page={page} scope="output" />
+					<div className="booklet-page__content">
+						{page.kind === "cover" ? (
+							<PaperCollageCover
+								booklet={booklet}
+								measurement={false}
+								titleSizePt={36}
+								titleSizesPt={paperCollageTitleSizes(undefined)}
+							/>
+						) : (
+							<PaperCollageDayPage booklet={booklet} page={page} />
+						)}
+					</div>
+				</article>
+			))}
+		</main>
+	);
+}
+
 function prepareRenderedDecor(
 	container: HTMLElement,
 	pagePlan: readonly PaperCollagePagePlan[],
-	resolvedDesign: ResolvedBookletDesign,
+	decorDesign: FamilyDecorDesign,
 ): void {
-	for (const pageElement of container.querySelectorAll<HTMLElement>(
-		"[data-booklet-page]",
-	)) {
+	const pageElements = Array.from(
+		container.querySelectorAll<HTMLElement>("[data-booklet-page]"),
+	);
+	for (const pageElement of pageElements) {
 		stubRect(pageElement, 0, 0, 148, 210);
 	}
 	for (const text of container.querySelectorAll<HTMLElement>(
@@ -134,7 +164,7 @@ function prepareRenderedDecor(
 	for (const page of pagePlan) {
 		const definition = paperCollageDecorDefinition(
 			page,
-			resolvedDesign.compositionId,
+			decorDesign.compositionId,
 		);
 		for (const anchor of definition.anchors) {
 			const element = container.querySelector<HTMLElement>(
@@ -152,39 +182,26 @@ function prepareRenderedDecor(
 			);
 		}
 	}
-	prepareFamilyDecor(
-		container,
-		resolvedDesign,
-		new Map(
-			pagePlan.map((page) => [
-				page.pageId,
-				paperCollageDecorDefinition(page, resolvedDesign.compositionId)
-					.decorations,
-			]),
-		),
+	prepareFamilyDecorPages(
+		pageElements,
+		decorDesign,
+		paperCollageDecorationsByPage(pagePlan, decorDesign.compositionId),
 	);
 }
 
-describe("PaperCollageDocument", () => {
+describe("PaperCollageDayPage", () => {
 	it("正常系: 短文付きと説明なしのカードを順序どおり描く", () => {
-		const pagePlan: readonly PaperCollagePagePlan[] = [
-			{ kind: "cover", pageId: "cover" },
-			{
-				columns: [[0], [1]],
-				continuation: false,
-				dayIndex: 0,
-				kind: "day",
-				layoutVariant: "selected",
-				pageId: "day-1",
-			},
-		];
 		const { container } = render(
-			<PaperCollageDocument
+			<PaperCollageDayPage
 				booklet={booklet}
-				design={design}
-				pagePlan={pagePlan}
-				rootRef={createRef<HTMLElement>()}
-				titleSizePt={36}
+				page={{
+					columns: [[0], [1]],
+					continuation: false,
+					dayIndex: 0,
+					kind: "day",
+					layoutVariant: "selected",
+					pageId: "day-1",
+				}}
 			/>,
 		);
 
@@ -200,33 +217,29 @@ describe("PaperCollageDocument", () => {
 	});
 
 	it("異常系: ページ計画にない日を描画しない", () => {
-		const pagePlan: readonly PaperCollagePagePlan[] = [
-			{
-				columns: [[0], []],
-				continuation: false,
-				dayIndex: 9,
-				kind: "day",
-				layoutVariant: "selected",
-				pageId: "missing-day",
-			},
-		];
 		const { container } = render(
-			<PaperCollageDocument
+			<PaperCollageDayPage
 				booklet={booklet}
-				design={design}
-				pagePlan={pagePlan}
-				rootRef={createRef<HTMLElement>()}
-				titleSizePt={36}
+				page={{
+					columns: [[0], []],
+					continuation: false,
+					dayIndex: 9,
+					kind: "day",
+					layoutVariant: "selected",
+					pageId: "missing-day",
+				}}
 			/>,
 		);
 
 		expect(container.querySelector(".paper-collage-card")).toBeNull();
 	});
+});
 
+describe("PaperCollageDecor", () => {
 	it.each(["photo-left", "photo-right"] as const)(
 		"境界値: %sの実測anchorと描画済み装飾が一致する",
 		(compositionId) => {
-			const resolvedDesign = { ...design, compositionId };
+			const decorDesign = { ...design, compositionId };
 			const pagePlan: readonly PaperCollagePagePlan[] = [
 				{ kind: "cover", pageId: `cover-${compositionId}` },
 				{
@@ -247,17 +260,11 @@ describe("PaperCollageDocument", () => {
 				},
 			];
 			const { container } = render(
-				<PaperCollageDocument
-					booklet={booklet}
-					design={resolvedDesign}
-					pagePlan={pagePlan}
-					rootRef={createRef<HTMLElement>()}
-					titleSizePt={36}
-				/>,
+				<PaperCollagePages decorDesign={decorDesign} pagePlan={pagePlan} />,
 			);
 
 			expect(() =>
-				prepareRenderedDecor(container, pagePlan, resolvedDesign),
+				prepareRenderedDecor(container, pagePlan, decorDesign),
 			).not.toThrow();
 			expect(
 				container.querySelector(

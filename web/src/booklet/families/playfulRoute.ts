@@ -1,5 +1,5 @@
 import type { EditorialBooklet } from "../editorialModel";
-import { PaginationError } from "../paginate";
+import { PaginationError } from "../paginationError";
 
 export type PlayfulRouteDayMeasurement = {
 	readonly selectedBlockHeights: readonly number[];
@@ -134,20 +134,17 @@ function selectLayoutVariant(
 	);
 }
 
-export function paginatePlayfulRoute(
+/**
+ * The day pages of `booklet` with one layout fallback chosen over all its
+ * units. A program scene calls it with its single day (25.4).
+ */
+export function paginatePlayfulRouteDays(
 	booklet: EditorialBooklet,
 	measurement: PlayfulRouteMeasurement,
-): readonly PlayfulRoutePagePlan[] {
-	if (booklet.days.length === 0) {
-		return Object.freeze([
-			{ kind: "cover", pageId: `playful-route-cover-${booklet.journeyId}` },
-		]);
-	}
+): readonly PlayfulRouteDayPagePlan[] {
 	validateMeasurement(booklet, measurement);
 	const layoutVariant = selectLayoutVariant(measurement);
-	const pages: PlayfulRoutePagePlan[] = [
-		{ kind: "cover", pageId: `playful-route-cover-${booklet.journeyId}` },
-	];
+	const pages: PlayfulRouteDayPagePlan[] = [];
 
 	booklet.days.forEach((day, dayIndex) => {
 		const measuredDay = measurement.days[dayIndex];
@@ -172,7 +169,7 @@ export function paginatePlayfulRoute(
 				dayIndex,
 				kind: "day",
 				layoutVariant,
-				pageId: `playful-route-day-${day.id}-${pages.length}`,
+				pageId: `playful-route-day-${day.id}-${pages.length + 1}`,
 				unitIndexes: Object.freeze([...unitIndexes]),
 			});
 		};

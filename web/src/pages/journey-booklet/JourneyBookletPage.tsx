@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router";
 import { ApiError } from "../../api/client";
 import { downloadJourneyBookletPdf } from "../../api/journeyBooklet";
@@ -16,20 +16,26 @@ import {
 	IllustrationNotReadyError,
 } from "../../booklet/fromJourney";
 import type { BookletModel } from "../../booklet/model";
-import { createBookletTheme } from "../../theme/bookletTheme";
-import { resolveBookletDesign } from "../../theme/families/resolveBookletDesign";
+import {
+	programComparisonKey,
+	programRenderKey,
+} from "../../booklet/program/programKeys";
+import { artworkById } from "../../theme/artwork/catalog";
+import { compileBooklet } from "../../theme/composition/compileBooklet";
 import {
 	createDefaultThemeSeed,
 	formatThemeSeed,
 	parseThemeSeed,
 } from "../../theme/seed";
-import type { RequestedBookletTheme } from "../../theme/types";
-import { FamilyBookletRenderer } from "./families/FamilyBookletRenderer";
-import {
-	isCurrentFamilyPagePlan,
-	useFamilyPagePlan,
-} from "./families/useFamilyPagePlan";
+import type { ThemeSeed } from "../../theme/types";
 import { selectRerollSeed } from "./reroll";
+import { type BookletWork, WorkRenderer } from "./WorkRenderer";
+import {
+	type BookletPagePlanStatus,
+	type BookletWorkState,
+	isPrintableWork,
+	pendingWorkState,
+} from "./workState";
 
 type LoadState =
 	| { readonly error: string; readonly status: "error" }
@@ -38,11 +44,9 @@ type LoadState =
 	| { readonly status: "loading" }
 	| { readonly status: "ready" };
 
-type ThemeRequestResult = {
-	readonly design: ReturnType<typeof resolveBookletDesign> | null;
-	readonly error: string | null;
+type SeedRequest = {
 	readonly invalidQuery: boolean;
-	readonly requestedTheme: RequestedBookletTheme | null;
+	readonly seed: ThemeSeed | null;
 };
 
 type BookletPrintState = {
@@ -91,9 +95,7 @@ function downloadFileName(model: BookletModel): string {
 function resolveBookletPrintState(
 	canPrint: boolean,
 	loadState: LoadState,
-	pagePlanError: string | null,
-	pagePlanStatus: string,
-	themeError: string | null,
+	workState: BookletWorkState,
 ): BookletPrintState {
 	if (canPrint) {
 		return { state: "ready" };
@@ -116,50 +118,46 @@ function resolveBookletPrintState(
 	if (loadState.status === "error") {
 		return { error: loadState.error, state: "error" };
 	}
-	if (themeError) {
-		return { error: themeError, state: "error" };
-	}
-	if (pagePlanStatus === "error") {
+	if (workState.status === "error") {
 		return {
-			error: pagePlanError ?? "印刷前の準備に失敗しました。",
+			error: workState.error ?? "印刷前の準備に失敗しました。",
 			state: "error",
 		};
 	}
 	return { state: "preparing" };
 }
 
-function resolveRequestedTheme(
+/** A missing or invalid seed falls back to the journey's default seed. */
+function resolveSeed(
 	journeyId: string | undefined,
 	seedQuery: string | null,
-	coverVisualStyle: BookletModel["cover"]["image"]["visualStyle"],
-): ThemeRequestResult {
+): SeedRequest {
 	if (!journeyId) {
-		return {
-			design: null,
-			error: null,
-			invalidQuery: false,
-			requestedTheme: null,
-		};
+		return { invalidQuery: false, seed: null };
 	}
 	const parsed = parseThemeSeed(seedQuery);
-	const seed =
-		parsed.kind === "valid" ? parsed.seed : createDefaultThemeSeed(journeyId);
-	try {
-		const requestedTheme = createBookletTheme(seed, { coverVisualStyle });
-		return {
-			design: resolveBookletDesign(requestedTheme),
-			error: null,
-			invalidQuery: parsed.kind === "invalid",
-			requestedTheme,
-		};
-	} catch {
-		return {
-			design: null,
-			error: "しおりのデザイン定義を読み込めませんでした。",
-			invalidQuery: parsed.kind === "invalid",
-			requestedTheme: null,
-		};
+	return {
+		invalidQuery: parsed.kind === "invalid",
+		seed:
+			parsed.kind === "valid" ? parsed.seed : createDefaultThemeSeed(journeyId),
+	};
+}
+
+/**
+ * Counts changes of the model or of the work's render key. A state reported
+ * for an older generation can never enable printing.
+ */
+function useWorkGeneration(
+	model: BookletModel | null,
+	renderKey: string | null,
+): number {
+	const [tracked, setTracked] = useState({ generation: 1, model, renderKey });
+	if (tracked.model !== model || tracked.renderKey !== renderKey) {
+		const next = { generation: tracked.generation + 1, model, renderKey };
+		setTracked(next);
+		return next.generation;
 	}
+	return tracked.generation;
 }
 
 function LoadingMessage() {
@@ -170,18 +168,16 @@ function BookletStatus({
 	downloadError,
 	isDownloading,
 	loadState,
-	pagePlanError,
-	pagePlanStatus,
-	reresolveError,
-	themeError,
+	rerollError,
+	workError,
+	workStatus,
 }: {
 	readonly downloadError: string | null;
 	readonly isDownloading: boolean;
 	readonly loadState: LoadState;
-	readonly pagePlanError: string | null;
-	readonly pagePlanStatus: string;
-	readonly reresolveError: string | null;
-	readonly themeError: string | null;
+	readonly rerollError: string | null;
+	readonly workError: string | null;
+	readonly workStatus: BookletPagePlanStatus;
 }) {
 	if (isDownloading) {
 		return <p>PDFを作成しています…</p>;
@@ -201,27 +197,63 @@ function BookletStatus({
 	if (loadState.status === "error") {
 		return <p>{loadState.error}</p>;
 	}
-	if (themeError) {
-		return <p>{themeError}</p>;
+	if (rerollError) {
+		return <p>{rerollError}</p>;
 	}
-	if (reresolveError) {
-		return <p>{reresolveError}</p>;
-	}
-	if (pagePlanStatus === "measuring") {
+	if (workStatus === "measuring") {
 		return <p>画像とフォントを準備し、ページを計測しています…</p>;
 	}
-	if (pagePlanStatus === "checking") {
+	if (workStatus === "checking") {
 		return <p>印刷ページの収まりを確認しています…</p>;
 	}
-	if (pagePlanStatus === "error") {
-		return <p>{pagePlanError ?? "印刷前の準備に失敗しました。"}</p>;
+	if (workStatus === "error") {
+		return <p>{workError ?? "印刷前の準備に失敗しました。"}</p>;
 	}
-	if (pagePlanStatus === "ready") {
+	if (workStatus === "ready") {
 		return <p>しおりの印刷準備ができました。</p>;
 	}
 	return null;
 }
 
+/** Shell attributes for observation; never an input of the PDF API. */
+type WorkAttributes = Readonly<Record<`data-${string}`, string | undefined>>;
+
+/** The work to draw for one model and seed, with its render key and attributes. */
+type ResolvedWork = {
+	readonly attributes: WorkAttributes;
+	/** null when nothing printable can be prepared (e.g. a compile failure). */
+	readonly renderKey: string | null;
+	readonly work: BookletWork;
+};
+
+/**
+ * The compiler reads only the model, the seed and this build's catalog, and
+ * the program is drawn by ProgramBooklet (25.4). A program carries no
+ * invented family ID.
+ */
+function resolveProgramWork(
+	model: BookletModel,
+	seed: ThemeSeed,
+): ResolvedWork {
+	const result = compileBooklet(model, { seed });
+	const program = result.status === "compiled" ? result.program : null;
+	return {
+		attributes: {
+			"data-booklet-catalog-revision": program?.catalogRevision,
+			"data-booklet-comparison-key": program
+				? programComparisonKey(program)
+				: undefined,
+			"data-booklet-direction-id": program?.baseDirectionId,
+		},
+		renderKey: program ? programRenderKey(program) : null,
+		work: { artworkById, result },
+	};
+}
+
+/**
+ * Loading, seed handling, status, printing, PDF download and reroll around
+ * the compiled program of one model and seed.
+ */
 export function JourneyBookletPage() {
 	const { journeyId } = useParams<{ journeyId: string }>();
 	const [searchParams, setSearchParams] = useSearchParams();
@@ -231,48 +263,46 @@ export function JourneyBookletPage() {
 	const [downloadError, setDownloadError] = useState<string | null>(null);
 	const [isDownloading, setIsDownloading] = useState(false);
 	const [rerollError, setRerollError] = useState<string | null>(null);
-	const coverVisualStyle = model?.cover.image.visualStyle ?? null;
-	const themeRequest = useMemo(
-		() => resolveRequestedTheme(journeyId, seedQuery, coverVisualStyle),
-		[journeyId, seedQuery, coverVisualStyle],
+	const seedRequest = useMemo(
+		() => resolveSeed(journeyId, seedQuery),
+		[journeyId, seedQuery],
 	);
-	const familyPagePlan = useFamilyPagePlan(model, themeRequest.design);
-	const {
-		activeTheme,
-		coverVeilBounds,
-		error: pagePlanError,
-		fallbackLog,
-		pagePlan,
-		resolvedTheme,
-		status,
-		renderPagePlan,
-	} = familyPagePlan;
-	const resolvedCompositionId = renderPagePlan?.actualCompositionId;
+	const { seed } = seedRequest;
+	const resolved = useMemo(
+		() => (model && seed ? resolveProgramWork(model, seed) : null),
+		[model, seed],
+	);
+	const renderKey = resolved?.renderKey ?? null;
+	const generation = useWorkGeneration(model, renderKey);
+	const [reportedState, setReportedState] = useState<BookletWorkState>(() =>
+		pendingWorkState("idle", 0),
+	);
+	const workState =
+		reportedState.generation === generation
+			? reportedState
+			: pendingWorkState(model ? "measuring" : "idle", generation);
+	const onWorkStateChange = useCallback((state: BookletWorkState) => {
+		setReportedState(state);
+	}, []);
+	const work = resolved?.work ?? null;
+	const shellAttributes = resolved?.attributes ?? {};
 	const canPrint =
 		loadState.status === "ready" &&
-		status === "ready" &&
-		pagePlan !== null &&
-		renderPagePlan !== null &&
-		coverVeilBounds !== null &&
-		resolvedTheme !== null &&
-		activeTheme?.resolvedThemeKey === resolvedTheme.resolvedThemeKey &&
-		isCurrentFamilyPagePlan(familyPagePlan, model, themeRequest.design);
+		isPrintableWork(workState, { generation, model, renderKey });
 	const bookletPrintState = resolveBookletPrintState(
 		canPrint,
 		loadState,
-		pagePlanError,
-		status,
-		themeRequest.error,
+		workState,
 	);
 
 	useEffect(() => {
-		if (!themeRequest.invalidQuery) {
+		if (!seedRequest.invalidQuery) {
 			return;
 		}
 		const next = new URLSearchParams(searchParams);
 		next.delete("seed");
 		setSearchParams(next, { replace: true });
-	}, [searchParams, setSearchParams, themeRequest.invalidQuery]);
+	}, [searchParams, setSearchParams, seedRequest.invalidQuery]);
 
 	useEffect(() => {
 		const controller = new AbortController();
@@ -345,8 +375,7 @@ export function JourneyBookletPage() {
 	};
 
 	const handleDownload = async () => {
-		const requestedTheme = themeRequest.requestedTheme;
-		if (!canPrint || !journeyId || !model || !requestedTheme) {
+		if (!canPrint || !journeyId || !model || !seed) {
 			return;
 		}
 
@@ -354,7 +383,7 @@ export function JourneyBookletPage() {
 		setIsDownloading(true);
 		try {
 			const pdf = await downloadJourneyBookletPdf(journeyId, {
-				seed: formatThemeSeed(requestedTheme.seed),
+				seed: formatThemeSeed(seed),
 			});
 			const objectURL = URL.createObjectURL(pdf);
 			const anchor = document.createElement("a");
@@ -375,7 +404,7 @@ export function JourneyBookletPage() {
 	};
 
 	const handleReroll = () => {
-		if (!themeRequest.requestedTheme) {
+		if (!seed) {
 			return;
 		}
 		setDownloadError(null);
@@ -399,15 +428,7 @@ export function JourneyBookletPage() {
 	return (
 		<div
 			className="booklet-shell"
-			data-booklet-fallback-log={
-				fallbackLog.length > 0 ? fallbackLog.join("\n") : undefined
-			}
-			data-booklet-family={themeRequest.design?.familyId}
-			data-booklet-comparison-key={themeRequest.design?.comparisonKey}
-			data-booklet-requested-composition={
-				themeRequest.design?.requestedTheme.recipe.compositionId
-			}
-			data-booklet-resolved-composition={resolvedCompositionId}
+			{...shellAttributes}
 			data-booklet-print-error={bookletPrintState.error}
 			data-booklet-print-state={bookletPrintState.state}
 		>
@@ -422,7 +443,7 @@ export function JourneyBookletPage() {
 					</Link>
 					<button
 						type="button"
-						disabled={themeRequest.requestedTheme === null || isDownloading}
+						disabled={seed === null || isDownloading}
 						onClick={handleReroll}
 					>
 						別のデザインを試す
@@ -452,16 +473,22 @@ export function JourneyBookletPage() {
 						downloadError={downloadError}
 						isDownloading={isDownloading}
 						loadState={loadState}
-						pagePlanError={pagePlanError}
-						pagePlanStatus={status}
-						reresolveError={rerollError}
-						themeError={themeRequest.error}
+						rerollError={rerollError}
+						workError={workState.error}
+						workStatus={
+							loadState.status === "ready" ? workState.status : "idle"
+						}
 					/>
 				</div>
 			</section>
 
-			{model ? (
-				<FamilyBookletRenderer model={model} pagePlanResult={familyPagePlan} />
+			{model && work ? (
+				<WorkRenderer
+					generation={generation}
+					model={model}
+					onStateChange={onWorkStateChange}
+					work={work}
+				/>
 			) : null}
 		</div>
 	);

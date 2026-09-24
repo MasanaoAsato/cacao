@@ -2,27 +2,36 @@
 
 import "@testing-library/jest-dom/vitest";
 import { render } from "@testing-library/react";
-import { createRef } from "react";
 import { describe, expect, it } from "vitest";
 import type {
 	EditorialArrivalUnit,
 	EditorialBooklet,
+	EditorialDay,
 } from "../../../booklet/editorialModel";
-import type { PlayfulRoutePagePlan } from "../../../booklet/families/playfulRoute";
-import type { ResolvedBookletDesign } from "../../../booklet/family";
-import { createBookletTheme } from "../../../theme/bookletTheme";
+import type {
+	PlayfulRouteDayPagePlan,
+	PlayfulRoutePagePlan,
+} from "../../../booklet/families/playfulRoute";
 import type {
 	PlayfulRouteCompositionId,
 	PlayfulRouteDecorVariantId,
 } from "../../../theme/families/playfulRoute";
-import { playfulRouteDecorVariantFor } from "../../../theme/families/playfulRoute";
-import { styleProfileFor } from "../../../theme/families/styleProfiles";
 import {
-	ensurePlayfulRouteContent,
-	PlayfulRouteDocument,
+	playfulRouteDecorVariantFor,
+	playfulRoutePaletteFor,
+} from "../../../theme/families/playfulRoute";
+import { familyProfileById } from "../program/modules/familyStyle";
+import { prepareFamilyDecorPages } from "./familyDecor";
+import {
+	ensurePlayfulRouteDayPageContent,
+	PlayfulDecor,
+	PlayfulRouteCover,
+	type PlayfulRouteDecorDesign,
+	playfulRouteDayLabel,
 	playfulRouteDecorDefinition,
+	playfulRouteStyleFor,
+	RouteDayPage,
 } from "./PlayfulRoute";
-import { prepareFamilyDecor } from "./useFamilyPagePlan";
 
 function unit(id: string, name: string): EditorialArrivalUnit {
 	return {
@@ -71,36 +80,85 @@ const booklet: EditorialBooklet = {
 	policyId: "route",
 };
 
-function designFor(
+const bookletDay = booklet.days[0] as EditorialDay;
+
+function profileIdFor(decorVariantId: string | null): string {
+	return decorVariantId === "sunny"
+		? "playful-route.playful-pop"
+		: "playful-route.playful-travel-diary";
+}
+
+/** The decor a program profile scene hands the family parts. */
+function decorDesignFor(
 	decorVariantId: PlayfulRouteDecorVariantId,
 	compositionId: PlayfulRouteCompositionId = "zigzag",
-): ResolvedBookletDesign {
-	const comparisonKey = `playful-route.berry-sun.${compositionId}.${decorVariantId}`;
+): PlayfulRouteDecorDesign {
 	return {
-		comparisonKey,
 		compositionId,
-		decorAssetIds: playfulRouteDecorVariantFor(decorVariantId).decorAssetIds,
+		decorAssetIds: familyProfileById(
+			"playful-route",
+			profileIdFor(decorVariantId),
+		).decorAssetIds,
 		decorVariantId,
 		familyId: "playful-route",
-		fontFamilies: ["Dela Gothic One", "M PLUS Rounded 1c", "Noto Sans JP"],
-		paletteId: "berry-sun",
-		policyId: "route",
-		renderKey: `playful-route:v2-0000001c:route:${comparisonKey}`,
-		requestedTheme: createBookletTheme({ value: 28, version: "v2" }),
 		seedToken: "v2-0000001c",
-		styleProfile: styleProfileFor(
-			decorVariantId === "sunny"
-				? "playful-route.playful-pop"
-				: "playful-route.playful-travel-diary",
-		),
-		styleProfileId:
-			decorVariantId === "sunny"
-				? "playful-route.playful-pop"
-				: "playful-route.playful-travel-diary",
 	};
 }
 
-const design = designFor("sunny");
+/** Cover and day pages drawn with the kept parts, as a profile scene does. */
+function PlayfulPages({
+	design,
+	pagePlan,
+}: {
+	readonly design: PlayfulRouteDecorDesign;
+	readonly pagePlan: readonly PlayfulRoutePagePlan[];
+}) {
+	const profile = familyProfileById(
+		"playful-route",
+		profileIdFor(design.decorVariantId),
+	);
+	return (
+		<div
+			className={`playful-route playful-route--${design.compositionId}`}
+			data-testid="playful-root"
+			style={playfulRouteStyleFor({
+				compositionId: design.compositionId,
+				palette: playfulRoutePaletteFor(profile.paletteId),
+				photoTreatment: profile.photoTreatment,
+				ruleTreatment: profile.ruleTreatment,
+				typography: profile,
+			})}
+		>
+			{pagePlan.map((page) => (
+				<article
+					className={`booklet-page playful-route-page playful-route-page--${page.kind}`}
+					data-booklet-page="true"
+					data-page-id={page.pageId}
+					key={page.pageId}
+				>
+					<PlayfulDecor
+						booklet={booklet}
+						design={design}
+						page={page}
+						scope="output"
+					/>
+					<div className="booklet-page__content">
+						{page.kind === "cover" ? (
+							<PlayfulRouteCover
+								booklet={booklet}
+								measurement={false}
+								titleSizePt={40}
+								titleSizesPt={[40, 34, 28, 22]}
+							/>
+						) : (
+							<RouteDayPage booklet={booklet} page={page} />
+						)}
+					</div>
+				</article>
+			))}
+		</div>
+	);
+}
 
 const PX_PER_MM = 4;
 
@@ -128,11 +186,12 @@ function stubRect(
 function prepareRenderedDecor(
 	container: HTMLElement,
 	pagePlan: readonly PlayfulRoutePagePlan[],
-	resolvedDesign: ResolvedBookletDesign,
+	design: PlayfulRouteDecorDesign,
 ): void {
-	for (const pageElement of container.querySelectorAll<HTMLElement>(
-		"[data-booklet-page]",
-	)) {
+	const pages = Array.from(
+		container.querySelectorAll<HTMLElement>("[data-booklet-page]"),
+	);
+	for (const pageElement of pages) {
 		stubRect(pageElement, 0, 0, 148, 210);
 	}
 	for (const text of container.querySelectorAll<HTMLElement>(
@@ -143,8 +202,8 @@ function prepareRenderedDecor(
 	for (const page of pagePlan) {
 		const definition = playfulRouteDecorDefinition(
 			page,
-			resolvedDesign.compositionId,
-			resolvedDesign.decorVariantId,
+			design.compositionId,
+			design.decorVariantId,
 			booklet,
 		);
 		for (const anchor of definition.anchors) {
@@ -163,16 +222,16 @@ function prepareRenderedDecor(
 			);
 		}
 	}
-	prepareFamilyDecor(
-		container,
-		resolvedDesign,
+	prepareFamilyDecorPages(
+		pages,
+		design,
 		new Map(
 			pagePlan.map((page) => [
 				page.pageId,
 				playfulRouteDecorDefinition(
 					page,
-					resolvedDesign.compositionId,
-					resolvedDesign.decorVariantId,
+					design.compositionId,
+					design.decorVariantId,
 					booklet,
 				).decorations,
 			]),
@@ -180,28 +239,31 @@ function prepareRenderedDecor(
 	);
 }
 
-describe("PlayfulRouteDocument", () => {
+const dayPage: PlayfulRouteDayPagePlan = {
+	blockHeightsMm: [32, 32],
+	continuation: false,
+	dayIndex: 0,
+	kind: "day",
+	layoutVariant: "selected",
+	pageId: "day-1",
+	unitIndexes: [0, 1],
+};
+
+const contentExpectation = {
+	label: playfulRouteDayLabel(1),
+	ordinalOffset: 0,
+	unitLabel: null,
+} as const;
+
+describe("playful-routeの表紙と日ページ", () => {
 	it("正常系: 日内番号・時刻・訪問先・移動を元の順で描く", () => {
+		const design = decorDesignFor("sunny");
 		const pagePlan: readonly PlayfulRoutePagePlan[] = [
 			{ kind: "cover", pageId: "cover" },
-			{
-				blockHeightsMm: [32, 32],
-				continuation: false,
-				dayIndex: 0,
-				kind: "day",
-				layoutVariant: "selected",
-				pageId: "day-1",
-				unitIndexes: [0, 1],
-			},
+			dayPage,
 		];
-		const { container } = render(
-			<PlayfulRouteDocument
-				booklet={booklet}
-				design={design}
-				pagePlan={pagePlan}
-				rootRef={createRef<HTMLElement>()}
-				titleSizePt={40}
-			/>,
+		const { container, getByTestId } = render(
+			<PlayfulPages design={design} pagePlan={pagePlan} />,
 		);
 
 		const blocks = container.querySelectorAll(".playful-route-block");
@@ -216,54 +278,95 @@ describe("PlayfulRouteDocument", () => {
 			"data-booklet-decor-connector",
 			"route-unit-unit-1>route-unit-unit-2",
 		);
-		const documentRoot =
-			container.querySelector<HTMLElement>(".booklet-document");
-		expect(documentRoot).not.toBeNull();
-		expect(
-			documentRoot?.style.getPropertyValue("--playful-route-utility-family"),
-		).toBe('"Noto Sans JP", sans-serif');
-		expect(
-			documentRoot?.style.getPropertyValue("--playful-route-utility-weight"),
-		).toBe("400");
+		const root = getByTestId("playful-root");
+		expect(root.style.getPropertyValue("--playful-route-utility-family")).toBe(
+			'"Noto Sans JP", sans-serif',
+		);
+		expect(root.style.getPropertyValue("--playful-route-utility-weight")).toBe(
+			"400",
+		);
 		expect(
 			container.querySelector(".playful-route-cover__period"),
 		).not.toBeNull();
+		expect(
+			container.querySelector(
+				'.playful-route-page--cover [data-booklet-text-role="cover-destination"]',
+			),
+		).toHaveTextContent("金沢");
 		expect(() =>
-			ensurePlayfulRouteContent(documentRoot as HTMLElement, booklet, pagePlan),
+			ensurePlayfulRouteDayPageContent(
+				container.querySelector('[data-page-id="day-1"]') as HTMLElement,
+				bookletDay,
+				dayPage,
+				contentExpectation,
+			),
 		).not.toThrow();
 	});
 
 	it("異常系: ページ計画にない日を描画しない", () => {
-		const pagePlan: readonly PlayfulRoutePagePlan[] = [
-			{ kind: "cover", pageId: "cover" },
-			{
-				blockHeightsMm: [32],
-				continuation: false,
-				dayIndex: 9,
-				kind: "day",
-				layoutVariant: "selected",
-				pageId: "missing-day",
-				unitIndexes: [0],
-			},
-		];
+		const design = decorDesignFor("sunny");
+		const missingDay: PlayfulRouteDayPagePlan = {
+			...dayPage,
+			blockHeightsMm: [32],
+			dayIndex: 9,
+			pageId: "missing-day",
+			unitIndexes: [0],
+		};
 		const { container } = render(
-			<PlayfulRouteDocument
-				booklet={booklet}
+			<PlayfulPages
 				design={design}
-				pagePlan={pagePlan}
-				rootRef={createRef<HTMLElement>()}
-				titleSizePt={40}
+				pagePlan={[{ kind: "cover", pageId: "cover" }, missingDay]}
 			/>,
 		);
 
 		expect(container.querySelector(".playful-route-block")).toBeNull();
+	});
+
+	it("異常系: ページ計画の掲載単位がモデルになければ内容確認で拒否する", () => {
+		const design = decorDesignFor("sunny");
+		const { container } = render(
+			<PlayfulPages design={design} pagePlan={[dayPage]} />,
+		);
+
 		expect(() =>
-			ensurePlayfulRouteContent(
-				container.querySelector(".booklet-document") as HTMLElement,
-				booklet,
-				pagePlan,
+			ensurePlayfulRouteDayPageContent(
+				container.querySelector('[data-page-id="day-1"]') as HTMLElement,
+				bookletDay,
+				{ ...dayPage, blockHeightsMm: [32], unitIndexes: [9] },
+				contentExpectation,
 			),
-		).toThrow("掲載モデルにありません");
+		).toThrow("掲載単位がモデルにありません");
+	});
+
+	it("異常系: 日見出しや掲載順が描画と一致しなければ内容確認で拒否する", () => {
+		const design = decorDesignFor("sunny");
+		const { container } = render(
+			<PlayfulPages design={design} pagePlan={[dayPage]} />,
+		);
+		const pageElement = container.querySelector(
+			'[data-page-id="day-1"]',
+		) as HTMLElement;
+
+		expect(() =>
+			ensurePlayfulRouteDayPageContent(pageElement, bookletDay, dayPage, {
+				...contentExpectation,
+				label: playfulRouteDayLabel(2),
+			}),
+		).toThrow("日見出しが掲載モデルと一致しません");
+		expect(() =>
+			ensurePlayfulRouteDayPageContent(pageElement, bookletDay, dayPage, {
+				...contentExpectation,
+				ordinalOffset: 1,
+			}),
+		).toThrow("表示文字が掲載モデルと一致しません");
+		expect(() =>
+			ensurePlayfulRouteDayPageContent(
+				pageElement,
+				bookletDay,
+				{ ...dayPage, unitIndexes: [1, 0] },
+				contentExpectation,
+			),
+		).toThrow("掲載単位ID順がページ計画と一致しません");
 	});
 
 	it.each([
@@ -274,7 +377,7 @@ describe("PlayfulRouteDocument", () => {
 	] as const)(
 		"境界値: %s・%sの実測anchor・折れ線・描画済み装飾が一致する",
 		(compositionId, decorVariantId) => {
-			const resolvedDesign = designFor(decorVariantId, compositionId);
+			const design = decorDesignFor(decorVariantId, compositionId);
 			const pagePlan: readonly PlayfulRoutePagePlan[] = [
 				{ kind: "cover", pageId: `cover-${compositionId}` },
 				{
@@ -288,17 +391,11 @@ describe("PlayfulRouteDocument", () => {
 				},
 			];
 			const { container } = render(
-				<PlayfulRouteDocument
-					booklet={booklet}
-					design={resolvedDesign}
-					pagePlan={pagePlan}
-					rootRef={createRef<HTMLElement>()}
-					titleSizePt={40}
-				/>,
+				<PlayfulPages design={design} pagePlan={pagePlan} />,
 			);
 
 			expect(() =>
-				prepareRenderedDecor(container, pagePlan, resolvedDesign),
+				prepareRenderedDecor(container, pagePlan, design),
 			).not.toThrow();
 			expect(
 				container.querySelector(
@@ -309,23 +406,18 @@ describe("PlayfulRouteDocument", () => {
 				container.querySelector("[data-booklet-decor-connector]"),
 			).toHaveAttribute("points");
 			expect(
-				container.querySelector(`[data-page-id="day-${compositionId}"]`),
-			).toHaveAttribute("data-booklet-composition", "compact-header");
+				container.querySelector(
+					`[data-page-id="day-${compositionId}"] .playful-route-blocks`,
+				),
+			).toHaveClass(
+				"playful-route-blocks--compact-header",
+				"playful-route-blocks--continuation",
+			);
 		},
 	);
 });
 
 describe("playful-routeの装飾パターン描画", () => {
-	const dayPage: Extract<PlayfulRoutePagePlan, { readonly kind: "day" }> = {
-		blockHeightsMm: [32, 32],
-		continuation: false,
-		dayIndex: 0,
-		kind: "day",
-		layoutVariant: "selected",
-		pageId: "day-1",
-		unitIndexes: [0, 1],
-	};
-
 	it("正常系: walkingは同じ予約領域に足跡と曲がった矢印を置く", () => {
 		const cover = playfulRouteDecorDefinition(
 			{ kind: "cover", pageId: "cover" },
@@ -398,29 +490,45 @@ describe("playful-routeの装飾パターン描画", () => {
 		},
 	);
 
+	it("境界値: 日の途中から始まるsceneはzigzagの左右を日内の位置で保つ", () => {
+		const fromStart = playfulRouteDecorDefinition(
+			dayPage,
+			"zigzag",
+			"sunny",
+			booklet,
+		);
+		const fromSecond = playfulRouteDecorDefinition(
+			dayPage,
+			"zigzag",
+			"sunny",
+			booklet,
+			1,
+		);
+
+		expect(fromStart.anchors.slice(0, 2).map((item) => item.rect.xMm)).toEqual([
+			10, 34,
+		]);
+		expect(fromSecond.anchors.slice(0, 2).map((item) => item.rect.xMm)).toEqual(
+			[34, 10],
+		);
+	});
+
 	it.each(["sunny", "walking"] as const)(
-		"正常系: %sを観測属性へ出し、表紙と本文の両方で描く",
+		"正常系: %sを表紙と本文の両方で描く",
 		(decorVariantId) => {
-			const resolvedDesign = designFor(decorVariantId);
+			const design = decorDesignFor(decorVariantId);
+			expect(design.decorAssetIds).toEqual(
+				playfulRouteDecorVariantFor(decorVariantId).decorAssetIds,
+			);
 			const pagePlan: readonly PlayfulRoutePagePlan[] = [
 				{ kind: "cover", pageId: "cover" },
 				dayPage,
 			];
 			const { container } = render(
-				<PlayfulRouteDocument
-					booklet={booklet}
-					design={resolvedDesign}
-					pagePlan={pagePlan}
-					rootRef={createRef<HTMLElement>()}
-					titleSizePt={40}
-				/>,
+				<PlayfulPages design={design} pagePlan={pagePlan} />,
 			);
 
-			expect(container.querySelector(".booklet-document")).toHaveAttribute(
-				"data-booklet-decor-variant",
-				decorVariantId,
-			);
-			prepareRenderedDecor(container, pagePlan, resolvedDesign);
+			prepareRenderedDecor(container, pagePlan, design);
 			const drawn = Array.from(
 				container.querySelectorAll("[data-booklet-decor-asset]"),
 				(element) => element.getAttribute("data-booklet-decor-asset"),
@@ -449,23 +557,17 @@ describe("playful-routeの装飾パターン描画", () => {
 	);
 
 	it("正常系: wide-ribbonへ退避しても選んだパターンを引き継ぐ", () => {
-		const resolvedDesign = designFor("walking");
+		const design = decorDesignFor("walking");
 		const pagePlan: readonly PlayfulRoutePagePlan[] = [
 			{ kind: "cover", pageId: "cover" },
 			{ ...dayPage, layoutVariant: "wide-ribbon" },
 		];
 		const { container } = render(
-			<PlayfulRouteDocument
-				booklet={booklet}
-				design={resolvedDesign}
-				pagePlan={pagePlan}
-				rootRef={createRef<HTMLElement>()}
-				titleSizePt={40}
-			/>,
+			<PlayfulPages design={design} pagePlan={pagePlan} />,
 		);
 
 		expect(() =>
-			prepareRenderedDecor(container, pagePlan, resolvedDesign),
+			prepareRenderedDecor(container, pagePlan, design),
 		).not.toThrow();
 		expect(
 			container.querySelectorAll(

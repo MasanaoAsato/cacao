@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
-	ACTIVE_DIRECTION_DEFINITIONS,
 	directionDefinitionById,
+	REGISTERED_DIRECTION_DEFINITIONS,
 } from "../directions/registry";
 import type { DirectionId } from "../directions/types";
 
@@ -11,7 +11,7 @@ function contributionIds(id: DirectionId): readonly string[] {
 
 describe("standardContributions", () => {
 	it("正常系: 52方向すべてが章変化の操作を持ち、IDは方向内で一意", () => {
-		for (const definition of ACTIVE_DIRECTION_DEFINITIONS) {
+		for (const definition of REGISTERED_DIRECTION_DEFINITIONS) {
 			const ids = definition.contributions.map((item) => item.id);
 			expect(ids).toContain(`${definition.id}:chapter-style`);
 			expect(new Set(ids).size).toBe(ids.length);
@@ -31,7 +31,7 @@ describe("standardContributions", () => {
 	});
 
 	it("正常系: 本文構造の交換元は各方向のbaseline moduleを参照する", () => {
-		for (const definition of ACTIVE_DIRECTION_DEFINITIONS) {
+		for (const definition of REGISTERED_DIRECTION_DEFINITIONS) {
 			for (const contribution of definition.contributions) {
 				for (const operation of contribution.operations) {
 					if (operation.kind === "content-structure")

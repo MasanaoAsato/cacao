@@ -1,0 +1,16 @@
+/* woodcut-folio: frameless body, carved faces and generous margins. */
+
+.program-page--woodcut-folio .program-heading {
+	border-bottom-width: 1.2mm;
+}
+
+.program-page--woodcut-folio .program-unit--full-width-list {
+	padding-bottom: 0;
+}
+
+.program-page--woodcut-folio.program-page--divider .program-title-region,
+.program-page--woodcut-folio.program-page--endcap .program-title-region {
+	display: flex;
+	align-items: flex-end;
+	border-bottom: 1.2mm solid var(--scene-heading-accent);
+}

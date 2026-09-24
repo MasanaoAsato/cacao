@@ -140,14 +140,18 @@ const DIRECTION_DEFINITIONS = [
 export const DIRECTION_REGISTRY = createDirectionRegistry(
 	DIRECTION_DEFINITIONS,
 );
-/** Publication order. Compilation enumerates this array, never object keys. */
-export const ACTIVE_DIRECTION_DEFINITIONS: readonly DirectionDefinition[] =
+/**
+ * Every registered direction in publication order (always 52). Which of them
+ * are active depends on reviewed artwork; see composition/activeDirections.
+ * Compilation enumerates this array, never object keys.
+ */
+export const REGISTERED_DIRECTION_DEFINITIONS: readonly DirectionDefinition[] =
 	Object.freeze([...DIRECTION_DEFINITIONS]);
-export const ACTIVE_DIRECTION_IDS = Object.freeze([
+export const REGISTERED_DIRECTION_IDS = Object.freeze([
 	...DIRECTION_REGISTRY.keys(),
 ]);
 
-if (ACTIVE_DIRECTION_IDS.length !== 52)
+if (REGISTERED_DIRECTION_IDS.length !== 52)
 	throw new Error("方向カタログは52件でなければなりません。");
 
 export function directionDefinitionById(id: DirectionId): DirectionDefinition {

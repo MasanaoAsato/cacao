@@ -6,11 +6,8 @@ import {
 	testModel,
 } from "../../theme/composition/compositionTestKit";
 import type { BookletProgram, ProgramScene } from "./model";
-import {
-	assertValidProgram,
-	ProgramValidationError,
-	programIssues,
-} from "./validateProgram";
+import { compiledProgram } from "./programTestKit";
+import { programIssues, renderedCoverageIssues } from "./validateProgram";
 
 const model = testModel();
 
@@ -54,7 +51,6 @@ describe("programIssues", () => {
 			"endcap",
 		]);
 		expect(programIssues(program, model)).toEqual([]);
-		expect(() => assertValidProgram(program, model)).not.toThrow();
 	});
 
 	it("異常系: unitの欠落と日の順序の入替えを拒否する", () => {
@@ -81,9 +77,6 @@ describe("programIssues", () => {
 			return scenes;
 		});
 		expect(programIssues(swapped, model).length).toBeGreaterThan(0);
-		expect(() => assertValidProgram(swapped, model)).toThrow(
-			ProgramValidationError,
-		);
 	});
 
 	it("異常系: coverが先頭でない・endcapが最後でない・extrasの位置違いを拒否する", () => {
@@ -120,6 +113,36 @@ describe("programIssues", () => {
 		);
 	});
 
+	it("異常系: アルバム頁のmemoがunitを参照していれば拒否し、参照なしなら受け入れる", () => {
+		const program = sampleProgram();
+		const asAlbum = (
+			unitRefs: (refs: readonly string[]) => readonly string[],
+		) =>
+			withScenes(program, (scenes) =>
+				scenes.map((scene) =>
+					scene.kind === "memo" && scene.sceneId === "memo:d1"
+						? {
+								...scene,
+								participation: "memory-album",
+								unitRefs: unitRefs(scene.unitRefs),
+							}
+						: scene,
+				),
+			);
+		expect(
+			programIssues(
+				asAlbum((refs) => refs),
+				model,
+			),
+		).toContain("memo「memo:d1」はアルバム頁なのでunitを参照しません。");
+		expect(
+			programIssues(
+				asAlbum(() => []),
+				model,
+			),
+		).toEqual([]);
+	});
+
 	it("境界値系: 空日は空のday sceneを一つだけ持つ", () => {
 		const program = sampleProgram();
 		const extraEmpty = withScenes(program, (scenes) => {
@@ -136,5 +159,59 @@ describe("programIssues", () => {
 		expect(programIssues(extraEmpty, model)).toContain(
 			"空日「d3」はsceneを一つだけ持ちます。",
 		);
+	});
+});
+
+describe("renderedCoverageIssues", () => {
+	const model = testModel();
+	const program = compiledProgram(["checklist"], model);
+	const owned = model.days.flatMap((day) =>
+		day.units.map((unit) => ({
+			kind: "owned" as const,
+			sceneId: `day:${day.id}`,
+			unitId: unit.id,
+		})),
+	);
+
+	it("正常系: 全unitが入力順に一回ずつ本体として描かれ、memoの参照は数えない", () => {
+		const refs = ["d1-u0", "d1-u1"].map((unitId) => ({
+			kind: "ref" as const,
+			sceneId: "memo:d1",
+			unitId,
+		}));
+		expect(renderedCoverageIssues(program, model, [...owned, ...refs])).toEqual(
+			[],
+		);
+	});
+
+	it("異常系: 参照を本体として数えた二重計数、欠落、順序違いを検出する", () => {
+		expect(
+			renderedCoverageIssues(program, model, [
+				...owned,
+				{ kind: "owned", sceneId: "memo:d1", unitId: "d1-u0" },
+			]).length,
+		).toBeGreaterThan(0);
+		expect(renderedCoverageIssues(program, model, owned.slice(1))).toContain(
+			"紙面が全unitを入力順に一回ずつ描いていません。",
+		);
+		expect(
+			renderedCoverageIssues(
+				program,
+				model,
+				[owned[1], owned[0], ...owned.slice(2)].filter(
+					(mark) => mark !== undefined,
+				),
+			),
+		).toContain("紙面が全unitを入力順に一回ずつ描いていません。");
+	});
+
+	it("異常系: 別の日のunitを参照するmemoと、scene外の描画を検出する", () => {
+		expect(
+			renderedCoverageIssues(program, model, [
+				...owned,
+				{ kind: "ref", sceneId: "memo:d1", unitId: "d2-u0" },
+				{ kind: "ref", sceneId: "unknown", unitId: "d1-u0" },
+			]),
+		).toHaveLength(2);
 	});
 });

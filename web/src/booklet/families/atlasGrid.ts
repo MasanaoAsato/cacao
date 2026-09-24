@@ -1,5 +1,5 @@
 import type { EditorialBooklet } from "../editorialModel";
-import { PaginationError } from "../paginate";
+import { PaginationError } from "../paginationError";
 
 export type AtlasGridDayMeasurement = {
 	readonly bandHeight: number;
@@ -91,15 +91,14 @@ function validateMeasurement(
 	});
 }
 
-export function paginateAtlasGrid(
+/**
+ * The itinerary table pages of `booklet`, packing consecutive days into one
+ * table. A program scene calls it with its single day (25.4).
+ */
+export function paginateAtlasGridTables(
 	booklet: EditorialBooklet,
 	measurement: AtlasGridMeasurement,
-): readonly AtlasGridPagePlan[] {
-	if (booklet.days.length === 0) {
-		return Object.freeze([
-			{ kind: "cover", pageId: `atlas-cover-${booklet.journeyId}` },
-		]);
-	}
+): readonly AtlasGridTablePagePlan[] {
 	validateMeasurement(booklet, measurement);
 	const tablePages: MutablePage[] = [];
 	let currentPage: MutablePage | null = null;
@@ -180,9 +179,8 @@ export function paginateAtlasGrid(
 		});
 	});
 
-	return Object.freeze([
-		{ kind: "cover", pageId: `atlas-cover-${booklet.journeyId}` },
-		...tablePages.map((page, pageIndex) =>
+	return Object.freeze(
+		tablePages.map((page, pageIndex) =>
 			Object.freeze({
 				kind: "table" as const,
 				pageId: `atlas-table-${booklet.journeyId}-${pageIndex + 1}`,
@@ -196,5 +194,5 @@ export function paginateAtlasGrid(
 				),
 			}),
 		),
-	]);
+	);
 }

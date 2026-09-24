@@ -78,6 +78,26 @@ describe("deriveFacts", () => {
 		]);
 	});
 
+	it("正常系: 日ごとにも移動分数と同通貨の費用合計を持ち、通貨を跨いで加算しない", () => {
+		const facts = deriveFacts(
+			model([
+				day([
+					unit("2026-03-01T09:00:00+09:00", "JPY", 15),
+					unit("2026-03-01T10:00:00+09:00", "EUR", 25),
+				]),
+				{ ...day([]), id: "day-2" },
+			]),
+		);
+		expect(facts.days[0]).toMatchObject({
+			costTotals: [
+				{ amount: 300, currency: "JPY" },
+				{ amount: 300, currency: "EUR" },
+			],
+			movementMinutes: 40,
+		});
+		expect(facts.days[1]).toMatchObject({ costTotals: [], movementMinutes: 0 });
+	});
+
 	it("異常系: RFC 3339ではない日時と不正な月を拒否する", () => {
 		expect(() => timeOfDayFor("2026-03-01 10:00")).toThrow("時間帯");
 		expect(() => timeOfDayFor("2026-03-01T任意文字列")).toThrow("時間帯");

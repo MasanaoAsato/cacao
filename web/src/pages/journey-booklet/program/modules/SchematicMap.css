@@ -1,0 +1,5 @@
+/* schematic-map: a numbered concept route; names stay in the body. */
+
+.program-page--schematic-map .program-extra {
+	box-shadow: inset 0 0 0 0.3mm var(--scene-accent);
+}

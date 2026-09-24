@@ -4,12 +4,13 @@ import { programIssues } from "../../booklet/program/validateProgram";
 import { ARTWORK_CATALOG } from "../artwork/catalog";
 import { localePackFor } from "../directions/localePacks";
 import {
-	ACTIVE_DIRECTION_DEFINITIONS,
 	isDirectionEligible,
+	REGISTERED_DIRECTION_DEFINITIONS,
 } from "../directions/registry";
 import type { DirectionDefinition } from "../directions/types";
 import { axisRandom, formatThemeSeed } from "../seed";
-import type { RequestedBookletTheme } from "../types";
+import type { ThemeSeed } from "../types";
+import { activeDirectionDefinitions } from "./activeDirections";
 import {
 	bindingCandidates,
 	buildBaselineState,
@@ -44,13 +45,23 @@ import type {
 	DraftState,
 } from "./types";
 
-/** The catalog delivered with this build. Draft artwork is never part of it. */
+let productionCatalog: CompositionCatalog | null = null;
+
+/**
+ * The catalog delivered with this build. Draft artwork is never part of it,
+ * and neither is a direction whose required artwork is still draft (25.5);
+ * such directions return by themselves once their artwork is reviewed.
+ */
 export function productionCompositionCatalog(): CompositionCatalog {
-	return {
+	productionCatalog ??= {
 		artwork: ARTWORK_CATALOG,
-		directions: ACTIVE_DIRECTION_DEFINITIONS,
+		directions: activeDirectionDefinitions(
+			REGISTERED_DIRECTION_DEFINITIONS,
+			ARTWORK_CATALOG,
+		),
 		revision: CATALOG_REVISION,
 	};
+	return productionCatalog;
 }
 
 /** Each step stops with this probability, so 1/2/3/4+ directions tend to 50/25/12.5/12.5%. */
@@ -136,7 +147,7 @@ export type CompileOptions = {
  */
 export function compileBooklet(
 	model: BookletModel,
-	requestedTheme: Pick<RequestedBookletTheme, "seed">,
+	requestedTheme: { readonly seed: ThemeSeed },
 	catalog: CompositionCatalog = productionCompositionCatalog(),
 	options: CompileOptions = {},
 ): CompileResult {

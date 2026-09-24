@@ -235,6 +235,14 @@
 	font-size: 14pt;
 }
 
+/* A program scene's section label stays on the compact header's one row. */
+.paper-collage-day-header--compact
+	.paper-collage-day-header__heading
+	> .program-heading__section {
+	grid-row: 1;
+	grid-column: 3;
+}
+
 .paper-collage-columns {
 	display: grid;
 	flex: 0 0 auto;

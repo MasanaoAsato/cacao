@@ -95,13 +95,25 @@ export type DirectionTouchId =
 	| "none"
 	| "chalk";
 
-export type StyleBundleId =
+/** The six text/color bundles of 25.1 that directions choose from. */
+export type DirectionStyleBundleId =
 	| "ink"
 	| "bright"
 	| "warm"
 	| "quiet"
 	| "play"
 	| "night";
+
+/**
+ * Styles of the four basic verification works of 25.4. Only verification
+ * programs name them; no direction baseline or family profile selects them.
+ */
+export type BasicWorkStyleId =
+	| "woodcut-journey"
+	| "rail-sketchbook"
+	| "specimen-scrapbook";
+
+export type StyleBundleId = DirectionStyleBundleId | BasicWorkStyleId;
 
 export type DirectionCoverage = {
 	readonly continuationPage: true;
@@ -131,7 +143,7 @@ export type DirectionBaseline = {
 	readonly coverage: DirectionCoverage;
 	readonly module: DirectionModuleId;
 	readonly signature: DirectionSignature;
-	readonly styleBundleId: StyleBundleId;
+	readonly styleBundleId: DirectionStyleBundleId;
 	readonly touch: DirectionTouchId;
 };
 

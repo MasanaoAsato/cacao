@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
-	ACTIVE_DIRECTION_IDS,
 	DIRECTION_REGISTRY,
 	isDirectionEligible,
+	REGISTERED_DIRECTION_IDS,
 } from "./registry";
 
 function requiredDirection(id: "local-color" | "local-motif") {
@@ -13,8 +13,8 @@ function requiredDirection(id: "local-color" | "local-motif") {
 
 describe("direction catalog", () => {
 	it("正常系: 52方向はそれぞれ単独で全冊子coverageを持つ", () => {
-		expect(ACTIVE_DIRECTION_IDS).toHaveLength(52);
-		expect(new Set(ACTIVE_DIRECTION_IDS).size).toBe(52);
+		expect(REGISTERED_DIRECTION_IDS).toHaveLength(52);
+		expect(new Set(REGISTERED_DIRECTION_IDS).size).toBe(52);
 		for (const definition of DIRECTION_REGISTRY.values()) {
 			expect(definition.baseline().coverage).toEqual({
 				continuationPage: true,

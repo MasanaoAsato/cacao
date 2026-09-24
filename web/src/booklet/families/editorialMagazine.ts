@@ -1,23 +1,18 @@
-import type { BookletStyleProfile } from "../../theme/families/styleProfiles";
 import type { EditorialBooklet } from "../editorialModel";
-import { PaginationError } from "../paginate";
+import { PaginationError } from "../paginationError";
 
 export const EDITORIAL_MAGAZINE_ARTICLE_START_Y_MM = 80;
 export const EDITORIAL_MAGAZINE_CONTINUATION_START_Y_MM = 30;
 export const EDITORIAL_MAGAZINE_PAGE_BOTTOM_Y_MM = 200;
 export const EDITORIAL_MAGAZINE_CARD_GAP_MM = 3;
-export const EDITORIAL_MAGAZINE_COVER_TITLE_MAX_HEIGHT_MM = 24;
 export const EDITORIAL_MAGAZINE_ARTICLE_CAPACITY_MM =
 	EDITORIAL_MAGAZINE_PAGE_BOTTOM_Y_MM - EDITORIAL_MAGAZINE_ARTICLE_START_Y_MM;
 export const EDITORIAL_MAGAZINE_CONTINUATION_CAPACITY_MM =
 	EDITORIAL_MAGAZINE_PAGE_BOTTOM_Y_MM -
 	EDITORIAL_MAGAZINE_CONTINUATION_START_Y_MM;
-export const EDITORIAL_MAGAZINE_EMPTY_DAY_LABEL_HEIGHT_MM = 10;
 
 export type EditorialMagazineMeasurements = {
-	readonly styleProfileId: string;
 	readonly unitHeightsMm: ReadonlyMap<string, number>;
-	readonly coverTitleHeightMm: number;
 	readonly articleHeaderHeightMm: number;
 	readonly continuationHeaderHeightMm: number;
 	readonly articleStartYmm: number;
@@ -71,30 +66,11 @@ function requireFixedMeasurement(
 	}
 }
 
+/** Day geometry and unit heights of the scene's day. */
 function validateMeasurement(
 	booklet: EditorialBooklet,
 	measurement: EditorialMagazineMeasurements,
-	styleProfile: BookletStyleProfile,
 ): void {
-	if (
-		styleProfile.familyId !== "editorial-magazine" ||
-		measurement.styleProfileId !== styleProfile.id
-	) {
-		throw new PaginationError(
-			"invalid-measurement",
-			"計測結果の作風プロファイルが一致しません。",
-		);
-	}
-	requireNonNegativeFinite(measurement.coverTitleHeightMm, "表紙題名の高さ");
-	if (
-		measurement.coverTitleHeightMm >
-		EDITORIAL_MAGAZINE_COVER_TITLE_MAX_HEIGHT_MM
-	) {
-		throw new PaginationError(
-			"unit-overflow",
-			"表紙題名が予約領域に収まりません。",
-		);
-	}
 	requireNonNegativeFinite(
 		measurement.articleHeaderHeightMm,
 		"記事ヘッダーの高さ",
@@ -179,13 +155,9 @@ function pageId(
 
 function freezePage(
 	page:
-		| EditorialMagazineCoverPagePlan
 		| EditorialMagazineArticlePagePlan
 		| EditorialMagazineContinuationPagePlan,
 ): EditorialMagazinePagePlan {
-	if (page.kind === "cover") {
-		return Object.freeze(page);
-	}
 	return Object.freeze({
 		...page,
 		unitIndexes: Object.freeze([...page.unitIndexes]),
@@ -196,22 +168,14 @@ function freezePage(
  * Splits whole article cards into A5 pages using measured card heights.
  * The candidate DOM and this function intentionally share only the measurement
  * contract; this function never reads layout from the browser.
+ * A program scene calls it with its single day (25.4).
  */
-export function paginateEditorialMagazine(
+export function paginateEditorialMagazineDays(
 	booklet: EditorialBooklet,
 	measurement: EditorialMagazineMeasurements,
-	styleProfile: BookletStyleProfile,
 ): readonly EditorialMagazinePagePlan[] {
-	const cover = freezePage({
-		kind: "cover",
-		pageId: `editorial-magazine-cover-${booklet.journeyId}`,
-	});
-	if (booklet.days.length === 0) {
-		return Object.freeze([cover]);
-	}
-	validateMeasurement(booklet, measurement, styleProfile);
-
-	const pages: EditorialMagazinePagePlan[] = [cover];
+	validateMeasurement(booklet, measurement);
+	const pages: EditorialMagazinePagePlan[] = [];
 	let ordinal = 1;
 
 	for (const [dayIndex, day] of booklet.days.entries()) {

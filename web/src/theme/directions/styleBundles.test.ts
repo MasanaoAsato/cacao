@@ -1,13 +1,27 @@
 import { describe, expect, it } from "vitest";
 import {
+	BASIC_WORK_STYLES,
+	DIRECTION_STYLE_BUNDLES,
 	STYLE_BUNDLES,
 	styleBundleById,
 	validateStyleBundle,
 } from "./styleBundles";
 
 describe("styleBundles", () => {
-	it("正常系: 6束をIDから取得し、共通の文字組下限を満たす", () => {
-		expect(Object.keys(STYLE_BUNDLES)).toHaveLength(6);
+	it("正常系: 方向用の6束と基礎作例の3styleをIDから取得し、共通の文字組下限を満たす", () => {
+		expect(Object.keys(DIRECTION_STYLE_BUNDLES)).toHaveLength(6);
+		expect(Object.keys(BASIC_WORK_STYLES)).toEqual([
+			"woodcut-journey",
+			"rail-sketchbook",
+			"specimen-scrapbook",
+		]);
+		expect(Object.keys(STYLE_BUNDLES)).toHaveLength(9);
+		expect(styleBundleById("woodcut-journey")).toMatchObject({
+			accentColor: "#D7C6A0",
+			bodyColor: "#19352C",
+			displayFontFamily: "Shippori Mincho",
+			paperColor: "#F7F1DD",
+		});
 		expect(styleBundleById("night").paperColor).toBe("#182331");
 		for (const bundle of Object.values(STYLE_BUNDLES)) {
 			expect(() => validateStyleBundle(bundle)).not.toThrow();

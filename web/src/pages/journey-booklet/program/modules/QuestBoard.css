@@ -1,0 +1,7 @@
+/* quest-board: headings across the page and one panel per unit. */
+
+.program-page--quest-board .program-heading {
+	padding: 1.5mm 3mm;
+	border: 0.5mm solid var(--scene-heading-ink);
+	border-radius: 1mm;
+}

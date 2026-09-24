@@ -69,9 +69,14 @@ const STANDARD_COVER: CoverCapability = {
 /**
  * The five modules extracted from the existing families keep their own
  * geometry, which 25.4 measures. The compiler only relies on the lower bounds
- * it asks the final DOM to prove.
+ * it asks the final DOM to prove. `dayImage` is the family's drawn day
+ * illustration (null when its day pages have none); an image smaller than
+ * the principal minimum never receives an image treatment.
  */
-function extractedFamily(standardCompositionId: string): ModuleCapability {
+function extractedFamily(
+	standardCompositionId: string,
+	dayImage: RegionSize | null,
+): ModuleCapability {
 	return {
 		cover: {
 			heroSlot: null,
@@ -84,7 +89,7 @@ function extractedFamily(standardCompositionId: string): ModuleCapability {
 			heading: size(128, 6.35),
 			headingOrientation: "horizontal",
 			heroSlot: null,
-			image: PRINCIPAL_ART_MINIMUM,
+			image: dayImage,
 			participationLanes: [],
 			splitHero: null,
 		},
@@ -95,11 +100,13 @@ function extractedFamily(standardCompositionId: string): ModuleCapability {
 export const MODULE_CAPABILITIES: Readonly<
 	Record<DirectionModuleId, ModuleCapability>
 > = {
-	"atlas-grid": extractedFamily("side-index"),
-	"paper-collage": extractedFamily("photo-left"),
-	"playful-route": extractedFamily("zigzag"),
-	"editorial-magazine": extractedFamily("magazine-feature"),
-	"travel-newspaper": extractedFamily("newspaper-columns"),
+	// Day tables carry no illustration.
+	"atlas-grid": extractedFamily("side-index", null),
+	"paper-collage": extractedFamily("photo-left", size(42, 36)),
+	"playful-route": extractedFamily("zigzag", size(32, 32)),
+	// The narrower bold-culture photo (48mm) is the lower bound of both variants.
+	"editorial-magazine": extractedFamily("magazine-feature", size(48, 42)),
+	"travel-newspaper": extractedFamily("newspaper-columns", size(58, 28)),
 	"woodcut-folio": {
 		cover: {
 			heroSlot: {

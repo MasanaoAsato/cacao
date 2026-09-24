@@ -1,11 +1,6 @@
 import { validateFamilyTextSafety } from "./decorPlacement";
-import type { VisualFamilyDefinition } from "./registry";
-import {
-	derivedStyleProfileFields,
-	styleProfilesForFamily,
-} from "./styleProfiles";
 
-export const PAPER_COLLAGE_PALETTES = {
+const PAPER_COLLAGE_PALETTES = {
 	"lilac-paper": {
 		accent: "#584792",
 		ink: "#343049",
@@ -22,9 +17,9 @@ export const PAPER_COLLAGE_PALETTES = {
 	},
 } as const;
 
-export type PaperCollagePaletteId = keyof typeof PAPER_COLLAGE_PALETTES;
+type PaperCollagePaletteId = keyof typeof PAPER_COLLAGE_PALETTES;
 
-export const PAPER_COLLAGE_COMPOSITIONS = {
+const PAPER_COLLAGE_COMPOSITIONS = {
 	"photo-left": {
 		coverImage: { heightMm: 84, widthMm: 112, xMm: 10, yMm: 64 },
 		coverPeriod: { heightMm: 20, widthMm: 100, xMm: 10, yMm: 180 },
@@ -41,18 +36,7 @@ export const PAPER_COLLAGE_COMPOSITIONS = {
 	},
 } as const;
 
-export type PaperCollageCompositionId = keyof typeof PAPER_COLLAGE_COMPOSITIONS;
-
-const PAPER_COLLAGE_STYLE_PROFILES = styleProfilesForFamily("paper-collage");
-const PAPER_COLLAGE_PROFILE_FIELDS = derivedStyleProfileFields(
-	PAPER_COLLAGE_STYLE_PROFILES,
-);
-
-export const PAPER_COLLAGE_DECOR_ASSET_IDS =
-	PAPER_COLLAGE_PROFILE_FIELDS.decorAssetIds;
-
-export const PAPER_COLLAGE_FONT_FAMILIES =
-	PAPER_COLLAGE_PROFILE_FIELDS.fontFamilies;
+type PaperCollageCompositionId = keyof typeof PAPER_COLLAGE_COMPOSITIONS;
 
 export function paperCollagePaletteFor(paletteId: string) {
 	const palette = PAPER_COLLAGE_PALETTES[paletteId as PaperCollagePaletteId];
@@ -83,11 +67,3 @@ for (const palette of Object.values(PAPER_COLLAGE_PALETTES)) {
 		{ colorHex: palette.ink, fontSizePt: 8.5, role: "utility" },
 	]);
 }
-
-export const PAPER_COLLAGE_FAMILY = {
-	...PAPER_COLLAGE_PROFILE_FIELDS,
-	id: "paper-collage",
-	moodIds: ["field-notes", "quiet-gallery"],
-	policyId: "captions",
-	styleProfiles: PAPER_COLLAGE_STYLE_PROFILES,
-} as const satisfies VisualFamilyDefinition;

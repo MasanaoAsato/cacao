@@ -1,11 +1,4 @@
-import {
-	type CSSProperties,
-	type RefObject,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-} from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { formatBookletDate } from "../../../booklet/dateFormat";
 import type {
 	EditorialArrivalUnit,
@@ -13,7 +6,6 @@ import type {
 	EditorialDay,
 } from "../../../booklet/editorialModel";
 import {
-	paginateTravelNewspaper,
 	TRAVEL_NEWSPAPER_ARTICLE_GAP_MM,
 	TRAVEL_NEWSPAPER_ARTICLE_START_Y_MM,
 	TRAVEL_NEWSPAPER_COLUMN_GAP_MM,
@@ -22,84 +14,61 @@ import {
 	type TravelNewspaperMeasurements,
 	type TravelNewspaperPagePlan,
 } from "../../../booklet/families/travelNewspaper";
-import type {
-	BookletRenderPagePlan,
-	ResolvedBookletDesign,
-} from "../../../booklet/family";
 import { formatTransportMode } from "../../../booklet/itineraryFormat";
-import type { BookletModel } from "../../../booklet/model";
-import { projectBooklet } from "../../../booklet/projectBooklet";
-import {
-	getThemeCandidates,
-	resolveBookletTheme,
-} from "../../../theme/bookletTheme";
 import { fontStack } from "../../../theme/families/styleProfiles";
-import {
-	travelNewspaperCompositionFor,
-	travelNewspaperPaletteFor,
-} from "../../../theme/families/travelNewspaper";
-import type { CoverVeilBounds } from "../../../theme/types";
-import {
-	BookletLayoutError,
-	type BookletPagePlanStatus,
-} from "../useBookletPagePlan";
-import type { FamilyPagePlanResult } from "./useFamilyPagePlan";
+import { travelNewspaperCompositionFor } from "../../../theme/families/travelNewspaper";
+import { BookletLayoutError } from "../layoutError";
+import type {
+	FamilyPalette,
+	FamilyTypography,
+} from "../program/modules/familyStyle";
+import type { EffectMarks } from "../program/sceneParts";
 import "./TravelNewspaper.css";
 
-const COVER_BOUNDS: CoverVeilBounds = {
-	height: 24,
-	width: 128,
-	x: 10,
-	y: 10,
-};
 const LAYOUT_TOLERANCE_PX = 1;
-const FONT_SAMPLE_TEXT = "旅の通信・東京の街歩き";
 
 type NewspaperStyle = CSSProperties & Record<`--${string}`, string>;
 
-function profileFor(design: ResolvedBookletDesign) {
-	if (design.familyId !== "travel-newspaper" || design.styleProfile === null) {
-		throw new Error("travel-newspaperの作風プロファイルがありません。");
-	}
-	return design.styleProfile;
+/** The two rule and photo variants of the family CSS. */
+export type TravelNewspaperVariant = "city-walk" | "classic-travel";
+
+export function travelNewspaperVariantOf(
+	profileId: string,
+): TravelNewspaperVariant {
+	return profileId.endsWith("city-walk") ? "city-walk" : "classic-travel";
 }
 
-export function travelNewspaperStyle(
-	design: ResolvedBookletDesign,
+/** Neutral inputs of the newspaper style: a registered profile or a direction bundle. */
+export type TravelNewspaperStyleInput = {
+	readonly compositionId: string;
+	readonly palette: FamilyPalette;
+	readonly typography: FamilyTypography;
+	readonly variant: TravelNewspaperVariant;
+};
+
+export function travelNewspaperStyleFor(
+	input: TravelNewspaperStyleInput,
 ): NewspaperStyle {
-	const profile = profileFor(design);
-	const palette = travelNewspaperPaletteFor(design.paletteId);
-	const composition = travelNewspaperCompositionFor(design.compositionId);
-	const cityWalk = profile.id.endsWith("city-walk");
-	const imageX = cityWalk
-		? composition.coverImage.cityXmm
-		: composition.coverImage.classicXmm;
+	const { palette, typography } = input;
+	const composition = travelNewspaperCompositionFor(input.compositionId);
+	const imageX =
+		input.variant === "city-walk"
+			? composition.coverImage.cityXmm
+			: composition.coverImage.classicXmm;
 	return {
 		"--newspaper-accent": palette.accent,
-		"--newspaper-body-family": fontStack(profile.fontFamilies.body),
+		"--newspaper-body-family": fontStack(typography.fontFamilies.body),
 		"--newspaper-column-gap": `${composition.columnGapMm}mm`,
-		"--newspaper-display-family": fontStack(profile.fontFamilies.display),
+		"--newspaper-display-family": fontStack(typography.fontFamilies.display),
 		"--newspaper-ink": palette.ink,
 		"--newspaper-paper": palette.paper,
 		"--newspaper-soft": palette.soft,
-		"--newspaper-title-size": `${profile.fontSizesPt.title}pt`,
-		"--newspaper-utility-family": fontStack(profile.fontFamilies.utility),
+		"--newspaper-title-size": `${typography.fontSizesPt.title}pt`,
+		"--newspaper-utility-family": fontStack(typography.fontFamilies.utility),
 		"--newspaper-cover-left": `${imageX}mm`,
 		"--newspaper-cover-width": `${composition.coverImage.widthMm}mm`,
 		"--newspaper-cover-height": `${composition.coverImage.heightMm}mm`,
 	};
-}
-
-function requiredElement(
-	root: ParentNode,
-	selector: string,
-	name: string,
-): HTMLElement {
-	const element = root.querySelector<HTMLElement>(selector);
-	if (!element) {
-		throw new BookletLayoutError("dom-not-ready", `${name}がありません。`);
-	}
-	return element;
 }
 
 function readHeight(element: HTMLElement, name: string): number {
@@ -114,17 +83,6 @@ function readHeight(element: HTMLElement, name: string): number {
 		throw new BookletLayoutError("dom-not-ready", `${name}を計測できません。`);
 	}
 	return height;
-}
-
-function pageScale(page: HTMLElement): number {
-	const width = page.getBoundingClientRect().width;
-	if (!Number.isFinite(width) || width <= 0) {
-		throw new BookletLayoutError(
-			"dom-not-ready",
-			"travel-newspaperのページ幅を計測できません。",
-		);
-	}
-	return 148 / width;
 }
 
 function heightMm(element: HTMLElement, scale: number, name: string): number {
@@ -143,50 +101,6 @@ function findMeasurementElement(
 	);
 }
 
-function waitForFrame(): Promise<void> {
-	return new Promise((resolve) => requestAnimationFrame(() => resolve()));
-}
-
-async function waitForFonts(design: ResolvedBookletDesign): Promise<void> {
-	if (!document.fonts) {
-		return;
-	}
-	await document.fonts.ready;
-	const profile = profileFor(design);
-	const requiredFonts = new Map([
-		[profile.fontFamilies.display, profile.fontWeights.display],
-		[profile.fontFamilies.body, profile.fontWeights.body],
-		[profile.fontFamilies.utility, profile.fontWeights.utility],
-	]);
-	for (const [family, weight] of requiredFonts) {
-		const descriptor = `${weight} 10pt "${family}"`;
-		await document.fonts.load(descriptor, FONT_SAMPLE_TEXT);
-		if (!document.fonts.check(descriptor, FONT_SAMPLE_TEXT)) {
-			throw new Error(`${family} ${weight} の読み込みを確認できませんでした。`);
-		}
-	}
-}
-
-async function waitForImages(root: ParentNode): Promise<void> {
-	await Promise.all(
-		Array.from(root.querySelectorAll<HTMLImageElement>("img")).map(
-			async (image) => {
-				if (typeof image.decode === "function") {
-					try {
-						await image.decode();
-						return;
-					} catch {
-						throw new Error(`画像「${image.alt}」の読み込みに失敗しました。`);
-					}
-				}
-				if (!image.complete || image.naturalWidth <= 0) {
-					throw new Error(`画像「${image.alt}」の読み込みに失敗しました。`);
-				}
-			},
-		),
-	);
-}
-
 function formatMoney(money: {
 	readonly amount: number;
 	readonly currency: string;
@@ -198,12 +112,34 @@ function titleFor(day: EditorialDay): string {
 	return `DAY ${String(day.dayNumber).padStart(2, "0")}`;
 }
 
-function DayHeader({
+/** The family CSS positions these figures but leaves the UA margin in place. */
+const SLOT_FIGURE_STYLE: CSSProperties = { margin: 0 };
+
+/**
+ * Program scenes pass effect marks for the elements that prove a claim and
+ * may replace the heading or the illustration with a transplanted system.
+ */
+export type TravelNewspaperDayHeaderSlots = {
+	/** Program scenes add their section label after the family heading. */
+	readonly extra?: ReactNode;
+	/** A transplanted heading system drawn in the heading copy's place. */
+	readonly heading?: ReactNode;
+	/** False on a later scene of the same day; the first one owns the art. */
+	readonly illustration?: boolean;
+	/** A transplanted image treatment inside the illustration's rect. */
+	readonly image?: ReactNode;
+	readonly imageMarks?: EffectMarks;
+	readonly marks?: EffectMarks;
+};
+
+export function DayHeader({
 	continuation,
 	day,
+	slots = {},
 }: {
 	readonly continuation: boolean;
 	readonly day: EditorialDay;
+	readonly slots?: TravelNewspaperDayHeaderSlots;
 }) {
 	return (
 		<header
@@ -212,30 +148,50 @@ function DayHeader({
 					? "travel-newspaper-day-header travel-newspaper-day-header--continuation"
 					: "travel-newspaper-day-header"
 			}
+			{...slots.marks}
 		>
 			<div className="travel-newspaper-day-header__copy">
-				<p
-					className="travel-newspaper-day-header__label"
-					data-booklet-text-role="day-label"
-				>
-					{titleFor(day)}
-					{continuation ? " / 続き" : ""}
-				</p>
-				<time
-					className="travel-newspaper-day-header__date"
-					data-booklet-text-role="day-date"
-					dateTime={day.date}
-				>
-					{formatBookletDate(day.date)}
-				</time>
-				<div aria-hidden="true" className="travel-newspaper-day-header__rule" />
+				{slots.heading ?? (
+					<>
+						<p
+							className="travel-newspaper-day-header__label"
+							data-booklet-text-role="day-label"
+						>
+							{titleFor(day)}
+							{continuation ? " / 続き" : ""}
+						</p>
+						<time
+							className="travel-newspaper-day-header__date"
+							data-booklet-text-role="day-date"
+							dateTime={day.date}
+						>
+							{formatBookletDate(day.date)}
+						</time>
+						<div
+							aria-hidden="true"
+							className="travel-newspaper-day-header__rule"
+						/>
+					</>
+				)}
+				{slots.extra}
 			</div>
-			{!continuation && day.illustration ? (
-				<img
-					alt=""
-					className="travel-newspaper-day-header__image"
-					src={day.illustration.contentUrl}
-				/>
+			{!continuation && (slots.illustration ?? true) && day.illustration ? (
+				slots.image ? (
+					<figure
+						className="travel-newspaper-day-header__image"
+						style={SLOT_FIGURE_STYLE}
+						{...slots.imageMarks}
+					>
+						{slots.image}
+					</figure>
+				) : (
+					<img
+						alt=""
+						className="travel-newspaper-day-header__image"
+						src={day.illustration.contentUrl}
+						{...slots.imageMarks}
+					/>
+				)
 			) : null}
 		</header>
 	);
@@ -311,66 +267,91 @@ function EmptyDayLabel() {
 	);
 }
 
-function NewspaperPage({
+export type TravelNewspaperCoverSlots = {
+	/** A transplanted image treatment inside the cover photo's rect. */
+	readonly image?: ReactNode;
+	readonly imageMarks?: EffectMarks;
+	readonly titleMarks?: EffectMarks;
+};
+
+/** Cover content inside `.travel-newspaper-page__content`. */
+export function TravelNewspaperCover({
 	booklet,
-	design,
-	page,
+	slots = {},
 }: {
 	readonly booklet: EditorialBooklet;
-	readonly design: ResolvedBookletDesign;
-	readonly page: TravelNewspaperPagePlan;
+	readonly slots?: TravelNewspaperCoverSlots;
 }) {
-	const style = travelNewspaperStyle(design);
-	const pageClass =
-		page.kind === "cover"
-			? "travel-newspaper-page travel-newspaper-page--cover"
-			: `travel-newspaper-page travel-newspaper-page--${page.kind}`;
-	if (page.kind === "cover") {
-		return (
-			<article
-				className={pageClass}
-				data-booklet-composition={design.compositionId}
-				data-booklet-family="travel-newspaper"
-				data-booklet-page="true"
-				data-booklet-theme-key={design.renderKey}
-				data-page-id={page.pageId}
-				style={style}
+	return (
+		<>
+			<p
+				className="travel-newspaper-cover__masthead"
+				data-booklet-text-role="masthead"
 			>
-				<div className="travel-newspaper-page__content">
-					<p
-						className="travel-newspaper-cover__masthead"
-						data-booklet-text-role="masthead"
-					>
-						旅の通信
-					</p>
-					<h1
-						className="travel-newspaper-cover__title"
-						data-booklet-text-role="cover-title"
-					>
-						{booklet.cover.title}
-					</h1>
-					<p
-						className="travel-newspaper-cover__period"
-						data-booklet-text-role="cover-period"
-					>
-						<time dateTime={booklet.cover.period.start_date}>
-							{formatBookletDate(booklet.cover.period.start_date)}
-						</time>{" "}
-						—{" "}
-						<time dateTime={booklet.cover.period.end_date}>
-							{formatBookletDate(booklet.cover.period.end_date)}
-						</time>
-					</p>
-					<img
-						alt={booklet.cover.title}
-						className="travel-newspaper-cover__image booklet-cover__image"
-						src={booklet.cover.image.contentUrl}
-					/>
-				</div>
-			</article>
-		);
-	}
+				旅の通信
+			</p>
+			<h1
+				className="travel-newspaper-cover__title"
+				data-booklet-text-role="cover-title"
+				{...slots.titleMarks}
+			>
+				{booklet.cover.title}
+			</h1>
+			<p
+				className="travel-newspaper-cover__period"
+				data-booklet-text-role="cover-period"
+			>
+				<time dateTime={booklet.cover.period.start_date}>
+					{formatBookletDate(booklet.cover.period.start_date)}
+				</time>{" "}
+				—{" "}
+				<time dateTime={booklet.cover.period.end_date}>
+					{formatBookletDate(booklet.cover.period.end_date)}
+				</time>
+			</p>
+			{slots.image ? (
+				<figure
+					className="travel-newspaper-cover__image"
+					style={SLOT_FIGURE_STYLE}
+					{...slots.imageMarks}
+				>
+					{slots.image}
+				</figure>
+			) : (
+				<img
+					alt={booklet.cover.title}
+					className="travel-newspaper-cover__image booklet-cover__image"
+					src={booklet.cover.image.contentUrl}
+					{...slots.imageMarks}
+				/>
+			)}
+		</>
+	);
+}
 
+export type TravelNewspaperDayPagePlan = Exclude<
+	TravelNewspaperPagePlan,
+	{ readonly kind: "cover" }
+>;
+
+export type TravelNewspaperArticlesSlots = {
+	readonly bodyMarks?: EffectMarks;
+	readonly header?: TravelNewspaperDayHeaderSlots;
+};
+
+/**
+ * Article or continuation page content: the day header and the family's own
+ * two article columns, never a shared card body.
+ */
+export function TravelNewspaperArticles({
+	booklet,
+	page,
+	slots = {},
+}: {
+	readonly booklet: EditorialBooklet;
+	readonly page: TravelNewspaperDayPagePlan;
+	readonly slots?: TravelNewspaperArticlesSlots;
+}) {
 	const day = booklet.days[page.dayIndex];
 	if (!day) {
 		return null;
@@ -379,130 +360,73 @@ function NewspaperPage({
 		.map((unitIndex) => day.units[unitIndex])
 		.filter((unit): unit is EditorialArrivalUnit => unit !== undefined);
 	return (
-		<article
-			className={pageClass}
-			data-booklet-composition={design.compositionId}
-			data-booklet-family="travel-newspaper"
-			data-booklet-page="true"
-			data-booklet-theme-key={design.renderKey}
-			data-day-id={day.id}
-			data-page-id={page.pageId}
-			style={style}
-		>
-			<div className="travel-newspaper-page__content">
-				<DayHeader continuation={page.kind === "continuation"} day={day} />
-				<div className="travel-newspaper-articles">
-					{units.length > 0 ? (
-						units.map((unit) => <UnitArticle key={unit.id} unit={unit} />)
-					) : (
-						<EmptyDayLabel />
-					)}
-				</div>
+		<>
+			<DayHeader
+				continuation={page.kind === "continuation"}
+				day={day}
+				slots={slots.header}
+			/>
+			<div className="travel-newspaper-articles" {...slots.bodyMarks}>
+				{units.length > 0 ? (
+					units.map((unit) => <UnitArticle key={unit.id} unit={unit} />)
+				) : (
+					<EmptyDayLabel />
+				)}
 			</div>
-		</article>
+		</>
 	);
 }
 
-function MeasurementPage({
+/**
+ * One day's headers and articles as the measurement DOM draws them, inside
+ * `.travel-newspaper-page__content`, used by program scenes.
+ */
+export function TravelNewspaperDayMeasurementSample({
 	day,
-	design,
+	headers = {},
 }: {
 	readonly day: EditorialDay;
-	readonly design: ResolvedBookletDesign;
+	readonly headers?: {
+		readonly continuation?: TravelNewspaperDayHeaderSlots;
+		readonly first?: TravelNewspaperDayHeaderSlots;
+	};
 }) {
 	return (
-		<article
-			className="travel-newspaper-page travel-newspaper-page--articles"
-			data-travel-newspaper-measurement-day={day.id}
-			style={travelNewspaperStyle(design)}
-		>
-			<div className="travel-newspaper-page__content">
-				<DayHeader continuation={false} day={day} />
-				<DayHeader continuation day={day} />
-				<div className="travel-newspaper-articles travel-newspaper-articles--measurement">
-					{day.units.length > 0 ? (
-						day.units.map((unit) => (
-							<UnitArticle key={unit.id} measurement unit={unit} />
-						))
-					) : (
-						<div
-							className="travel-newspaper-empty-day"
-							data-travel-newspaper-empty-day-label
-						>
-							予定はありません
-						</div>
-					)}
-				</div>
-			</div>
-		</article>
-	);
-}
-
-export function TravelNewspaperMeasurement({
-	booklet,
-	design,
-	rootRef,
-}: {
-	readonly booklet: EditorialBooklet;
-	readonly design: ResolvedBookletDesign;
-	readonly rootRef: RefObject<HTMLDivElement | null>;
-}) {
-	return (
-		<div
-			aria-hidden="true"
-			className="travel-newspaper travel-newspaper-measurement"
-			data-booklet-family="travel-newspaper"
-			data-booklet-theme-key={design.renderKey}
-			ref={rootRef}
-			style={travelNewspaperStyle(design)}
-		>
-			<article
-				className="travel-newspaper-page travel-newspaper-page--cover"
-				style={travelNewspaperStyle(design)}
-			>
-				<div className="travel-newspaper-page__content">
-					<h1
-						className="travel-newspaper-cover__title"
-						data-travel-newspaper-cover-title
+		<>
+			<DayHeader continuation={false} day={day} slots={headers.first} />
+			<DayHeader continuation day={day} slots={headers.continuation} />
+			<div className="travel-newspaper-articles travel-newspaper-articles--measurement">
+				{day.units.length > 0 ? (
+					day.units.map((unit) => (
+						<UnitArticle key={unit.id} measurement unit={unit} />
+					))
+				) : (
+					<div
+						className="travel-newspaper-empty-day"
+						data-travel-newspaper-empty-day-label
 					>
-						{booklet.cover.title}
-					</h1>
-					<img
-						alt={booklet.cover.title}
-						className="travel-newspaper-cover__image"
-						src={booklet.cover.image.contentUrl}
-					/>
-				</div>
-			</article>
-			{booklet.days.map((day) => (
-				<MeasurementPage day={day} design={design} key={day.id} />
-			))}
-		</div>
+						予定はありません
+					</div>
+				)}
+			</div>
+		</>
 	);
 }
 
-function collectMeasurement(
-	root: HTMLElement,
+export type TravelNewspaperDayHeights = Pick<
+	TravelNewspaperMeasurements,
+	"continuationHeaderHeightMm" | "dayHeaderHeightMm" | "unitHeightsMm"
+>;
+
+/**
+ * Header and article heights of every day sample, in mm. A program scene
+ * measures its single day with these samples.
+ */
+export function collectTravelNewspaperDayHeights(
+	root: ParentNode,
 	booklet: EditorialBooklet,
-	design: ResolvedBookletDesign,
-): TravelNewspaperMeasurements {
-	const coverTitle = requiredElement(
-		root,
-		"[data-travel-newspaper-cover-title]",
-		"表紙題名",
-	);
-	const firstPage = root.querySelector<HTMLElement>(
-		"[data-travel-newspaper-measurement-day]",
-	);
-	if (!firstPage && booklet.days.length > 0) {
-		throw new BookletLayoutError(
-			"dom-not-ready",
-			"travel-newspaperの日別計測用DOMがありません。",
-		);
-	}
-	const pageForScale =
-		firstPage ?? requiredElement(root, ".travel-newspaper-page", "計測用紙面");
-	const scale = pageScale(pageForScale);
+	scale: number,
+): TravelNewspaperDayHeights {
 	const unitHeightsMm = new Map<string, number>();
 	const dayHeaderHeights: number[] = [];
 	const continuationHeaderHeights: number[] = [];
@@ -555,32 +479,34 @@ function collectMeasurement(
 	const maxOrZero = (values: readonly number[]) =>
 		values.length === 0 ? 0 : Math.max(...values);
 	return {
-		articleGapMm: TRAVEL_NEWSPAPER_ARTICLE_GAP_MM,
-		articleStartYmm: TRAVEL_NEWSPAPER_ARTICLE_START_Y_MM,
-		columnGapMm: TRAVEL_NEWSPAPER_COLUMN_GAP_MM,
 		continuationHeaderHeightMm: maxOrZero(continuationHeaderHeights),
-		continuationStartYmm: TRAVEL_NEWSPAPER_CONTINUATION_START_Y_MM,
-		coverTitleHeightMm: heightMm(coverTitle, scale, "表紙題名"),
 		dayHeaderHeightMm: maxOrZero(dayHeaderHeights),
-		pageBottomYmm: TRAVEL_NEWSPAPER_PAGE_BOTTOM_Y_MM,
-		styleProfileId: profileFor(design).id,
 		unitHeightsMm,
 	};
 }
 
-function ensureDocumentFits(
-	root: HTMLElement,
-	pagePlan: readonly TravelNewspaperPagePlan[],
+/** Day heights plus the family's fixed geometry, in the paginator's contract. */
+export function travelNewspaperMeasurementsOf(
+	days: TravelNewspaperDayHeights,
+): TravelNewspaperMeasurements {
+	return {
+		articleGapMm: TRAVEL_NEWSPAPER_ARTICLE_GAP_MM,
+		articleStartYmm: TRAVEL_NEWSPAPER_ARTICLE_START_Y_MM,
+		columnGapMm: TRAVEL_NEWSPAPER_COLUMN_GAP_MM,
+		continuationHeaderHeightMm: days.continuationHeaderHeightMm,
+		continuationStartYmm: TRAVEL_NEWSPAPER_CONTINUATION_START_Y_MM,
+		dayHeaderHeightMm: days.dayHeaderHeightMm,
+		pageBottomYmm: TRAVEL_NEWSPAPER_PAGE_BOTTOM_Y_MM,
+		unitHeightsMm: days.unitHeightsMm,
+	};
+}
+
+/**
+ * Page and text fit of the newspaper pages a program scene draws.
+ */
+export function ensureTravelNewspaperPagesFit(
+	pages: readonly HTMLElement[],
 ): void {
-	const pages = Array.from(
-		root.querySelectorAll<HTMLElement>("[data-booklet-page]"),
-	);
-	if (pages.length !== pagePlan.length) {
-		throw new BookletLayoutError(
-			"dom-not-ready",
-			"travel-newspaperのページ数がページ計画と一致しません。",
-		);
-	}
 	for (const page of pages) {
 		if (page.scrollWidth > page.clientWidth + LAYOUT_TOLERANCE_PX) {
 			throw new BookletLayoutError(
@@ -595,8 +521,8 @@ function ensureDocumentFits(
 			);
 		}
 	}
-	for (const text of root.querySelectorAll<HTMLElement>(
-		"[data-booklet-text-role]",
+	for (const text of pages.flatMap((page) =>
+		Array.from(page.querySelectorAll<HTMLElement>("[data-booklet-text-role]")),
 	)) {
 		const style = getComputedStyle(text);
 		if (
@@ -613,228 +539,4 @@ function ensureDocumentFits(
 			);
 		}
 	}
-}
-
-async function waitForOutput(
-	getRoot: () => HTMLElement | null,
-	renderKey: string,
-): Promise<HTMLElement | null> {
-	await waitForFrame();
-	for (let attempt = 0; attempt < 12; attempt += 1) {
-		const root = getRoot();
-		if (root?.dataset.bookletThemeKey === renderKey) {
-			return root;
-		}
-		await waitForFrame();
-	}
-	return null;
-}
-
-export function TravelNewspaperDocument({
-	booklet,
-	design,
-	pagePlan,
-	rootRef,
-}: {
-	readonly booklet: EditorialBooklet;
-	readonly design: ResolvedBookletDesign;
-	readonly pagePlan: readonly TravelNewspaperPagePlan[];
-	readonly rootRef: RefObject<HTMLElement | null>;
-}) {
-	const profile = profileFor(design);
-	const style = travelNewspaperStyle(design);
-	return (
-		<main
-			aria-label="旅のしおり印刷プレビュー"
-			className={`booklet-document booklet-theme travel-newspaper ${profile.id.endsWith("city-walk") ? "travel-newspaper--city-walk" : "travel-newspaper--classic-travel"}`}
-			data-booklet-comparison-key={design.comparisonKey}
-			data-booklet-composition={design.compositionId}
-			data-booklet-design={design.requestedTheme.recipe.id}
-			data-booklet-family="travel-newspaper"
-			data-booklet-photo-treatment={profile.photoTreatment}
-			data-booklet-resolved-composition="newspaper-columns"
-			data-booklet-style-profile={design.styleProfileId ?? undefined}
-			data-booklet-theme-key={design.renderKey}
-			ref={rootRef}
-			style={style}
-		>
-			{pagePlan.map((page) => (
-				<NewspaperPage
-					booklet={booklet}
-					design={design}
-					key={page.pageId}
-					page={page}
-				/>
-			))}
-		</main>
-	);
-}
-
-export function useTravelNewspaperPagePlan(
-	model: BookletModel | null,
-	design: ResolvedBookletDesign | null,
-): FamilyPagePlanResult {
-	const activeDesign = design?.familyId === "travel-newspaper" ? design : null;
-	const newspaper = useMemo(
-		() => (model && activeDesign ? projectBooklet(model, "timetable") : null),
-		[activeDesign, model],
-	);
-	const activeTheme = useMemo(() => {
-		if (!activeDesign) {
-			return null;
-		}
-		const candidate = getThemeCandidates(activeDesign.requestedTheme)[0];
-		return candidate
-			? resolveBookletTheme(activeDesign.requestedTheme, candidate)
-			: null;
-	}, [activeDesign]);
-	const measurementRef = useRef<HTMLDivElement>(null);
-	const documentRef = useRef<HTMLElement>(null);
-	const runIdRef = useRef(0);
-	const [pagePlan, setPagePlan] = useState<
-		readonly TravelNewspaperPagePlan[] | null
-	>(null);
-	const [preparedModel, setPreparedModel] = useState<BookletModel | null>(null);
-	const [preparedRenderKey, setPreparedRenderKey] = useState<string | null>(
-		null,
-	);
-	const [error, setError] = useState<string | null>(null);
-	const [status, setStatus] = useState<BookletPagePlanStatus>("idle");
-
-	useEffect(() => {
-		runIdRef.current += 1;
-		setPagePlan(null);
-		setPreparedModel(null);
-		setPreparedRenderKey(null);
-		setError(null);
-		setStatus(model && activeDesign && activeTheme ? "measuring" : "idle");
-	}, [activeDesign, activeTheme, model]);
-
-	useEffect(() => {
-		if (!model || !newspaper || !activeDesign || !activeTheme) {
-			return;
-		}
-		const runId = ++runIdRef.current;
-		let cancelled = false;
-		const run = async () => {
-			try {
-				setStatus("measuring");
-				await waitForFonts(activeDesign);
-				const measurementRoot = measurementRef.current;
-				if (!measurementRoot) {
-					throw new BookletLayoutError(
-						"dom-not-ready",
-						"travel-newspaperの計測用DOMを準備できませんでした。",
-					);
-				}
-				await waitForImages(measurementRoot);
-				const measurement = collectMeasurement(
-					measurementRoot,
-					newspaper,
-					activeDesign,
-				);
-				const nextPagePlan = paginateTravelNewspaper(
-					newspaper,
-					measurement,
-					profileFor(activeDesign),
-				);
-				if (cancelled || runId !== runIdRef.current) {
-					return;
-				}
-				setPagePlan(nextPagePlan);
-				setStatus("checking");
-				const output = await waitForOutput(
-					() => documentRef.current,
-					activeDesign.renderKey,
-				);
-				if (cancelled || runId !== runIdRef.current) {
-					return;
-				}
-				if (!output) {
-					throw new BookletLayoutError(
-						"dom-not-ready",
-						"travel-newspaperの印刷ページDOMを準備できませんでした。",
-					);
-				}
-				await waitForImages(output);
-				ensureDocumentFits(output, nextPagePlan);
-				setPreparedModel(model);
-				setPreparedRenderKey(activeDesign.renderKey);
-				setStatus("ready");
-			} catch (runError) {
-				if (cancelled || runId !== runIdRef.current) {
-					return;
-				}
-				setPagePlan(null);
-				setPreparedModel(null);
-				setPreparedRenderKey(null);
-				setError(
-					runError instanceof Error
-						? runError.message
-						: "travel-newspaperの印刷準備に失敗しました。",
-				);
-				setStatus("error");
-			}
-		};
-		void run();
-		return () => {
-			cancelled = true;
-		};
-	}, [activeDesign, activeTheme, model, newspaper]);
-
-	const renderPagePlan: BookletRenderPagePlan | null = pagePlan
-		? {
-				actualCompositionId: "newspaper-columns",
-				familyId: "travel-newspaper",
-				pagePlan,
-			}
-		: null;
-
-	return {
-		activeTheme,
-		coverVeilBounds: pagePlan ? COVER_BOUNDS : null,
-		design: activeDesign,
-		documentRef,
-		error,
-		fallbackLog: [],
-		measurementRef,
-		pagePlan,
-		preparedModel,
-		preparedRenderKey,
-		renderPagePlan,
-		resolvedTheme: status === "ready" ? activeTheme : null,
-		status,
-	};
-}
-
-export function TravelNewspaperRenderer({
-	model,
-	pagePlanResult,
-}: {
-	readonly model: BookletModel;
-	readonly pagePlanResult: FamilyPagePlanResult;
-}) {
-	const { design, documentRef, measurementRef, renderPagePlan } =
-		pagePlanResult;
-	if (design?.familyId !== "travel-newspaper") {
-		return null;
-	}
-	const newspaper = projectBooklet(model, "timetable");
-	return (
-		<>
-			<TravelNewspaperMeasurement
-				booklet={newspaper}
-				design={design}
-				rootRef={measurementRef}
-			/>
-			{renderPagePlan?.familyId === "travel-newspaper" ? (
-				<TravelNewspaperDocument
-					booklet={newspaper}
-					design={design}
-					pagePlan={renderPagePlan.pagePlan}
-					rootRef={documentRef}
-				/>
-			) : null}
-		</>
-	);
 }

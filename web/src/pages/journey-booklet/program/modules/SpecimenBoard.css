@@ -1,0 +1,13 @@
+/*
+ * specimen-board: two 61mm columns. Each entry keeps a 4mm decor band and a
+ * 1mm text guard on both sides, so text wraps at 51mm.
+ */
+
+.program-page--specimen-board .program-unit--specimen-columns {
+	grid-template-columns: minmax(0, 1fr);
+	width: 61mm;
+	padding: 1.5mm 5mm;
+	box-shadow:
+		inset 4mm 0 0 var(--scene-accent),
+		inset 0 0 0 0.3mm var(--scene-ink);
+}

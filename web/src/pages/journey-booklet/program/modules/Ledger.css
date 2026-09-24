@@ -1,0 +1,6 @@
+/* ledger: aligned time, transport, name and cost columns. */
+
+.program-page--ledger .program-unit--ledger-rows {
+	border-bottom: 0.25mm solid var(--scene-accent);
+	padding-bottom: 1mm;
+}

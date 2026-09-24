@@ -757,7 +757,11 @@ function participateDay(
 				kind: "memo",
 				participation,
 				sceneId: memoId,
-				unitRefs: day.units.map((unit) => unit.id),
+				// The album page lists no visits, so it references no unit.
+				unitRefs:
+					participation === "memory-album"
+						? []
+						: day.units.map((unit) => unit.id),
 			},
 		})),
 		writes: [...work.writes, participationKey, sceneKey(memoId)],

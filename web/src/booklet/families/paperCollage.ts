@@ -1,5 +1,5 @@
 import type { EditorialBooklet } from "../editorialModel";
-import { PaginationError } from "../paginate";
+import { PaginationError } from "../paginationError";
 
 export type PaperCollageDayMeasurement = {
 	readonly narrowCardHeights: readonly number[];
@@ -114,21 +114,18 @@ function selectLayoutVariant(
 	);
 }
 
-export function paginatePaperCollage(
+/**
+ * The day pages of `booklet` with one layout fallback chosen over all its
+ * units. A program scene calls it with its single day (25.4).
+ */
+export function paginatePaperCollageDays(
 	booklet: EditorialBooklet,
 	measurement: PaperCollageMeasurement,
-): readonly PaperCollagePagePlan[] {
-	if (booklet.days.length === 0) {
-		return Object.freeze([
-			{ kind: "cover", pageId: `paper-collage-cover-${booklet.journeyId}` },
-		]);
-	}
+): readonly PaperCollageDayPagePlan[] {
 	validateMeasurement(booklet, measurement);
 	const layoutVariant = selectLayoutVariant(measurement);
 	const columnCount = layoutVariant === "wide-cards" ? 1 : 2;
-	const pages: PaperCollagePagePlan[] = [
-		{ kind: "cover", pageId: `paper-collage-cover-${booklet.journeyId}` },
-	];
+	const pages: PaperCollageDayPagePlan[] = [];
 
 	booklet.days.forEach((day, dayIndex) => {
 		const measuredDay = measurement.days[dayIndex];
@@ -155,7 +152,7 @@ export function paginatePaperCollage(
 				dayIndex,
 				kind: "day",
 				layoutVariant,
-				pageId: `paper-collage-day-${day.id}-${pages.length}`,
+				pageId: `paper-collage-day-${day.id}-${pages.length + 1}`,
 			});
 		};
 
