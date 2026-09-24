@@ -6,7 +6,7 @@
 	"scripts": {
 		"dev": "vite",
 		"build": "vitest run src/theme/artwork/catalog.test.ts && tsc -b && vite build",
-		"artwork:release-check": "ARTWORK_RELEASE_CHECK=1 vitest run src/theme/artwork/catalog.test.ts",
+		"artwork:release-check": "ARTWORK_RELEASE_CHECK=1 vitest run src/theme/artwork/catalog.test.ts src/theme/composition/distribution.test.ts src/theme/reviews/validateReviews.test.ts --testTimeout=120000",
 		"check": "biome check src vite.config.ts package.json biome.json",
 		"lint": "biome lint src",
 		"format": "biome format --write src e2e vite.config.ts playwright.config.ts package.json biome.json",

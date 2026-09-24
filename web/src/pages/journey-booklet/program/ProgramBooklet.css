@@ -434,6 +434,7 @@
 
 .program-page .program-unit--quest-panels {
 	grid-template-columns: minmax(0, 1fr);
+	column-gap: 0;
 	padding: 4mm;
 	box-shadow: inset 0 0 0 0.3mm var(--scene-ink);
 }

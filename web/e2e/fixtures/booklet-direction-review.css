@@ -1,0 +1,49 @@
+.review-controls {
+	max-width: 1200px;
+	margin: 0 auto 1.5rem;
+	padding: 1rem 1.5rem;
+	background: #fffdf8;
+	color: #242424;
+	font:
+		1rem / 1.5 system-ui,
+		sans-serif;
+}
+
+.review-controls h1 {
+	margin: 0 0 0.5rem;
+	font-size: 1.5rem;
+}
+.review-controls p {
+	margin: 0.5rem 0;
+}
+
+.review-artwork-summary {
+	display: block;
+	margin-top: 0.35rem;
+	padding: 0.35rem 0.5rem;
+	border-left: 0.25rem solid #36566a;
+	background: #f2f5f5;
+	font-size: 0.9rem;
+	word-break: break-word;
+}
+.review-controls__actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.75rem;
+}
+.review-controls__actions select {
+	max-width: min(100%, 26rem);
+}
+.review-controls__actions button,
+.review-controls__actions select {
+	min-height: 2.5rem;
+	padding: 0.35rem;
+	font: inherit;
+}
+
+@media print {
+	.review-controls {
+		display: none;
+	}
+}

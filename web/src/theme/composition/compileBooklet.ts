@@ -16,7 +16,7 @@ import {
 	buildBaselineState,
 	paperColorFor,
 } from "./baseline";
-import { CATALOG_REVISION } from "./catalogRevision";
+import { CATALOG_REVISION, MAX_BOOKLET_DIRECTIONS } from "./catalogRevision";
 import {
 	candidatePresence,
 	catalogFailure,
@@ -59,6 +59,7 @@ export function productionCompositionCatalog(): CompositionCatalog {
 			REGISTERED_DIRECTION_DEFINITIONS,
 			ARTWORK_CATALOG,
 		),
+		maxDirections: MAX_BOOKLET_DIRECTIONS,
 		revision: CATALOG_REVISION,
 	};
 	return productionCatalog;
@@ -143,7 +144,7 @@ export type CompileOptions = {
  * probability 1/2 or adds one contribution from an unused direction:
  * direction, contribution and scope are each chosen uniformly, so a
  * direction with more artwork or scopes is not favored. There is no fixed
- * upper bound; the published direction count ends the loop.
+ * permanent upper bound; a catalog may set a deployment limit.
  */
 export function compileBooklet(
 	model: BookletModel,
@@ -193,6 +194,13 @@ export function compileBooklet(
 	const contributions: ContributionTrace[] = [];
 	let stopReason: CompositionStopReason;
 	for (let step = 0; ; step += 1) {
+		if (
+			catalog.maxDirections !== undefined &&
+			state.adopted.length >= catalog.maxDirections
+		) {
+			stopReason = "max-directions";
+			break;
+		}
 		const continueAxis = `compose:${step}:continue`;
 		const continueRandom = random(continueAxis);
 		if (

@@ -92,6 +92,14 @@ export function catalogFailure(
 		return { code: "invalid-catalog", message: "カタログ版がありません。" };
 	if (catalog.directions.length === 0)
 		return { code: "empty-catalog", message: "方向が登録されていません。" };
+	if (
+		catalog.maxDirections !== undefined &&
+		(!Number.isSafeInteger(catalog.maxDirections) || catalog.maxDirections < 1)
+	)
+		return {
+			code: "invalid-catalog",
+			message: "一冊あたりの最大方向数が不正です。",
+		};
 	const seen = new Set<string>();
 	for (const definition of catalog.directions) {
 		if (seen.has(definition.id))

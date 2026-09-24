@@ -52,6 +52,56 @@ afterEach(() => {
 });
 
 describe("compileBooklet", () => {
+	it.each([1, 2, 5])(
+		"正常系・境界値系: 上限%i方向で追加を止め、実際の寄与を残す",
+		(limit) => {
+			const model = testModel();
+			const result = compiled(
+				compileBooklet(
+					model,
+					SEED,
+					{ ...testCatalog(FUSION_ORDER), maxDirections: limit },
+					{
+						random: scriptedRandom({
+							choices: { direction: 0, operation: 0.99, scope: 0 },
+							steps: 5,
+						}),
+					},
+				),
+			);
+			expect(result.trace.effectiveDirectionIds).toEqual(
+				FUSION_ORDER.slice(0, limit),
+			);
+			expect(result.trace.contributions).toHaveLength(limit - 1);
+			expect(result.trace.stopReason).toBe("max-directions");
+			expect(programIssues(result.program, model)).toEqual([]);
+		},
+	);
+
+	it("正常系: 上限2でも途中で乱数停止したら単独で終了する", () => {
+		const result = compiled(
+			compileBooklet(
+				testModel(),
+				SEED,
+				{ ...testCatalog(FUSION_ORDER), maxDirections: 2 },
+				{ random: scriptedRandom({ steps: 0 }) },
+			),
+		);
+		expect(result.trace.effectiveDirectionIds).toHaveLength(1);
+		expect(result.trace.stopReason).toBe("random-stop");
+	});
+
+	it("異常系: 不正な上限はカタログエラーとして拒否する", () => {
+		for (const limit of [0, -1, 1.5, Number.NaN, Number.MAX_SAFE_INTEGER + 1]) {
+			expect(
+				compileBooklet(testModel(), SEED, {
+					...testCatalog(FUSION_ORDER),
+					maxDirections: limit,
+				}),
+			).toMatchObject({ status: "failed", code: "invalid-catalog" });
+		}
+	});
+
 	it("正常系: step 0で停止すると単独方向の冊子になる", () => {
 		const result = compiled(
 			compileBooklet(testModel(), SEED, testCatalog(FUSION_ORDER), {
