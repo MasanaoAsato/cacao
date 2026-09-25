@@ -1,0 +1,213 @@
+/*
+ * Baseline details from 25.1. These rules decorate each module's reserved
+ * regions; page geometry, text boxes and pagination remain module-owned.
+ * The same rules apply to measurement, screen output and print.
+ */
+
+/* An observation notebook uses a faint 5 mm grid on the paper itself. */
+.booklet-page.program-page[data-direction-id="travel-note"] {
+	background-image:
+		linear-gradient(
+			color-mix(in srgb, var(--scene-accent) 12%, transparent) 0.2mm,
+			transparent 0.2mm
+		),
+		linear-gradient(
+			90deg,
+			color-mix(in srgb, var(--scene-accent) 12%, transparent) 0.2mm,
+			transparent 0.2mm
+		);
+	background-size: 5mm 5mm;
+}
+
+/* The hotel uses a formal rule system distinct from the notebook grid. */
+.program-page[data-direction-id="hotel-brochure"] .atlas-grid-cover__image,
+.program-page[data-direction-id="hotel-brochure"] .atlas-grid-table__body {
+	box-shadow: inset 0 0 0 0.45mm #b99d62;
+}
+.program-page[data-direction-id="hotel-brochure"] .atlas-grid-day-band th {
+	box-shadow: inset 0 -0.5mm 0 #b99d62;
+}
+
+/* The guide counter has crisp information bands; the color schedule uses
+   the labelled bands supplied by its content structure. */
+.program-page[data-direction-id="tourist-info"] .atlas-grid-columns {
+	background: color-mix(in srgb, var(--atlas-accent) 14%, var(--atlas-paper));
+}
+.program-page[data-direction-id="category-color"] .program-unit__band {
+	background: color-mix(in srgb, currentColor 5%, var(--scene-paper));
+}
+
+/* Editorial magazine: the feature edition, two-color pamphlet, airline
+   guide and local-color edition share type-safe geometry but have different
+   photographic and rule systems. */
+.program-page[data-direction-id="travel-magazine"]
+.editorial-magazine-cover__title,
+.program-page[data-direction-id="travel-magazine"]
+	.editorial-magazine-day-header__label {
+	font-family: "Shippori Mincho", serif;
+	font-weight: 400;
+}
+.program-page[data-direction-id="travel-magazine"] .editorial-magazine-card {
+	border-top-width: 0.25pt;
+}
+.program-page[data-direction-id="travel-magazine"]
+	.editorial-magazine-article-cards {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	column-gap: 5mm;
+}
+.booklet-page.program-page[data-direction-id="retro-tourism"] {
+	background-image: radial-gradient(
+		color-mix(in srgb, var(--editorial-accent) 14%, transparent) 0.2mm,
+		transparent 0.25mm
+	);
+	background-size: 2mm 2mm;
+}
+.program-page[data-direction-id="retro-tourism"]
+	.editorial-magazine-cover__image,
+.program-page[data-direction-id="retro-tourism"]
+	.editorial-magazine-day-header__image
+	img {
+	filter: grayscale(1) sepia(0.65) saturate(1.6);
+}
+.program-page[data-direction-id="inflight"] .editorial-magazine-cover__image {
+	box-shadow: inset 0 0 0 0.55mm #366376;
+}
+.program-page[data-direction-id="inflight"] .editorial-magazine-page__rule,
+.program-page[data-direction-id="inflight"] .editorial-magazine-card {
+	border-color: #366376;
+}
+.program-page[data-direction-id="inflight"] .editorial-magazine-cover__period {
+	box-shadow: inset 0 0.4mm 0 #366376;
+}
+.program-page[data-direction-id="inflight"] .editorial-magazine-card {
+	border-top: 0;
+	box-shadow: inset 0.45mm 0 0 #366376;
+	padding-left: 3mm;
+}
+.program-page[data-direction-id="local-color"]
+	.editorial-magazine-cover__image {
+	box-shadow: 0 0 0 1mm var(--editorial-accent);
+}
+
+/* Paper collage editions have different mounts around their real photos. */
+.program-page[data-direction-id="scrapbook"] .paper-collage-cover__image,
+.program-page[data-direction-id="scrapbook"] .paper-collage-day-header__image {
+	box-shadow: 1.5mm 2mm 0
+		color-mix(
+			in srgb,
+			var(--paper-collage-accent) 34%,
+			var(--paper-collage-paper)
+		);
+}
+.program-page[data-direction-id="social"] .paper-collage-card {
+	clip-path: none;
+	box-shadow: inset 0 0 0 0.3mm var(--paper-collage-accent);
+}
+.program-page[data-direction-id="polaroid"] .paper-collage-cover__image,
+.program-page[data-direction-id="polaroid"] .paper-collage-day-header__image {
+	box-shadow:
+		0 2mm 3mm rgb(20 20 20 / 15%),
+		inset 0 -5mm 0 #fff;
+}
+
+/* The film edge belongs to the image region; the story editions give their
+   itinerary a separate opaque reading strip. */
+.program-page[data-direction-id="film"] .program-image {
+	background-image: radial-gradient(#ede8dd 0.75mm, transparent 0.8mm);
+	background-position: 0 0;
+	background-size: 7mm 7mm;
+}
+.program-page[data-direction-id="anime-background"] .program-body,
+.program-page[data-direction-id="storybook"] .program-body {
+	box-shadow: inset 0 0 0 0.45mm var(--scene-accent);
+}
+.program-page[data-direction-id="luxury-magazine"] .program-heading {
+	border-bottom-width: 0.2mm;
+}
+
+/* A woodcut folio can be quiet and architectural, seasonal, archival or
+   minimal without moving its measured text. */
+.booklet-page.program-page[data-direction-id="wa-modern"] {
+	background-image: repeating-linear-gradient(
+		135deg,
+		transparent 0 10mm,
+		color-mix(in srgb, #ba5346 6%, transparent) 10mm 10.3mm
+	);
+}
+.program-page[data-direction-id="wa-modern"] .program-heading {
+	border-bottom-color: #ba5346;
+}
+.program-page[data-direction-id="season"] .program-heading-region {
+	background: color-mix(in srgb, var(--scene-accent) 11%, var(--scene-paper));
+}
+.program-page[data-direction-id="museum"] .program-heading,
+.program-page[data-direction-id="vintage-journal"] .program-heading {
+	border-bottom-style: double;
+}
+.program-page[data-direction-id="minimal"] .program-heading {
+	border-bottom: 0;
+}
+.program-page[data-direction-id="minimal"] .program-unit {
+	box-shadow: none;
+}
+
+/* Rectangular cards are mounted as print cards. The Web app uses a browser
+   frame on the cover and tab-like section headings on the day pages. */
+.program-page[data-direction-id="cards"].program-page--cover
+.program-image__frame {
+	clip-path: inset(5mm round 1mm);
+}
+.program-page[data-direction-id="cards"] .program-unit--cards {
+	background: color-mix(in srgb, var(--scene-accent) 5%, var(--scene-paper));
+}
+.program-page[data-direction-id="web-app"].program-page--cover .program-image {
+	box-shadow: inset 0 0 0 0.5mm var(--scene-ink);
+}
+.program-page[data-direction-id="web-app"].program-page--cover
+	.program-image::after {
+	position: absolute;
+	z-index: 2;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 8mm;
+	content: "";
+	background:
+		radial-gradient(
+			circle at 4mm 4mm,
+			var(--scene-accent) 0 1mm,
+			transparent 1.1mm
+		),
+		radial-gradient(
+			circle at 8mm 4mm,
+			var(--scene-accent) 0 1mm,
+			transparent 1.1mm
+		),
+		var(--scene-paper);
+	box-shadow: inset 0 -0.35mm 0 var(--scene-ink);
+}
+.program-page[data-direction-id="web-app"] .program-heading {
+	border-radius: 2mm 2mm 0 0;
+	background: color-mix(in srgb, var(--scene-accent) 12%, var(--scene-paper));
+}
+.program-page[data-direction-id="web-app"] .program-unit--quest-panels {
+	background: color-mix(in srgb, var(--scene-accent) 5%, var(--scene-paper));
+}
+
+/* Route and travel utility editions use their own strokes and column faces. */
+.program-page[data-direction-id="road-trip"] .program-route__line {
+	stroke-width: 2.4;
+}
+.program-page[data-direction-id="transit"] .program-route__node {
+	stroke-width: 1;
+}
+.program-page[data-direction-id="flight"] .program-heading {
+	border-bottom-style: dashed;
+}
+.program-page[data-direction-id="cafe"] .program-ledger-head {
+	border-bottom-style: dotted;
+}
+.program-page[data-direction-id="practical"] .program-heading,
+.program-page[data-direction-id="practical"] .program-ledger-head {
+	border-bottom-color: var(--scene-ink);
+}

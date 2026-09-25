@@ -25,6 +25,7 @@ type DirectionDefinitionInput<Id extends DirectionId> = {
 	readonly eligibility?: DirectionEligibility;
 	readonly id: Id;
 	readonly module: DirectionModuleId;
+	readonly revision?: number;
 	readonly signature: DirectionSignature;
 	readonly styleBundleId: DirectionStyleBundleId;
 	readonly touch: DirectionTouchId;
@@ -33,6 +34,11 @@ type DirectionDefinitionInput<Id extends DirectionId> = {
 export function defineDirection<Id extends DirectionId>(
 	input: DirectionDefinitionInput<Id>,
 ): DirectionDefinition<Id> {
+	const revision = input.revision ?? 1;
+	if (!Number.isSafeInteger(revision) || revision < 1)
+		throw new RangeError(
+			`方向「${input.id}」のrevisionは正の安全な整数が必要です。`,
+		);
 	const config = Object.freeze({ ...input.config });
 	const eligibility = input.eligibility
 		? Object.freeze({
@@ -65,7 +71,7 @@ export function defineDirection<Id extends DirectionId>(
 		),
 		eligibility,
 		id: input.id,
-		revision: 1 as const,
-		reviewId: `direction:${input.id}:v1` as const,
+		revision,
+		reviewId: `direction:${input.id}:v${revision}` as const,
 	});
 }

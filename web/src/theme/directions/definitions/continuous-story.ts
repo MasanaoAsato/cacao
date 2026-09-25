@@ -3,7 +3,7 @@ import { defineDirection } from "../definition";
 export const CONTINUOUS_STORY_DIRECTION = defineDirection({
 	id: "continuous-story",
 	module: "schematic-map",
-	styleBundleId: "ink",
+	styleBundleId: "quiet",
 	touch: "woodcut",
 	signature: {
 		label: "表紙から裏表紙まで一枚の旅",

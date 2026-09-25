@@ -3,7 +3,7 @@ import { defineDirection } from "../definition";
 export const MINIMAL_DIRECTION = defineDirection({
 	id: "minimal",
 	module: "woodcut-folio",
-	styleBundleId: "quiet",
+	styleBundleId: "bright",
 	touch: "none",
 	signature: {
 		label: "ミニマル",

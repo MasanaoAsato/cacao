@@ -25,7 +25,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:pencil-airplane-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "pencil-bag-medium-r1",
@@ -50,7 +50,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:pencil-bag-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "pencil-car-medium-r1",
@@ -75,7 +75,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:pencil-car-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "pencil-flower-medium-r1",
@@ -100,7 +100,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:pencil-flower-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "pencil-grid-panel-panel-r1",
@@ -125,7 +125,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:pencil-grid-panel-panel-r1:v1:review-20260925",
 	},
 	{
 		id: "pencil-heading-band-heading-r1",
@@ -150,7 +150,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:pencil-heading-band-heading-r1:v1:review-20260925",
 	},
 	{
 		id: "pencil-leaf-medium-r1",
@@ -175,7 +175,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:pencil-leaf-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "pencil-machiya-grid-hero-r1",
@@ -200,7 +200,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:pencil-machiya-grid-hero-r1:v1:review-20260925",
 	},
 	{
 		id: "pencil-measurement-rule-rule-r1",
@@ -225,7 +225,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:pencil-measurement-rule-rule-r1:v1:review-20260925",
 	},
 	{
 		id: "pencil-mountain-hero-r1",
@@ -250,7 +250,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:pencil-mountain-hero-r1:v1:review-20260925",
 	},
 	{
 		id: "pencil-photo-frame-frame-r1",
@@ -275,7 +275,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:pencil-photo-frame-frame-r1:v1:review-20260925",
 	},
 	{
 		id: "pencil-roof-arch-hero-r1",
@@ -300,7 +300,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:pencil-roof-arch-hero-r1:v1:review-20260925",
 	},
 	{
 		id: "pencil-route-route-r1",
@@ -325,7 +325,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:pencil-route-route-r1:v1:review-20260925",
 	},
 	{
 		id: "pencil-sea-hero-r1",
@@ -350,7 +350,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:pencil-sea-hero-r1:v1:review-20260925",
 	},
 	{
 		id: "pencil-season-pattern-season-pattern-r1",
@@ -375,7 +375,8 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId:
+			"artwork:pencil-season-pattern-season-pattern-r1:v1:review-20260925",
 		views: [
 			{ id: "spring", x: 0, y: 0, width: 500, height: 500 },
 			{ id: "summer", x: 500, y: 0, width: 500, height: 500 },
@@ -406,7 +407,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:pencil-shell-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "pencil-sticky-note-tab-r1",
@@ -431,7 +432,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:pencil-sticky-note-tab-r1:v1:review-20260925",
 	},
 	{
 		id: "pencil-straight-arrow-straight-arrow-r1",
@@ -456,7 +457,8 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId:
+			"artwork:pencil-straight-arrow-straight-arrow-r1:v1:review-20260925",
 	},
 	{
 		id: "pencil-street-hero-r1",
@@ -481,7 +483,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:pencil-street-hero-r1:v1:review-20260925",
 	},
 	{
 		id: "pencil-tableware-medium-r1",
@@ -506,7 +508,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:pencil-tableware-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "pencil-ticket-label-label-r1",
@@ -531,7 +533,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:pencil-ticket-label-label-r1:v1:review-20260925",
 	},
 	{
 		id: "pencil-train-medium-r1",
@@ -556,7 +558,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:pencil-train-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "pencil-turn-arrow-turn-arrow-r1",
@@ -581,7 +583,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:pencil-turn-arrow-turn-arrow-r1:v1:review-20260925",
 	},
 	{
 		id: "pencil-urban-window-railway-hero-r1",
@@ -606,6 +608,6 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:pencil-urban-window-railway-hero-r1:v1:review-20260925",
 	},
 ];

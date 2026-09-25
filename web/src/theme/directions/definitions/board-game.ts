@@ -9,5 +9,5 @@ export const BOARD_GAME_DIRECTION = defineDirection({
 		label: "ボードゲーム",
 		description: "マスの連続、イベント単位、ゲーム盤の面",
 	},
-	config: { dayHeader: "DAY / EVENT" },
+	config: { contentStructure: "board-squares", dayHeader: "DAY / EVENT" },
 });

@@ -3,7 +3,7 @@ import { defineDirection } from "../definition";
 export const WA_MODERN_DIRECTION = defineDirection({
 	id: "wa-modern",
 	module: "woodcut-folio",
-	styleBundleId: "ink",
+	styleBundleId: "quiet",
 	touch: "woodcut",
 	signature: {
 		label: "和モダン",

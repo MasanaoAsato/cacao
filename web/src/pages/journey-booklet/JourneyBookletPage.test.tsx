@@ -12,6 +12,23 @@ import { compileBooklet } from "../../theme/composition/compileBooklet";
 import { createDefaultThemeSeed } from "../../theme/seed";
 import { JourneyBookletPage } from "./JourneyBookletPage";
 
+// Exercise the page against an explicit test catalog while production reviews are empty.
+vi.mock("../../theme/composition/compileBooklet", async (importOriginal) => {
+	const real =
+		await importOriginal<
+			typeof import("../../theme/composition/compileBooklet")
+		>();
+	const { testCatalog } = await import(
+		"../../theme/composition/compositionTestKit"
+	);
+	const catalog = testCatalog(["minimal", "photo-book", "practical"]);
+	return {
+		...real,
+		compileBooklet: (...args: Parameters<typeof real.compileBooklet>) =>
+			real.compileBooklet(args[0], args[1], args[2] ?? catalog, args[3]),
+	};
+});
+
 const journeyPayload = {
 	days: [
 		{

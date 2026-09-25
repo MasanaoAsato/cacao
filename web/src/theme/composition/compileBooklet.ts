@@ -8,6 +8,9 @@ import {
 	REGISTERED_DIRECTION_DEFINITIONS,
 } from "../directions/registry";
 import type { DirectionDefinition } from "../directions/types";
+import directionReviews from "../reviews/directions.json";
+import { selectPublishedDirections } from "../reviews/publication";
+import sampleReviews from "../reviews/samples.json";
 import { axisRandom, formatThemeSeed } from "../seed";
 import type { ThemeSeed } from "../types";
 import { activeDirectionDefinitions } from "./activeDirections";
@@ -48,16 +51,29 @@ import type {
 let productionCatalog: CompositionCatalog | null = null;
 
 /**
- * The catalog delivered with this build. Draft artwork is never part of it,
- * and neither is a direction whose required artwork is still draft (25.5);
- * such directions return by themselves once their artwork is reviewed.
+ * The catalog delivered with this build. Both the direction and every
+ * required artwork must have an active human review for this revision.
  */
 export function productionCompositionCatalog(): CompositionCatalog {
-	productionCatalog ??= {
+	if (productionCatalog) return productionCatalog;
+	const published = selectPublishedDirections(
+		REGISTERED_DIRECTION_DEFINITIONS,
+		directionReviews as import("../reviews/types").DirectionReview[],
+		sampleReviews as import("../reviews/types").SampleReview[],
+		ARTWORK_CATALOG,
+		CATALOG_REVISION,
+		MAX_BOOKLET_DIRECTIONS,
+	);
+	if (published.issues.length > 0)
+		throw new Error(
+			`Direction publication is inconsistent: ${published.issues.join("; ")}`,
+		);
+	productionCatalog = {
 		artwork: ARTWORK_CATALOG,
 		directions: activeDirectionDefinitions(
 			REGISTERED_DIRECTION_DEFINITIONS,
 			ARTWORK_CATALOG,
+			new Set(published.selected.map((definition) => definition.id)),
 		),
 		maxDirections: MAX_BOOKLET_DIRECTIONS,
 		revision: CATALOG_REVISION,

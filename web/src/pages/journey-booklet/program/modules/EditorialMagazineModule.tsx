@@ -73,7 +73,9 @@ function magazineSceneStyle(spec: MagazineSpec, context: SceneRenderContext) {
 	};
 	const variant: EditorialMagazineVariant = profile
 		? editorialMagazineVariantOf(profile.id)
-		: "quiet-photo";
+		: config.surface.directionId === "retro-tourism"
+			? "bold-culture"
+			: "quiet-photo";
 	const vars = editorialMagazineStyleFor({
 		compositionId: config.compositionId,
 		palette: profile
@@ -195,6 +197,7 @@ function Measure({
 		kind: "cover" | "first" | "continuation",
 	) => (
 		<ProgramPage
+			context={context}
 			className={`editorial-magazine-page editorial-magazine-page--${familyPageKind(kind)}`}
 			familyStyle={style.pageStyle}
 			mode="measurement"
@@ -284,6 +287,7 @@ function Pages({
 					page.kind === "first" || page.kind === "continuation" ? page : null;
 				return (
 					<ProgramPage
+						context={context}
 						className={`editorial-magazine-page editorial-magazine-page--${familyPageKind(page.kind)}`}
 						familyStyle={style.pageStyle}
 						key={item.pageId}

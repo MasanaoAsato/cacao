@@ -25,7 +25,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:chalk-mountain-hero-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -51,7 +51,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:chalk-sea-hero-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -77,7 +77,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:chalk-street-hero-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -103,7 +103,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:chalk-machiya-grid-hero-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -129,7 +129,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:chalk-urban-window-railway-hero-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -155,7 +155,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:chalk-roof-arch-hero-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -181,7 +181,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:chalk-train-medium-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -207,7 +207,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:chalk-airplane-medium-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -233,7 +233,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:chalk-car-medium-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -259,7 +259,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:chalk-bag-medium-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -285,7 +285,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:chalk-tableware-medium-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -311,7 +311,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:chalk-leaf-medium-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -337,7 +337,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:chalk-flower-medium-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -363,7 +363,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:chalk-shell-medium-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -389,7 +389,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:chalk-photo-frame-frame-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -415,7 +415,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:chalk-heading-band-heading-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -441,7 +441,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:chalk-sticky-note-tab-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -467,7 +467,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:chalk-ticket-label-label-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -493,7 +493,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:chalk-measurement-rule-rule-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -519,7 +519,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:chalk-grid-panel-panel-r1:v1:review-20260925",
 		hasAlpha: false,
 		views: [{ id: "film", x: 200, y: 150, width: 1600, height: 1200 }],
 	},
@@ -546,7 +546,8 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId:
+			"artwork:chalk-straight-arrow-straight-arrow-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -572,7 +573,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:chalk-turn-arrow-turn-arrow-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -598,7 +599,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:chalk-route-route-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -624,7 +625,8 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId:
+			"artwork:chalk-season-pattern-season-pattern-r1:v1:review-20260925",
 		hasAlpha: false,
 		views: [
 			{ id: "spring", x: 0, y: 0, width: 500, height: 500 },

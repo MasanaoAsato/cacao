@@ -224,6 +224,7 @@ function Measure({
 		children: ReactNode,
 	) => (
 		<ProgramPage
+			context={context}
 			className={`paper-collage-page paper-collage-page--${kind === "cover" ? "cover" : "day"}`}
 			familyStyle={style.vars}
 			mode="measurement"
@@ -348,6 +349,7 @@ function Pages({
 				const familyPlan = familyPlanOf(item.pageId, page, spec);
 				return (
 					<ProgramPage
+						context={context}
 						className={`paper-collage-page paper-collage-page--${familyPlan.kind}`}
 						familyStyle={style.vars}
 						key={item.pageId}

@@ -3,7 +3,7 @@ import { defineDirection } from "../definition";
 export const CHECKLIST_DIRECTION = defineDirection({
 	id: "checklist",
 	module: "ledger",
-	styleBundleId: "warm",
+	styleBundleId: "bright",
 	touch: "pencil",
 	signature: {
 		label: "チェックリスト中心",

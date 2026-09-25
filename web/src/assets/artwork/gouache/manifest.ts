@@ -25,7 +25,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:gouache-mountain-hero-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -51,7 +51,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:gouache-sea-hero-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -77,7 +77,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:gouache-street-hero-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -103,7 +103,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:gouache-machiya-grid-hero-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -129,7 +129,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:gouache-urban-window-railway-hero-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -155,7 +155,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:gouache-roof-arch-hero-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -181,7 +181,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:gouache-train-medium-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -207,7 +207,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:gouache-airplane-medium-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -233,7 +233,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:gouache-car-medium-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -259,7 +259,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:gouache-bag-medium-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -285,7 +285,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:gouache-tableware-medium-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -311,7 +311,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:gouache-leaf-medium-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -337,7 +337,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:gouache-flower-medium-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -363,7 +363,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:gouache-shell-medium-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -389,7 +389,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:gouache-photo-frame-frame-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -415,7 +415,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:gouache-heading-band-heading-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -441,7 +441,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:gouache-sticky-note-tab-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -467,7 +467,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:gouache-ticket-label-label-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -493,7 +493,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:gouache-measurement-rule-rule-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -519,7 +519,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:gouache-grid-panel-panel-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -546,7 +546,8 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId:
+			"artwork:gouache-straight-arrow-straight-arrow-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -572,7 +573,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:gouache-turn-arrow-turn-arrow-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -598,7 +599,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:gouache-route-route-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -625,7 +626,8 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId:
+			"artwork:gouache-season-pattern-season-pattern-r1:v1:review-20260925",
 		hasAlpha: false,
 		views: [
 			{ id: "spring", x: 0, y: 0, width: 500, height: 500 },

@@ -143,7 +143,7 @@ describe("production artwork catalog", () => {
 
 	it("異常系: 未審査のIDはprogramへ凍結できない", () => {
 		expect(() => artworkById("unreviewed-or-unknown")).toThrow(
-			/missing or not reviewed/,
+			/missing or not active/,
 		);
 	});
 });

@@ -5,4 +5,4 @@ export const MAX_BOOKLET_DIRECTIONS = parseDirectionLimit(
 );
 
 /** Identifies the delivered catalog, including its deployment direction limit. */
-export const CATALOG_REVISION = `2026-09-24.3-max${MAX_BOOKLET_DIRECTIONS}`;
+export const CATALOG_REVISION = `2026-09-25.2-max${MAX_BOOKLET_DIRECTIONS}`;

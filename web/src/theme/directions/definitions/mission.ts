@@ -3,7 +3,7 @@ import { defineDirection } from "../definition";
 export const MISSION_DIRECTION = defineDirection({
 	id: "mission",
 	module: "quest-board",
-	styleBundleId: "night",
+	styleBundleId: "play",
 	touch: "pixel",
 	signature: {
 		label: "旅のミッションブック",

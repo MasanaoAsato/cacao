@@ -1,1 +1,678 @@
-[]
+[
+	{
+		"id": "travel-magazine",
+		"revision": 1,
+		"reviewId": "direction:travel-magazine:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=travel-magazine（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "travel-note",
+		"revision": 1,
+		"reviewId": "direction:travel-note:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=travel-note（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "scrapbook",
+		"revision": 1,
+		"reviewId": "direction:scrapbook:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=scrapbook（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "film",
+		"revision": 1,
+		"reviewId": "direction:film:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=film（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "retro-tourism",
+		"revision": 1,
+		"reviewId": "direction:retro-tourism:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=retro-tourism（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "vintage-journal",
+		"revision": 1,
+		"reviewId": "direction:vintage-journal:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=vintage-journal（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "luxury-magazine",
+		"revision": 1,
+		"reviewId": "direction:luxury-magazine:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=luxury-magazine（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "hotel-brochure",
+		"revision": 1,
+		"reviewId": "direction:hotel-brochure:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=hotel-brochure（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "inflight",
+		"revision": 1,
+		"reviewId": "direction:inflight:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=inflight（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "japan-poster",
+		"revision": 1,
+		"reviewId": "direction:japan-poster:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=japan-poster（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "wa-modern",
+		"revision": 1,
+		"reviewId": "direction:wa-modern:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=wa-modern（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "onsen",
+		"revision": 1,
+		"reviewId": "direction:onsen:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=onsen（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "youth",
+		"revision": 1,
+		"reviewId": "direction:youth:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=youth（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "anime-background",
+		"revision": 1,
+		"reviewId": "direction:anime-background:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=anime-background（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "game-ui",
+		"revision": 1,
+		"reviewId": "direction:game-ui:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=game-ui（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "rpg",
+		"revision": 1,
+		"reviewId": "direction:rpg:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=rpg（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "board-game",
+		"revision": 1,
+		"reviewId": "direction:board-game:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=board-game（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "rail",
+		"revision": 1,
+		"reviewId": "direction:rail:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=rail（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "flight",
+		"revision": 1,
+		"reviewId": "direction:flight:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=flight（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "road-trip",
+		"revision": 1,
+		"reviewId": "direction:road-trip:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=road-trip（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "map",
+		"revision": 1,
+		"reviewId": "direction:map:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=map（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "transit",
+		"revision": 1,
+		"reviewId": "direction:transit:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=transit（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "timeline",
+		"revision": 1,
+		"reviewId": "direction:timeline:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=timeline（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "cards",
+		"revision": 1,
+		"reviewId": "direction:cards:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=cards（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "minimal",
+		"revision": 1,
+		"reviewId": "direction:minimal:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=minimal（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "nordic",
+		"revision": 1,
+		"reviewId": "direction:nordic:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=nordic（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pastel-pop",
+		"revision": 1,
+		"reviewId": "direction:pastel-pop:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=pastel-pop（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "cafe",
+		"revision": 1,
+		"reviewId": "direction:cafe:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=cafe（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "gourmet",
+		"revision": 1,
+		"reviewId": "direction:gourmet:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=gourmet（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "photo-book",
+		"revision": 1,
+		"reviewId": "direction:photo-book:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=photo-book（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "storybook",
+		"revision": 1,
+		"reviewId": "direction:storybook:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=storybook（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "literature",
+		"revision": 1,
+		"reviewId": "direction:literature:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=literature（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "newspaper",
+		"revision": 1,
+		"reviewId": "direction:newspaper:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=newspaper（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "tourist-info",
+		"revision": 1,
+		"reviewId": "direction:tourist-info:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=tourist-info（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "museum",
+		"revision": 1,
+		"reviewId": "direction:museum:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=museum（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "encyclopedia",
+		"revision": 1,
+		"reviewId": "direction:encyclopedia:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=encyclopedia（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "data-book",
+		"revision": 1,
+		"reviewId": "direction:data-book:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=data-book（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "web-app",
+		"revision": 1,
+		"reviewId": "direction:web-app:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=web-app（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "social",
+		"revision": 1,
+		"reviewId": "direction:social:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=social（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "polaroid",
+		"revision": 1,
+		"reviewId": "direction:polaroid:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=polaroid（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "season",
+		"revision": 1,
+		"reviewId": "direction:season:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=season（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "local-color",
+		"revision": 1,
+		"reviewId": "direction:local-color:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=local-color（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "local-motif",
+		"revision": 1,
+		"reviewId": "direction:local-motif:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=local-motif（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "stamp",
+		"revision": 1,
+		"reviewId": "direction:stamp:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=stamp（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "checklist",
+		"revision": 1,
+		"reviewId": "direction:checklist:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=checklist（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "mission",
+		"revision": 1,
+		"reviewId": "direction:mission:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=mission（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "day-story",
+		"revision": 1,
+		"reviewId": "direction:day-story:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=day-story（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "chapters",
+		"revision": 1,
+		"reviewId": "direction:chapters:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=chapters（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "category-color",
+		"revision": 1,
+		"reviewId": "direction:category-color:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=category-color（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "practical",
+		"revision": 1,
+		"reviewId": "direction:practical:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=practical（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "memory-album",
+		"revision": 1,
+		"reviewId": "direction:memory-album:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=memory-album（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "continuous-story",
+		"revision": 1,
+		"reviewId": "direction:continuous-story:v1",
+		"sampleId": null,
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"catalogRevision": "2026-09-25.2-max1",
+			"evidence": "e2e/fixtures/booklet-direction-review.html?direction=continuous-story（固定seed v2-00000006）。ユーザーが52方向の単独冊子を確認済み。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	}
+]

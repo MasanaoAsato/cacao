@@ -32,6 +32,7 @@ import type { SceneRenderContext } from "./sceneParts";
 import { resolveSceneStyle } from "./sceneStyle";
 import { useProgramReadiness } from "./useProgramReadiness";
 import "./ProgramBooklet.css";
+import "./DirectionDesign.css";
 
 function errorMessage(error: unknown, fallback: string): string {
 	return error instanceof Error ? error.message : fallback;

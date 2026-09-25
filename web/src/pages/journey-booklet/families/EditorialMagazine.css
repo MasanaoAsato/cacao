@@ -158,6 +158,7 @@
 
 .editorial-magazine-day-header__image {
 	position: absolute;
+	box-sizing: border-box;
 	left: 0;
 	top: 22mm;
 	width: 52mm;

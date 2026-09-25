@@ -1,1 +1,3170 @@
-[]
+[
+	{
+		"id": "brush-airplane-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:brush-airplane-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "brush-bag-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:brush-bag-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "brush-car-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:brush-car-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "brush-flower-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:brush-flower-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "brush-grid-panel-panel-r1",
+		"revision": 1,
+		"reviewId": "artwork:brush-grid-panel-panel-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "brush-heading-band-heading-r1",
+		"revision": 1,
+		"reviewId": "artwork:brush-heading-band-heading-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "brush-leaf-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:brush-leaf-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "brush-machiya-grid-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:brush-machiya-grid-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "brush-measurement-rule-rule-r1",
+		"revision": 1,
+		"reviewId": "artwork:brush-measurement-rule-rule-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "brush-mountain-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:brush-mountain-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "brush-photo-frame-frame-r1",
+		"revision": 1,
+		"reviewId": "artwork:brush-photo-frame-frame-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "brush-roof-arch-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:brush-roof-arch-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "brush-route-route-r1",
+		"revision": 1,
+		"reviewId": "artwork:brush-route-route-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "brush-sea-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:brush-sea-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "brush-season-pattern-season-pattern-r1",
+		"revision": 1,
+		"reviewId": "artwork:brush-season-pattern-season-pattern-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "brush-shell-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:brush-shell-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "brush-sticky-note-tab-r1",
+		"revision": 1,
+		"reviewId": "artwork:brush-sticky-note-tab-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "brush-straight-arrow-straight-arrow-r1",
+		"revision": 1,
+		"reviewId": "artwork:brush-straight-arrow-straight-arrow-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "brush-street-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:brush-street-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "brush-tableware-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:brush-tableware-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "brush-ticket-label-label-r1",
+		"revision": 1,
+		"reviewId": "artwork:brush-ticket-label-label-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "brush-train-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:brush-train-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "brush-turn-arrow-turn-arrow-r1",
+		"revision": 1,
+		"reviewId": "artwork:brush-turn-arrow-turn-arrow-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "brush-urban-window-railway-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:brush-urban-window-railway-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "chalk-mountain-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:chalk-mountain-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "chalk-sea-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:chalk-sea-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "chalk-street-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:chalk-street-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "chalk-machiya-grid-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:chalk-machiya-grid-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "chalk-urban-window-railway-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:chalk-urban-window-railway-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "chalk-roof-arch-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:chalk-roof-arch-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "chalk-train-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:chalk-train-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "chalk-airplane-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:chalk-airplane-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "chalk-car-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:chalk-car-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "chalk-bag-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:chalk-bag-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "chalk-tableware-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:chalk-tableware-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "chalk-leaf-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:chalk-leaf-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "chalk-flower-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:chalk-flower-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "chalk-shell-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:chalk-shell-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "chalk-photo-frame-frame-r1",
+		"revision": 1,
+		"reviewId": "artwork:chalk-photo-frame-frame-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "chalk-heading-band-heading-r1",
+		"revision": 1,
+		"reviewId": "artwork:chalk-heading-band-heading-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "chalk-sticky-note-tab-r1",
+		"revision": 1,
+		"reviewId": "artwork:chalk-sticky-note-tab-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "chalk-ticket-label-label-r1",
+		"revision": 1,
+		"reviewId": "artwork:chalk-ticket-label-label-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "chalk-measurement-rule-rule-r1",
+		"revision": 1,
+		"reviewId": "artwork:chalk-measurement-rule-rule-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "chalk-grid-panel-panel-r1",
+		"revision": 1,
+		"reviewId": "artwork:chalk-grid-panel-panel-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "chalk-straight-arrow-straight-arrow-r1",
+		"revision": 1,
+		"reviewId": "artwork:chalk-straight-arrow-straight-arrow-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "chalk-turn-arrow-turn-arrow-r1",
+		"revision": 1,
+		"reviewId": "artwork:chalk-turn-arrow-turn-arrow-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "chalk-route-route-r1",
+		"revision": 1,
+		"reviewId": "artwork:chalk-route-route-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "chalk-season-pattern-season-pattern-r1",
+		"revision": 1,
+		"reviewId": "artwork:chalk-season-pattern-season-pattern-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "cut-paper-airplane-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:cut-paper-airplane-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "cut-paper-bag-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:cut-paper-bag-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "cut-paper-car-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:cut-paper-car-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "cut-paper-flower-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:cut-paper-flower-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "cut-paper-grid-panel-panel-r1",
+		"revision": 1,
+		"reviewId": "artwork:cut-paper-grid-panel-panel-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "cut-paper-heading-band-heading-r1",
+		"revision": 1,
+		"reviewId": "artwork:cut-paper-heading-band-heading-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "cut-paper-leaf-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:cut-paper-leaf-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "cut-paper-machiya-grid-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:cut-paper-machiya-grid-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "cut-paper-measurement-rule-rule-r1",
+		"revision": 1,
+		"reviewId": "artwork:cut-paper-measurement-rule-rule-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "cut-paper-mountain-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:cut-paper-mountain-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "cut-paper-photo-frame-frame-r1",
+		"revision": 1,
+		"reviewId": "artwork:cut-paper-photo-frame-frame-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "cut-paper-roof-arch-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:cut-paper-roof-arch-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "cut-paper-route-route-r1",
+		"revision": 1,
+		"reviewId": "artwork:cut-paper-route-route-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "cut-paper-sea-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:cut-paper-sea-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "cut-paper-season-pattern-season-pattern-r1",
+		"revision": 1,
+		"reviewId": "artwork:cut-paper-season-pattern-season-pattern-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "cut-paper-shell-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:cut-paper-shell-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "cut-paper-sticky-note-tab-r1",
+		"revision": 1,
+		"reviewId": "artwork:cut-paper-sticky-note-tab-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "cut-paper-straight-arrow-straight-arrow-r1",
+		"revision": 1,
+		"reviewId": "artwork:cut-paper-straight-arrow-straight-arrow-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "cut-paper-street-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:cut-paper-street-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "cut-paper-tableware-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:cut-paper-tableware-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "cut-paper-ticket-label-label-r1",
+		"revision": 1,
+		"reviewId": "artwork:cut-paper-ticket-label-label-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "cut-paper-train-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:cut-paper-train-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "cut-paper-turn-arrow-turn-arrow-r1",
+		"revision": 1,
+		"reviewId": "artwork:cut-paper-turn-arrow-turn-arrow-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "cut-paper-urban-window-railway-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:cut-paper-urban-window-railway-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "engraving-airplane-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:engraving-airplane-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "engraving-bag-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:engraving-bag-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "engraving-car-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:engraving-car-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "engraving-flower-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:engraving-flower-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "engraving-grid-panel-panel-r1",
+		"revision": 1,
+		"reviewId": "artwork:engraving-grid-panel-panel-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "engraving-heading-band-heading-r1",
+		"revision": 1,
+		"reviewId": "artwork:engraving-heading-band-heading-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "engraving-leaf-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:engraving-leaf-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "engraving-machiya-grid-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:engraving-machiya-grid-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "engraving-measurement-rule-rule-r1",
+		"revision": 1,
+		"reviewId": "artwork:engraving-measurement-rule-rule-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "engraving-mountain-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:engraving-mountain-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "engraving-photo-frame-frame-r1",
+		"revision": 1,
+		"reviewId": "artwork:engraving-photo-frame-frame-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "engraving-roof-arch-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:engraving-roof-arch-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "engraving-route-route-r1",
+		"revision": 1,
+		"reviewId": "artwork:engraving-route-route-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "engraving-sea-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:engraving-sea-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "engraving-season-pattern-season-pattern-r1",
+		"revision": 1,
+		"reviewId": "artwork:engraving-season-pattern-season-pattern-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "engraving-shell-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:engraving-shell-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "engraving-sticky-note-tab-r1",
+		"revision": 1,
+		"reviewId": "artwork:engraving-sticky-note-tab-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "engraving-straight-arrow-straight-arrow-r1",
+		"revision": 1,
+		"reviewId": "artwork:engraving-straight-arrow-straight-arrow-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "engraving-street-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:engraving-street-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "engraving-tableware-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:engraving-tableware-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "engraving-ticket-label-label-r1",
+		"revision": 1,
+		"reviewId": "artwork:engraving-ticket-label-label-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "engraving-train-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:engraving-train-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "engraving-turn-arrow-turn-arrow-r1",
+		"revision": 1,
+		"reviewId": "artwork:engraving-turn-arrow-turn-arrow-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "engraving-urban-window-railway-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:engraving-urban-window-railway-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "gouache-mountain-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:gouache-mountain-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "gouache-sea-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:gouache-sea-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "gouache-street-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:gouache-street-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "gouache-machiya-grid-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:gouache-machiya-grid-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "gouache-urban-window-railway-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:gouache-urban-window-railway-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "gouache-roof-arch-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:gouache-roof-arch-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "gouache-train-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:gouache-train-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "gouache-airplane-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:gouache-airplane-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "gouache-car-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:gouache-car-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "gouache-bag-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:gouache-bag-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "gouache-tableware-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:gouache-tableware-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "gouache-leaf-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:gouache-leaf-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "gouache-flower-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:gouache-flower-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "gouache-shell-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:gouache-shell-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "gouache-photo-frame-frame-r1",
+		"revision": 1,
+		"reviewId": "artwork:gouache-photo-frame-frame-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "gouache-heading-band-heading-r1",
+		"revision": 1,
+		"reviewId": "artwork:gouache-heading-band-heading-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "gouache-sticky-note-tab-r1",
+		"revision": 1,
+		"reviewId": "artwork:gouache-sticky-note-tab-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "gouache-ticket-label-label-r1",
+		"revision": 1,
+		"reviewId": "artwork:gouache-ticket-label-label-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "gouache-measurement-rule-rule-r1",
+		"revision": 1,
+		"reviewId": "artwork:gouache-measurement-rule-rule-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "gouache-grid-panel-panel-r1",
+		"revision": 1,
+		"reviewId": "artwork:gouache-grid-panel-panel-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "gouache-straight-arrow-straight-arrow-r1",
+		"revision": 1,
+		"reviewId": "artwork:gouache-straight-arrow-straight-arrow-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "gouache-turn-arrow-turn-arrow-r1",
+		"revision": 1,
+		"reviewId": "artwork:gouache-turn-arrow-turn-arrow-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "gouache-route-route-r1",
+		"revision": 1,
+		"reviewId": "artwork:gouache-route-route-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "gouache-season-pattern-season-pattern-r1",
+		"revision": 1,
+		"reviewId": "artwork:gouache-season-pattern-season-pattern-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "ink-wash-mountain-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:ink-wash-mountain-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "ink-wash-sea-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:ink-wash-sea-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "ink-wash-street-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:ink-wash-street-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "ink-wash-machiya-grid-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:ink-wash-machiya-grid-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "ink-wash-urban-window-railway-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:ink-wash-urban-window-railway-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "ink-wash-roof-arch-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:ink-wash-roof-arch-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "ink-wash-train-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:ink-wash-train-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "ink-wash-airplane-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:ink-wash-airplane-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "ink-wash-car-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:ink-wash-car-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "ink-wash-bag-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:ink-wash-bag-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "ink-wash-tableware-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:ink-wash-tableware-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "ink-wash-leaf-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:ink-wash-leaf-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "ink-wash-flower-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:ink-wash-flower-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "ink-wash-shell-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:ink-wash-shell-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "ink-wash-photo-frame-frame-r1",
+		"revision": 1,
+		"reviewId": "artwork:ink-wash-photo-frame-frame-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "ink-wash-heading-band-heading-r1",
+		"revision": 1,
+		"reviewId": "artwork:ink-wash-heading-band-heading-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "ink-wash-sticky-note-tab-r1",
+		"revision": 1,
+		"reviewId": "artwork:ink-wash-sticky-note-tab-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "ink-wash-ticket-label-label-r1",
+		"revision": 1,
+		"reviewId": "artwork:ink-wash-ticket-label-label-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "ink-wash-measurement-rule-rule-r1",
+		"revision": 1,
+		"reviewId": "artwork:ink-wash-measurement-rule-rule-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "ink-wash-grid-panel-panel-r1",
+		"revision": 1,
+		"reviewId": "artwork:ink-wash-grid-panel-panel-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "ink-wash-straight-arrow-straight-arrow-r1",
+		"revision": 1,
+		"reviewId": "artwork:ink-wash-straight-arrow-straight-arrow-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "ink-wash-turn-arrow-turn-arrow-r1",
+		"revision": 1,
+		"reviewId": "artwork:ink-wash-turn-arrow-turn-arrow-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "ink-wash-route-route-r1",
+		"revision": 1,
+		"reviewId": "artwork:ink-wash-route-route-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "ink-wash-season-pattern-season-pattern-r1",
+		"revision": 1,
+		"reviewId": "artwork:ink-wash-season-pattern-season-pattern-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pencil-airplane-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:pencil-airplane-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pencil-bag-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:pencil-bag-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pencil-car-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:pencil-car-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pencil-flower-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:pencil-flower-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pencil-grid-panel-panel-r1",
+		"revision": 1,
+		"reviewId": "artwork:pencil-grid-panel-panel-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pencil-heading-band-heading-r1",
+		"revision": 1,
+		"reviewId": "artwork:pencil-heading-band-heading-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pencil-leaf-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:pencil-leaf-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pencil-machiya-grid-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:pencil-machiya-grid-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pencil-measurement-rule-rule-r1",
+		"revision": 1,
+		"reviewId": "artwork:pencil-measurement-rule-rule-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pencil-mountain-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:pencil-mountain-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pencil-photo-frame-frame-r1",
+		"revision": 1,
+		"reviewId": "artwork:pencil-photo-frame-frame-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pencil-roof-arch-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:pencil-roof-arch-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pencil-route-route-r1",
+		"revision": 1,
+		"reviewId": "artwork:pencil-route-route-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pencil-sea-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:pencil-sea-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pencil-season-pattern-season-pattern-r1",
+		"revision": 1,
+		"reviewId": "artwork:pencil-season-pattern-season-pattern-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pencil-shell-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:pencil-shell-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pencil-sticky-note-tab-r1",
+		"revision": 1,
+		"reviewId": "artwork:pencil-sticky-note-tab-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pencil-straight-arrow-straight-arrow-r1",
+		"revision": 1,
+		"reviewId": "artwork:pencil-straight-arrow-straight-arrow-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pencil-street-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:pencil-street-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pencil-tableware-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:pencil-tableware-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pencil-ticket-label-label-r1",
+		"revision": 1,
+		"reviewId": "artwork:pencil-ticket-label-label-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pencil-train-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:pencil-train-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pencil-turn-arrow-turn-arrow-r1",
+		"revision": 1,
+		"reviewId": "artwork:pencil-turn-arrow-turn-arrow-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pencil-urban-window-railway-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:pencil-urban-window-railway-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pixel-airplane-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:pixel-airplane-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pixel-bag-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:pixel-bag-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pixel-car-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:pixel-car-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pixel-flower-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:pixel-flower-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pixel-grid-panel-panel-r1",
+		"revision": 1,
+		"reviewId": "artwork:pixel-grid-panel-panel-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pixel-heading-band-heading-r1",
+		"revision": 1,
+		"reviewId": "artwork:pixel-heading-band-heading-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pixel-leaf-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:pixel-leaf-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pixel-machiya-grid-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:pixel-machiya-grid-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pixel-measurement-rule-rule-r1",
+		"revision": 1,
+		"reviewId": "artwork:pixel-measurement-rule-rule-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pixel-mountain-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:pixel-mountain-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pixel-photo-frame-frame-r1",
+		"revision": 1,
+		"reviewId": "artwork:pixel-photo-frame-frame-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pixel-roof-arch-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:pixel-roof-arch-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pixel-route-route-r1",
+		"revision": 1,
+		"reviewId": "artwork:pixel-route-route-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pixel-sea-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:pixel-sea-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pixel-season-pattern-season-pattern-r1",
+		"revision": 1,
+		"reviewId": "artwork:pixel-season-pattern-season-pattern-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pixel-shell-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:pixel-shell-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pixel-sticky-note-tab-r1",
+		"revision": 1,
+		"reviewId": "artwork:pixel-sticky-note-tab-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pixel-straight-arrow-straight-arrow-r1",
+		"revision": 1,
+		"reviewId": "artwork:pixel-straight-arrow-straight-arrow-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pixel-street-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:pixel-street-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pixel-tableware-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:pixel-tableware-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pixel-ticket-label-label-r1",
+		"revision": 1,
+		"reviewId": "artwork:pixel-ticket-label-label-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pixel-train-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:pixel-train-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pixel-turn-arrow-turn-arrow-r1",
+		"revision": 1,
+		"reviewId": "artwork:pixel-turn-arrow-turn-arrow-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "pixel-urban-window-railway-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:pixel-urban-window-railway-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "risograph-airplane-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:risograph-airplane-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "risograph-bag-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:risograph-bag-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "risograph-car-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:risograph-car-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "risograph-flower-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:risograph-flower-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "risograph-grid-panel-panel-r1",
+		"revision": 1,
+		"reviewId": "artwork:risograph-grid-panel-panel-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "risograph-heading-band-heading-r1",
+		"revision": 1,
+		"reviewId": "artwork:risograph-heading-band-heading-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "risograph-leaf-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:risograph-leaf-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "risograph-machiya-grid-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:risograph-machiya-grid-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "risograph-measurement-rule-rule-r1",
+		"revision": 1,
+		"reviewId": "artwork:risograph-measurement-rule-rule-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "risograph-mountain-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:risograph-mountain-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "risograph-photo-frame-frame-r1",
+		"revision": 1,
+		"reviewId": "artwork:risograph-photo-frame-frame-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "risograph-roof-arch-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:risograph-roof-arch-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "risograph-route-route-r1",
+		"revision": 1,
+		"reviewId": "artwork:risograph-route-route-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "risograph-sea-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:risograph-sea-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "risograph-season-pattern-season-pattern-r1",
+		"revision": 1,
+		"reviewId": "artwork:risograph-season-pattern-season-pattern-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "risograph-shell-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:risograph-shell-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "risograph-sticky-note-tab-r1",
+		"revision": 1,
+		"reviewId": "artwork:risograph-sticky-note-tab-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "risograph-straight-arrow-straight-arrow-r1",
+		"revision": 1,
+		"reviewId": "artwork:risograph-straight-arrow-straight-arrow-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "risograph-street-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:risograph-street-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "risograph-tableware-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:risograph-tableware-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "risograph-ticket-label-label-r1",
+		"revision": 1,
+		"reviewId": "artwork:risograph-ticket-label-label-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "risograph-train-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:risograph-train-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "risograph-turn-arrow-turn-arrow-r1",
+		"revision": 1,
+		"reviewId": "artwork:risograph-turn-arrow-turn-arrow-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "risograph-urban-window-railway-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:risograph-urban-window-railway-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "screenprint-airplane-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:screenprint-airplane-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "screenprint-bag-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:screenprint-bag-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "screenprint-car-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:screenprint-car-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "screenprint-flower-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:screenprint-flower-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "screenprint-grid-panel-panel-r1",
+		"revision": 1,
+		"reviewId": "artwork:screenprint-grid-panel-panel-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "screenprint-heading-band-heading-r1",
+		"revision": 1,
+		"reviewId": "artwork:screenprint-heading-band-heading-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "screenprint-leaf-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:screenprint-leaf-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "screenprint-machiya-grid-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:screenprint-machiya-grid-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "screenprint-measurement-rule-rule-r1",
+		"revision": 1,
+		"reviewId": "artwork:screenprint-measurement-rule-rule-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "screenprint-mountain-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:screenprint-mountain-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "screenprint-photo-frame-frame-r1",
+		"revision": 1,
+		"reviewId": "artwork:screenprint-photo-frame-frame-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "screenprint-roof-arch-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:screenprint-roof-arch-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "screenprint-route-route-r1",
+		"revision": 1,
+		"reviewId": "artwork:screenprint-route-route-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "screenprint-sea-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:screenprint-sea-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "screenprint-season-pattern-season-pattern-r1",
+		"revision": 1,
+		"reviewId": "artwork:screenprint-season-pattern-season-pattern-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "screenprint-shell-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:screenprint-shell-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "screenprint-sticky-note-tab-r1",
+		"revision": 1,
+		"reviewId": "artwork:screenprint-sticky-note-tab-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "screenprint-straight-arrow-straight-arrow-r1",
+		"revision": 1,
+		"reviewId": "artwork:screenprint-straight-arrow-straight-arrow-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "screenprint-street-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:screenprint-street-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "screenprint-tableware-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:screenprint-tableware-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "screenprint-ticket-label-label-r1",
+		"revision": 1,
+		"reviewId": "artwork:screenprint-ticket-label-label-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "screenprint-train-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:screenprint-train-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "screenprint-turn-arrow-turn-arrow-r1",
+		"revision": 1,
+		"reviewId": "artwork:screenprint-turn-arrow-turn-arrow-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "screenprint-urban-window-railway-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:screenprint-urban-window-railway-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "technical-mountain-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:technical-mountain-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "technical-sea-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:technical-sea-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "technical-street-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:technical-street-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "technical-machiya-grid-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:technical-machiya-grid-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "technical-urban-window-railway-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:technical-urban-window-railway-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "technical-roof-arch-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:technical-roof-arch-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "technical-train-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:technical-train-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "technical-airplane-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:technical-airplane-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "technical-car-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:technical-car-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "technical-bag-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:technical-bag-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "technical-tableware-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:technical-tableware-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "technical-leaf-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:technical-leaf-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "technical-flower-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:technical-flower-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "technical-shell-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:technical-shell-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "technical-photo-frame-frame-r1",
+		"revision": 1,
+		"reviewId": "artwork:technical-photo-frame-frame-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "technical-heading-band-heading-r1",
+		"revision": 1,
+		"reviewId": "artwork:technical-heading-band-heading-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "technical-sticky-note-tab-r1",
+		"revision": 1,
+		"reviewId": "artwork:technical-sticky-note-tab-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "technical-ticket-label-label-r1",
+		"revision": 1,
+		"reviewId": "artwork:technical-ticket-label-label-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "technical-measurement-rule-rule-r1",
+		"revision": 1,
+		"reviewId": "artwork:technical-measurement-rule-rule-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "technical-grid-panel-panel-r1",
+		"revision": 1,
+		"reviewId": "artwork:technical-grid-panel-panel-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "technical-straight-arrow-straight-arrow-r1",
+		"revision": 1,
+		"reviewId": "artwork:technical-straight-arrow-straight-arrow-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "technical-turn-arrow-turn-arrow-r1",
+		"revision": 1,
+		"reviewId": "artwork:technical-turn-arrow-turn-arrow-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "technical-route-route-r1",
+		"revision": 1,
+		"reviewId": "artwork:technical-route-route-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "technical-season-pattern-season-pattern-r1",
+		"revision": 1,
+		"reviewId": "artwork:technical-season-pattern-season-pattern-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "woodcut-airplane-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:woodcut-airplane-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "woodcut-bag-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:woodcut-bag-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "woodcut-car-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:woodcut-car-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "woodcut-flower-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:woodcut-flower-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "woodcut-grid-panel-panel-r1",
+		"revision": 1,
+		"reviewId": "artwork:woodcut-grid-panel-panel-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "woodcut-heading-band-heading-r1",
+		"revision": 1,
+		"reviewId": "artwork:woodcut-heading-band-heading-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "woodcut-leaf-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:woodcut-leaf-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "woodcut-machiya-grid-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:woodcut-machiya-grid-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "woodcut-measurement-rule-rule-r1",
+		"revision": 1,
+		"reviewId": "artwork:woodcut-measurement-rule-rule-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "woodcut-mountain-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:woodcut-mountain-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "woodcut-photo-frame-frame-r1",
+		"revision": 1,
+		"reviewId": "artwork:woodcut-photo-frame-frame-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "woodcut-roof-arch-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:woodcut-roof-arch-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "woodcut-route-route-r1",
+		"revision": 1,
+		"reviewId": "artwork:woodcut-route-route-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "woodcut-sea-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:woodcut-sea-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "woodcut-season-pattern-season-pattern-r1",
+		"revision": 1,
+		"reviewId": "artwork:woodcut-season-pattern-season-pattern-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "woodcut-shell-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:woodcut-shell-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "woodcut-sticky-note-tab-r1",
+		"revision": 1,
+		"reviewId": "artwork:woodcut-sticky-note-tab-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "woodcut-straight-arrow-straight-arrow-r1",
+		"revision": 1,
+		"reviewId": "artwork:woodcut-straight-arrow-straight-arrow-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "woodcut-street-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:woodcut-street-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "woodcut-tableware-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:woodcut-tableware-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "woodcut-ticket-label-label-r1",
+		"revision": 1,
+		"reviewId": "artwork:woodcut-ticket-label-label-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "woodcut-train-medium-r1",
+		"revision": 1,
+		"reviewId": "artwork:woodcut-train-medium-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "woodcut-turn-arrow-turn-arrow-r1",
+		"revision": 1,
+		"reviewId": "artwork:woodcut-turn-arrow-turn-arrow-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	},
+	{
+		"id": "woodcut-urban-window-railway-hero-r1",
+		"revision": 1,
+		"reviewId": "artwork:woodcut-urban-window-railway-hero-r1:v1:review-20260925",
+		"reviewer": "requester-confirmed-2026-09-25",
+		"status": "active",
+		"provisional": {
+			"evidence": "2026-09-25: ユーザーが現行288素材の暫定本番使用を明示承認。",
+			"reason": "SVG/WebPを大幅に改稿する制作段階。52方向の確認を優先し、現行素材の暫定使用を承認。"
+		}
+	}
+]

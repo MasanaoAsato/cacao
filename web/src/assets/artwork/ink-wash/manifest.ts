@@ -25,7 +25,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:ink-wash-mountain-hero-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -51,7 +51,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:ink-wash-sea-hero-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -77,7 +77,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:ink-wash-street-hero-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -103,7 +103,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:ink-wash-machiya-grid-hero-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -129,7 +129,8 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId:
+			"artwork:ink-wash-urban-window-railway-hero-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -155,7 +156,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:ink-wash-roof-arch-hero-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -181,7 +182,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:ink-wash-train-medium-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -207,7 +208,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:ink-wash-airplane-medium-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -233,7 +234,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:ink-wash-car-medium-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -259,7 +260,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:ink-wash-bag-medium-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -285,7 +286,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:ink-wash-tableware-medium-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -311,7 +312,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:ink-wash-leaf-medium-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -337,7 +338,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:ink-wash-flower-medium-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -363,7 +364,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:ink-wash-shell-medium-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -389,7 +390,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:ink-wash-photo-frame-frame-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -415,7 +416,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:ink-wash-heading-band-heading-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -441,7 +442,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:ink-wash-sticky-note-tab-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -467,7 +468,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:ink-wash-ticket-label-label-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -493,7 +494,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:ink-wash-measurement-rule-rule-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -519,7 +520,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:ink-wash-grid-panel-panel-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -546,7 +547,8 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId:
+			"artwork:ink-wash-straight-arrow-straight-arrow-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -572,7 +574,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:ink-wash-turn-arrow-turn-arrow-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -598,7 +600,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:ink-wash-route-route-r1:v1:review-20260925",
 		hasAlpha: false,
 	},
 	{
@@ -625,7 +627,8 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal raster artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId:
+			"artwork:ink-wash-season-pattern-season-pattern-r1:v1:review-20260925",
 		hasAlpha: false,
 		views: [
 			{ id: "spring", x: 0, y: 0, width: 500, height: 500 },

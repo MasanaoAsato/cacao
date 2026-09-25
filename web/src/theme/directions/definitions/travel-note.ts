@@ -5,6 +5,7 @@ export const TRAVEL_NOTE_DIRECTION = defineDirection({
 	module: "atlas-grid",
 	styleBundleId: "warm",
 	touch: "pencil",
+	config: { headingSystem: "note" },
 	signature: {
 		label: "トラベルノート",
 		description: "方眼、余白の書込み、鉛筆の観察線",

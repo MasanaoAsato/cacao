@@ -25,7 +25,7 @@ describe("paginateQuestBoardScene", () => {
 	});
 
 	it("境界値系: 欄のない参加なしの面は120mm幅", () => {
-		const specs = specsFor(compiledProgram(["cards"]));
+		const specs = specsFor(compiledProgram(["web-app"]));
 		const spec = moduleSpec(specs, "day:d2", "quest-board");
 		expect(
 			paginateQuestBoardScene(spec, bodyMeasurement(spec, 108, 120)).pages,

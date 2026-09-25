@@ -1,11 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
-import {
-	bookletFixtureJourneyId,
-	COMPARISON_BOOKLET_EXPECTED_UNITS,
-	routeBookletApi,
-} from "./fixtures/booklet.js";
+import { COMPARISON_BOOKLET_EXPECTED_UNITS } from "./fixtures/booklet.js";
 import { DIVERSITY_SAMPLES } from "./fixtures/booklet-diversity.js";
+import plan from "./fixtures/booklet-publication-plan.json";
 import {
 	expectArtworkClearOfText,
 	expectBookletPrintReady,
@@ -15,13 +12,16 @@ import {
 } from "./support/booklet-assertions.js";
 
 test.describe("25.5 同条件の比較作例", () => {
+	test.skip(
+		plan.directionIds.length === 0,
+		"公開予定方向の集合とreviewed素材が未登録です",
+	);
 	for (const sample of DIVERSITY_SAMPLES) {
 		test(`正常系: ${sample.id} の画面・PDFと比較資料を保存する`, async ({
 			page,
 		}, testInfo) => {
-			await routeBookletApi(page, "comparison", "artwork");
 			await page.goto(
-				`/journeys/${bookletFixtureJourneyId("comparison")}/booklet?seed=${seedToken(sample.seed)}`,
+				`/e2e/fixtures/booklet-publication-review.html?seed=${seedToken(sample.seed)}`,
 			);
 			await expectBookletPrintReady(page);
 			const document = page.locator(".booklet-document");

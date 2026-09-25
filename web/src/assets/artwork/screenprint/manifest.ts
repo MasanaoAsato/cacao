@@ -25,7 +25,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:screenprint-airplane-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "screenprint-bag-medium-r1",
@@ -50,7 +50,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:screenprint-bag-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "screenprint-car-medium-r1",
@@ -75,7 +75,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:screenprint-car-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "screenprint-flower-medium-r1",
@@ -100,7 +100,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:screenprint-flower-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "screenprint-grid-panel-panel-r1",
@@ -125,7 +125,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:screenprint-grid-panel-panel-r1:v1:review-20260925",
 	},
 	{
 		id: "screenprint-heading-band-heading-r1",
@@ -150,7 +150,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:screenprint-heading-band-heading-r1:v1:review-20260925",
 	},
 	{
 		id: "screenprint-leaf-medium-r1",
@@ -175,7 +175,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:screenprint-leaf-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "screenprint-machiya-grid-hero-r1",
@@ -200,7 +200,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:screenprint-machiya-grid-hero-r1:v1:review-20260925",
 	},
 	{
 		id: "screenprint-measurement-rule-rule-r1",
@@ -225,7 +225,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:screenprint-measurement-rule-rule-r1:v1:review-20260925",
 	},
 	{
 		id: "screenprint-mountain-hero-r1",
@@ -250,7 +250,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:screenprint-mountain-hero-r1:v1:review-20260925",
 	},
 	{
 		id: "screenprint-photo-frame-frame-r1",
@@ -275,7 +275,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:screenprint-photo-frame-frame-r1:v1:review-20260925",
 	},
 	{
 		id: "screenprint-roof-arch-hero-r1",
@@ -300,7 +300,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:screenprint-roof-arch-hero-r1:v1:review-20260925",
 	},
 	{
 		id: "screenprint-route-route-r1",
@@ -325,7 +325,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:screenprint-route-route-r1:v1:review-20260925",
 	},
 	{
 		id: "screenprint-sea-hero-r1",
@@ -350,7 +350,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:screenprint-sea-hero-r1:v1:review-20260925",
 	},
 	{
 		id: "screenprint-season-pattern-season-pattern-r1",
@@ -376,7 +376,8 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId:
+			"artwork:screenprint-season-pattern-season-pattern-r1:v1:review-20260925",
 		views: [
 			{ id: "spring", x: 0, y: 0, width: 500, height: 500 },
 			{ id: "summer", x: 500, y: 0, width: 500, height: 500 },
@@ -407,7 +408,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:screenprint-shell-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "screenprint-sticky-note-tab-r1",
@@ -432,7 +433,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:screenprint-sticky-note-tab-r1:v1:review-20260925",
 	},
 	{
 		id: "screenprint-straight-arrow-straight-arrow-r1",
@@ -458,7 +459,8 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId:
+			"artwork:screenprint-straight-arrow-straight-arrow-r1:v1:review-20260925",
 	},
 	{
 		id: "screenprint-street-hero-r1",
@@ -483,7 +485,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:screenprint-street-hero-r1:v1:review-20260925",
 	},
 	{
 		id: "screenprint-tableware-medium-r1",
@@ -508,7 +510,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:screenprint-tableware-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "screenprint-ticket-label-label-r1",
@@ -533,7 +535,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:screenprint-ticket-label-label-r1:v1:review-20260925",
 	},
 	{
 		id: "screenprint-train-medium-r1",
@@ -558,7 +560,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:screenprint-train-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "screenprint-turn-arrow-turn-arrow-r1",
@@ -583,7 +585,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:screenprint-turn-arrow-turn-arrow-r1:v1:review-20260925",
 	},
 	{
 		id: "screenprint-urban-window-railway-hero-r1",
@@ -609,6 +611,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId:
+			"artwork:screenprint-urban-window-railway-hero-r1:v1:review-20260925",
 	},
 ];

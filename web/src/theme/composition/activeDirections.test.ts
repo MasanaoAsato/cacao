@@ -8,22 +8,12 @@ import {
 import { compileBooklet, productionCompositionCatalog } from "./compileBooklet";
 import { REVIEWED_TEST_ARTWORK, testModel } from "./compositionTestKit";
 
-const ART_DEPENDENT = [
-	"vintage-journal",
-	"wa-modern",
-	"game-ui",
-	"rpg",
-	"nordic",
-	"gourmet",
-	"literature",
-	"museum",
-	"encyclopedia",
-	"season",
-	"local-motif",
-	"stamp",
-	"mission",
-	"chapters",
-];
+const ALL_IDS = new Set(
+	REGISTERED_DIRECTION_DEFINITIONS.map((item) => item.id),
+);
+
+// These four directions deliberately use no authored decoration.
+const ART_INDEPENDENT = ["minimal", "photo-book", "local-color", "practical"];
 
 describe("activeDirectionDefinitions", () => {
 	it("正常系: 全素材が審査済みなら登録52方向がすべてactive", () => {
@@ -31,25 +21,52 @@ describe("activeDirectionDefinitions", () => {
 			activeDirectionDefinitions(
 				REGISTERED_DIRECTION_DEFINITIONS,
 				REVIEWED_TEST_ARTWORK,
+				ALL_IDS,
 			),
 		).toHaveLength(52);
 	});
 
-	it("異常系: 審査済み素材がなければ、必須の主役絵枠を持つ方向だけが外れる", () => {
+	it("異常系: active素材がなければ、素材を使う方向は公開候補から外れる", () => {
 		const active = activeDirectionDefinitions(
 			REGISTERED_DIRECTION_DEFINITIONS,
 			[],
+			ALL_IDS,
 		);
 		const inactive = REGISTERED_DIRECTION_DEFINITIONS.filter(
 			(definition) => !active.includes(definition),
 		).map((definition) => definition.id);
-		expect(new Set(inactive)).toEqual(new Set(ART_DEPENDENT));
+		expect(new Set(inactive)).toEqual(
+			new Set(
+				REGISTERED_DIRECTION_DEFINITIONS.map(
+					(definition) => definition.id,
+				).filter((id) => !ART_INDEPENDENT.includes(id)),
+			),
+		);
 		// Registered order is kept for the remaining directions.
 		expect(active.map((definition) => definition.id)).toEqual(
 			REGISTERED_DIRECTION_DEFINITIONS.map(
 				(definition) => definition.id,
-			).filter((id) => !ART_DEPENDENT.includes(id)),
+			).filter((id) => ART_INDEPENDENT.includes(id)),
 		);
+	});
+
+	it("異常系: 共用素材を使う未承認方向は候補にも寄与にも入らない", () => {
+		const active = activeDirectionDefinitions(
+			REGISTERED_DIRECTION_DEFINITIONS,
+			REVIEWED_TEST_ARTWORK,
+			new Set(["travel-magazine"]),
+		);
+		expect(active.map((item) => item.id)).toEqual(["travel-magazine"]);
+		const result = compileBooklet(
+			testModel(),
+			{ seed: { value: 6, version: "v2" } },
+			{ artwork: REVIEWED_TEST_ARTWORK, directions: active, revision: "test" },
+		);
+		expect(result.status).toBe("compiled");
+		if (result.status === "compiled") {
+			expect(result.trace.effectiveDirectionIds).toEqual(["travel-magazine"]);
+			expect(result.trace.contributions).toEqual([]);
+		}
 	});
 
 	it("境界値系: 季節方向は春夏秋冬のviewが一つでも欠ければactiveにしない", () => {
@@ -75,6 +92,7 @@ describe("activeDirectionDefinitions", () => {
 			activeDirectionDefinitions(
 				REGISTERED_DIRECTION_DEFINITIONS,
 				ARTWORK_CATALOG,
+				new Set(catalog.directions.map((item) => item.id)),
 			),
 		);
 		const model = testModel();

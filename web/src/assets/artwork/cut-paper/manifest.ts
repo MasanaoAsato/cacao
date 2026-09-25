@@ -25,7 +25,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:cut-paper-airplane-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "cut-paper-bag-medium-r1",
@@ -50,7 +50,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:cut-paper-bag-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "cut-paper-car-medium-r1",
@@ -75,7 +75,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:cut-paper-car-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "cut-paper-flower-medium-r1",
@@ -100,7 +100,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:cut-paper-flower-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "cut-paper-grid-panel-panel-r1",
@@ -125,7 +125,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:cut-paper-grid-panel-panel-r1:v1:review-20260925",
 	},
 	{
 		id: "cut-paper-heading-band-heading-r1",
@@ -150,7 +150,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:cut-paper-heading-band-heading-r1:v1:review-20260925",
 	},
 	{
 		id: "cut-paper-leaf-medium-r1",
@@ -175,7 +175,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:cut-paper-leaf-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "cut-paper-machiya-grid-hero-r1",
@@ -200,7 +200,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:cut-paper-machiya-grid-hero-r1:v1:review-20260925",
 	},
 	{
 		id: "cut-paper-measurement-rule-rule-r1",
@@ -225,7 +225,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:cut-paper-measurement-rule-rule-r1:v1:review-20260925",
 	},
 	{
 		id: "cut-paper-mountain-hero-r1",
@@ -250,7 +250,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:cut-paper-mountain-hero-r1:v1:review-20260925",
 	},
 	{
 		id: "cut-paper-photo-frame-frame-r1",
@@ -275,7 +275,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:cut-paper-photo-frame-frame-r1:v1:review-20260925",
 	},
 	{
 		id: "cut-paper-roof-arch-hero-r1",
@@ -300,7 +300,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:cut-paper-roof-arch-hero-r1:v1:review-20260925",
 	},
 	{
 		id: "cut-paper-route-route-r1",
@@ -325,7 +325,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:cut-paper-route-route-r1:v1:review-20260925",
 	},
 	{
 		id: "cut-paper-sea-hero-r1",
@@ -350,7 +350,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:cut-paper-sea-hero-r1:v1:review-20260925",
 	},
 	{
 		id: "cut-paper-season-pattern-season-pattern-r1",
@@ -376,7 +376,8 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId:
+			"artwork:cut-paper-season-pattern-season-pattern-r1:v1:review-20260925",
 		views: [
 			{ id: "spring", x: 0, y: 0, width: 500, height: 500 },
 			{ id: "summer", x: 500, y: 0, width: 500, height: 500 },
@@ -407,7 +408,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:cut-paper-shell-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "cut-paper-sticky-note-tab-r1",
@@ -432,7 +433,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:cut-paper-sticky-note-tab-r1:v1:review-20260925",
 	},
 	{
 		id: "cut-paper-straight-arrow-straight-arrow-r1",
@@ -458,7 +459,8 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId:
+			"artwork:cut-paper-straight-arrow-straight-arrow-r1:v1:review-20260925",
 	},
 	{
 		id: "cut-paper-street-hero-r1",
@@ -483,7 +485,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:cut-paper-street-hero-r1:v1:review-20260925",
 	},
 	{
 		id: "cut-paper-tableware-medium-r1",
@@ -508,7 +510,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:cut-paper-tableware-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "cut-paper-ticket-label-label-r1",
@@ -533,7 +535,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:cut-paper-ticket-label-label-r1:v1:review-20260925",
 	},
 	{
 		id: "cut-paper-train-medium-r1",
@@ -558,7 +560,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:cut-paper-train-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "cut-paper-turn-arrow-turn-arrow-r1",
@@ -583,7 +585,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:cut-paper-turn-arrow-turn-arrow-r1:v1:review-20260925",
 	},
 	{
 		id: "cut-paper-urban-window-railway-hero-r1",
@@ -608,6 +610,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId:
+			"artwork:cut-paper-urban-window-railway-hero-r1:v1:review-20260925",
 	},
 ];

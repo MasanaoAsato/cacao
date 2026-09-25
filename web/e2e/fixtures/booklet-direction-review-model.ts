@@ -68,3 +68,31 @@ export const REVIEW_MODEL: BookletModel = {
 	}),
 	journeyId: "review-fixture-only",
 };
+
+/** Four valid month samples expose every seasonal view without changing the itinerary. */
+export const SEASON_REVIEW_MONTHS = ["03", "08", "09", "12"] as const;
+export type SeasonReviewMonth = (typeof SEASON_REVIEW_MONTHS)[number];
+
+export function reviewModelForMonth(month: SeasonReviewMonth): BookletModel {
+	if (month === "08") return REVIEW_MODEL;
+	const moveMonth = (date: string) =>
+		date.replace(/^2026-08-/, `2026-${month}-`);
+	return {
+		...REVIEW_MODEL,
+		cover: {
+			...REVIEW_MODEL.cover,
+			period: {
+				start_date: moveMonth(REVIEW_MODEL.cover.period.start_date),
+				end_date: moveMonth(REVIEW_MODEL.cover.period.end_date),
+			},
+		},
+		days: REVIEW_MODEL.days.map((day) => ({
+			...day,
+			date: moveMonth(day.date),
+			units: day.units.map((unit) => ({
+				...unit,
+				spot: { ...unit.spot, start_at: moveMonth(unit.spot.start_at) },
+			})),
+		})),
+	};
+}

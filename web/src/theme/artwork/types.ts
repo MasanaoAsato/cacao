@@ -16,9 +16,10 @@ export const ARTWORK_TOUCH_IDS = [
 
 export type ArtworkTouchId = (typeof ARTWORK_TOUCH_IDS)[number];
 
-/** Film's charcoal setting uses chalk artwork; it is not a thirteenth touch. */
+/** Direction aliases reuse one of the twelve authored artwork techniques. */
 export function canonicalArtworkTouchId(id: string): ArtworkTouchId | null {
-	const canonical = id === "charcoal" ? "chalk" : id;
+	const canonical =
+		id === "charcoal" ? "chalk" : id === "geometric" ? "screenprint" : id;
 	return ARTWORK_TOUCH_IDS.find((touch) => touch === canonical) ?? null;
 }
 

@@ -4,6 +4,7 @@ import {
 	MODULE_CAPABILITIES,
 } from "../../booklet/program/moduleCapabilities";
 import { type ArtworkAsset, canonicalArtworkTouchId } from "../artwork/types";
+import { directionArtworkSlot } from "../directions/artworkSlots";
 import { LOCALE_PACKS, type LocalePackId } from "../directions/localePacks";
 import { STYLE_BUNDLES } from "../directions/styleBundles";
 import type { DirectionDefinition } from "../directions/types";
@@ -81,10 +82,8 @@ function possibleBindings(
 }
 
 /**
- * A direction is active only when every required baseline slot has reviewed
- * artwork for every input it can meet (25.5: a direction depending on draft
- * artwork is never active). It uses the compiler's own candidate rule, so an
- * active direction cannot fail with `artwork-unavailable`.
+ * Every required baseline slot must have active artwork for every input it
+ * can meet. This uses the compiler's own candidate rule.
  */
 export function isDirectionArtworkReady(
 	definition: DirectionDefinition,
@@ -95,6 +94,20 @@ export function isDirectionArtworkReady(
 	const slots = [
 		MODULE_CAPABILITIES[baseline.coverModule].cover?.heroSlot ?? null,
 		MODULE_CAPABILITIES[baseline.module].day.heroSlot,
+		directionArtworkSlot(
+			baseline.coverModule,
+			"cover",
+			definition.id,
+			baseline.config.coverCompositionId ??
+				MODULE_CAPABILITIES[baseline.coverModule].standardCompositionId,
+		)?.slot ?? null,
+		directionArtworkSlot(
+			baseline.module,
+			"day",
+			definition.id,
+			baseline.config.dayCompositionId ??
+				MODULE_CAPABILITIES[baseline.module].standardCompositionId,
+		)?.slot ?? null,
 	].filter((slot) => slot !== null);
 	return slots.every((slot) =>
 		possibleBindings(definition, slot).every(
@@ -103,14 +116,17 @@ export function isDirectionArtworkReady(
 	);
 }
 
-/** The registered directions that reviewed artwork can draw, in publication order. */
+/** Only explicitly approved directions with all required active artwork. */
 export function activeDirectionDefinitions(
 	registered: readonly DirectionDefinition[],
 	artwork: readonly ArtworkAsset[],
+	approvedIds: ReadonlySet<string>,
 ): readonly DirectionDefinition[] {
 	return Object.freeze(
-		registered.filter((definition) =>
-			isDirectionArtworkReady(definition, artwork),
+		registered.filter(
+			(definition) =>
+				approvedIds.has(definition.id) &&
+				isDirectionArtworkReady(definition, artwork),
 		),
 	);
 }

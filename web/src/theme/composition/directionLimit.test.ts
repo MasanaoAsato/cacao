@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { compileBooklet, productionCompositionCatalog } from "./compileBooklet";
-import { testModel } from "./compositionTestKit";
+import { fullTestCatalog, testModel } from "./compositionTestKit";
 import { parseDirectionLimit } from "./directionLimit";
 
 describe("direction limit", () => {
@@ -17,10 +17,13 @@ describe("direction limit", () => {
 	it("正常系: 上限1で配信するとどのseedも1方向で止まる", () => {
 		if (productionCompositionCatalog().maxDirections !== 1) return;
 		const model = testModel();
+		const catalog = { ...fullTestCatalog(), maxDirections: 1 };
 		for (let value = 0; value < 32; value += 1) {
-			const result = compileBooklet(model, {
-				seed: { value, version: "v2" },
-			});
+			const result = compileBooklet(
+				model,
+				{ seed: { value, version: "v2" } },
+				catalog,
+			);
 			expect(result.status).toBe("compiled");
 			if (result.status !== "compiled") continue;
 			expect(result.trace.effectiveDirectionIds).toHaveLength(1);

@@ -5,6 +5,9 @@ export const TOURIST_INFO_DIRECTION = defineDirection({
 	module: "atlas-grid",
 	styleBundleId: "bright",
 	touch: "geometric",
+	config: {
+		numberedEntries: true,
+	},
 	signature: {
 		label: "観光案内所パンフレット",
 		description: "情報の区分と番号、交通欄を揃える",

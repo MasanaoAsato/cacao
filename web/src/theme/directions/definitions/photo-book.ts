@@ -5,6 +5,7 @@ export const PHOTO_BOOK_DIRECTION = defineDirection({
 	module: "photo-essay",
 	styleBundleId: "quiet",
 	touch: "none",
+	config: { imageTreatment: "caption-margin" },
 	signature: {
 		label: "写真集",
 		description: "大きい旅程画像、短いcaption、画像ごとの余白",
