@@ -1,5 +1,7 @@
 import type { BookletModel, BookletPlace } from "../../booklet/model";
 import type {
+	ContentStructureId,
+	HeadingSystemId,
 	ImageTreatmentId,
 	ParticipationId,
 } from "../../booklet/program/model";
@@ -128,7 +130,11 @@ export type DirectionSignature = {
 };
 
 export type DirectionBaselineConfig = {
+	readonly contentStructure?: ContentStructureId;
+	readonly coverCompositionId?: string;
 	readonly dayHeader?: "DAY / EVENT" | "DAY / MISSION" | "第○章 / 訪問地点";
+	readonly dayCompositionId?: string;
+	readonly headingSystem?: HeadingSystemId;
 	readonly imageTreatment?: ImageTreatmentId;
 	readonly ledgerHeading?: "data-book" | "flight" | "practical" | "rail";
 	readonly minimalDecoration?: true;
@@ -156,8 +162,8 @@ export type DirectionDefinition<Id extends DirectionId = DirectionId> = {
 	readonly contributions: readonly DirectionContribution[];
 	readonly eligibility: DirectionEligibility;
 	readonly id: Id;
-	readonly revision: 1;
-	readonly reviewId: `direction:${Id}:v1`;
+	readonly revision: number;
+	readonly reviewId: `direction:${Id}:v${number}`;
 };
 
 export type DirectionEligibilityContext = {

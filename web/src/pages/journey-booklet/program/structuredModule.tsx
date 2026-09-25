@@ -316,6 +316,7 @@ function DayPage({
 	const showIllustration = scene.kind === "day" && scene.showIllustration;
 	return (
 		<ProgramPage
+			context={context}
 			mode={mode}
 			page={page}
 			pageId={pageId}
@@ -396,6 +397,7 @@ function CoverPage({
 	const { scene, content } = spec;
 	return (
 		<ProgramPage
+			context={context}
 			mode={mode}
 			page={page}
 			pageId={pageId}
@@ -620,6 +622,7 @@ function ExtraPage({
 	const memo = scene.kind === "memo";
 	return (
 		<ProgramPage
+			context={context}
 			mode={mode}
 			page={page}
 			pageId={pageId}
@@ -711,6 +714,7 @@ export function StructuredMeasure({
 				spec={{ ...spec, content: { ...spec.content, ownedUnits: [] } }}
 			/>
 			<ProgramPage
+				context={context}
 				mode="measurement"
 				page={{ ...probe, kind: "continuation" }}
 				spec={spec}

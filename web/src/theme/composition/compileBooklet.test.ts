@@ -323,7 +323,8 @@ describe("compileBooklet", () => {
 
 	it("正常系: 素材数を増やしてもbase方向の選択は変わらない", () => {
 		const options = { random: scriptedRandom({ base: 0.5, steps: 0 }) };
-		const directions: DirectionId[] = ["travel-magazine", "rail", "newspaper"];
+		// These directions do not request authored artwork.
+		const directions: DirectionId[] = ["minimal", "photo-book", "practical"];
 		const without = compiled(
 			compileBooklet(testModel(), SEED, testCatalog(directions, []), options),
 		);
@@ -331,8 +332,8 @@ describe("compileBooklet", () => {
 			compileBooklet(testModel(), SEED, testCatalog(directions), options),
 		);
 
-		expect(without.program.baseDirectionId).toBe("rail");
-		expect(withAll.program.baseDirectionId).toBe("rail");
+		expect(without.program.baseDirectionId).toBe("photo-book");
+		expect(withAll.program.baseDirectionId).toBe("photo-book");
 	});
 
 	it("正常系: 方向は候補scope数に関係なく等確率で選ばれる", () => {

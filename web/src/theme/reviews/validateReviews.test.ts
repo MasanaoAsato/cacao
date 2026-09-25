@@ -6,6 +6,7 @@ import {
 	compileBooklet,
 	productionCompositionCatalog,
 } from "../composition/compileBooklet";
+import { fullTestCatalog } from "../composition/compositionTestKit";
 import { REGISTERED_DIRECTION_DEFINITIONS } from "../directions/registry";
 import artwork from "./artwork.json";
 import directions from "./directions.json";
@@ -44,6 +45,25 @@ const fixtures = {
 };
 
 describe("25.5 release review gate", () => {
+	it("異常系: 暫定使用の承認を素材品質と208作例の最終審査へ流用しない", () => {
+		const issues = reviewIssues(
+			{
+				directions: directions as ReviewRecords["directions"],
+				artwork: artwork as ReviewRecords["artwork"],
+				samples,
+			},
+			REGISTERED_DIRECTION_DEFINITIONS,
+			ARTWORK_MANIFEST,
+			CATALOG_REVISION,
+		);
+		expect(issues).toContain(
+			"direction travel-magazine: provisional approval is not final review",
+		);
+		expect(issues).toContain(
+			`artwork ${ARTWORK_MANIFEST[0]?.id}: provisional approval is not final review`,
+		);
+		expect(issues).toContain("expected 208 samples, got 0");
+	});
 	it("異常系: 記録のない作品や未審査素材をactiveとは認定しない", () => {
 		const issues = reviewIssues(
 			{ directions: [], artwork: [], samples: [] },
@@ -61,7 +81,7 @@ describe("25.5 release review gate", () => {
 	});
 
 	it("正常系・境界値系: 保存seedと寄与が一致し、値を変えると拒否する", () => {
-		const catalog = productionCompositionCatalog();
+		const catalog = fullTestCatalog();
 		const result = compileBooklet(
 			model,
 			{ seed: { value: 6, version: "v2" } },
@@ -113,7 +133,11 @@ describe("25.5 release review gate", () => {
 	it.runIf(process.env.ARTWORK_RELEASE_CHECK === "1")(
 		"公開時: 全52方向・288素材・208作例の審査記録と製品compilerを照合する",
 		() => {
-			const records: ReviewRecords = { directions, artwork, samples };
+			const records: ReviewRecords = {
+				directions: directions as ReviewRecords["directions"],
+				artwork: artwork as ReviewRecords["artwork"],
+				samples,
+			};
 			expect(
 				reviewIssues(
 					records,

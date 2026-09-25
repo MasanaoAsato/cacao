@@ -255,6 +255,13 @@
 	background-repeat: no-repeat;
 }
 
+/* The authored plate sits inside the itinerary image area, clear of text. */
+.program-page .program-art--direction {
+	z-index: 3;
+	background: var(--scene-paper);
+	box-shadow: inset 0 0 0 0.35mm var(--scene-accent);
+}
+
 .program-page .program-art__asset--mask {
 	background-color: var(--scene-accent);
 	mask-position: center;

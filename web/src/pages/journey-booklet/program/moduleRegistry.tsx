@@ -117,7 +117,20 @@ function bind<M extends DirectionModuleId>(
 			};
 		},
 		renderMeasure: (context) => <Measure context={context} spec={spec} />,
-		resources: (context) => registration.resources(spec, context),
+		resources: (context) => {
+			const resources = registration.resources(spec, context);
+			return {
+				...resources,
+				artworkIds: [
+					...new Set([
+						...resources.artworkIds,
+						...spec.scene.config.bindings.flatMap((binding) =>
+							binding.assetId ? [binding.assetId] : [],
+						),
+					]),
+				],
+			};
+		},
 		spec,
 	};
 }

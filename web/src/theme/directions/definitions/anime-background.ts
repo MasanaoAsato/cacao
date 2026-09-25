@@ -3,7 +3,7 @@ import { defineDirection } from "../definition";
 export const ANIME_BACKGROUND_DIRECTION = defineDirection({
 	id: "anime-background",
 	module: "photo-essay",
-	styleBundleId: "quiet",
+	styleBundleId: "bright",
 	touch: "gouache",
 	signature: {
 		label: "アニメ背景美術",

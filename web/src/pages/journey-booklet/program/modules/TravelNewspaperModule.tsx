@@ -231,6 +231,7 @@ function Measure({
 		familyKind: NewspaperPageKind,
 	) => (
 		<ProgramPage
+			context={context}
 			className={`travel-newspaper-page travel-newspaper-page--${familyKind}`}
 			familyStyle={style.vars}
 			mode="measurement"
@@ -329,6 +330,7 @@ function Pages({
 				const familyPlan = familyPlanOf(item.pageId, body, spec);
 				return (
 					<ProgramPage
+						context={context}
 						className={`travel-newspaper-page travel-newspaper-page--${familyPlan.kind}`}
 						familyStyle={style.vars}
 						key={item.pageId}

@@ -34,10 +34,10 @@ describe("buildSceneSpecs", () => {
 		expect(memo.content.referencedUnits).toHaveLength(4);
 	});
 
-	it("異常系: styleKeyは見出し・紙面の束が違えば変わる", () => {
+	it("異常系: styleKeyは見出し体系または紙面の束が違えば変わる", () => {
 		const a = specById(specsFor(compiledProgram(["rail"])), "cover");
 		const b = specById(specsFor(compiledProgram(["flight"])), "cover");
-		expect(a.styleKey).toBe(b.styleKey);
+		expect(a.styleKey).not.toBe(b.styleKey);
 		const c = specById(specsFor(compiledProgram(["cafe"])), "cover");
 		expect(c.styleKey).not.toBe(a.styleKey);
 	});

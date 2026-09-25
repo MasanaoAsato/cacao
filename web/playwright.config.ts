@@ -17,7 +17,7 @@ export default defineConfig({
 	webServer: {
 		command:
 			"node ./node_modules/vite/bin/vite.js --host 127.0.0.1 --port 4173",
-		// Composition E2E covers fusion; override with 1 to verify the initial rollout.
+		// Composition E2E covers fusion; override with 1 to verify the single-direction boundary.
 		env: {
 			VITE_BOOKLET_MAX_DIRECTIONS:
 				process.env.VITE_BOOKLET_MAX_DIRECTIONS ?? "5",

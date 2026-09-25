@@ -3,7 +3,7 @@ import { defineDirection } from "../definition";
 export const PRACTICAL_DIRECTION = defineDirection({
 	id: "practical",
 	module: "ledger",
-	styleBundleId: "quiet",
+	styleBundleId: "bright",
 	touch: "none",
 	signature: {
 		label: "同行者向け実用",

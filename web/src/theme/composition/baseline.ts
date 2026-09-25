@@ -14,6 +14,7 @@ import {
 	type ArtworkTouchId,
 	canonicalArtworkTouchId,
 } from "../artwork/types";
+import { directionArtworkSlot } from "../directions/artworkSlots";
 import type { LocalePackId } from "../directions/localePacks";
 import { STYLE_BUNDLES } from "../directions/styleBundles";
 import type {
@@ -243,6 +244,10 @@ export function baselineSceneConfig(
 	const capability = MODULE_CAPABILITIES[moduleId];
 	const cover = capability.cover;
 	if (target.kind === "cover" && cover === null) return null;
+	const compositionId =
+		(target.kind === "cover"
+			? baseline.config.coverCompositionId
+			: baseline.config.dayCompositionId) ?? capability.standardCompositionId;
 	const orientation: HeadingOrientation =
 		target.kind === "cover" && cover
 			? cover.titleOrientation
@@ -272,17 +277,47 @@ export function baselineSceneConfig(
 		if (!binding) return null;
 		bindings.push(binding);
 	}
+	const directionSlot = directionArtworkSlot(
+		moduleId,
+		target.kind,
+		definition.id,
+		compositionId,
+	);
+	if (
+		directionSlot &&
+		touchId &&
+		(target.kind === "cover" || target.showIllustration)
+	) {
+		const binding = bindingForPool({
+			context,
+			dayId: target.kind === "day" ? target.day.id : null,
+			directionId: definition.id,
+			pool: baselinePool(definition.id, directionSlot.slot),
+			required: true,
+			slot: directionSlot.slot,
+			touchId,
+		});
+		if (!binding) return null;
+		bindings.push(binding);
+	}
 	return {
 		bindings,
 		chapterStyled: false,
-		compositionId: capability.standardCompositionId,
-		contentStructure: null,
+		compositionId,
+		contentStructure:
+			target.kind === "day" && baseline.config.contentStructure
+				? {
+						directionId: definition.id,
+						sourceModuleId: baseline.module,
+						structure: baseline.config.contentStructure,
+					}
+				: null,
 		dayHeader: baseline.config.dayHeader ?? null,
 		heading: {
 			directionId: definition.id,
 			orientation,
 			styleBundleId: baseline.styleBundleId,
-			system: null,
+			system: baseline.config.headingSystem ?? null,
 		},
 		heroSplit: false,
 		imageTreatment:

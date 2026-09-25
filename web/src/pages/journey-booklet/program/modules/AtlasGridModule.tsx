@@ -172,6 +172,7 @@ function Measure({
 		return (
 			<FamilySceneRoot className={style.className} style={style.vars}>
 				<ProgramPage
+					context={context}
 					className="atlas-grid-page atlas-grid-page--cover"
 					familyStyle={style.vars}
 					mode="measurement"
@@ -195,6 +196,7 @@ function Measure({
 	if (!day) return null;
 	const tablePage = (children: ReactNode, kind: "first" | "continuation") => (
 		<ProgramPage
+			context={context}
 			className="atlas-grid-page atlas-grid-page--table"
 			familyStyle={style.vars}
 			mode="measurement"
@@ -271,6 +273,7 @@ function Pages({
 				const familyPlan = familyPlanOf(item.pageId, body, spec);
 				return (
 					<ProgramPage
+						context={context}
 						className={`atlas-grid-page atlas-grid-page--${familyPlan.kind}`}
 						familyStyle={style.vars}
 						key={item.pageId}

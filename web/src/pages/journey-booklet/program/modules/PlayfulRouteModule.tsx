@@ -341,6 +341,7 @@ function Measure({
 			<FamilySceneRoot className={style.className} style={style.vars}>
 				{preload}
 				<ProgramPage
+					context={context}
 					className="playful-route-page playful-route-page--cover"
 					familyStyle={style.vars}
 					mode="measurement"
@@ -377,6 +378,7 @@ function Measure({
 		children: ReactNode,
 	) => (
 		<ProgramPage
+			context={context}
 			className="playful-route-page playful-route-page--day"
 			familyStyle={style.vars}
 			mode="measurement"
@@ -473,6 +475,7 @@ function Pages({
 				const familyPlan = familyPlanOf(item.pageId, body, spec);
 				return (
 					<ProgramPage
+						context={context}
 						className={`playful-route-page playful-route-page--${familyPlan.kind}`}
 						familyStyle={style.vars}
 						key={item.pageId}

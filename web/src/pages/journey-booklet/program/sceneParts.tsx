@@ -26,6 +26,7 @@ import {
 	rect,
 } from "../../../booklet/program/modules/geometry";
 import type { ArtworkAsset } from "../../../theme/artwork/types";
+import { directionArtworkSlot } from "../../../theme/directions/artworkSlots";
 import type { SceneStyle } from "./sceneStyle";
 
 export type SceneRenderMode = "measurement" | "output";
@@ -127,6 +128,7 @@ export function Region({
 export function ProgramPage({
 	children,
 	className,
+	context,
 	familyStyle,
 	mode,
 	page,
@@ -137,6 +139,7 @@ export function ProgramPage({
 }: {
 	readonly children: ReactNode;
 	readonly className?: string;
+	readonly context: SceneRenderContext;
 	/** An extracted family keeps its own page box and variables. */
 	readonly familyStyle?: CSSProperties;
 	readonly mode: SceneRenderMode;
@@ -148,12 +151,26 @@ export function ProgramPage({
 }) {
 	const { scene } = spec;
 	const output = mode === "output";
+	const directionPlate =
+		(scene.kind === "cover" && page.kind === "cover") ||
+		(scene.kind === "day" && page.kind === "first")
+			? directionArtworkSlot(
+					scene.moduleId,
+					scene.kind,
+					scene.config.surface.directionId,
+					page.compositionId,
+				)
+			: null;
+	const directionArt = directionPlate
+		? bindingFor(scene, directionPlate.slot.slotId)
+		: null;
 	return (
 		<article
 			className={`booklet-page program-page${familyStyle ? " program-page--family" : ""} program-page--${scene.moduleId} program-page--${page.kind}${className ? ` ${className}` : ""}`}
 			data-booklet-composition={page.compositionId}
 			data-booklet-page={output ? "true" : undefined}
 			data-booklet-style-id={style.styleId}
+			data-direction-id={scene.config.surface.directionId}
 			data-local-page-id={page.localPageId}
 			data-module-id={scene.moduleId}
 			data-page-id={output ? pageId : undefined}
@@ -164,6 +181,14 @@ export function ProgramPage({
 			style={familyStyle ? { ...style.vars, ...familyStyle } : style.vars}
 		>
 			{children}
+			{directionPlate && directionArt ? (
+				<ArtSlot
+					binding={directionArt}
+					context={context}
+					region={directionPlate.region}
+					scene={scene}
+				/>
+			) : null}
 			{output && pageNumber !== undefined ? (
 				<footer className="program-page__footer">
 					<span data-booklet-text-role="page-number">{pageNumber}</span>
@@ -480,9 +505,16 @@ export function ArtSlot({
 		widthMm,
 		heightMm,
 	);
+	const viewImage =
+		asset && view
+			? {
+					backgroundPosition: `${(-view.x / view.width) * widthMm}mm ${(-view.y / view.height) * heightMm}mm`,
+					backgroundSize: `${(asset.width / view.width) * widthMm}mm ${(asset.height / view.height) * heightMm}mm`,
+				}
+			: null;
 	return (
 		<Region
-			className="program-art"
+			className={`program-art${binding?.slotId.startsWith("direction-") ? " program-art--direction" : ""}`}
 			effectRegionId="hero"
 			region={region}
 			regionId={`art-${binding?.slotId ?? "empty"}`}
@@ -500,13 +532,20 @@ export function ArtSlot({
 							? {
 									WebkitMaskImage: `url("${asset.src}")`,
 									maskImage: `url("${asset.src}")`,
+									...(viewImage
+										? {
+												WebkitMaskPosition: viewImage.backgroundPosition,
+												WebkitMaskSize: viewImage.backgroundSize,
+												maskPosition: viewImage.backgroundPosition,
+												maskSize: viewImage.backgroundSize,
+											}
+										: {}),
 								}
 							: {}),
-						...(view
+						...(view && asset.recolor === "none" && viewImage
 							? {
 									backgroundImage: `url("${asset.src}")`,
-									backgroundPosition: `${(-view.x / view.width) * widthMm}mm ${(-view.y / view.height) * heightMm}mm`,
-									backgroundSize: `${(asset.width / view.width) * widthMm}mm ${(asset.height / view.height) * heightMm}mm`,
+									...viewImage,
 								}
 							: {}),
 					}}

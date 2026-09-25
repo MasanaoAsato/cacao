@@ -25,7 +25,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:technical-mountain-hero-r1:v1:review-20260925",
 	},
 	{
 		id: "technical-sea-hero-r1",
@@ -50,7 +50,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:technical-sea-hero-r1:v1:review-20260925",
 	},
 	{
 		id: "technical-street-hero-r1",
@@ -75,7 +75,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:technical-street-hero-r1:v1:review-20260925",
 	},
 	{
 		id: "technical-machiya-grid-hero-r1",
@@ -100,7 +100,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:technical-machiya-grid-hero-r1:v1:review-20260925",
 	},
 	{
 		id: "technical-urban-window-railway-hero-r1",
@@ -125,7 +125,8 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId:
+			"artwork:technical-urban-window-railway-hero-r1:v1:review-20260925",
 	},
 	{
 		id: "technical-roof-arch-hero-r1",
@@ -150,7 +151,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:technical-roof-arch-hero-r1:v1:review-20260925",
 	},
 	{
 		id: "technical-train-medium-r1",
@@ -175,7 +176,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:technical-train-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "technical-airplane-medium-r1",
@@ -200,7 +201,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:technical-airplane-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "technical-car-medium-r1",
@@ -225,7 +226,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:technical-car-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "technical-bag-medium-r1",
@@ -250,7 +251,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:technical-bag-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "technical-tableware-medium-r1",
@@ -275,7 +276,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:technical-tableware-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "technical-leaf-medium-r1",
@@ -300,7 +301,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:technical-leaf-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "technical-flower-medium-r1",
@@ -325,7 +326,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:technical-flower-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "technical-shell-medium-r1",
@@ -350,7 +351,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:technical-shell-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "technical-photo-frame-frame-r1",
@@ -375,7 +376,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:technical-photo-frame-frame-r1:v1:review-20260925",
 	},
 	{
 		id: "technical-heading-band-heading-r1",
@@ -400,7 +401,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:technical-heading-band-heading-r1:v1:review-20260925",
 	},
 	{
 		id: "technical-sticky-note-tab-r1",
@@ -425,7 +426,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:technical-sticky-note-tab-r1:v1:review-20260925",
 	},
 	{
 		id: "technical-ticket-label-label-r1",
@@ -450,7 +451,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:technical-ticket-label-label-r1:v1:review-20260925",
 	},
 	{
 		id: "technical-measurement-rule-rule-r1",
@@ -475,7 +476,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:technical-measurement-rule-rule-r1:v1:review-20260925",
 	},
 	{
 		id: "technical-grid-panel-panel-r1",
@@ -500,7 +501,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:technical-grid-panel-panel-r1:v1:review-20260925",
 	},
 	{
 		id: "technical-straight-arrow-straight-arrow-r1",
@@ -526,7 +527,8 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId:
+			"artwork:technical-straight-arrow-straight-arrow-r1:v1:review-20260925",
 	},
 	{
 		id: "technical-turn-arrow-turn-arrow-r1",
@@ -551,7 +553,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:technical-turn-arrow-turn-arrow-r1:v1:review-20260925",
 	},
 	{
 		id: "technical-route-route-r1",
@@ -576,7 +578,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId: "artwork:technical-route-route-r1:v1:review-20260925",
 	},
 	{
 		id: "technical-season-pattern-season-pattern-r1",
@@ -602,7 +604,8 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal artwork authored for this repository; no external source material.",
 		},
-		reviewId: null,
+		reviewId:
+			"artwork:technical-season-pattern-season-pattern-r1:v1:review-20260925",
 		views: [
 			{ id: "spring", x: 0, y: 0, width: 500, height: 500 },
 			{ id: "summer", x: 500, y: 0, width: 500, height: 500 },

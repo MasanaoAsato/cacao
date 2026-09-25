@@ -3,7 +3,7 @@ import { defineDirection } from "../definition";
 export const DAY_STORY_DIRECTION = defineDirection({
 	id: "day-story",
 	module: "photo-essay",
-	styleBundleId: "play",
+	styleBundleId: "quiet",
 	touch: "gouache",
 	signature: {
 		label: "一日の物語型",

@@ -1,34 +1,49 @@
 import { ARTWORK_MANIFEST } from "../../assets/artwork/manifest";
+import artworkReviews from "../reviews/artwork.json";
+import { selectPublishedArtwork } from "../reviews/publication";
+import type { ArtworkReview } from "../reviews/types";
+import { PUBLISHED_ARTWORK_URLS } from "./publishedUrls";
 import type { ArtworkAlias, ArtworkAsset } from "./types";
 import { assertArtworkCatalog } from "./validateCatalog";
-
-/** Vite turns these imports into local URLs. It does not preload the files. */
-const bundledUrls: Record<string, string> = import.meta.glob(
-	"../../assets/artwork/*/*.{svg,webp}",
-	{ eager: true, import: "default", query: "?url" },
-);
 
 /** Old names can point to canonical IDs without increasing the production count. */
 export const ARTWORK_ALIASES: readonly ArtworkAlias[] = [];
 
 assertArtworkCatalog(ARTWORK_MANIFEST, {
 	aliases: ARTWORK_ALIASES,
-	bundledUrls,
 });
 
-export const ARTWORK_CATALOG: readonly ArtworkAsset[] = ARTWORK_MANIFEST.filter(
-	(definition) => Boolean(definition.reviewId?.trim()),
-).map((definition) => ({
-	...definition,
-	src: bundledUrls[definition.sourcePath] ?? "",
-}));
+const publishedArtwork = selectPublishedArtwork(
+	ARTWORK_MANIFEST,
+	artworkReviews as ArtworkReview[],
+);
+if (publishedArtwork.issues.length > 0)
+	throw new Error(
+		`Artwork publication is inconsistent: ${publishedArtwork.issues.join("; ")}`,
+	);
+const publishedPaths = new Set(
+	publishedArtwork.selected.map((definition) => definition.sourcePath),
+);
+if (
+	Object.keys(PUBLISHED_ARTWORK_URLS).length !== publishedPaths.size ||
+	[...publishedPaths].some((path) => !PUBLISHED_ARTWORK_URLS[path])
+)
+	throw new Error(
+		"Published artwork URL list is stale; regenerate it before building.",
+	);
+
+export const ARTWORK_CATALOG: readonly ArtworkAsset[] =
+	publishedArtwork.selected.map((definition) => ({
+		...definition,
+		src: PUBLISHED_ARTWORK_URLS[definition.sourcePath] ?? "",
+	}));
 
 const byId = new Map(ARTWORK_CATALOG.map((artwork) => [artwork.id, artwork]));
 const aliasTargets = new Map(
 	ARTWORK_ALIASES.map((alias) => [alias.id, alias.targetId]),
 );
 
-/** A draft or unknown ID cannot enter a frozen booklet program. */
+/** Only active artwork IDs can enter a frozen product booklet program. */
 export function artworkById(id: string): ArtworkAsset {
 	const seen = new Set<string>();
 	let canonicalId = id;
@@ -41,7 +56,7 @@ export function artworkById(id: string): ArtworkAsset {
 	}
 	const artwork = byId.get(canonicalId);
 	if (!artwork) {
-		throw new Error(`Artwork is missing or not reviewed: ${id}`);
+		throw new Error(`Artwork is missing or not active: ${id}`);
 	}
 	return artwork;
 }

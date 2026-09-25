@@ -25,7 +25,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:brush-airplane-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "brush-bag-medium-r1",
@@ -50,7 +50,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:brush-bag-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "brush-car-medium-r1",
@@ -75,7 +75,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:brush-car-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "brush-flower-medium-r1",
@@ -100,7 +100,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:brush-flower-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "brush-grid-panel-panel-r1",
@@ -125,7 +125,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:brush-grid-panel-panel-r1:v1:review-20260925",
 	},
 	{
 		id: "brush-heading-band-heading-r1",
@@ -150,7 +150,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:brush-heading-band-heading-r1:v1:review-20260925",
 	},
 	{
 		id: "brush-leaf-medium-r1",
@@ -175,7 +175,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:brush-leaf-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "brush-machiya-grid-hero-r1",
@@ -200,7 +200,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:brush-machiya-grid-hero-r1:v1:review-20260925",
 	},
 	{
 		id: "brush-measurement-rule-rule-r1",
@@ -225,7 +225,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:brush-measurement-rule-rule-r1:v1:review-20260925",
 	},
 	{
 		id: "brush-mountain-hero-r1",
@@ -250,7 +250,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:brush-mountain-hero-r1:v1:review-20260925",
 	},
 	{
 		id: "brush-photo-frame-frame-r1",
@@ -275,7 +275,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:brush-photo-frame-frame-r1:v1:review-20260925",
 	},
 	{
 		id: "brush-roof-arch-hero-r1",
@@ -300,7 +300,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:brush-roof-arch-hero-r1:v1:review-20260925",
 	},
 	{
 		id: "brush-route-route-r1",
@@ -325,7 +325,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:brush-route-route-r1:v1:review-20260925",
 	},
 	{
 		id: "brush-sea-hero-r1",
@@ -350,7 +350,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:brush-sea-hero-r1:v1:review-20260925",
 	},
 	{
 		id: "brush-season-pattern-season-pattern-r1",
@@ -375,7 +375,8 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId:
+			"artwork:brush-season-pattern-season-pattern-r1:v1:review-20260925",
 		views: [
 			{ id: "spring", x: 0, y: 0, width: 500, height: 500 },
 			{ id: "summer", x: 500, y: 0, width: 500, height: 500 },
@@ -406,7 +407,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:brush-shell-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "brush-sticky-note-tab-r1",
@@ -431,7 +432,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:brush-sticky-note-tab-r1:v1:review-20260925",
 	},
 	{
 		id: "brush-straight-arrow-straight-arrow-r1",
@@ -456,7 +457,8 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId:
+			"artwork:brush-straight-arrow-straight-arrow-r1:v1:review-20260925",
 	},
 	{
 		id: "brush-street-hero-r1",
@@ -481,7 +483,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:brush-street-hero-r1:v1:review-20260925",
 	},
 	{
 		id: "brush-tableware-medium-r1",
@@ -506,7 +508,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:brush-tableware-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "brush-ticket-label-label-r1",
@@ -531,7 +533,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:brush-ticket-label-label-r1:v1:review-20260925",
 	},
 	{
 		id: "brush-train-medium-r1",
@@ -556,7 +558,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:brush-train-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "brush-turn-arrow-turn-arrow-r1",
@@ -581,7 +583,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:brush-turn-arrow-turn-arrow-r1:v1:review-20260925",
 	},
 	{
 		id: "brush-urban-window-railway-hero-r1",
@@ -606,6 +608,6 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:brush-urban-window-railway-hero-r1:v1:review-20260925",
 	},
 ];

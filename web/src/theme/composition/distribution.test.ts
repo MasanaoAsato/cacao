@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { COMPARISON_BOOKLET_MODEL } from "../../../e2e/fixtures/booklet-diversity";
 import { productionCompositionCatalog } from "./compileBooklet";
-import { testDay, testModel } from "./compositionTestKit";
+import { fullTestCatalog, testDay, testModel } from "./compositionTestKit";
 import { distributionIssues, sampleDistribution } from "./distribution";
 
 const STANDARD = COMPARISON_BOOKLET_MODEL;
@@ -21,8 +21,11 @@ const LONG = testModel({
 });
 
 describe("製品compilerのseed分布", () => {
-	it("正常系: 3日×4予定と長い4日旅程を、実際のactive catalogで集計する", () => {
-		const catalog = productionCompositionCatalog();
+	it("正常系: 3日×4予定と長い4日旅程を明示的な比較catalogで集計する", () => {
+		const catalog =
+			process.env.ARTWORK_RELEASE_CHECK === "1"
+				? productionCompositionCatalog()
+				: fullTestCatalog();
 		if (process.env.ARTWORK_RELEASE_CHECK === "1")
 			expect(
 				catalog.maxDirections,
@@ -68,7 +71,10 @@ describe("製品compilerのseed分布", () => {
 	});
 
 	it("境界値系: 日0・空日・未登録地域は存在しない表現数を強制しない", () => {
-		const catalog = productionCompositionCatalog();
+		const catalog =
+			process.env.ARTWORK_RELEASE_CHECK === "1"
+				? productionCompositionCatalog()
+				: fullTestCatalog();
 		for (const model of [
 			testModel({ days: [] }),
 			testModel({ days: [testDay("empty", 1, [])] }),

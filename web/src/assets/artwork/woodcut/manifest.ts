@@ -25,7 +25,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:woodcut-airplane-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "woodcut-bag-medium-r1",
@@ -50,7 +50,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:woodcut-bag-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "woodcut-car-medium-r1",
@@ -75,7 +75,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:woodcut-car-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "woodcut-flower-medium-r1",
@@ -100,7 +100,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:woodcut-flower-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "woodcut-grid-panel-panel-r1",
@@ -125,7 +125,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:woodcut-grid-panel-panel-r1:v1:review-20260925",
 	},
 	{
 		id: "woodcut-heading-band-heading-r1",
@@ -150,7 +150,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:woodcut-heading-band-heading-r1:v1:review-20260925",
 	},
 	{
 		id: "woodcut-leaf-medium-r1",
@@ -175,7 +175,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:woodcut-leaf-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "woodcut-machiya-grid-hero-r1",
@@ -200,7 +200,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:woodcut-machiya-grid-hero-r1:v1:review-20260925",
 	},
 	{
 		id: "woodcut-measurement-rule-rule-r1",
@@ -225,7 +225,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:woodcut-measurement-rule-rule-r1:v1:review-20260925",
 	},
 	{
 		id: "woodcut-mountain-hero-r1",
@@ -250,7 +250,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:woodcut-mountain-hero-r1:v1:review-20260925",
 	},
 	{
 		id: "woodcut-photo-frame-frame-r1",
@@ -275,7 +275,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:woodcut-photo-frame-frame-r1:v1:review-20260925",
 	},
 	{
 		id: "woodcut-roof-arch-hero-r1",
@@ -300,7 +300,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:woodcut-roof-arch-hero-r1:v1:review-20260925",
 	},
 	{
 		id: "woodcut-route-route-r1",
@@ -325,7 +325,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:woodcut-route-route-r1:v1:review-20260925",
 	},
 	{
 		id: "woodcut-sea-hero-r1",
@@ -350,7 +350,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:woodcut-sea-hero-r1:v1:review-20260925",
 	},
 	{
 		id: "woodcut-season-pattern-season-pattern-r1",
@@ -376,7 +376,8 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId:
+			"artwork:woodcut-season-pattern-season-pattern-r1:v1:review-20260925",
 		views: [
 			{ id: "spring", x: 0, y: 0, width: 500, height: 500 },
 			{ id: "summer", x: 500, y: 0, width: 500, height: 500 },
@@ -407,7 +408,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:woodcut-shell-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "woodcut-sticky-note-tab-r1",
@@ -432,7 +433,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:woodcut-sticky-note-tab-r1:v1:review-20260925",
 	},
 	{
 		id: "woodcut-straight-arrow-straight-arrow-r1",
@@ -458,7 +459,8 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId:
+			"artwork:woodcut-straight-arrow-straight-arrow-r1:v1:review-20260925",
 	},
 	{
 		id: "woodcut-street-hero-r1",
@@ -483,7 +485,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:woodcut-street-hero-r1:v1:review-20260925",
 	},
 	{
 		id: "woodcut-tableware-medium-r1",
@@ -508,7 +510,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:woodcut-tableware-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "woodcut-ticket-label-label-r1",
@@ -533,7 +535,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:woodcut-ticket-label-label-r1:v1:review-20260925",
 	},
 	{
 		id: "woodcut-train-medium-r1",
@@ -558,7 +560,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:woodcut-train-medium-r1:v1:review-20260925",
 	},
 	{
 		id: "woodcut-turn-arrow-turn-arrow-r1",
@@ -583,7 +585,7 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:woodcut-turn-arrow-turn-arrow-r1:v1:review-20260925",
 	},
 	{
 		id: "woodcut-urban-window-railway-hero-r1",
@@ -608,6 +610,6 @@ export const ARTWORK_MANIFEST: readonly ArtworkDefinition[] = [
 			licenseEvidence:
 				"Original internal SVG artwork; no external source material used.",
 		},
-		reviewId: null,
+		reviewId: "artwork:woodcut-urban-window-railway-hero-r1:v1:review-20260925",
 	},
 ];

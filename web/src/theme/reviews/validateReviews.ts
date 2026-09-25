@@ -2,59 +2,23 @@ import type { BookletModel } from "../../booklet/model";
 import type { ArtworkDefinition } from "../artwork/types";
 import { compileBooklet } from "../composition/compileBooklet";
 import type { CompositionCatalog } from "../composition/types";
-import type { DirectionDefinition, DirectionId } from "../directions/types";
+import type { DirectionDefinition } from "../directions/types";
+import {
+	sampleComparisonIssues,
+	selectPublishedArtwork,
+	selectPublishedDirections,
+} from "./publication";
+import type { ReviewRecords, SampleReview } from "./types";
 
-export type ReviewStatus = "draft" | "reviewed" | "active";
-export type DirectionReview = {
-	readonly id: DirectionId;
-	readonly revision: number;
-	readonly reviewId: string;
-	readonly sampleId: string;
-	readonly reviewer: string;
-	readonly status: ReviewStatus;
-};
-export type ArtworkReview = {
-	readonly id: string;
-	readonly revision: number;
-	readonly reviewId: string;
-	readonly reviewer: string;
-	readonly status: ReviewStatus;
-};
-export const DIFFERENCE_AXES = [
-	"material",
-	"typography",
-	"imagery",
-	"readingOrder",
-	"density",
-	"chapterFlow",
-] as const;
-export type DifferenceAxis = (typeof DIFFERENCE_AXES)[number];
-export type SampleReview = {
-	readonly sampleId: string;
-	readonly seed: number;
-	readonly catalogRevision: string;
-	readonly baseDirectionId: DirectionId;
-	readonly effectiveDirectionIds: readonly DirectionId[];
-	readonly contributionIds: readonly string[];
-	readonly assets: readonly string[];
-	readonly moduleIds: readonly string[];
-	readonly pageCount: number;
-	readonly nearestSampleId: string | null;
-	readonly perceptualGroupId: string;
-	readonly judgments: Partial<Record<DifferenceAxis, string>>;
-	readonly decision: "accept" | "revise";
-	readonly reviewer: string;
-	/** The locale fixture must be specified for a locale-only direction. */
-	readonly fixture: "standard" | "kyoto" | "tokyo" | "paris";
-	readonly samePageTriple: boolean;
-	readonly chapterChange: boolean;
-};
-
-export type ReviewRecords = {
-	readonly directions: readonly DirectionReview[];
-	readonly artwork: readonly ArtworkReview[];
-	readonly samples: readonly SampleReview[];
-};
+export type {
+	ArtworkReview,
+	DifferenceAxis,
+	DirectionReview,
+	ReviewRecords,
+	ReviewStatus,
+	SampleReview,
+} from "./types";
+export { DIFFERENCE_AXES } from "./types";
 
 /** Publication checks never invent a review or turn a draft into an active work. */
 export function reviewIssues(
@@ -65,6 +29,7 @@ export function reviewIssues(
 ): string[] {
 	const issues: string[] = [];
 	const samples = new Map<string, SampleReview>();
+	const accepted = new Map<string, SampleReview>();
 	const groups = new Map<string, number>();
 	const sampleCounts = new Map<string, number>();
 	let fivePlus = 0;
@@ -87,38 +52,23 @@ export function reviewIssues(
 			if (sample.samePageTriple) samePageTriple += 1;
 			if (sample.chapterChange) chapter += 1;
 		}
-		if (
+		if (sample.decision === "accept") {
+			const comparisonIssues = sampleComparisonIssues(
+				sample,
+				accepted,
+				catalogRevision,
+				samples.size === 0,
+			);
+			issues.push(...comparisonIssues);
+			if (comparisonIssues.length === 0) accepted.set(sample.sampleId, sample);
+		} else if (
 			!Number.isInteger(sample.seed) ||
 			sample.seed < 0 ||
 			sample.seed > 65535 ||
 			sample.catalogRevision !== catalogRevision ||
-			!Number.isInteger(sample.pageCount) ||
-			sample.pageCount < 1 ||
-			!sample.reviewer?.trim() ||
-			!sample.perceptualGroupId?.trim() ||
-			count === 0 ||
-			sample.effectiveDirectionIds[0] !== sample.baseDirectionId ||
-			new Set(sample.effectiveDirectionIds).size !== count ||
-			!sample.moduleIds.length ||
-			!sample.fixture
+			!sample.reviewer?.trim()
 		)
 			issues.push(`sample ${sample.sampleId}: invalid recipe or revision`);
-		const differences = DIFFERENCE_AXES.filter((axis) =>
-			sample.judgments[axis]?.trim(),
-		);
-		if (
-			sample.decision === "accept" &&
-			(differences.length < 2 ||
-				!differences.some((axis) =>
-					["material", "typography", "imagery", "readingOrder"].includes(axis),
-				) ||
-				(samples.size > 0 &&
-					(sample.nearestSampleId === null ||
-						samples.get(sample.nearestSampleId)?.decision !== "accept")))
-		)
-			issues.push(
-				`sample ${sample.sampleId}: comparison to nearest accepted work is missing`,
-			);
 		samples.set(sample.sampleId, sample);
 	}
 	const directionReviews = new Map(
@@ -128,13 +78,18 @@ export function reviewIssues(
 		issues.push("duplicate direction review");
 	for (const direction of directions) {
 		const review = directionReviews.get(direction.id);
+		const sample = review?.sampleId ? samples.get(review.sampleId) : undefined;
+		if (review?.provisional)
+			issues.push(
+				`direction ${direction.id}: provisional approval is not final review`,
+			);
 		if (
 			review?.status !== "active" ||
 			review.revision !== direction.revision ||
 			review.reviewId !== direction.reviewId ||
 			!review.reviewer?.trim() ||
-			samples.get(review.sampleId)?.baseDirectionId !== direction.id ||
-			samples.get(review.sampleId)?.decision !== "accept"
+			sample?.baseDirectionId !== direction.id ||
+			sample?.decision !== "accept"
 		)
 			issues.push(
 				`direction ${direction.id}: active review/revision/sample missing`,
@@ -153,6 +108,10 @@ export function reviewIssues(
 		issues.push("duplicate artwork review");
 	for (const asset of artwork) {
 		const review = artworkReviews.get(asset.id);
+		if (review?.provisional)
+			issues.push(
+				`artwork ${asset.id}: provisional approval is not final review`,
+			);
 		if (
 			review?.status !== "active" ||
 			review.revision !== asset.revision ||
@@ -175,6 +134,17 @@ export function reviewIssues(
 		Math.max(...groups.values(), 0) / records.samples.length >= 0.25
 	)
 		issues.push("largest perceptual group must be below 25%");
+	const publishedArtwork = selectPublishedArtwork(artwork, records.artwork);
+	issues.push(...publishedArtwork.issues);
+	issues.push(
+		...selectPublishedDirections(
+			directions,
+			records.directions,
+			records.samples,
+			publishedArtwork.selected.map((asset) => ({ ...asset, src: "" })),
+			catalogRevision,
+		).issues,
+	);
 	return issues;
 }
 

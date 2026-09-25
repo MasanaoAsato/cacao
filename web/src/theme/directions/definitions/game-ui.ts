@@ -9,5 +9,5 @@ export const GAME_UI_DIRECTION = defineDirection({
 		label: "ゲームUI",
 		description: "ステージ番号、HUD状見出し、角のある面",
 	},
-	config: { dayHeader: "DAY / MISSION" },
+	config: { contentStructure: "stage-panels", dayHeader: "DAY / MISSION" },
 });
