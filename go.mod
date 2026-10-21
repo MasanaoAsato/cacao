@@ -1,6 +1,6 @@
 module cacao
 
-go 1.26.4
+go 1.26.10
 
 require (
 	github.com/OpenRouterTeam/go-sdk v0.7.84

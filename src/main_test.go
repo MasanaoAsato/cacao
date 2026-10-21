@@ -348,8 +348,8 @@ func TestWaitForWorkerWaitsAfterCancellation(t *testing.T) {
 		t.Fatal("worker cancellation was not requested")
 	}
 	select {
-	case <-waitResult:
-		t.Fatal("waitForWorkerWithTimeout returned before worker stopped")
+	case err := <-waitResult:
+		t.Fatalf("waitForWorkerWithTimeout returned before worker stopped: %v", err)
 	default:
 	}
 
