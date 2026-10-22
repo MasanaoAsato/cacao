@@ -1,8 +1,9 @@
 [tools]
 go = '1.26.10'
 golangci-lint = "latest"
-node = '24.20.0'
-pnpm = '11.24.0'
+node = '24.22.1'
+# 単体実行版は古いNode.jsを内蔵するため、修正済みNode.jsで動くnpm版を使う。
+"npm:pnpm" = '11.24.0'
 
 [tasks.fmt]
 description = "Goコードをフォーマットする"
